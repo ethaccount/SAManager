@@ -8,7 +8,7 @@ const { open, close } = useModal({
 	component: ConnectModal,
 	attrs: {
 		title: 'Hello World!',
-		onConfirm() {
+		onClose() {
 			close()
 		},
 	},
