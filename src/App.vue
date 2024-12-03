@@ -24,7 +24,7 @@ function onClickConnectButton() {
 <template>
 	<button @click="onClickConnectButton">{{ isConnected ? 'Disconnect' : 'Connect' }}</button>
 
-	<div>status: {{ wallet.status }}</div>
+	<div class="text-red-500">status: {{ wallet.status }}</div>
 	<div>isConnected: {{ isConnected }}</div>
 	<div>error: {{ wallet.error }}</div>
 
