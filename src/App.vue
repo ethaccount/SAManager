@@ -1,11 +1,22 @@
 <script lang="ts" setup>
 import { BrowserWalletConnector, useVueDapp } from '@vue-dapp/core'
-import { VueDappModal, useVueDappModal } from '@vue-dapp/modal'
-import '@vue-dapp/modal/dist/style.css'
-
 import { CoinbaseWalletConnector } from '@vue-dapp/coinbase'
+import { ModalsContainer, useModal } from 'vue-final-modal'
+import ConnectModal from './components/ConnectModal.vue'
 
-const { addConnectors, isConnected, wallet, disconnect } = useVueDapp()
+const { open, close } = useModal({
+	component: ConnectModal,
+	attrs: {
+		title: 'Hello World!',
+		onConfirm() {
+			close()
+		},
+	},
+	slots: {
+		default: '<p>The content of the modal</p>',
+	},
+})
+const { addConnectors, isConnected, wallet } = useVueDapp()
 
 addConnectors([
 	new BrowserWalletConnector(),
@@ -16,8 +27,7 @@ addConnectors([
 ])
 
 function onClickConnectButton() {
-	if (isConnected.value) disconnect()
-	else useVueDappModal().open()
+	open()
 }
 </script>
 
@@ -33,7 +43,7 @@ function onClickConnectButton() {
 		<div>address: {{ wallet.address }}</div>
 	</div>
 
-	<VueDappModal dark auto-connect />
+	<ModalsContainer />
 </template>
 
 <style></style>
