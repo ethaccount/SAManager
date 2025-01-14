@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { VueFinalModal } from 'vue-final-modal'
 import { CreateAccountStage, EOAManagedStage, PasskeyStage, useConnectStage } from '../core/connect_stage'
-
+import { Button } from '@/components/ui/button'
 defineProps<{
 	title?: string
 }>()
@@ -24,10 +24,13 @@ const { eoaManagedStage, createAccountStage, isInitialStage, toInitialStage } = 
 		<!-- INITIAL -->
 		<div v-if="isInitialStage" class="flex flex-col gap-4">
 			<div class="flex flex-col gap-2">
-				<button @click="eoaManagedStage = EOAManagedStage.CONNECT_EOA">Connect with EOA-Managed</button>
-				<button @click="createAccountStage = CreateAccountStage.CHOOSE_ACCOUNT_TYPE_AND_VALIDATOR">
+				<Button class="w-full" @click="eoaManagedStage = EOAManagedStage.CONNECT_EOA">EOA-Managed</Button>
+				<Button
+					class="w-full"
+					@click="createAccountStage = CreateAccountStage.CHOOSE_ACCOUNT_TYPE_AND_VALIDATOR"
+				>
 					Create Smart Account
-				</button>
+				</Button>
 			</div>
 
 			<!-- <div class="flex justify-between gap-4">
