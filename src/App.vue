@@ -1,10 +1,12 @@
 <script lang="ts" setup>
-import { BrowserWalletConnector, useVueDapp } from '@vue-dapp/core'
+import { Button } from '@/components/ui/button'
 import { CoinbaseWalletConnector } from '@vue-dapp/coinbase'
+import { BrowserWalletConnector, useVueDapp } from '@vue-dapp/core'
 import { ModalsContainer, useModal } from 'vue-final-modal'
 import ConnectModal from './components/ConnectModal.vue'
-import { Button } from '@/components/ui/button'
-import { useColorMode } from '@vueuse/core'
+// import { useColorMode } from '@vueuse/core'
+import { VueDappModal } from '@vue-dapp/modal'
+import '@vue-dapp/modal/dist/style.css'
 
 const { open, close } = useModal({
 	component: ConnectModal,
@@ -18,7 +20,7 @@ const { open, close } = useModal({
 		default: '<p>The content of the modal</p>',
 	},
 })
-const { addConnectors, isConnected, wallet } = useVueDapp()
+const { addConnectors, isConnected, wallet, disconnect } = useVueDapp()
 
 addConnectors([
 	new BrowserWalletConnector(),
@@ -34,9 +36,7 @@ function onClickConnectButton() {
 </script>
 
 <template>
-	<div class="flex flex-col items-center justify-center h-screen">
-		<Button @click="onClickConnectButton">{{ isConnected ? 'Disconnect' : 'Connect' }}</Button>
-
+	<div class="p-5">
 		<div class="text-red-500">status: {{ wallet.status }}</div>
 		<div>isConnected: {{ isConnected }}</div>
 		<div>error: {{ wallet.error }}</div>
@@ -44,8 +44,14 @@ function onClickConnectButton() {
 		<div v-if="isConnected">
 			<div>chainId: {{ wallet.chainId }}</div>
 			<div>address: {{ wallet.address }}</div>
+			<Button @click="disconnect">Disconnect</Button>
 		</div>
 
+		<div class="mt-5">
+			<Button @click="onClickConnectButton">Connect Smart Account</Button>
+		</div>
+
+		<VueDappModal dark auto-connect />
 		<ModalsContainer />
 	</div>
 </template>

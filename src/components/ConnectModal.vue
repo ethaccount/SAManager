@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { VueFinalModal } from 'vue-final-modal'
-import { CreateAccountStage, EOAManagedStage, PasskeyStage, useConnectStage } from '../core/connect_stage'
 import { Button } from '@/components/ui/button'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
-import { CardContent } from '@/components/ui/card'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { shortenAddress, useVueDapp } from '@vue-dapp/core'
+import { useVueDappModal } from '@vue-dapp/modal'
+import { VueFinalModal } from 'vue-final-modal'
+import { CreateAccountStage, EOAManagedStage, useConnectStage } from '../core/connect_stage'
+
+import { ref, watch } from 'vue'
 
 defineProps<{
 	title?: string
@@ -16,6 +19,31 @@ const emit = defineEmits<{
 }>()
 
 const { eoaManagedStage, createAccountStage, isInitialStage, toInitialStage } = useConnectStage()
+const { isConnected, wallet, disconnect } = useVueDapp()
+
+function onClickConnectButton() {
+	emit('close')
+	if (isConnected.value) disconnect()
+	else useVueDappModal().open()
+}
+
+const deployedAddress = ref('')
+
+watch(createAccountStage, () => {
+	if (createAccountStage.value === CreateAccountStage.CONNECT_EOA_OR_SIGNUP_PASSKEY) {
+		if (isConnected.value) {
+			deployedAddress.value = getDeployedAddress()
+		}
+	}
+})
+
+function getDeployedAddress() {
+	return '0x1234567890'
+}
+
+function onClickDeploy() {
+	createAccountStage.value = CreateAccountStage.CONNECTED
+}
 </script>
 
 <template>
@@ -108,7 +136,15 @@ const { eoaManagedStage, createAccountStage, isInitialStage, toInitialStage } = 
 		<!-- CreateAccountStage.CONNECT_EOA_OR_SIGNUP_PASSKEY -->
 		<div v-if="createAccountStage === CreateAccountStage.CONNECT_EOA_OR_SIGNUP_PASSKEY">
 			<div>Connect with EOA</div>
-			<div>Signup with Passkey</div>
+			<div>{{ wallet.address ? shortenAddress(wallet.address) : 'Not connected' }}</div>
+			<button v-if="!isConnected" @click="onClickConnectButton">Connect</button>
+
+			<div>Deployed Address</div>
+			<div>{{ deployedAddress }}</div>
+
+			<div>
+				<Button class="w-full" @click="onClickDeploy">Deploy</Button>
+			</div>
 		</div>
 
 		<!-- CreateAccountStage.CONNECTED -->
