@@ -11,7 +11,7 @@ const emit = defineEmits<{
 	(e: 'close'): void
 }>()
 
-const { eoaManagedStage, createAccountStage, passkeyStage, isInitialStage } = useConnectStage()
+const { eoaManagedStage, createAccountStage, isInitialStage } = useConnectStage()
 </script>
 
 <template>
