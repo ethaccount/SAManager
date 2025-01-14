@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { VueFinalModal } from 'vue-final-modal'
-import { EOAManagedStage, PasskeyStage, useConnectStage } from '../core/connect_stage'
+import { CreateAccountStage, EOAManagedStage, PasskeyStage, useConnectStage } from '../core/connect_stage'
 
 defineProps<{
 	title?: string
@@ -11,7 +11,7 @@ const emit = defineEmits<{
 	(e: 'close'): void
 }>()
 
-const { eoaManagedStage, passkeyStage } = useConnectStage()
+const { eoaManagedStage, createAccountStage, passkeyStage, isInitialStage } = useConnectStage()
 </script>
 
 <template>
@@ -22,40 +22,31 @@ const { eoaManagedStage, passkeyStage } = useConnectStage()
 		content-transition="vfm-fade"
 	>
 		<!-- INITIAL -->
-		<div
-			v-if="eoaManagedStage === EOAManagedStage.INITIAL && passkeyStage === PasskeyStage.INITIAL"
-			class="flex flex-col gap-4"
-		>
+		<div v-if="isInitialStage" class="flex flex-col gap-4">
 			<div class="flex flex-col gap-2">
-				<button @click="eoaManagedStage = EOAManagedStage.CONNECT_WALLET">EOA-Managed</button>
-				<button @click="passkeyStage = PasskeyStage.LOGIN_OR_SIGNUP">Passkey</button>
+				<button @click="eoaManagedStage = EOAManagedStage.CONNECT_EOA">Connect with EOA-Managed</button>
+				<button @click="createAccountStage = CreateAccountStage.CHOOSE_ACCOUNT_TYPE_AND_VALIDATOR">
+					Create Smart Account
+				</button>
 			</div>
 
-			<div class="flex justify-between gap-4">
+			<!-- <div class="flex justify-between gap-4">
 				<button @click="emit('close')">Cancel</button>
-			</div>
+			</div> -->
+		</div>
+
+		<!-- Create Account Stage -->
+		<div v-if="createAccountStage === CreateAccountStage.CHOOSE_ACCOUNT_TYPE_AND_VALIDATOR">
+			<div>Choose Account Type and Validator</div>
 		</div>
 
 		<!-- EOAManaged Stage -->
-		<div v-if="eoaManagedStage === EOAManagedStage.CONNECT_WALLET">
+		<div v-if="eoaManagedStage === EOAManagedStage.CONNECT_EOA">
 			<div>Connect Wallet</div>
-		</div>
-
-		<div v-if="eoaManagedStage === EOAManagedStage.ACCOUNT_CHOICE">
-			<div>Account Choice</div>
-		</div>
-
-		<div v-if="eoaManagedStage === EOAManagedStage.CREATE_ACCOUNT">
-			<div>Create Account</div>
 		</div>
 
 		<div v-if="eoaManagedStage === EOAManagedStage.CONNECTED">
 			<div>Connected</div>
-		</div>
-
-		<!-- Passkey Stage -->
-		<div v-if="passkeyStage === PasskeyStage.LOGIN_OR_SIGNUP">
-			<div>Login or Signup</div>
 		</div>
 	</VueFinalModal>
 </template>
