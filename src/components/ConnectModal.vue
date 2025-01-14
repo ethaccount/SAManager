@@ -2,6 +2,10 @@
 import { VueFinalModal } from 'vue-final-modal'
 import { CreateAccountStage, EOAManagedStage, PasskeyStage, useConnectStage } from '../core/connect_stage'
 import { Button } from '@/components/ui/button'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Label } from '@/components/ui/label'
+import { CardContent } from '@/components/ui/card'
+
 defineProps<{
 	title?: string
 }>()
@@ -45,49 +49,59 @@ const { eoaManagedStage, createAccountStage, isInitialStage, toInitialStage } = 
 		>
 			<div class="flex flex-col gap-4">
 				<h3 class="text-lg font-semibold">Select Account Type</h3>
-				<div class="grid grid-cols-2 gap-4">
-					<button
-						class="p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex flex-col items-center gap-2"
-					>
-						<span class="text-lg font-medium">Kernel</span>
-					</button>
-					<button
-						class="p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex flex-col items-center gap-2"
-					>
-						<span class="text-lg font-medium">Nexus</span>
-					</button>
-				</div>
+
+				<RadioGroup default-value="kernel" class="grid grid-cols-2 gap-4">
+					<div>
+						<RadioGroupItem id="kernel" value="kernel" class="peer sr-only" />
+						<Label
+							for="kernel"
+							class="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+						>
+							Kernel
+						</Label>
+					</div>
+					<div>
+						<RadioGroupItem id="myaccount" value="myaccount" class="peer sr-only" />
+						<Label
+							for="myaccount"
+							class="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+						>
+							MyAccount
+						</Label>
+					</div>
+				</RadioGroup>
 			</div>
 
 			<div class="flex flex-col gap-4">
 				<h3 class="text-lg font-semibold">Select Validator</h3>
-				<div class="grid grid-cols-2 gap-4">
-					<button
-						class="p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex flex-col items-center gap-2"
-					>
-						<span class="text-lg font-medium">ECDSA</span>
-					</button>
-					<button
-						class="p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex flex-col items-center gap-2"
-					>
-						<span class="text-lg font-medium">WebAuthn</span>
-					</button>
-				</div>
+
+				<RadioGroup default-value="ecdsa" class="grid grid-cols-2 gap-4">
+					<div>
+						<RadioGroupItem id="ecdsa" value="ecdsa" class="peer sr-only" />
+						<Label
+							for="ecdsa"
+							class="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+						>
+							ECDSA
+						</Label>
+					</div>
+					<div>
+						<RadioGroupItem id="webauthn" value="webauthn" class="peer sr-only" />
+						<Label
+							for="webauthn"
+							class="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+						>
+							Passkey
+						</Label>
+					</div>
+				</RadioGroup>
 			</div>
 
-			<div class="flex justify-end gap-4 mt-4">
-				<button
-					class="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-					@click="toInitialStage"
-				>
-					Back
-				</button>
-				<button
-					class="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors"
-					@click="createAccountStage = CreateAccountStage.CONNECT_EOA_OR_SIGNUP_PASSKEY"
-				>
+			<div class="flex w-full gap-4 mt-4">
+				<Button class="w-full" variant="outline" @click="toInitialStage">Back</Button>
+				<Button class="w-full" @click="createAccountStage = CreateAccountStage.CONNECT_EOA_OR_SIGNUP_PASSKEY">
 					Continue
-				</button>
+				</Button>
 			</div>
 		</div>
 
