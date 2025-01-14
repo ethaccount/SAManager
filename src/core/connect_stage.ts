@@ -1,15 +1,16 @@
 import { computed, ref } from 'vue'
 
+export enum CreateAccountStage {
+	INITIAL,
+	CHOOSE_ACCOUNT_TYPE_AND_VALIDATOR,
+	CONNECT_EOA_OR_SIGNUP_PASSKEY,
+	CONNECTED,
+}
+
 export enum EOAManagedStage {
 	INITIAL,
 	CONNECT_EOA,
 	CHOOSE_ACCOUNT,
-	CONNECTED,
-}
-
-export enum CreateAccountStage {
-	INITIAL,
-	CHOOSE_ACCOUNT_TYPE_AND_VALIDATOR,
 	CONNECTED,
 }
 
@@ -41,6 +42,12 @@ export function useConnectStage() {
 		)
 	})
 
+	function toInitialStage() {
+		eoaManagedStage.value = EOAManagedStage.INITIAL
+		createAccountStage.value = CreateAccountStage.INITIAL
+		passkeyStage.value = PasskeyStage.INITIAL
+	}
+
 	const logCurrentStage = () => {
 		console.log('EOAManagedStage', eoaManagedStage.value)
 		console.log('CreateAccountStage', createAccountStage.value)
@@ -54,6 +61,9 @@ export function useConnectStage() {
 
 		isInitialStage,
 		isConnected,
+
+		toInitialStage,
+
 		logCurrentStage,
 	}
 }
