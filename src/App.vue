@@ -6,7 +6,7 @@ import ConnectModal from './components/ConnectModal.vue'
 // import { useColorMode } from '@vueuse/core'
 import { VueDappModal } from '@vue-dapp/modal'
 import '@vue-dapp/modal/dist/style.css'
-
+import ConnectModal2 from './components/ConnectModal2.vue'
 const { open, close } = useModal({
 	component: ConnectModal,
 	attrs: {
@@ -32,6 +32,23 @@ addConnectors([
 function onClickConnectButton() {
 	open()
 }
+
+const { open: open2, close: close2 } = useModal({
+	component: ConnectModal2,
+	attrs: {
+		title: 'Hello World!',
+		onClose() {
+			close2()
+		},
+	},
+	slots: {
+		default: '<p>The content of the modal</p>',
+	},
+})
+
+function onClickConnectButton2() {
+	open2()
+}
 </script>
 
 <template>
@@ -48,6 +65,10 @@ function onClickConnectButton() {
 
 		<div class="mt-5">
 			<Button @click="onClickConnectButton">Connect Smart Account</Button>
+		</div>
+
+		<div class="mt-5">
+			<Button @click="onClickConnectButton2">Connect Smart Account 2</Button>
 		</div>
 
 		<router-view></router-view>
