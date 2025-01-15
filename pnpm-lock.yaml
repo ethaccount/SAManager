@@ -47,6 +47,9 @@ importers:
       vue-final-modal:
         specifier: ^4.5.5
         version: 4.5.5(@vueuse/core@12.4.0(typescript@5.7.2))(@vueuse/integrations@12.0.0(focus-trap@7.6.2)(typescript@5.7.2))(focus-trap@7.6.2)(vue@3.5.13(typescript@5.7.2))
+      vue-router:
+        specifier: ^4.5.0
+        version: 4.5.0(vue@3.5.13(typescript@5.7.2))
     devDependencies:
       '@types/node':
         specifier: ^22.10.6
@@ -1145,6 +1148,11 @@ packages:
       focus-trap: '>=7.2.0'
       vue: '>=3.2.0'
 
+  vue-router@4.5.0:
+    resolution: {integrity: sha512-HDuk+PuH5monfNuY+ct49mNmkCRK4xJAV9Ts4z9UFc4rzdDnxQLyCMGGc8pKhZhHTVzfanpNwB/lwqevcBwI4w==}
+    peerDependencies:
+      vue: ^3.2.0
+
   vue-tsc@2.1.10:
     resolution: {integrity: sha512-RBNSfaaRHcN5uqVqJSZh++Gy/YUzryuv9u1aFWhsammDJXNtUiJMNoJ747lZcQ68wUQFx6E73y4FY3D8E7FGMA==}
     hasBin: true
@@ -2136,6 +2144,11 @@ snapshots:
       '@vueuse/core': 12.4.0(typescript@5.7.2)
       '@vueuse/integrations': 12.0.0(focus-trap@7.6.2)(typescript@5.7.2)
       focus-trap: 7.6.2
+      vue: 3.5.13(typescript@5.7.2)
+
+  vue-router@4.5.0(vue@3.5.13(typescript@5.7.2)):
+    dependencies:
+      '@vue/devtools-api': 6.6.4
       vue: 3.5.13(typescript@5.7.2)
 
   vue-tsc@2.1.10(typescript@5.7.2):

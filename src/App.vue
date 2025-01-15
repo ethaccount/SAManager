@@ -51,6 +51,8 @@ function onClickConnectButton() {
 			<Button @click="onClickConnectButton">Connect Smart Account</Button>
 		</div>
 
+		<router-view></router-view>
+
 		<VueDappModal dark auto-connect />
 		<ModalsContainer />
 	</div>
