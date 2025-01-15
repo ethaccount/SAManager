@@ -1,13 +1,8 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { shortenAddress, useVueDapp } from '@vue-dapp/core'
 import { useVueDappModal } from '@vue-dapp/modal'
 import { VueFinalModal } from 'vue-final-modal'
 import { CreateAccountStage, EOAManagedStage, useConnectStage } from '../core/connect_stage'
-
-import { ref, watch } from 'vue'
 
 defineProps<{
 	title?: string

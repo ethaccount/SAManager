@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { Button } from '@/components/ui/button'
 import { CoinbaseWalletConnector } from '@vue-dapp/coinbase'
 import { BrowserWalletConnector, useVueDapp } from '@vue-dapp/core'
 import { ModalsContainer, useModal } from 'vue-final-modal'
