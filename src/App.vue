@@ -6,7 +6,8 @@ import ConnectModal from './components/ConnectModal.vue'
 // import { useColorMode } from '@vueuse/core'
 import { VueDappModal } from '@vue-dapp/modal'
 import '@vue-dapp/modal/dist/style.css'
-import ConnectModal2 from './components/ConnectModal2.vue'
+import ConnectModal3 from '@/components/connect_flow/ConnectModal.vue'
+
 const { open, close } = useModal({
 	component: ConnectModal,
 	attrs: {
@@ -33,12 +34,12 @@ function onClickConnectButton() {
 	open()
 }
 
-const { open: open2, close: close2 } = useModal({
-	component: ConnectModal2,
+const { open: open3, close: close3 } = useModal({
+	component: ConnectModal3,
 	attrs: {
 		title: 'Hello World!',
 		onClose() {
-			close2()
+			close3()
 		},
 	},
 	slots: {
@@ -46,8 +47,8 @@ const { open: open2, close: close2 } = useModal({
 	},
 })
 
-function onClickConnectButton2() {
-	open2()
+function onClickConnectButton3() {
+	open3()
 }
 </script>
 
@@ -68,7 +69,7 @@ function onClickConnectButton2() {
 		</div>
 
 		<div class="mt-5">
-			<Button @click="onClickConnectButton2">Connect Smart Account 2</Button>
+			<Button @click="onClickConnectButton3">Connect Smart Account 3</Button>
 		</div>
 
 		<router-view></router-view>
