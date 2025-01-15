@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { VueFinalModal } from 'vue-final-modal'
-import { useConnectFlow, Stage, Path } from '@/stores/connect_flow2'
+import { useConnectFlow, Stage, Path, useConnectFlowStore } from '@/stores/connect_flow2'
+import { SelectItem } from 'radix-vue'
 
 defineProps<{
 	title?: string
@@ -11,11 +12,37 @@ const emit = defineEmits<{
 	(e: 'close'): void
 }>()
 
-const { currentStage, currentPath, reset, selectPath, navigateTo } = useConnectFlow()
+const {
+	currentStage,
+	currentPath,
+	reset,
+	selectPath,
+	navigateTo,
+	updatePathData_CREATE,
+	goBack,
+	canGoBack,
+	goNext,
+	hasNextStage,
+} = useConnectFlow()
 
 onUnmounted(() => {
 	reset()
 })
+
+function handle_CREATE_EOA() {
+	navigateTo(Stage.CONNECT_BY_EOA)
+	updatePathData_CREATE({ selectedMethod: 'EOA' })
+}
+
+function handle_CREATE_PASSKEY() {
+	navigateTo(Stage.CONNECT_BY_PASSKEY)
+	updatePathData_CREATE({ selectedMethod: 'PASSKEY' })
+}
+
+function handle_CREATE_EIP7702() {
+	navigateTo(Stage.CONNECT_BY_EOA)
+	updatePathData_CREATE({ selectedMethod: 'EIP7702' })
+}
 </script>
 
 <template>
@@ -36,8 +63,9 @@ onUnmounted(() => {
 		<!-- CREATE -->
 		<div v-if="currentPath === Path.CREATE">
 			<div v-if="currentStage === Stage.CREATE_SIGNER_CHOICE" class="flex flex-col gap-2 w-full">
-				<Button class="w-full" @click="navigateTo(Stage.CONNECT_BY_EOA)"> EOA </Button>
-				<Button class="w-full" @click="navigateTo(Stage.CONNECT_BY_PASSKEY)"> Passkey </Button>
+				<Button class="w-full" @click="handle_CREATE_EOA"> EOA </Button>
+				<Button class="w-full" @click="handle_CREATE_PASSKEY"> Passkey </Button>
+				<Button class="w-full" @click="handle_CREATE_EIP7702"> EIP-7702 </Button>
 			</div>
 
 			<div v-if="currentStage === Stage.CONNECT_BY_EOA">
@@ -67,6 +95,22 @@ onUnmounted(() => {
 		<!-- Connected Stage -->
 		<div v-if="currentStage === Stage.CONNECTED">
 			<div>Successfully Connected!</div>
+		</div>
+
+		<div class="flex justify-between">
+			<!-- back button -->
+			<div v-if="canGoBack" class="flex justify-start">
+				<div>
+					<Button class="w-20" variant="outline" @click="goBack"> Back </Button>
+				</div>
+			</div>
+
+			<!-- next button -->
+			<div v-if="hasNextStage" class="flex justify-end">
+				<div>
+					<Button class="w-20" variant="outline" @click="goNext"> Next </Button>
+				</div>
+			</div>
 		</div>
 	</VueFinalModal>
 </template>

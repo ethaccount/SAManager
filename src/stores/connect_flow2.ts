@@ -17,25 +17,11 @@ export enum Stage {
 	CONNECTED = 'CONNECTED',
 }
 
-export type PathData = {
-	create: {
-		selectedMethod?: 'EOA' | 'PASSKEY'
-	}
-	eoaManaged: {}
-	passkey: {}
-	walletConnection: {}
-}
-
 type FlowStep = {
 	stage: Stage
 	next?: Stage[] // possible next stages
 }
 
-// CREATE -> CREATE_SIGNER_CHOICE -> CONNECT_BY_EOA -> SETUP -> CONNECTED
-// CREATE -> CREATE_SIGNER_CHOICE -> CONNECT_BY_PASSKEY -> SETUP -> CONNECTED
-// EOA_MANAGED -> CONNECT_BY_EOA -> SETUP -> CONNECTED
-// EIP7702 -> CONNECT_BY_EIP7702 -> SETUP -> CONNECTED
-// PASSKEY -> CONNECT_BY_PASSKEY -> SETUP -> CONNECTED
 const FLOW_CONFIGS: {
 	path: Path
 	steps: FlowStep[]
@@ -58,27 +44,40 @@ const FLOW_CONFIGS: {
 			{ stage: Stage.CONNECTED },
 		],
 	},
+	{
+		path: Path.EIP7702,
+		steps: [
+			{ stage: Stage.CONNECT_BY_EOA, next: [Stage.SETUP] },
+			{ stage: Stage.SETUP, next: [Stage.CONNECTED] },
+			{ stage: Stage.CONNECTED },
+		],
+	},
+	{
+		path: Path.PASSKEY,
+		steps: [
+			{ stage: Stage.CONNECT_BY_PASSKEY, next: [Stage.SETUP] },
+			{ stage: Stage.SETUP, next: [Stage.CONNECTED] },
+			{ stage: Stage.CONNECTED },
+		],
+	},
 ]
+
+type CreatePathData = {
+	selectedMethod: 'EOA' | 'PASSKEY' | 'EIP7702' | null
+}
 
 export const useConnectFlowStore = defineStore('useConnectFlowStore2', () => {
 	const currentPath = ref<Path | null>(null)
 	const currentStage = ref<Stage>(Stage.INITIAL)
 	const stageHistory = ref<Stage[]>([Stage.INITIAL])
-	const pathData = reactive<PathData>({
-		create: {},
-		eoaManaged: {},
-		passkey: {},
-		walletConnection: {},
+	const createPathData = ref<CreatePathData>({
+		selectedMethod: null,
 	})
 
 	function reset() {
 		currentStage.value = Stage.INITIAL
 		currentPath.value = null
 		stageHistory.value = [Stage.INITIAL]
-		pathData.create = {}
-		pathData.eoaManaged = {}
-		pathData.passkey = {}
-		pathData.walletConnection = {}
 	}
 
 	function selectPath(path: Path) {
@@ -94,6 +93,13 @@ export const useConnectFlowStore = defineStore('useConnectFlowStore2', () => {
 		const currentStep = flow?.steps.find(s => s.stage === currentStage.value)
 		return currentStep?.next || []
 	}
+
+	const hasNextStage = computed<boolean>(() => {
+		const flow = FLOW_CONFIGS.find(f => f.path === currentPath.value)
+		const currentStep = flow?.steps.find(s => s.stage === currentStage.value)
+		if (!currentStep) return false
+		return !!currentStep.next
+	})
 
 	const canGoBack = computed(() => stageHistory.value.length > 1)
 	const previousStage = computed(() =>
@@ -113,34 +119,44 @@ export const useConnectFlowStore = defineStore('useConnectFlowStore2', () => {
 		}
 	}
 
+	function goNext() {
+		const nextStage = getNextPossibleStages()[0]
+		if (nextStage) {
+			navigateTo(nextStage)
+		}
+	}
+
+	function updatePathData_CREATE(data: CreatePathData) {
+		createPathData.value = {
+			...createPathData.value,
+			...data,
+		}
+	}
+
 	return {
 		// state
-		currentStage: computed(() => currentStage.value),
-		currentPath: computed(() => currentPath.value),
-		stageHistory: computed(() => stageHistory.value),
-		pathData: computed(() => pathData),
-
+		currentStage,
+		currentPath,
+		stageHistory,
+		createPathData,
+		canGoBack,
+		previousStage,
+		hasNextStage,
 		// methods
 		reset,
 		selectPath,
 		getNextPossibleStages,
-		canGoBack,
-		previousStage,
+		goNext,
 		navigateTo,
 		goBack,
+		updatePathData_CREATE,
 	}
 })
 
 export function useConnectFlow() {
 	const store = useConnectFlowStore()
 	return {
+		...store,
 		...storeToRefs(store),
-		reset: store.reset,
-		selectPath: store.selectPath,
-		getNextPossibleStages: store.getNextPossibleStages,
-		canGoBack: store.canGoBack,
-		previousStage: store.previousStage,
-		navigateTo: store.navigateTo,
-		goBack: store.goBack,
 	}
 }
