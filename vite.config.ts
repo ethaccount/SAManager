@@ -10,7 +10,7 @@ export default defineConfig({
 		vue(),
 		AutoImport({
 			dts: 'src/auto-import.d.ts',
-			imports: ['vue', 'vue-router', 'pinia', 'vitest'],
+			imports: ['vue', 'vue-router', 'pinia'],
 			eslintrc: {
 				enabled: true,
 			},

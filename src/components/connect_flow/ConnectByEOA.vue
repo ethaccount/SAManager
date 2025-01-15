@@ -1,10 +1,11 @@
 <script setup lang="ts">
+import { useConnectFlow } from '@/stores/connect_flow2'
 import { useVueDapp, shortenAddress, RdnsEnum, type RDNS } from '@vue-dapp/core'
 import { useVueDappModal } from '@vue-dapp/modal'
 
 const emit = defineEmits(['next'])
 
-const { providerDetails, wallet, address, status, connectTo, error, isConnected } = useVueDapp()
+const { providerDetails, wallet, address, status, connectTo, error, isConnected, watchWalletChanged } = useVueDapp()
 
 const providerList = computed(() => {
 	return providerDetails.value.slice().sort((a, b) => {
@@ -20,6 +21,19 @@ async function onClickWallet(rdns: RDNS) {
 	useVueDappModal().close()
 	await connectTo('BrowserWallet', { target: 'rdns', rdns })
 }
+
+const { updatePathData_CREATE } = useConnectFlow()
+
+watchWalletChanged(
+	async ({ address }) => {
+		updatePathData_CREATE({
+			connectedAddress: address,
+		})
+	},
+	{
+		immediate: true,
+	},
+)
 </script>
 
 <template>

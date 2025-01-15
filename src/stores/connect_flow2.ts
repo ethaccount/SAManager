@@ -17,20 +17,21 @@ export enum Stage {
 	CONNECTED = 'CONNECTED',
 }
 
-type FlowStep = {
+type Step = {
 	stage: Stage
 	next?: Stage[] // possible next stages
+	hasNextButton?: boolean
 }
 
 const FLOW_CONFIGS: {
 	path: Path
-	steps: FlowStep[]
+	steps: Step[]
 }[] = [
 	{
 		path: Path.CREATE,
 		steps: [
 			{ stage: Stage.CREATE_SIGNER_CHOICE, next: [Stage.CONNECT_BY_EOA, Stage.CONNECT_BY_PASSKEY] },
-			{ stage: Stage.CONNECT_BY_EOA, next: [Stage.SETUP] },
+			{ stage: Stage.CONNECT_BY_EOA, next: [Stage.SETUP], hasNextButton: true },
 			{ stage: Stage.CONNECT_BY_PASSKEY, next: [Stage.SETUP] },
 			{ stage: Stage.SETUP, next: [Stage.CONNECTED] },
 			{ stage: Stage.CONNECTED },
@@ -63,7 +64,8 @@ const FLOW_CONFIGS: {
 ]
 
 type CreatePathData = {
-	selectedMethod: 'EOA' | 'PASSKEY' | 'EIP7702' | null
+	selectedMethod?: 'EOA' | 'PASSKEY' | 'EIP7702'
+	connectedAddress?: string
 }
 
 export const useConnectFlowStore = defineStore('useConnectFlowStore2', () => {
@@ -71,13 +73,16 @@ export const useConnectFlowStore = defineStore('useConnectFlowStore2', () => {
 	const currentStage = ref<Stage>(Stage.INITIAL)
 	const stageHistory = ref<Stage[]>([Stage.INITIAL])
 	const createPathData = ref<CreatePathData>({
-		selectedMethod: null,
+		selectedMethod: undefined,
 	})
 
 	function reset() {
 		currentStage.value = Stage.INITIAL
 		currentPath.value = null
 		stageHistory.value = [Stage.INITIAL]
+		createPathData.value = {
+			selectedMethod: undefined,
+		}
 	}
 
 	function selectPath(path: Path) {
@@ -99,6 +104,14 @@ export const useConnectFlowStore = defineStore('useConnectFlowStore2', () => {
 		const currentStep = flow?.steps.find(s => s.stage === currentStage.value)
 		if (!currentStep) return false
 		return !!currentStep.next
+	})
+
+	const hasNextButton = computed<boolean>(() => {
+		const step = FLOW_CONFIGS.find(f => f.path === currentPath.value)?.steps.find(
+			s => s.stage === currentStage.value,
+		)
+		if (!step) return false
+		return hasNextStage.value && !!step.hasNextButton
 	})
 
 	const canGoBack = computed(() => stageHistory.value.length > 1)
@@ -142,6 +155,7 @@ export const useConnectFlowStore = defineStore('useConnectFlowStore2', () => {
 		canGoBack,
 		previousStage,
 		hasNextStage,
+		hasNextButton,
 		// methods
 		reset,
 		selectPath,

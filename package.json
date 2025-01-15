@@ -16,6 +16,7 @@
 		"@vueuse/core": "^12.4.0",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
+		"ethers": "^6.13.5",
 		"lucide-vue-next": "^0.471.0",
 		"pinia": "^2.2.8",
 		"radix-vue": "^1.9.12",

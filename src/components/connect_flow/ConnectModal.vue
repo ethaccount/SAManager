@@ -22,7 +22,7 @@ const {
 	goBack,
 	canGoBack,
 	goNext,
-	hasNextStage,
+	hasNextButton,
 } = useConnectFlow()
 
 onUnmounted(() => {
@@ -106,7 +106,7 @@ function handle_CREATE_EIP7702() {
 			</div>
 
 			<!-- next button -->
-			<div v-if="hasNextStage" class="flex justify-end">
+			<div v-if="hasNextButton" class="flex justify-end">
 				<div>
 					<Button class="w-20" variant="outline" @click="goNext"> Next </Button>
 				</div>
