@@ -64,8 +64,8 @@ function handle_CREATE_EIP7702() {
 		<div v-if="currentPath === Path.CREATE">
 			<div v-if="currentStage === Stage.CREATE_SIGNER_CHOICE" class="flex flex-col gap-2 w-full">
 				<Button class="w-full" @click="handle_CREATE_EOA"> EOA </Button>
-				<Button class="w-full" @click="handle_CREATE_PASSKEY"> Passkey </Button>
-				<Button class="w-full" @click="handle_CREATE_EIP7702"> EIP-7702 </Button>
+				<Button disabled class="w-full" @click="handle_CREATE_PASSKEY"> Passkey </Button>
+				<Button disabled class="w-full" @click="handle_CREATE_EIP7702"> EIP-7702 </Button>
 			</div>
 
 			<div v-if="currentStage === Stage.CONNECT_BY_EOA">

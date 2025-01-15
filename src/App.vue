@@ -7,6 +7,7 @@ import ConnectModal from './components/ConnectModal.vue'
 import { VueDappModal } from '@vue-dapp/modal'
 import '@vue-dapp/modal/dist/style.css'
 import ConnectModal3 from '@/components/connect_flow/ConnectModal.vue'
+import { useEthers } from './stores/ethers'
 
 const { open, close } = useModal({
 	component: ConnectModal,
@@ -50,6 +51,17 @@ const { open: open3, close: close3 } = useModal({
 function onClickConnectButton3() {
 	open3()
 }
+
+const { watchWalletChanged, watchDisconnect } = useVueDapp()
+const { setWallet, resetWallet } = useEthers()
+
+watchWalletChanged(async wallet => {
+	setWallet(wallet.provider)
+})
+
+watchDisconnect(() => {
+	resetWallet()
+})
 </script>
 
 <template>

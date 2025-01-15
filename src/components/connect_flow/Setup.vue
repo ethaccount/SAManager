@@ -1,9 +1,15 @@
 <script setup lang="ts">
-import { RPC_URL, SALT, ECDSA_VALIDATOR } from '@/config'
-import { useConnectFlow, Path } from '@/stores/connect_flow2'
+import { CHARITY_PAYMASTER, ECDSA_VALIDATOR, RPC_URL, SALT } from '@/config'
+import { PimlicoBundler } from '@/core/bundler'
+import { OpBuilder } from '@/core/op_builders'
+import { MyPaymaster } from '@/core/pm_builders'
+import { useApp } from '@/stores/app'
+import { Path, useConnectFlow } from '@/stores/connect_flow2'
+import { useEthers } from '@/stores/ethers'
 import { shortenAddress } from '@vue-dapp/core'
-import { hexlify } from 'ethers'
-import { Kernel, MyAccount } from 'sendop'
+import { hexlify, JsonRpcProvider } from 'ethers'
+import { Loader2 } from 'lucide-vue-next'
+import { ECDSAValidator, Kernel, MyAccount, sendop } from 'sendop'
 
 const { currentPath } = useConnectFlow()
 
@@ -52,6 +58,71 @@ function getDeployedAddress(vendor: 'kernel' | 'myaccount') {
 
 	throw new Error('Invalid vendor')
 }
+
+const loadingDeploy = ref(false)
+async function handleDeploy() {
+	const { createPathData, goNext } = useConnectFlow()
+	if (!createPathData.value.connectedAddress) {
+		throw new Error('No connected address')
+	}
+
+	let vendor
+
+	if (selectedVendor.value === 'kernel') {
+		vendor = new Kernel(RPC_URL, {
+			salt: hexlify(SALT),
+			validatorAddress: ECDSA_VALIDATOR,
+			owner: createPathData.value.connectedAddress,
+		})
+	}
+
+	const { chainId, bundlerUrl } = useApp()
+	if (!deployedAddress.value) {
+		throw new Error('No deployed address')
+	}
+
+	const { signer } = useEthers()
+
+	if (!signer.value) {
+		throw new Error('No signer')
+	}
+
+	loadingDeploy.value = true
+	try {
+		const op = await sendop({
+			bundler: new PimlicoBundler(chainId.value, bundlerUrl.value),
+			from: deployedAddress.value,
+			executions: [],
+			opBuilder: new OpBuilder({
+				client: new JsonRpcProvider(RPC_URL),
+				vendor,
+				validator: new ECDSAValidator({
+					address: ECDSA_VALIDATOR,
+					clientUrl: RPC_URL,
+					signer: signer.value,
+				}),
+				from: deployedAddress.value,
+				isCreation: true,
+			}),
+			pmBuilder: new MyPaymaster({
+				chainId: chainId.value,
+				clientUrl: RPC_URL,
+				paymasterAddress: CHARITY_PAYMASTER,
+			}),
+		})
+
+		const receipt = await op.wait()
+		console.log(receipt)
+
+		// store account data to app as AA connected
+		// account address, vendor, validator, chainId
+		goNext()
+	} catch (err) {
+		console.error(err)
+	} finally {
+		loadingDeploy.value = false
+	}
+}
 </script>
 
 <template>
@@ -93,6 +164,13 @@ function getDeployedAddress(vendor: 'kernel' | 'myaccount') {
 							: 'None'
 					}}
 				</p>
+			</div>
+
+			<div>
+				<Button class="w-full" @click="handleDeploy" :disabled="!deployedAddress || loadingDeploy">
+					<Loader2 v-if="loadingDeploy" class="w-4 h-4 mr-2 animate-spin" />
+					Deploy
+				</Button>
 			</div>
 		</div>
 	</div>
