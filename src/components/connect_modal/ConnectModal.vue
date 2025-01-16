@@ -11,11 +11,19 @@ const emit = defineEmits<{
 	(e: 'close'): void
 }>()
 
-const { step, goNextStep, goBackStep, reset, canGoBack, canGoNext } = useConnectModal()
+const { step, goNextStep, goBackStep, reset, canGoBack, hasNextButton } = useConnectModal()
 
 onUnmounted(() => {
 	reset()
 })
+
+function handleNext() {
+	goNextStep()
+}
+
+function handleBack() {
+	goBackStep()
+}
 </script>
 
 <template>
@@ -33,14 +41,14 @@ onUnmounted(() => {
 			<!-- back button -->
 			<div class="flex justify-start">
 				<div v-if="canGoBack">
-					<Button class="w-20" variant="outline" @click="goBackStep"> Back </Button>
+					<Button class="w-20" variant="outline" @click="handleBack"> Back </Button>
 				</div>
 			</div>
 
 			<!-- next button -->
 			<div class="flex justify-end">
-				<div v-if="canGoNext">
-					<Button class="w-20" variant="outline" @click="goNextStep"> Next </Button>
+				<div v-if="hasNextButton">
+					<Button class="w-20" variant="outline" @click="handleNext"> Next </Button>
 				</div>
 			</div>
 		</div>

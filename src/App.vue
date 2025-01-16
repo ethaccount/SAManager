@@ -31,11 +31,11 @@ addConnectors([
 	}),
 ])
 
-const { historyStage, start, step, stage } = useConnectModal()
+const { historyStage, goNextStep, stage } = useConnectModal()
 
 function onClickConnectButton() {
 	open()
-	start()
+	goNextStep()
 }
 
 const { open: open3, close: close3 } = useModal({

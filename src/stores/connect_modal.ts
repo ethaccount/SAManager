@@ -5,57 +5,105 @@ import PasskeyLogin from '@/components/connect_modal/PasskeyLogin.vue'
 import CreateDeploy from '@/components/connect_modal/CreateDeploy.vue'
 import Connected from '@/components/connect_modal/Connected.vue'
 
+// Stage is the id of the step
 export enum Stage {
 	INITIAL = 'INITIAL',
+
 	CREATE_SIGNER_CHOICE = 'CREATE_SIGNER_CHOICE',
 	CREATE_EOA_CONNECT = 'CREATE_EOA_CONNECT',
 	CREATE_PASSKEY_CONNECT = 'CREATE_PASSKEY_CONNECT',
+	CREATE_EIP7702_CONNECT = 'CREATE_EIP7702_CONNECT',
 	CREATE_DEPLOY = 'CREATE_DEPLOY',
 	CREATE_CONNECTED = 'CREATE_CONNECTED',
+
+	EOA_EOA_CONNECT = 'EOA_EOA_CONNECT',
 }
 
 type Step = {
 	stage: Stage
 	component: Component
 	next: Stage[]
-	metadata?: Record<string, any>
+	metadata?: (ExtendedStepMetadata[keyof ExtendedStepMetadata] & BaseStepMetadata) | BaseStepMetadata
 }
 
-export const STEPS: readonly Step[] = [
-	{
-		stage: Stage.INITIAL,
-		component: InitialStep,
-		next: [Stage.CREATE_SIGNER_CHOICE],
-	},
-	// CREATE
-	{
-		stage: Stage.CREATE_SIGNER_CHOICE,
-		component: CreateSignerChoice,
-		next: [Stage.CREATE_EOA_CONNECT, Stage.CREATE_PASSKEY_CONNECT],
-	},
-	{
-		stage: Stage.CREATE_EOA_CONNECT,
-		component: EOAConnect,
-		next: [Stage.CREATE_DEPLOY],
-	},
-	{
-		stage: Stage.CREATE_PASSKEY_CONNECT,
-		component: PasskeyLogin,
-		next: [Stage.CREATE_DEPLOY],
-	},
-	{
-		stage: Stage.CREATE_DEPLOY,
-		component: CreateDeploy,
-		next: [Stage.CREATE_CONNECTED],
-	},
-	{
-		stage: Stage.CREATE_CONNECTED,
-		component: Connected,
-		next: [],
-	},
-]
+type Store = {
+	eoaAddress: string | null
+}
+
+type BaseStepMetadata = {
+	hasNextButton?: boolean
+	requiredStore?: (keyof Store)[]
+}
+
+export type ExtendedStepMetadata = {
+	[Stage.INITIAL]: {
+		gotoCreate: () => void
+		gotoEoa: () => void
+	}
+	[Stage.CREATE_SIGNER_CHOICE]: {
+		gotoEoa: () => void
+		gotoPasskey: () => void
+	}
+}
 
 export const useConnectModalStore = defineStore('useConnectModalStore', () => {
+	const STEPS: readonly Step[] = [
+		{
+			stage: Stage.INITIAL,
+			component: InitialStep,
+			next: [Stage.CREATE_SIGNER_CHOICE, Stage.EOA_EOA_CONNECT],
+			metadata: {
+				gotoCreate() {
+					goNextStep(Stage.CREATE_SIGNER_CHOICE)
+				},
+				gotoEoa() {
+					goNextStep(Stage.EOA_EOA_CONNECT)
+				},
+			} satisfies ExtendedStepMetadata[Stage.INITIAL],
+		},
+		// CREATE
+		{
+			stage: Stage.CREATE_SIGNER_CHOICE,
+			component: CreateSignerChoice,
+			next: [Stage.CREATE_EOA_CONNECT, Stage.CREATE_PASSKEY_CONNECT, Stage.CREATE_EIP7702_CONNECT],
+		},
+		{
+			stage: Stage.CREATE_EOA_CONNECT,
+			component: EOAConnect,
+			next: [Stage.CREATE_DEPLOY],
+			metadata: {
+				hasNextButton: true,
+				requiredStore: ['eoaAddress'],
+			},
+		},
+		{
+			stage: Stage.CREATE_PASSKEY_CONNECT,
+			component: PasskeyLogin,
+			next: [Stage.CREATE_DEPLOY],
+		},
+		{
+			stage: Stage.CREATE_EIP7702_CONNECT,
+			component: EOAConnect,
+			next: [Stage.CREATE_DEPLOY],
+		},
+		{
+			stage: Stage.CREATE_DEPLOY,
+			component: CreateDeploy,
+			next: [Stage.CREATE_CONNECTED],
+		},
+		{
+			stage: Stage.CREATE_CONNECTED,
+			component: Connected,
+			next: [],
+		},
+		// EOA
+		{
+			stage: Stage.EOA_EOA_CONNECT,
+			component: EOAConnect,
+			next: [],
+		},
+	]
+
 	const stage = ref<Stage | null>(null)
 	const step = computed<Step | null>(() => {
 		return STEPS.find(step => step.stage === stage.value) ?? null
@@ -76,9 +124,21 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		historyStage.value = []
 	}
 
-	const start = () => {
-		stage.value = Stage.INITIAL
+	// ===============================
+	// STORE
+	// ===============================
+
+	const store = ref<Store>({
+		eoaAddress: null,
+	})
+
+	const updateStore = (update: Partial<Store>) => {
+		store.value = { ...store.value, ...update }
 	}
+
+	// ===============================
+	// STORE END
+	// ===============================
 
 	const canGoBack = computed(() => {
 		return historyStage.value.length > 0
@@ -88,15 +148,42 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		return (step.value?.next.length ?? 0) > 0
 	})
 
-	const goNextStep = () => {
+	const hasNextButton = computed(() => {
+		return (step.value?.metadata?.hasNextButton ?? false) && canGoNext.value
+	})
+
+	const isValidTransition = (fromStage: Stage, toStage: Stage): boolean => {
+		const currentStep = STEPS.find(step => step.stage === fromStage)
+		return currentStep?.next.includes(toStage) ?? false
+	}
+
+	const goNextStep = (specificStage?: Stage) => {
+		if (!stage.value) {
+			stage.value = Stage.INITIAL
+			return
+		}
+
+		// If a specific stage is provided, we validate the transition and set the stage
+		if (specificStage) {
+			if (!isValidTransition(stage.value, specificStage)) {
+				throw new Error(`Invalid transition from ${stage.value} to ${specificStage}`)
+			}
+			historyStage.value.push(stage.value)
+			stage.value = specificStage
+			return
+		}
+
 		if ((step.value?.next.length ?? 0) === 0) {
 			throw new Error('No next stage available')
 		}
 
+		if ((step.value?.next.length ?? 0) > 1) {
+			console.warn('Multiple next stages available, using the first one')
+		}
+
 		const nextStage = step.value?.next[0]
 		if (!nextStage) {
-			console.error('No next stage found')
-			return
+			throw new Error('No next stage found')
 		}
 
 		stage.value && historyStage.value.push(stage.value)
@@ -113,6 +200,12 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		}
 	}
 
+	const checkStage = (_stage: Stage) => {
+		if (stage.value !== _stage) {
+			throw new Error(`Invalid stage, expected ${_stage} but got ${stage.value}`)
+		}
+	}
+
 	return {
 		stage,
 		step,
@@ -121,9 +214,12 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		reset,
 		goNextStep,
 		goBackStep,
-		start,
+		checkStage,
+		hasNextButton,
 		canGoBack,
 		canGoNext,
+		store,
+		updateStore,
 	}
 })
 
