@@ -19,6 +19,7 @@
 		"ethers": "^6.13.4",
 		"lucide-vue-next": "^0.471.0",
 		"pinia": "^2.2.8",
+		"pinia-plugin-persistedstate": "^4.2.0",
 		"radix-vue": "^1.9.12",
 		"tailwind-merge": "^2.6.0",
 		"tailwindcss-animate": "^1.0.7",

@@ -5,12 +5,18 @@ import { createPinia } from 'pinia'
 import { createVfm } from 'vue-final-modal'
 import 'vue-final-modal/style.css'
 import router from './router'
-const app = createApp(App)
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 
-app.use(createPinia())
-app.use(router)
+const app = createApp(App)
 
 const vfm = createVfm()
 app.use(vfm)
+
+// pinia
+const pinia = createPinia()
+pinia.use(piniaPluginPersistedstate)
+app.use(pinia)
+
+app.use(router)
 
 app.mount('#app')
