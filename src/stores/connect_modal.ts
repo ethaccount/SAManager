@@ -69,14 +69,6 @@ export type ExtendedScreenConfig = {
 }
 
 export const useConnectModalStore = defineStore('useConnectModalStore', () => {
-	const { open, close } = useModal({
-		component: ConnectModal,
-		attrs: {
-			onClose: () => close(),
-		},
-		slots: {},
-	})
-
 	// Update STEPS to SCREENS
 	const SCREENS: Partial<Record<ConnectFlowState, ModalScreen>> = {
 		[ConnectFlowState.INITIAL]: {
@@ -175,6 +167,9 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 			state: ConnectFlowState.EOA_CONNECTED,
 			component: Connected,
 			next: [],
+			screenConfig: {
+				title: 'Connected',
+			},
 		},
 	} as const
 
@@ -312,23 +307,21 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		canGoNext,
 		store,
 		updateStore,
-		open,
-		close,
 	}
 })
 
 export function useConnectModal() {
-	const store = useConnectModalStore()
+	const connectModalStore = useConnectModalStore()
 	return {
-		...store,
-		...storeToRefs(store),
+		...connectModalStore,
+		...storeToRefs(connectModalStore),
 	}
 }
 
 // =============================== DEV ===============================
 
 export function simulateScreen(state: ConnectFlowState) {
-	const { open, currentState, updateStore } = useConnectModal()
+	const { currentState, updateStore } = useConnectModal()
 	if (import.meta.env.DEV) {
 		open()
 

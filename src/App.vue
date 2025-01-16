@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { CoinbaseWalletConnector } from '@vue-dapp/coinbase'
 import { BrowserWalletConnector, useVueDapp } from '@vue-dapp/core'
-import { ModalsContainer } from 'vue-final-modal'
+import { ModalsContainer, useModal } from 'vue-final-modal'
 // import { useColorMode } from '@vueuse/core'
 import { useConnectModal } from '@/stores/connect_modal'
 import { VueDappModal } from '@vue-dapp/modal'
@@ -9,12 +9,27 @@ import '@vue-dapp/modal/dist/style.css'
 import { useAccount } from './stores/account'
 import { useApp } from './stores/app'
 import { useEthers } from './stores/ethers'
+import ConnectModal from '@/components/connect_modal/ConnectModal.vue'
 
-const { goNextState, open } = useConnectModal()
+// ============================== Connect Modal ==============================
+const { goNextState } = useConnectModal()
+const { open, close } = useModal({
+	component: ConnectModal,
+	attrs: {
+		onClose: () => close(),
+	},
+	slots: {},
+})
+
+function onClickConnectButton() {
+	open()
+	goNextState()
+}
 
 // =============================== DEV ===============================
 
 import { simulateScreen, ConnectFlowState } from '@/stores/connect_modal'
+open()
 // simulateScreen(ConnectFlowState.CREATE_CONNECTED)
 simulateScreen(ConnectFlowState.EOA_ACCOUNT_CHOICE)
 
@@ -39,13 +54,6 @@ watchWalletChanged(async wallet => {
 watchDisconnect(() => {
 	resetWallet()
 })
-
-// ============================== Connect Modal ==============================
-
-function onClickConnectButton() {
-	open()
-	goNextState()
-}
 
 // ============================== App ==============================
 
