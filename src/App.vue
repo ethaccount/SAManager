@@ -3,7 +3,7 @@ import { CoinbaseWalletConnector } from '@vue-dapp/coinbase'
 import { BrowserWalletConnector, useVueDapp } from '@vue-dapp/core'
 import { ModalsContainer } from 'vue-final-modal'
 // import { useColorMode } from '@vueuse/core'
-import { ConnectFlowState, useConnectModal } from '@/stores/connect_modal'
+import { useConnectModal } from '@/stores/connect_modal'
 import { VueDappModal } from '@vue-dapp/modal'
 import '@vue-dapp/modal/dist/style.css'
 import { useAccount } from './stores/account'
@@ -12,7 +12,11 @@ import { useEthers } from './stores/ethers'
 
 const { goNextState, open } = useConnectModal()
 
-// useConnectModal().simulateScreen(ConnectFlowState.CREATE_CONNECTED)
+// =============================== DEV ===============================
+
+import { simulateScreen, ConnectFlowState } from '@/stores/connect_modal'
+// simulateScreen(ConnectFlowState.CREATE_CONNECTED)
+simulateScreen(ConnectFlowState.EOA_ACCOUNT_CHOICE)
 
 // ============================== Vue Dapp ==============================
 

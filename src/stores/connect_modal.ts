@@ -166,6 +166,10 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 			state: ConnectFlowState.EOA_ACCOUNT_CHOICE,
 			component: EOAAccountChoice,
 			next: [ConnectFlowState.EOA_CONNECTED],
+			screenConfig: {
+				title: 'Choose Account',
+				requiredStore: ['eoaAddress', 'validator', 'deployedAddress'],
+			},
 		},
 		[ConnectFlowState.EOA_CONNECTED]: {
 			state: ConnectFlowState.EOA_CONNECTED,
@@ -294,44 +298,6 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		}
 	}
 
-	const simulateScreen = (state: ConnectFlowState) => {
-		if (import.meta.env.DEV) {
-			open()
-
-			currentState.value = state
-			switch (state) {
-				case ConnectFlowState.CREATE_CONNECTED:
-					const { chainId } = useApp()
-					const account = {
-						chainId: chainId.value,
-						eoaAddress: '0x0924E969a99547374C9F4B43503652fdB28289e4',
-						deployedAddress: '0x0924E969a99547374C9F4B43503652fdB28289e4',
-						vendor: 'kernel' as VendorKey,
-						validator: 'eoa' as ValidatorKey,
-					}
-					const { setAccount } = useAccount()
-					setAccount({
-						address: account.deployedAddress,
-						chainId: account.chainId,
-						vendor: account.vendor,
-						validator: account.validator,
-					})
-
-					updateStore({
-						eoaAddress: account.eoaAddress,
-						deployedAddress: account.deployedAddress,
-						vendor: account.vendor,
-						validator: account.validator,
-					})
-					break
-				default:
-					throw new Error(`Unknown state: ${state}`)
-			}
-		} else {
-			throw new Error('Simulate screen is only available in development mode')
-		}
-	}
-
 	return {
 		currentState,
 		currentScreen,
@@ -346,7 +312,6 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		canGoNext,
 		store,
 		updateStore,
-		simulateScreen,
 		open,
 		close,
 	}
@@ -357,5 +322,52 @@ export function useConnectModal() {
 	return {
 		...store,
 		...storeToRefs(store),
+	}
+}
+
+// =============================== DEV ===============================
+
+export function simulateScreen(state: ConnectFlowState) {
+	const { open, currentState, updateStore } = useConnectModal()
+	if (import.meta.env.DEV) {
+		open()
+
+		currentState.value = state
+		switch (state) {
+			case ConnectFlowState.CREATE_CONNECTED:
+				const { chainId } = useApp()
+				const account = {
+					chainId: chainId.value,
+					eoaAddress: '0x0924E969a99547374C9F4B43503652fdB28289e4',
+					deployedAddress: '0x0924E969a99547374C9F4B43503652fdB28289e4',
+					vendor: 'kernel' as VendorKey,
+					validator: 'eoa' as ValidatorKey,
+				}
+				const { setAccount } = useAccount()
+				setAccount({
+					address: account.deployedAddress,
+					chainId: account.chainId,
+					vendor: account.vendor,
+					validator: account.validator,
+				})
+
+				updateStore({
+					eoaAddress: account.eoaAddress,
+					deployedAddress: account.deployedAddress,
+					vendor: account.vendor,
+					validator: account.validator,
+				})
+				break
+			case ConnectFlowState.EOA_ACCOUNT_CHOICE:
+				updateStore({
+					validator: 'eoa',
+					eoaAddress: '0xd78B5013757Ea4A7841811eF770711e6248dC282',
+				})
+				break
+			default:
+				throw new Error(`Unknown state: ${state}`)
+		}
+	} else {
+		throw new Error('Simulate screen is only available in development mode')
 	}
 }
