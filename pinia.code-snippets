@@ -1,0 +1,25 @@
+{
+	"Pinia Setup Store": {
+		"scope": "javascript,typescript",
+		"prefix": "pinia-setup",
+		"body": [
+			"import { defineStore } from 'pinia'",
+			"import { storeToRefs } from 'pinia'",
+			"",
+			"export const ${TM_FILENAME_BASE/^(.*)$/${1:/camelcase}/}Store = defineStore('${TM_FILENAME_BASE}', () => {",
+			"  $1",
+			"  return {}",
+			"})",
+			"",
+			"export function use${TM_FILENAME_BASE/^(.*)$/${1:/pascalcase}/}Store() {",
+			"  const store = ${TM_FILENAME_BASE/^(.*)$/${1:/camelcase}/}Store()",
+			"  return {",
+			"    ...store,",
+			"    ...storeToRefs(store),",
+			"  }",
+			"}",
+			""
+		],
+		"description": "Bootstrap the code needed for a Vue.js Pinia Setup Store file"
+	}
+}

@@ -2,13 +2,13 @@
 import { CoinbaseWalletConnector } from '@vue-dapp/coinbase'
 import { BrowserWalletConnector, useVueDapp } from '@vue-dapp/core'
 import { ModalsContainer, useModal } from 'vue-final-modal'
-import ConnectModal from './components/ConnectModal.vue'
+import ConnectModal from './components/connect_modal/ConnectModal.vue'
 // import { useColorMode } from '@vueuse/core'
 import { VueDappModal } from '@vue-dapp/modal'
 import '@vue-dapp/modal/dist/style.css'
 import ConnectModal3 from '@/components/connect_flow/ConnectModal.vue'
 import { useEthers } from './stores/ethers'
-
+import { useConnectModal } from './stores/connect_modal'
 const { open, close } = useModal({
 	component: ConnectModal,
 	attrs: {
@@ -31,8 +31,11 @@ addConnectors([
 	}),
 ])
 
+const { historyStage, start, step, stage } = useConnectModal()
+
 function onClickConnectButton() {
 	open()
+	start()
 }
 
 const { open: open3, close: close3 } = useModal({
@@ -66,9 +69,8 @@ watchDisconnect(() => {
 
 <template>
 	<div class="p-5">
-		<div class="text-red-500">status: {{ wallet.status }}</div>
-		<div>isConnected: {{ isConnected }}</div>
-		<div>error: {{ wallet.error }}</div>
+		<div>historyStage: {{ historyStage }}</div>
+		<div>stage: {{ stage }}</div>
 
 		<div v-if="isConnected">
 			<div>chainId: {{ wallet.chainId }}</div>
