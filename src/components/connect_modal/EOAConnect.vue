@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useConnectModal, Stage } from '@/stores/connect_modal'
-import { useVueDapp, shortenAddress, RdnsEnum, type RDNS } from '@vue-dapp/core'
+import { useConnectModal } from '@/stores/connect_modal'
+import { RdnsEnum, shortenAddress, useVueDapp, type RDNS } from '@vue-dapp/core'
 import { useVueDappModal } from '@vue-dapp/modal'
 
 const emit = defineEmits(['next'])

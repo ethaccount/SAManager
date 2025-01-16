@@ -11,18 +11,18 @@ const emit = defineEmits<{
 	(e: 'close'): void
 }>()
 
-const { step, goNextStep, goBackStep, reset, canGoBack, hasNextButton } = useConnectModal()
+const { currentScreen, goNextState, goBackState, reset, canGoBack, hasNextButton } = useConnectModal()
 
 onUnmounted(() => {
 	reset()
 })
 
 function handleNext() {
-	goNextStep()
+	goNextState()
 }
 
 function handleBack() {
-	goBackStep()
+	goBackState()
 }
 </script>
 
@@ -33,8 +33,8 @@ function handleBack() {
 		overlay-transition="vfm-fade"
 		content-transition="vfm-fade"
 	>
-		<div v-if="step">
-			<component :is="step.component" />
+		<div v-if="currentScreen">
+			<component :is="currentScreen.component" />
 		</div>
 
 		<div class="flex justify-between">

@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import { useConnectModal, ExtendedStepMetadata, Stage } from '@/stores/connect_modal'
-const { step, checkStage } = useConnectModal()
+import { useConnectModal, ExtendedScreenConfig, ConnectFlowState } from '@/stores/connect_modal'
+const { currentScreen, checkState } = useConnectModal()
 
-checkStage(Stage.INITIAL)
+checkState(ConnectFlowState.INITIAL)
 
-const metadata = step.value?.metadata as ExtendedStepMetadata[Stage.INITIAL]
+const screenConfig = currentScreen.value?.screenConfig as ExtendedScreenConfig[ConnectFlowState.INITIAL]
 
 function handleCreate() {
-	metadata.gotoCreate()
+	screenConfig.gotoCreate()
 }
 
 function handleEoa() {
-	metadata.gotoEoa()
+	screenConfig.gotoEoa()
 }
 </script>
 

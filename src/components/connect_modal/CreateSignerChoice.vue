@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import { useConnectModal, Stage } from '@/stores/connect_modal'
-const { checkStage, goNextStep } = useConnectModal()
+import { useConnectModal, ConnectFlowState } from '@/stores/connect_modal'
+const { checkState, goNextState } = useConnectModal()
 
-checkStage(Stage.CREATE_SIGNER_CHOICE)
+checkState(ConnectFlowState.CREATE_SIGNER_CHOICE)
 
 function handleEOA() {
-	goNextStep(Stage.CREATE_EOA_CONNECT)
+	goNextState(ConnectFlowState.CREATE_EOA_CONNECT)
 }
 
 function handlePasskey() {
-	goNextStep(Stage.CREATE_PASSKEY_CONNECT)
+	goNextState(ConnectFlowState.CREATE_PASSKEY_CONNECT)
 }
 
 function handleEIP7702() {
-	goNextStep(Stage.CREATE_EIP7702_CONNECT)
+	goNextState(ConnectFlowState.CREATE_EIP7702_CONNECT)
 }
 </script>
 
