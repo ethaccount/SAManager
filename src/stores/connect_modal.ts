@@ -1,3 +1,4 @@
+import ConnectModal from '@/components/connect_modal/ConnectModal.vue'
 import Connected from '@/components/connect_modal/Connected.vue'
 import CreateDeploy from '@/components/connect_modal/CreateDeploy.vue'
 import CreateSignerChoice from '@/components/connect_modal/CreateSignerChoice.vue'
@@ -5,6 +6,9 @@ import EOAConnect from '@/components/connect_modal/EOAConnect.vue'
 import InitialStep from '@/components/connect_modal/Initial.vue'
 import PasskeyLogin from '@/components/connect_modal/PasskeyLogin.vue'
 import { ValidatorKey, VendorKey } from '@/types'
+import { useModal } from 'vue-final-modal'
+import { useAccount } from './account'
+import { useApp } from './app'
 
 // Change Stage to ConnectFlowState
 export enum ConnectFlowState {
@@ -58,6 +62,14 @@ export type ExtendedScreenConfig = {
 }
 
 export const useConnectModalStore = defineStore('useConnectModalStore', () => {
+	const { open, close } = useModal({
+		component: ConnectModal,
+		attrs: {
+			onClose: () => close(),
+		},
+		slots: {},
+	})
+
 	// Update STEPS to SCREENS
 	const SCREENS: Record<ConnectFlowState, ModalScreen> = {
 		[ConnectFlowState.INITIAL]: {
@@ -120,6 +132,9 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 			state: ConnectFlowState.CREATE_CONNECTED,
 			component: Connected,
 			next: [],
+			screenConfig: {
+				title: 'Connected',
+			},
 		},
 		[ConnectFlowState.EOA_EOA_CONNECT]: {
 			state: ConnectFlowState.EOA_EOA_CONNECT,
@@ -242,6 +257,44 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		}
 	}
 
+	const simulateScreen = (state: ConnectFlowState) => {
+		if (import.meta.env.DEV) {
+			open()
+
+			currentState.value = state
+			switch (state) {
+				case ConnectFlowState.CREATE_CONNECTED:
+					const { chainId } = useApp()
+					const account = {
+						chainId: chainId.value,
+						eoaAddress: '0x0924E969a99547374C9F4B43503652fdB28289e4',
+						deployedAddress: '0x0924E969a99547374C9F4B43503652fdB28289e4',
+						vendor: 'kernel' as VendorKey,
+						validator: 'eoa' as ValidatorKey,
+					}
+					const { setAccount } = useAccount()
+					setAccount({
+						address: account.deployedAddress,
+						chainId: account.chainId,
+						vendor: account.vendor,
+						validator: account.validator,
+					})
+
+					updateStore({
+						eoaAddress: account.eoaAddress,
+						deployedAddress: account.deployedAddress,
+						vendor: account.vendor,
+						validator: account.validator,
+					})
+					break
+				default:
+					throw new Error(`Unknown state: ${state}`)
+			}
+		} else {
+			throw new Error('Simulate screen is only available in development mode')
+		}
+	}
+
 	return {
 		currentState,
 		currentScreen,
@@ -256,6 +309,9 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		canGoNext,
 		store,
 		updateStore,
+		simulateScreen,
+		open,
+		close,
 	}
 })
 

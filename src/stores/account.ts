@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { storeToRefs } from 'pinia'
 import { ValidatorKey, VendorKey } from '@/types'
 
-type ConnectedAccount = {
+export type ConnectedAccount = {
 	address: string
 	chainId: string
 	validator: ValidatorKey

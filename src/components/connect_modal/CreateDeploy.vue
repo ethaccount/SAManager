@@ -10,7 +10,7 @@ import { shortenAddress } from '@vue-dapp/core'
 import { hexlify, JsonRpcProvider } from 'ethers'
 import { Loader2 } from 'lucide-vue-next'
 import { ECDSAValidator, Kernel, MyAccount, sendop } from 'sendop'
-import { useAccount } from '@/stores/account'
+import { useAccount, ConnectedAccount } from '@/stores/account'
 
 const { assertState, goNextState, store } = useConnectModal()
 assertState(ConnectFlowState.CREATE_DEPLOY)
@@ -91,6 +91,14 @@ async function onClickDeploy() {
 
 	loadingDeploy.value = true
 	try {
+		const accountData: ConnectedAccount = {
+			address: deployedAddress.value,
+			chainId: chainId.value,
+			vendor: 'kernel',
+			validator: store.value.validator!,
+		}
+		console.log('sendop to deploy', accountData)
+
 		const op = await sendop({
 			bundler: new PimlicoBundler(chainId.value, bundlerUrl.value),
 			from: deployedAddress.value,
@@ -118,12 +126,7 @@ async function onClickDeploy() {
 
 		// store account data to app as AA connected
 		const { account } = useAccount()
-		account.value = {
-			address: deployedAddress.value,
-			chainId: chainId.value,
-			vendor: 'kernel',
-			validator: store.value.validator!,
-		}
+		account.value = accountData
 
 		goNextState()
 	} catch (err: unknown) {

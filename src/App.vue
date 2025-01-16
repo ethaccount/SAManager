@@ -1,14 +1,18 @@
 <script lang="ts" setup>
 import { CoinbaseWalletConnector } from '@vue-dapp/coinbase'
 import { BrowserWalletConnector, useVueDapp } from '@vue-dapp/core'
-import { ModalsContainer, useModal } from 'vue-final-modal'
-import ConnectModal from './components/connect_modal/ConnectModal.vue'
+import { ModalsContainer } from 'vue-final-modal'
 // import { useColorMode } from '@vueuse/core'
+import { ConnectFlowState, useConnectModal } from '@/stores/connect_modal'
 import { VueDappModal } from '@vue-dapp/modal'
 import '@vue-dapp/modal/dist/style.css'
+import { useAccount } from './stores/account'
 import { useApp } from './stores/app'
-import { useConnectModal } from './stores/connect_modal'
 import { useEthers } from './stores/ethers'
+
+const { goNextState, open } = useConnectModal()
+
+// useConnectModal().simulateScreen(ConnectFlowState.CREATE_CONNECTED)
 
 // ============================== Vue Dapp ==============================
 
@@ -34,36 +38,31 @@ watchDisconnect(() => {
 
 // ============================== Connect Modal ==============================
 
-const { stateHistory, goNextState, currentState } = useConnectModal()
-
-const { open: openConnectModal, close: closeConnectModal } = useModal({
-	component: ConnectModal,
-	attrs: {
-		onClose: () => closeConnectModal(),
-	},
-	slots: {},
-})
-
 function onClickConnectButton() {
-	openConnectModal()
+	open()
 	goNextState()
 }
 
 // ============================== App ==============================
 
 const { chainId } = useApp()
+const { account, resetAccount, isConnected } = useAccount()
+
+function onClickDisconnect() {
+	resetAccount()
+}
 </script>
 
 <template>
 	<div class="p-5 flex flex-col gap-2">
 		<div>
-			<div>currentState: {{ currentState }}</div>
-			<div>stateHistory: {{ stateHistory }}</div>
 			<div>app chainId: {{ chainId }}</div>
+			<div>account: {{ account }}</div>
 		</div>
 
 		<div>
-			<Button @click="onClickConnectButton">Connect Smart Account</Button>
+			<Button v-if="!isConnected" @click="onClickConnectButton">Connect Smart Account</Button>
+			<Button v-else @click="onClickDisconnect">Disconnect</Button>
 		</div>
 
 		<div>
