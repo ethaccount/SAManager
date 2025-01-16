@@ -132,11 +132,24 @@ export const useConnectFlowStore = defineStore('useConnectFlowStore2', () => {
 		}
 	}
 
-	function goNext() {
-		const nextStage = getNextPossibleStages()[0]
-		if (nextStage) {
-			navigateTo(nextStage)
+	function goNext(specificStage?: Stage) {
+		const nextPossibleStages = getNextPossibleStages()
+		if (nextPossibleStages.length === 0) return
+
+		// If a specific stage is provided and it's valid, use it
+		if (specificStage && nextPossibleStages.includes(specificStage)) {
+			navigateTo(specificStage)
+			return
 		}
+
+		// If there's only one possible next stage, use it
+		if (nextPossibleStages.length === 1) {
+			navigateTo(nextPossibleStages[0])
+			return
+		}
+
+		// If we reach here, there are multiple possible stages and no specific one was chosen
+		console.warn('Multiple next stages available, please specify which one to use:', nextPossibleStages)
 	}
 
 	function updatePathData_CREATE(data: CreatePathData) {
