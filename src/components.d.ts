@@ -25,6 +25,7 @@ declare module 'vue' {
     copy: typeof import('./co./components/connect_flow/ConnectByEOA.vuee')['default']
     CreateDeploy: typeof import('./components/connect_modal/CreateDeploy.vue')['default']
     CreateSignerChoice: typeof import('./components/connect_modal/CreateSignerChoice.vue')['default']
+    EOAAccountChoice: typeof import('./components/connect_modal/EOAAccountChoice.vue')['default']
     EOAConnect: typeof import('./components/connect_modal/EOAConnect.vue')['default']
     EOAStage: typeof import('./components/connect_flow/EOAStage.vue')['default']
     Initial: typeof import('./components/connect_modal/Initial.vue')['default']

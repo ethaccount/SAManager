@@ -3,6 +3,7 @@ import Connected from '@/components/connect_modal/Connected.vue'
 import CreateDeploy from '@/components/connect_modal/CreateDeploy.vue'
 import CreateSignerChoice from '@/components/connect_modal/CreateSignerChoice.vue'
 import EOAConnect from '@/components/connect_modal/EOAConnect.vue'
+import EOAAccountChoice from '@/components/connect_modal/EOAAccountChoice.vue'
 import InitialStep from '@/components/connect_modal/Initial.vue'
 import PasskeyLogin from '@/components/connect_modal/PasskeyLogin.vue'
 import { ValidatorKey, VendorKey } from '@/types'
@@ -22,6 +23,12 @@ export enum ConnectFlowState {
 	CREATE_CONNECTED = 'CREATE_CONNECTED',
 
 	EOA_EOA_CONNECT = 'EOA_EOA_CONNECT',
+	EOA_ACCOUNT_CHOICE = 'EOA_ACCOUNT_CHOICE',
+	EOA_CONNECTED = 'EOA_CONNECTED',
+
+	PASSKEY_LOGIN = 'PASSKEY_LOGIN',
+	PASSKEY_ACCOUNT_CHOICE = 'PASSKEY_ACCOUNT_CHOICE',
+	PASSKEY_CONNECTED = 'PASSKEY_CONNECTED',
 }
 
 // Update Step to ModalScreen and related properties
@@ -71,7 +78,7 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 	})
 
 	// Update STEPS to SCREENS
-	const SCREENS: Record<ConnectFlowState, ModalScreen> = {
+	const SCREENS: Partial<Record<ConnectFlowState, ModalScreen>> = {
 		[ConnectFlowState.INITIAL]: {
 			state: ConnectFlowState.INITIAL,
 			component: InitialStep,
@@ -82,10 +89,16 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 					goNextState(ConnectFlowState.CREATE_SIGNER_CHOICE)
 				},
 				gotoEoa() {
+					updateStore({
+						validator: 'eoa',
+					})
 					goNextState(ConnectFlowState.EOA_EOA_CONNECT)
 				},
 			} satisfies ExtendedScreenConfig[ConnectFlowState.INITIAL],
 		},
+		// ===============================
+		// CREATE
+		// ===============================
 		[ConnectFlowState.CREATE_SIGNER_CHOICE]: {
 			state: ConnectFlowState.CREATE_SIGNER_CHOICE,
 			component: CreateSignerChoice,
@@ -136,9 +149,27 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 				title: 'Connected',
 			},
 		},
+		// ===============================
+		// EOA
+		// ===============================
 		[ConnectFlowState.EOA_EOA_CONNECT]: {
 			state: ConnectFlowState.EOA_EOA_CONNECT,
 			component: EOAConnect,
+			next: [ConnectFlowState.EOA_ACCOUNT_CHOICE],
+			screenConfig: {
+				title: 'Connect EOA Wallet',
+				hasNextButton: true,
+				requiredStore: ['eoaAddress', 'validator'],
+			},
+		},
+		[ConnectFlowState.EOA_ACCOUNT_CHOICE]: {
+			state: ConnectFlowState.EOA_ACCOUNT_CHOICE,
+			component: EOAAccountChoice,
+			next: [ConnectFlowState.EOA_CONNECTED],
+		},
+		[ConnectFlowState.EOA_CONNECTED]: {
+			state: ConnectFlowState.EOA_CONNECTED,
+			component: Connected,
 			next: [],
 		},
 	} as const
@@ -146,11 +177,17 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 	// Update state/step variables to currentState/currentScreen
 	const currentState = ref<ConnectFlowState | null>(null)
 	const currentScreen = computed<ModalScreen | null>(() => {
-		return currentState.value ? SCREENS[currentState.value] : null
+		if (!currentState.value) return null
+		return SCREENS[currentState.value] ?? null
 	})
 	const stateHistory = ref<ConnectFlowState[]>([])
 	const screenHistory = computed<ModalScreen[]>(() => {
-		return stateHistory.value.map(state => SCREENS[state])
+		return stateHistory.value.map(state => {
+			if (!SCREENS[state]) {
+				throw new Error(`screenHistory: Screen not found for state: ${state}`)
+			}
+			return SCREENS[state]
+		})
 	})
 
 	// ===============================
@@ -198,9 +235,9 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 	const assertValidTransition = (fromState: ConnectFlowState, toState: ConnectFlowState) => {
 		const currentScreen = SCREENS[fromState]
 
-		if (!currentScreen.next.includes(toState)) {
+		if (!currentScreen?.next.includes(toState)) {
 			throw new Error(
-				`Invalid transition from ${fromState} to ${toState}. Allowed transitions: ${currentScreen.next.join(
+				`Invalid transition from ${fromState} to ${toState}. Allowed transitions: ${currentScreen?.next.join(
 					', ',
 				)}`,
 			)
