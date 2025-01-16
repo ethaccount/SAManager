@@ -17,7 +17,7 @@ declare module 'vue' {
     ConnectByEOA: typeof import('./components/connect_flow/ConnectByEOA.vue')['default']
     ConnectByPasskey: typeof import('./components/connect_flow/ConnectByPasskey.vue')['default']
     Connected: typeof import('./components/connect_modal/Connected.vue')['default']
-    ConnectModal: typeof import('./components/connect_flow/ConnectModal.vue')['default']
+    ConnectModal: typeof import('./components/connect_modal/ConnectModal.vue')['default']
     ConnectModal2: typeof import('./components/connect_flow/ConnectModal.vue')['default']
     ConnectModal3: typeof import('./components/connect_flow/ConnectModal.vue')['default']
     ConnectWallet: typeof import('./components/ConnectWalletStage.vue')['default']
