@@ -36,12 +36,12 @@ watchDisconnect(() => {
 
 const { stateHistory, goNextState, currentState } = useConnectModal()
 
-const { open, close } = useModal({
+const { open: openConnectModal, close: closeConnectModal } = useModal({
 	component: ConnectModal,
 	attrs: {
 		title: 'Hello World!',
 		onClose() {
-			close()
+			closeConnectModal()
 		},
 	},
 	slots: {
@@ -50,7 +50,7 @@ const { open, close } = useModal({
 })
 
 function onClickConnectButton() {
-	open()
+	openConnectModal()
 	goNextState()
 }
 
