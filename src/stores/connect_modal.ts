@@ -154,39 +154,50 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 
 	const isValidTransition = (fromStage: Stage, toStage: Stage): boolean => {
 		const currentStep = STEPS.find(step => step.stage === fromStage)
-		return currentStep?.next.includes(toStage) ?? false
+
+		// Check if the transition is allowed
+		if (!currentStep?.next.includes(toStage)) {
+			return false
+		}
+
+		// Check if required store values are filled
+		const requiredStore = currentStep.metadata?.requiredStore
+		if (requiredStore) {
+			return requiredStore.every(key => store.value[key] !== null)
+		}
+
+		return true
 	}
 
 	const goNextStep = (specificStage?: Stage) => {
+		// Initialize to INITIAL stage if no current stage
 		if (!stage.value) {
 			stage.value = Stage.INITIAL
 			return
 		}
 
-		// If a specific stage is provided, we validate the transition and set the stage
-		if (specificStage) {
-			if (!isValidTransition(stage.value, specificStage)) {
-				throw new Error(`Invalid transition from ${stage.value} to ${specificStage}`)
-			}
-			historyStage.value.push(stage.value)
-			stage.value = specificStage
-			return
-		}
-
-		if ((step.value?.next.length ?? 0) === 0) {
-			throw new Error('No next stage available')
-		}
-
-		if ((step.value?.next.length ?? 0) > 1) {
-			console.warn('Multiple next stages available, using the first one')
-		}
-
-		const nextStage = step.value?.next[0]
+		// Determine the next stage (either specified or first available)
+		const nextStage = specificStage ?? step.value?.next[0]
 		if (!nextStage) {
 			throw new Error('No next stage found')
 		}
 
-		stage.value && historyStage.value.push(stage.value)
+		// Validate the transition
+		if (!isValidTransition(stage.value, nextStage)) {
+			throw new Error(`Invalid transition from ${stage.value} to ${nextStage}`)
+		}
+
+		// When using automatic next stage (no specificStage), validate there's only one option
+		if (!specificStage && (step.value?.next.length ?? 0) === 0) {
+			throw new Error('No next stage available')
+		}
+
+		if (!specificStage && (step.value?.next.length ?? 0) > 1) {
+			console.warn('Multiple next stages available, using the first one')
+		}
+
+		// Update history and move to next stage
+		historyStage.value.push(stage.value)
 		stage.value = nextStage
 	}
 
