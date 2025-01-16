@@ -1,9 +1,10 @@
-import InitialStep from '@/components/connect_modal/Initial.vue'
+import Connected from '@/components/connect_modal/Connected.vue'
+import CreateDeploy from '@/components/connect_modal/CreateDeploy.vue'
 import CreateSignerChoice from '@/components/connect_modal/CreateSignerChoice.vue'
 import EOAConnect from '@/components/connect_modal/EOAConnect.vue'
+import InitialStep from '@/components/connect_modal/Initial.vue'
 import PasskeyLogin from '@/components/connect_modal/PasskeyLogin.vue'
-import CreateDeploy from '@/components/connect_modal/CreateDeploy.vue'
-import Connected from '@/components/connect_modal/Connected.vue'
+import { ValidatorKey, VendorKey } from '@/types'
 
 // Change Stage to ConnectFlowState
 export enum ConnectFlowState {
@@ -24,17 +25,24 @@ type ModalScreen = {
 	state: ConnectFlowState
 	component: Component
 	next: ConnectFlowState[]
-	screenConfig?: (ExtendedScreenConfig[keyof ExtendedScreenConfig] & BaseScreenConfig) | BaseScreenConfig
+	screenConfig?: ExtendedScreenConfig[keyof ExtendedScreenConfig] | BaseScreenConfig
 }
 
 type Store = {
 	eoaAddress: string | null
+	deployedAddress: string | null
+	vendor: VendorKey | null
+	validator: ValidatorKey | null
 }
 
 // Update metadata to screenConfig
 type BaseScreenConfig = {
+	title?: string
 	hasNextButton?: boolean
 	requiredStore?: (keyof Store)[]
+	action?: {
+		func: () => void
+	}
 }
 
 // Update ExtendedStepMetadata to ExtendedScreenConfig
@@ -42,11 +50,11 @@ export type ExtendedScreenConfig = {
 	[ConnectFlowState.INITIAL]: {
 		gotoCreate: () => void
 		gotoEoa: () => void
-	}
+	} & BaseScreenConfig
 	[ConnectFlowState.CREATE_SIGNER_CHOICE]: {
 		gotoEoa: () => void
 		gotoPasskey: () => void
-	}
+	} & BaseScreenConfig
 }
 
 export const useConnectModalStore = defineStore('useConnectModalStore', () => {
@@ -57,6 +65,7 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 			component: InitialStep,
 			next: [ConnectFlowState.CREATE_SIGNER_CHOICE, ConnectFlowState.EOA_EOA_CONNECT],
 			screenConfig: {
+				title: 'Create or Connect',
 				gotoCreate() {
 					goNextState(ConnectFlowState.CREATE_SIGNER_CHOICE)
 				},
@@ -73,12 +82,17 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 				ConnectFlowState.CREATE_PASSKEY_CONNECT,
 				ConnectFlowState.CREATE_EIP7702_CONNECT,
 			],
+			screenConfig: {
+				title: 'Choose Signer',
+				requiredStore: ['validator'],
+			},
 		},
 		[ConnectFlowState.CREATE_EOA_CONNECT]: {
 			state: ConnectFlowState.CREATE_EOA_CONNECT,
 			component: EOAConnect,
 			next: [ConnectFlowState.CREATE_DEPLOY],
 			screenConfig: {
+				title: 'Connect EOA Wallet',
 				hasNextButton: true,
 				requiredStore: ['eoaAddress'],
 			},
@@ -97,6 +111,10 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 			state: ConnectFlowState.CREATE_DEPLOY,
 			component: CreateDeploy,
 			next: [ConnectFlowState.CREATE_CONNECTED],
+			screenConfig: {
+				title: 'Deploy Smart Account',
+				requiredStore: ['eoaAddress', 'deployedAddress', 'vendor', 'validator'],
+			},
 		},
 		[ConnectFlowState.CREATE_CONNECTED]: {
 			state: ConnectFlowState.CREATE_CONNECTED,
@@ -120,18 +138,27 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		return stateHistory.value.map(state => SCREENS[state])
 	})
 
-	const reset = () => {
-		currentState.value = null
-		stateHistory.value = []
-	}
-
 	// ===============================
 	// STORE
 	// ===============================
 
 	const store = ref<Store>({
 		eoaAddress: null,
+		deployedAddress: null,
+		vendor: null,
+		validator: null,
 	})
+
+	const reset = () => {
+		currentState.value = null
+		stateHistory.value = []
+		store.value = {
+			eoaAddress: null,
+			deployedAddress: null,
+			vendor: null,
+			validator: null,
+		}
+	}
 
 	const updateStore = (update: Partial<Store>) => {
 		store.value = { ...store.value, ...update }
@@ -153,20 +180,24 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		return (currentScreen.value?.screenConfig?.hasNextButton ?? false) && canGoNext.value
 	})
 
-	// Update transition validation
-	const isValidTransition = (fromState: ConnectFlowState, toState: ConnectFlowState): boolean => {
+	const assertValidTransition = (fromState: ConnectFlowState, toState: ConnectFlowState) => {
 		const currentScreen = SCREENS[fromState]
 
 		if (!currentScreen.next.includes(toState)) {
-			return false
+			throw new Error(
+				`Invalid transition from ${fromState} to ${toState}. Allowed transitions: ${currentScreen.next.join(
+					', ',
+				)}`,
+			)
 		}
 
 		const requiredStore = currentScreen.screenConfig?.requiredStore
 		if (requiredStore) {
-			return requiredStore.every(key => store.value[key] !== null)
+			const missingFields = requiredStore.filter(key => store.value[key] === null)
+			if (missingFields.length > 0) {
+				throw new Error(`Missing required store fields: ${missingFields.join(', ')}`)
+			}
 		}
-
-		return true
 	}
 
 	// Update navigation methods
@@ -181,9 +212,7 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 			throw new Error('No next state found')
 		}
 
-		if (!isValidTransition(currentState.value, nextState)) {
-			throw new Error(`Invalid transition from ${currentState.value} to ${nextState}`)
-		}
+		assertValidTransition(currentState.value, nextState)
 
 		if (!specificState && (currentScreen.value?.next.length ?? 0) === 0) {
 			throw new Error('No next state available')
@@ -207,7 +236,7 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		}
 	}
 
-	const checkState = (_state: ConnectFlowState) => {
+	const assertState = (_state: ConnectFlowState) => {
 		if (currentState.value !== _state) {
 			throw new Error(`Invalid state, expected ${_state} but got ${currentState.value}`)
 		}
@@ -221,7 +250,7 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		reset,
 		goNextState,
 		goBackState,
-		checkState,
+		assertState,
 		hasNextButton,
 		canGoBack,
 		canGoNext,

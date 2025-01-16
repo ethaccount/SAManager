@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { useConnectModal, ExtendedScreenConfig, ConnectFlowState } from '@/stores/connect_modal'
-const { currentScreen, checkState } = useConnectModal()
+const { currentScreen, assertState } = useConnectModal()
 
-checkState(ConnectFlowState.INITIAL)
+assertState(ConnectFlowState.INITIAL)
 
 const screenConfig = currentScreen.value?.screenConfig as ExtendedScreenConfig[ConnectFlowState.INITIAL]
 
@@ -17,10 +17,12 @@ function handleEoa() {
 
 <template>
 	<div class="flex flex-col gap-2 w-full">
-		<Button class="w-full" @click="handleCreate"> Create Smart Account </Button>
-		<Button class="w-full" @click="handleEoa"> EOA Managed </Button>
-		<Button disabled class="w-full"> EIP-7702 </Button>
-		<Button disabled class="w-full"> Passkey </Button>
+		<Button class="w-full" @click="handleCreate"> Create New Account </Button>
+		<div class="mt-2 flex flex-col gap-2 w-full">
+			<Button class="w-full" @click="handleEoa"> EOA Managed </Button>
+			<Button disabled class="w-full"> EIP-7702 </Button>
+			<Button disabled class="w-full"> Passkey </Button>
+		</div>
 	</div>
 </template>
 

@@ -53,7 +53,7 @@ watchWalletChanged(
 
 		<div
 			:class="{
-				'h-[200px]': status !== 'idle',
+				'h-[50px]': status !== 'idle',
 			}"
 		>
 			<div class="flex flex-col gap-1">

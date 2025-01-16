@@ -10,9 +10,10 @@ import { shortenAddress } from '@vue-dapp/core'
 import { hexlify, JsonRpcProvider } from 'ethers'
 import { Loader2 } from 'lucide-vue-next'
 import { ECDSAValidator, Kernel, MyAccount, sendop } from 'sendop'
+import { useAccount } from '@/stores/account'
 
-const { checkState, goNextState, store } = useConnectModal()
-checkState(ConnectFlowState.CREATE_DEPLOY)
+const { assertState, goNextState, store } = useConnectModal()
+assertState(ConnectFlowState.CREATE_DEPLOY)
 
 const selectedVendor = ref<'kernel' | 'myaccount' | undefined>(undefined)
 const deployedAddress = ref<string | null>(null)
@@ -60,7 +61,9 @@ function getDeployedAddress(vendor: 'kernel' | 'myaccount') {
 }
 
 const loadingDeploy = ref(false)
-async function handleDeploy() {
+const errorDeploy = ref<string | null>(null)
+
+async function onClickDeploy() {
 	if (!store.value.eoaAddress) {
 		throw new Error('No connected address')
 	}
@@ -114,9 +117,18 @@ async function handleDeploy() {
 		console.log(receipt)
 
 		// store account data to app as AA connected
-		// account address, vendor, validator, chainId
+		const { account } = useAccount()
+		account.value = {
+			address: deployedAddress.value,
+			chainId: chainId.value,
+			vendor: 'kernel',
+			validator: store.value.validator!,
+		}
+
 		goNextState()
-	} catch (err) {
+	} catch (err: unknown) {
+		const errorMessage = (err as Error).toString().match(/AA\d+[^:]+/)?.[0] || 'Error deploying'
+		errorDeploy.value = errorMessage
 		console.error(err)
 	} finally {
 		loadingDeploy.value = false
@@ -166,10 +178,14 @@ async function handleDeploy() {
 			</div>
 
 			<div>
-				<Button class="w-full" @click="handleDeploy" :disabled="!deployedAddress || loadingDeploy">
+				<Button class="w-full" @click="onClickDeploy" :disabled="!deployedAddress || loadingDeploy">
 					<Loader2 v-if="loadingDeploy" class="w-4 h-4 mr-2 animate-spin" />
 					Deploy
 				</Button>
+			</div>
+
+			<div v-if="errorDeploy" class="text-destructive text-sm">
+				{{ errorDeploy }}
 			</div>
 		</div>
 	</div>

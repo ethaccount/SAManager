@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { VueFinalModal } from 'vue-final-modal'
 import { useConnectModal } from '@/stores/connect_modal'
-
+import { ChevronLeft, X } from 'lucide-vue-next'
 defineProps<{
 	title?: string
 }>()
@@ -24,6 +24,10 @@ function handleNext() {
 function handleBack() {
 	goBackState()
 }
+
+function handleClose() {
+	emit('close')
+}
 </script>
 
 <template>
@@ -32,25 +36,33 @@ function handleBack() {
 		content-class="confirm-modal-content"
 		overlay-transition="vfm-fade"
 		content-transition="vfm-fade"
+		:click-to-close="false"
+		:esc-to-close="false"
 	>
+		<div class="flex justify-between items-center">
+			<!-- back button -->
+			<div class="w-6">
+				<Button v-if="canGoBack" class="w-6 h-6" variant="outline" size="icon" @click="handleBack">
+					<ChevronLeft class="w-4 h-4" />
+				</Button>
+			</div>
+
+			<div>{{ currentScreen?.screenConfig?.title }}</div>
+
+			<!-- close button -->
+			<div class="w-6">
+				<Button class="w-6 h-6" variant="outline" size="icon" @click="handleClose">
+					<X class="w-4 h-4" />
+				</Button>
+			</div>
+		</div>
+
 		<div v-if="currentScreen">
 			<component :is="currentScreen.component" />
 		</div>
 
-		<div class="flex justify-between">
-			<!-- back button -->
-			<div class="flex justify-start">
-				<div v-if="canGoBack">
-					<Button class="w-20" variant="outline" @click="handleBack"> Back </Button>
-				</div>
-			</div>
-
-			<!-- next button -->
-			<div class="flex justify-end">
-				<div v-if="hasNextButton">
-					<Button class="w-20" variant="outline" @click="handleNext"> Next </Button>
-				</div>
-			</div>
+		<div v-if="hasNextButton" class="flex flex-col">
+			<Button class="w-full" variant="outline" @click="handleNext"> Next </Button>
 		</div>
 	</VueFinalModal>
 </template>

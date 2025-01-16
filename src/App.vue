@@ -39,14 +39,9 @@ const { stateHistory, goNextState, currentState } = useConnectModal()
 const { open: openConnectModal, close: closeConnectModal } = useModal({
 	component: ConnectModal,
 	attrs: {
-		title: 'Hello World!',
-		onClose() {
-			closeConnectModal()
-		},
+		onClose: () => closeConnectModal(),
 	},
-	slots: {
-		default: '<p>The content of the modal</p>',
-	},
+	slots: {},
 })
 
 function onClickConnectButton() {
