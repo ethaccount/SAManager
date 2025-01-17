@@ -45,7 +45,7 @@ const CONNECT_MODAL_CONFIG: Record<ConnectModalStageKey, Stage> = {
 		component: InitialStep,
 		next: [ConnectModalStageKey.CREATE_SIGNER_CHOICE, ConnectModalStageKey.EOA_EOA_CONNECT],
 		config: {
-			title: 'Create or Connect',
+			title: 'Connect or Create',
 		},
 	},
 	// ===============================

@@ -19,11 +19,12 @@ function onClickEOA() {
 
 <template>
 	<div class="flex flex-col gap-2 w-full">
-		<Button class="w-full" @click="onClickCreate"> Create New Account </Button>
-		<div class="mt-2 flex flex-col gap-2 w-full">
-			<Button class="w-full" @click="onClickEOA"> EOA Managed </Button>
-			<Button disabled class="w-full"> EIP-7702 </Button>
-			<Button disabled class="w-full"> Passkey </Button>
+		<Button class="w-full" @click="onClickEOA"> EOA Managed </Button>
+		<Button disabled class="w-full"> EIP-7702 </Button>
+		<Button disabled class="w-full"> Passkey </Button>
+
+		<div class="mt-2">
+			<Button class="w-full" @click="onClickCreate"> Create New Account </Button>
 		</div>
 	</div>
 </template>
