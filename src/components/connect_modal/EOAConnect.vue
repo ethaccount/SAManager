@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useConnectModal } from '@/stores/connect_modal'
+import { useConnectModal } from '@/stores/useConnectModal'
 import { RdnsEnum, shortenAddress, useVueDapp, type RDNS } from '@vue-dapp/core'
 import { useVueDappModal } from '@vue-dapp/modal'
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { useConnectModal, ExtendedScreenConfig, ConnectModalStageKey } from '@/stores/connect_modal'
-const { stage, assertStage, goNextStage } = useConnectModal()
+import { useConnectModal, ConnectModalStageKey } from '@/stores/useConnectModal'
+
+const { assertStage, goNextStage, updateStore } = useConnectModal()
 
 assertStage(ConnectModalStageKey.INITIAL)
 

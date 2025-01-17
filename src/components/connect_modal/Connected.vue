@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useAccount } from '@/stores/account'
-import { useConnectModal } from '@/stores/connect_modal'
+import { useConnectModal } from '@/stores/useConnectModal'
 import { shortenAddress } from '@vue-dapp/core'
 
 const { close } = useConnectModal()

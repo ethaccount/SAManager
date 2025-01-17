@@ -3,7 +3,7 @@ import { CoinbaseWalletConnector } from '@vue-dapp/coinbase'
 import { BrowserWalletConnector, useVueDapp } from '@vue-dapp/core'
 import { ModalsContainer, useModal } from 'vue-final-modal'
 // import { useColorMode } from '@vueuse/core'
-import { useConnectModal } from '@/stores/connect_modal'
+import { useConnectModal } from '@/stores/useConnectModal'
 import { VueDappModal } from '@vue-dapp/modal'
 import '@vue-dapp/modal/dist/style.css'
 import { useAccount } from './stores/account'
@@ -28,7 +28,7 @@ function onClickConnectButton() {
 
 // =============================== DEV ===============================
 
-// import { simulateStage, ConnectModalStageKey } from '@/stores/connect_modal'
+// import { simulateStage, ConnectModalStageKey } from '@/stores/useConnectModal'
 // open()
 // simulateStage(ConnectModalStageKey.CREATE_CONNECTED)
 // simulateStage(ConnectModalStageKey.EOA_ACCOUNT_CHOICE)

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useConnectModal, ConnectModalStageKey } from '@/stores/connect_modal'
+import { useConnectModal, ConnectModalStageKey } from '@/stores/useConnectModal'
 const { updateStore, assertStage, goNextStage } = useConnectModal()
 
 assertStage(ConnectModalStageKey.CREATE_SIGNER_CHOICE)

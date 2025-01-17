@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useConnectModal, ConnectModalStageKey } from '@/stores/connect_modal'
+import { useConnectModal, ConnectModalStageKey } from '@/stores/useConnectModal'
 import { useApp } from '@/stores/app'
 import { Contract, EventLog } from 'ethers'
 import { ECDSA_VALIDATOR } from '@/config'

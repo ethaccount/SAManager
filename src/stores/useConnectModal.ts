@@ -23,12 +23,12 @@ export enum ConnectModalStageKey {
 	EOA_ACCOUNT_CHOICE = 'EOA_ACCOUNT_CHOICE',
 	EOA_CONNECTED = 'EOA_CONNECTED',
 
-	PASSKEY_LOGIN = 'PASSKEY_LOGIN',
-	PASSKEY_ACCOUNT_CHOICE = 'PASSKEY_ACCOUNT_CHOICE',
-	PASSKEY_CONNECTED = 'PASSKEY_CONNECTED',
+	// PASSKEY_LOGIN = 'PASSKEY_LOGIN',
+	// PASSKEY_ACCOUNT_CHOICE = 'PASSKEY_ACCOUNT_CHOICE',
+	// PASSKEY_CONNECTED = 'PASSKEY_CONNECTED',
 }
 
-type ConnectModalStage = {
+type Stage = {
 	component: Component
 	next: ConnectModalStageKey[]
 	config: StageConfig
@@ -40,7 +40,7 @@ type StageConfig = {
 	requiredStore?: (keyof ConnectModalStore)[]
 }
 
-const CONNECT_MODAL_CONFIG: Partial<Record<ConnectModalStageKey, ConnectModalStage>> = {
+const CONNECT_MODAL_CONFIG: Record<ConnectModalStageKey, Stage> = {
 	[ConnectModalStageKey.INITIAL]: {
 		component: InitialStep,
 		next: [ConnectModalStageKey.CREATE_SIGNER_CHOICE, ConnectModalStageKey.EOA_EOA_CONNECT],
@@ -135,12 +135,12 @@ type ConnectModalStore = {
 
 const useConnectModalStore = defineStore('useConnectModalStore', () => {
 	const stageKey = ref<ConnectModalStageKey | null>(null)
-	const stage = computed<ConnectModalStage | null>(() => {
+	const stage = computed<Stage | null>(() => {
 		if (!stageKey.value) return null
 		return CONNECT_MODAL_CONFIG[stageKey.value] ?? null
 	})
 	const stageKeyHistory = ref<ConnectModalStageKey[]>([])
-	const stageHistory = computed<ConnectModalStage[]>(() => {
+	const stageHistory = computed<Stage[]>(() => {
 		return stageKeyHistory.value.map(state => {
 			if (!CONNECT_MODAL_CONFIG[state]) {
 				throw new Error(`stageHistory: Screen not found for state: ${state}`)
