@@ -134,6 +134,8 @@ const CONNECT_MODAL_CONFIG: Record<ConnectModalStageKey, Stage> = {
 } as const
 
 type ConnectModalStore = {
+	openModal: () => void
+	closeModal: () => void
 	eoaAddress: string | null
 	deployedAddress: string | null
 	vendor: VendorKey | null
@@ -157,6 +159,8 @@ const useConnectModalStore = defineStore('useConnectModalStore', () => {
 	})
 
 	const store = ref<ConnectModalStore>({
+		openModal: () => {},
+		closeModal: () => {},
 		eoaAddress: null,
 		deployedAddress: null,
 		vendor: null,
@@ -167,6 +171,7 @@ const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		stageKey.value = null
 		stageKeyHistory.value = []
 		store.value = {
+			...store.value,
 			eoaAddress: null,
 			deployedAddress: null,
 			vendor: null,
@@ -297,14 +302,16 @@ export function useConnectModal() {
 
 // =============================== DEV ===============================
 
-export function simulateStage(state: ConnectModalStageKey) {
+export function simulateStage(_stageKey: ConnectModalStageKey) {
 	if (!import.meta.env.DEV) {
 		throw new Error('Simulate stage is only available in development mode')
 	}
+	console.warn('Simulating', _stageKey)
 
-	const { stageKey, updateStore } = useConnectModal()
-	stageKey.value = state
-	switch (state) {
+	const { stageKey, updateStore, store } = useConnectModal()
+	store.value.openModal()
+	stageKey.value = _stageKey
+	switch (_stageKey) {
 		case ConnectModalStageKey.CREATE_CONNECTED:
 			const { chainId } = useApp()
 			const account = {
@@ -336,6 +343,6 @@ export function simulateStage(state: ConnectModalStageKey) {
 			})
 			break
 		default:
-			throw new Error(`Unknown state: ${state}`)
+			throw new Error(`Unknown stage: ${_stageKey}`)
 	}
 }
