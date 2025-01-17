@@ -1,18 +1,15 @@
-import ConnectModal from '@/components/connect_modal/ConnectModal.vue'
 import Connected from '@/components/connect_modal/Connected.vue'
 import CreateDeploy from '@/components/connect_modal/CreateDeploy.vue'
 import CreateSignerChoice from '@/components/connect_modal/CreateSignerChoice.vue'
-import EOAConnect from '@/components/connect_modal/EOAConnect.vue'
 import EOAAccountChoice from '@/components/connect_modal/EOAAccountChoice.vue'
+import EOAConnect from '@/components/connect_modal/EOAConnect.vue'
 import InitialStep from '@/components/connect_modal/Initial.vue'
 import PasskeyLogin from '@/components/connect_modal/PasskeyLogin.vue'
 import { ValidatorKey, VendorKey } from '@/types'
-import { useModal } from 'vue-final-modal'
 import { useAccount } from './account'
 import { useApp } from './app'
 
-// Change Stage to ConnectFlowState
-export enum ConnectFlowState {
+export enum ConnectModalStageKey {
 	INITIAL = 'INITIAL',
 
 	CREATE_SIGNER_CHOICE = 'CREATE_SIGNER_CHOICE',
@@ -31,14 +28,13 @@ export enum ConnectFlowState {
 	PASSKEY_CONNECTED = 'PASSKEY_CONNECTED',
 }
 
-// Update Step to ModalScreen and related properties
-type ModalScreen = {
+type ConnectModalStage = {
 	component: Component
-	next: ConnectFlowState[]
+	next: ConnectModalStageKey[]
 	config?: ExtendedScreenConfig[keyof ExtendedScreenConfig] | BaseScreenConfig
 }
 
-type Store = {
+type ConnectModalStore = {
 	eoaAddress: string | null
 	deployedAddress: string | null
 	vendor: VendorKey | null
@@ -49,7 +45,7 @@ type Store = {
 type BaseScreenConfig = {
 	title?: string
 	hasNextButton?: boolean
-	requiredStore?: (keyof Store)[]
+	requiredStore?: (keyof ConnectModalStore)[]
 	action?: {
 		func: () => void
 	}
@@ -57,76 +53,75 @@ type BaseScreenConfig = {
 
 // Update ExtendedStepMetadata to ExtendedScreenConfig
 export type ExtendedScreenConfig = {
-	[ConnectFlowState.INITIAL]: {
+	[ConnectModalStageKey.INITIAL]: {
 		gotoCreate: () => void
 		gotoEoa: () => void
 	} & BaseScreenConfig
-	[ConnectFlowState.CREATE_SIGNER_CHOICE]: {
+	[ConnectModalStageKey.CREATE_SIGNER_CHOICE]: {
 		gotoEoa: () => void
 		gotoPasskey: () => void
 	} & BaseScreenConfig
 }
 
 export const useConnectModalStore = defineStore('useConnectModalStore', () => {
-	// Update STEPS to SCREENS
-	const SCREENS: Partial<Record<ConnectFlowState, ModalScreen>> = {
-		[ConnectFlowState.INITIAL]: {
+	const CONNECT_MODAL_CONFIG: Partial<Record<ConnectModalStageKey, ConnectModalStage>> = {
+		[ConnectModalStageKey.INITIAL]: {
 			component: InitialStep,
-			next: [ConnectFlowState.CREATE_SIGNER_CHOICE, ConnectFlowState.EOA_EOA_CONNECT],
+			next: [ConnectModalStageKey.CREATE_SIGNER_CHOICE, ConnectModalStageKey.EOA_EOA_CONNECT],
 			config: {
 				title: 'Create or Connect',
 				gotoCreate() {
-					goNextState(ConnectFlowState.CREATE_SIGNER_CHOICE)
+					goNextStage(ConnectModalStageKey.CREATE_SIGNER_CHOICE)
 				},
 				gotoEoa() {
 					updateStore({
 						validator: 'eoa',
 					})
-					goNextState(ConnectFlowState.EOA_EOA_CONNECT)
+					goNextStage(ConnectModalStageKey.EOA_EOA_CONNECT)
 				},
-			} satisfies ExtendedScreenConfig[ConnectFlowState.INITIAL],
+			} satisfies ExtendedScreenConfig[ConnectModalStageKey.INITIAL],
 		},
 		// ===============================
 		// CREATE
 		// ===============================
-		[ConnectFlowState.CREATE_SIGNER_CHOICE]: {
+		[ConnectModalStageKey.CREATE_SIGNER_CHOICE]: {
 			component: CreateSignerChoice,
 			next: [
-				ConnectFlowState.CREATE_EOA_CONNECT,
-				ConnectFlowState.CREATE_PASSKEY_CONNECT,
-				ConnectFlowState.CREATE_EIP7702_CONNECT,
+				ConnectModalStageKey.CREATE_EOA_CONNECT,
+				ConnectModalStageKey.CREATE_PASSKEY_CONNECT,
+				ConnectModalStageKey.CREATE_EIP7702_CONNECT,
 			],
 			config: {
 				title: 'Choose Signer',
 				requiredStore: ['validator'],
 			},
 		},
-		[ConnectFlowState.CREATE_EOA_CONNECT]: {
+		[ConnectModalStageKey.CREATE_EOA_CONNECT]: {
 			component: EOAConnect,
-			next: [ConnectFlowState.CREATE_DEPLOY],
+			next: [ConnectModalStageKey.CREATE_DEPLOY],
 			config: {
 				title: 'Connect EOA Wallet',
 				hasNextButton: true,
 				requiredStore: ['eoaAddress'],
 			},
 		},
-		[ConnectFlowState.CREATE_PASSKEY_CONNECT]: {
+		[ConnectModalStageKey.CREATE_PASSKEY_CONNECT]: {
 			component: PasskeyLogin,
-			next: [ConnectFlowState.CREATE_DEPLOY],
+			next: [ConnectModalStageKey.CREATE_DEPLOY],
 		},
-		[ConnectFlowState.CREATE_EIP7702_CONNECT]: {
+		[ConnectModalStageKey.CREATE_EIP7702_CONNECT]: {
 			component: EOAConnect,
-			next: [ConnectFlowState.CREATE_DEPLOY],
+			next: [ConnectModalStageKey.CREATE_DEPLOY],
 		},
-		[ConnectFlowState.CREATE_DEPLOY]: {
+		[ConnectModalStageKey.CREATE_DEPLOY]: {
 			component: CreateDeploy,
-			next: [ConnectFlowState.CREATE_CONNECTED],
+			next: [ConnectModalStageKey.CREATE_CONNECTED],
 			config: {
 				title: 'Deploy Smart Account',
 				requiredStore: ['eoaAddress', 'deployedAddress', 'vendor', 'validator'],
 			},
 		},
-		[ConnectFlowState.CREATE_CONNECTED]: {
+		[ConnectModalStageKey.CREATE_CONNECTED]: {
 			component: Connected,
 			next: [],
 			config: {
@@ -136,24 +131,24 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		// ===============================
 		// EOA
 		// ===============================
-		[ConnectFlowState.EOA_EOA_CONNECT]: {
+		[ConnectModalStageKey.EOA_EOA_CONNECT]: {
 			component: EOAConnect,
-			next: [ConnectFlowState.EOA_ACCOUNT_CHOICE],
+			next: [ConnectModalStageKey.EOA_ACCOUNT_CHOICE],
 			config: {
 				title: 'Connect EOA Wallet',
 				hasNextButton: true,
 				requiredStore: ['eoaAddress', 'validator'],
 			},
 		},
-		[ConnectFlowState.EOA_ACCOUNT_CHOICE]: {
+		[ConnectModalStageKey.EOA_ACCOUNT_CHOICE]: {
 			component: EOAAccountChoice,
-			next: [ConnectFlowState.EOA_CONNECTED],
+			next: [ConnectModalStageKey.EOA_CONNECTED],
 			config: {
 				title: 'Choose Account',
 				requiredStore: ['eoaAddress', 'validator', 'deployedAddress'],
 			},
 		},
-		[ConnectFlowState.EOA_CONNECTED]: {
+		[ConnectModalStageKey.EOA_CONNECTED]: {
 			component: Connected,
 			next: [],
 			config: {
@@ -162,19 +157,18 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		},
 	} as const
 
-	// Update state/step variables to currentState/currentScreen
-	const currentState = ref<ConnectFlowState | null>(null)
-	const currentScreen = computed<ModalScreen | null>(() => {
-		if (!currentState.value) return null
-		return SCREENS[currentState.value] ?? null
+	const stageKey = ref<ConnectModalStageKey | null>(null)
+	const stage = computed<ConnectModalStage | null>(() => {
+		if (!stageKey.value) return null
+		return CONNECT_MODAL_CONFIG[stageKey.value] ?? null
 	})
-	const stateHistory = ref<ConnectFlowState[]>([])
-	const screenHistory = computed<ModalScreen[]>(() => {
-		return stateHistory.value.map(state => {
-			if (!SCREENS[state]) {
-				throw new Error(`screenHistory: Screen not found for state: ${state}`)
+	const stageKeyHistory = ref<ConnectModalStageKey[]>([])
+	const stageHistory = computed<ConnectModalStage[]>(() => {
+		return stageKeyHistory.value.map(state => {
+			if (!CONNECT_MODAL_CONFIG[state]) {
+				throw new Error(`stageHistory: Screen not found for state: ${state}`)
 			}
-			return SCREENS[state]
+			return CONNECT_MODAL_CONFIG[state]
 		})
 	})
 
@@ -182,7 +176,7 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 	// STORE
 	// ===============================
 
-	const store = ref<Store>({
+	const store = ref<ConnectModalStore>({
 		eoaAddress: null,
 		deployedAddress: null,
 		vendor: null,
@@ -190,8 +184,8 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 	})
 
 	const reset = () => {
-		currentState.value = null
-		stateHistory.value = []
+		stageKey.value = null
+		stageKeyHistory.value = []
 		store.value = {
 			eoaAddress: null,
 			deployedAddress: null,
@@ -200,7 +194,7 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		}
 	}
 
-	const updateStore = (update: Partial<Store>) => {
+	const updateStore = (update: Partial<ConnectModalStore>) => {
 		store.value = { ...store.value, ...update }
 	}
 
@@ -209,29 +203,27 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 	// ===============================
 
 	const canGoBack = computed(() => {
-		return stateHistory.value.length > 0
+		return stageKeyHistory.value.length > 0
 	})
 
 	const canGoNext = computed(() => {
-		return (currentScreen.value?.next.length ?? 0) > 0
+		return (stage.value?.next.length ?? 0) > 0
 	})
 
 	const hasNextButton = computed(() => {
-		return (currentScreen.value?.config?.hasNextButton ?? false) && canGoNext.value
+		return (stage.value?.config?.hasNextButton ?? false) && canGoNext.value
 	})
 
-	const assertValidTransition = (fromState: ConnectFlowState, toState: ConnectFlowState) => {
-		const currentScreen = SCREENS[fromState]
+	const assertValidTransition = (fromState: ConnectModalStageKey, toState: ConnectModalStageKey) => {
+		const stage = CONNECT_MODAL_CONFIG[fromState]
 
-		if (!currentScreen?.next.includes(toState)) {
+		if (!stage?.next.includes(toState)) {
 			throw new Error(
-				`Invalid transition from ${fromState} to ${toState}. Allowed transitions: ${currentScreen?.next.join(
-					', ',
-				)}`,
+				`Invalid transition from ${fromState} to ${toState}. Allowed transitions: ${stage?.next.join(', ')}`,
 			)
 		}
 
-		const requiredStore = currentScreen.config?.requiredStore
+		const requiredStore = stage.config?.requiredStore
 		if (requiredStore) {
 			const missingFields = requiredStore.filter(key => store.value[key] === null)
 			if (missingFields.length > 0) {
@@ -241,56 +233,56 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 	}
 
 	// Update navigation methods
-	const goNextState = (specificState?: ConnectFlowState) => {
-		if (!currentState.value) {
-			currentState.value = ConnectFlowState.INITIAL
+	const goNextStage = (specificState?: ConnectModalStageKey) => {
+		if (!stageKey.value) {
+			stageKey.value = ConnectModalStageKey.INITIAL
 			return
 		}
 
-		const nextState = specificState ?? currentScreen.value?.next[0]
+		const nextState = specificState ?? stage.value?.next[0]
 		if (!nextState) {
 			throw new Error('No next state found')
 		}
 
-		assertValidTransition(currentState.value, nextState)
+		assertValidTransition(stageKey.value, nextState)
 
-		if (!specificState && (currentScreen.value?.next.length ?? 0) === 0) {
+		if (!specificState && (stage.value?.next.length ?? 0) === 0) {
 			throw new Error('No next state available')
 		}
 
-		if (!specificState && (currentScreen.value?.next.length ?? 0) > 1) {
+		if (!specificState && (stage.value?.next.length ?? 0) > 1) {
 			console.warn('Multiple next states available, using the first one')
 		}
 
-		stateHistory.value.push(currentState.value)
-		currentState.value = nextState
+		stageKeyHistory.value.push(stageKey.value)
+		stageKey.value = nextState
 	}
 
-	const goBackState = () => {
-		if (stateHistory.value.length === 0) {
+	const goBackStage = () => {
+		if (stageKeyHistory.value.length === 0) {
 			throw new Error('No history found')
 		}
-		const previousState = stateHistory.value.pop()
+		const previousState = stageKeyHistory.value.pop()
 		if (previousState) {
-			currentState.value = previousState
+			stageKey.value = previousState
 		}
 	}
 
-	const assertState = (_state: ConnectFlowState) => {
-		if (currentState.value !== _state) {
-			throw new Error(`Invalid state, expected ${_state} but got ${currentState.value}`)
+	const assertStage = (_state: ConnectModalStageKey) => {
+		if (stageKey.value !== _state) {
+			throw new Error(`Invalid state, expected ${_state} but got ${stageKey.value}`)
 		}
 	}
 
 	return {
-		currentState,
-		currentScreen,
-		stateHistory,
-		screenHistory,
+		stageKey,
+		stage,
+		stageKeyHistory,
+		stageHistory,
 		reset,
-		goNextState,
-		goBackState,
-		assertState,
+		goNextStage,
+		goBackStage,
+		assertStage,
 		hasNextButton,
 		canGoBack,
 		canGoNext,
@@ -309,14 +301,12 @@ export function useConnectModal() {
 
 // =============================== DEV ===============================
 
-export function simulateScreen(state: ConnectFlowState) {
-	const { currentState, updateStore } = useConnectModal()
+export function simulateStage(state: ConnectModalStageKey) {
+	const { stageKey, updateStore } = useConnectModal()
 	if (import.meta.env.DEV) {
-		open()
-
-		currentState.value = state
+		stageKey.value = state
 		switch (state) {
-			case ConnectFlowState.CREATE_CONNECTED:
+			case ConnectModalStageKey.CREATE_CONNECTED:
 				const { chainId } = useApp()
 				const account = {
 					chainId: chainId.value,
@@ -340,7 +330,7 @@ export function simulateScreen(state: ConnectFlowState) {
 					validator: account.validator,
 				})
 				break
-			case ConnectFlowState.EOA_ACCOUNT_CHOICE:
+			case ConnectModalStageKey.EOA_ACCOUNT_CHOICE:
 				updateStore({
 					validator: 'eoa',
 					eoaAddress: '0xd78B5013757Ea4A7841811eF770711e6248dC282',

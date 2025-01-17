@@ -11,18 +11,18 @@ const emit = defineEmits<{
 	(e: 'close'): void
 }>()
 
-const { currentScreen, goNextState, goBackState, reset, canGoBack, hasNextButton } = useConnectModal()
+const { stage, goNextStage, goBackStage, reset, canGoBack, hasNextButton } = useConnectModal()
 
 onUnmounted(() => {
 	reset()
 })
 
 function handleNext() {
-	goNextState()
+	goNextStage()
 }
 
 function handleBack() {
-	goBackState()
+	goBackStage()
 }
 
 function handleClose() {
@@ -47,7 +47,7 @@ function handleClose() {
 				</Button>
 			</div>
 
-			<div>{{ currentScreen?.config?.title }}</div>
+			<div>{{ stage?.config?.title }}</div>
 
 			<!-- close button -->
 			<div class="w-6">
@@ -57,8 +57,8 @@ function handleClose() {
 			</div>
 		</div>
 
-		<div v-if="currentScreen">
-			<component :is="currentScreen.component" />
+		<div v-if="stage">
+			<component :is="stage.component" />
 		</div>
 
 		<div v-if="hasNextButton" class="flex flex-col">

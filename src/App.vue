@@ -12,7 +12,7 @@ import { useEthers } from './stores/ethers'
 import ConnectModal from '@/components/connect_modal/ConnectModal.vue'
 
 // ============================== Connect Modal ==============================
-const { goNextState } = useConnectModal()
+const { goNextStage } = useConnectModal()
 const { open, close } = useModal({
 	component: ConnectModal,
 	attrs: {
@@ -23,15 +23,15 @@ const { open, close } = useModal({
 
 function onClickConnectButton() {
 	open()
-	goNextState()
+	goNextStage()
 }
 
 // =============================== DEV ===============================
 
-// import { simulateScreen, ConnectFlowState } from '@/stores/connect_modal'
+// import { simulateStage, ConnectModalStageKey } from '@/stores/connect_modal'
 // open()
-// simulateScreen(ConnectFlowState.CREATE_CONNECTED)
-// simulateScreen(ConnectFlowState.EOA_ACCOUNT_CHOICE)
+// simulateStage(ConnectModalStageKey.CREATE_CONNECTED)
+// simulateStage(ConnectModalStageKey.EOA_ACCOUNT_CHOICE)
 
 // ============================== Vue Dapp ==============================
 

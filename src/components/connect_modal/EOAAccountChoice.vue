@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { useConnectModal, ConnectFlowState } from '@/stores/connect_modal'
+import { useConnectModal, ConnectModalStageKey } from '@/stores/connect_modal'
 import { useApp } from '@/stores/app'
 import { Contract, EventLog } from 'ethers'
 import { ECDSA_VALIDATOR } from '@/config'
 import { shortenAddress } from '@vue-dapp/core'
 
-const { store, assertState } = useConnectModal()
+const { store, assertStage } = useConnectModal()
 
-assertState(ConnectFlowState.EOA_ACCOUNT_CHOICE)
+assertStage(ConnectModalStageKey.EOA_ACCOUNT_CHOICE)
 
 const accounts = ref<string[]>([])
 const loading = ref(false)

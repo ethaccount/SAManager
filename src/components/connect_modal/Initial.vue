@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { useConnectModal, ExtendedScreenConfig, ConnectFlowState } from '@/stores/connect_modal'
-const { currentScreen, assertState } = useConnectModal()
+import { useConnectModal, ExtendedScreenConfig, ConnectModalStageKey } from '@/stores/connect_modal'
+const { stage, assertStage } = useConnectModal()
 
-assertState(ConnectFlowState.INITIAL)
+assertStage(ConnectModalStageKey.INITIAL)
 
-const config = currentScreen.value?.config as ExtendedScreenConfig[ConnectFlowState.INITIAL]
+const config = stage.value?.config as ExtendedScreenConfig[ConnectModalStageKey.INITIAL]
 
 function handleCreate() {
 	config.gotoCreate()

@@ -4,7 +4,7 @@ import { PimlicoBundler } from '@/core/bundler'
 import { OpBuilder } from '@/core/op_builders'
 import { MyPaymaster } from '@/core/pm_builders'
 import { useApp } from '@/stores/app'
-import { useConnectModal, ConnectFlowState } from '@/stores/connect_modal'
+import { useConnectModal, ConnectModalStageKey } from '@/stores/connect_modal'
 import { useEthers } from '@/stores/ethers'
 import { shortenAddress } from '@vue-dapp/core'
 import { hexlify, JsonRpcProvider } from 'ethers'
@@ -12,8 +12,8 @@ import { Loader2 } from 'lucide-vue-next'
 import { ECDSAValidator, Kernel, MyAccount, sendop } from 'sendop'
 import { useAccount, ConnectedAccount } from '@/stores/account'
 
-const { assertState, goNextState, store } = useConnectModal()
-assertState(ConnectFlowState.CREATE_DEPLOY)
+const { assertStage, goNextStage, store } = useConnectModal()
+assertStage(ConnectModalStageKey.CREATE_DEPLOY)
 
 const selectedVendor = ref<'kernel' | 'myaccount' | undefined>(undefined)
 const deployedAddress = ref<string | null>(null)
@@ -128,7 +128,7 @@ async function onClickDeploy() {
 		const { account } = useAccount()
 		account.value = accountData
 
-		goNextState()
+		goNextStage()
 	} catch (err: unknown) {
 		const errorMessage = (err as Error).toString().match(/AA\d+[^:]+/)?.[0] || 'Error deploying'
 		errorDeploy.value = errorMessage
