@@ -69,6 +69,8 @@ const { account, resetAccount, isConnected } = useAccount()
 function onClickDisconnect() {
 	resetAccount()
 }
+
+const router = useRouter()
 </script>
 
 <template>
@@ -98,9 +100,22 @@ function onClickDisconnect() {
 			<Button v-else @click="onClickDisconnect">Disconnect</Button>
 		</div>
 
-		<div>
-			<router-view></router-view>
+		<div class="flex justify-center gap-2">
+			<Button
+				variant="link"
+				:class="{ underline: router.currentRoute.value.path === '/' }"
+				@click="router.push('/')"
+				>Modules</Button
+			>
+			<Button
+				variant="link"
+				:class="{ underline: router.currentRoute.value.path === '/send' }"
+				@click="router.push('/send')"
+				>Send</Button
+			>
 		</div>
+
+		<router-view></router-view>
 	</div>
 	<VueDappModal dark auto-connect />
 	<ModalsContainer />

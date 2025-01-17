@@ -49,5 +49,9 @@ declare module 'vue' {
     SelectValue: typeof import('./components/ui/select/SelectValue.vue')['default']
     Setup: typeof import('./components/connect_flow/Setup.vue')['default']
     SetupSignerStage: typeof import('./components/connect_flow/SetupSignerStage.vue')['default']
+    Tabs: typeof import('./components/ui/tabs/Tabs.vue')['default']
+    TabsContent: typeof import('./components/ui/tabs/TabsContent.vue')['default']
+    TabsList: typeof import('./components/ui/tabs/TabsList.vue')['default']
+    TabsTrigger: typeof import('./components/ui/tabs/TabsTrigger.vue')['default']
   }
 }
