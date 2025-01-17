@@ -4,14 +4,14 @@ const { currentScreen, assertState } = useConnectModal()
 
 assertState(ConnectFlowState.INITIAL)
 
-const screenConfig = currentScreen.value?.screenConfig as ExtendedScreenConfig[ConnectFlowState.INITIAL]
+const config = currentScreen.value?.config as ExtendedScreenConfig[ConnectFlowState.INITIAL]
 
 function handleCreate() {
-	screenConfig.gotoCreate()
+	config.gotoCreate()
 }
 
 function handleEoa() {
-	screenConfig.gotoEoa()
+	config.gotoEoa()
 }
 </script>
 

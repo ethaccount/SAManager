@@ -35,7 +35,7 @@ export enum ConnectFlowState {
 type ModalScreen = {
 	component: Component
 	next: ConnectFlowState[]
-	screenConfig?: ExtendedScreenConfig[keyof ExtendedScreenConfig] | BaseScreenConfig
+	config?: ExtendedScreenConfig[keyof ExtendedScreenConfig] | BaseScreenConfig
 }
 
 type Store = {
@@ -45,7 +45,7 @@ type Store = {
 	validator: ValidatorKey | null
 }
 
-// Update metadata to screenConfig
+// Update metadata to config
 type BaseScreenConfig = {
 	title?: string
 	hasNextButton?: boolean
@@ -73,7 +73,7 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		[ConnectFlowState.INITIAL]: {
 			component: InitialStep,
 			next: [ConnectFlowState.CREATE_SIGNER_CHOICE, ConnectFlowState.EOA_EOA_CONNECT],
-			screenConfig: {
+			config: {
 				title: 'Create or Connect',
 				gotoCreate() {
 					goNextState(ConnectFlowState.CREATE_SIGNER_CHOICE)
@@ -96,7 +96,7 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 				ConnectFlowState.CREATE_PASSKEY_CONNECT,
 				ConnectFlowState.CREATE_EIP7702_CONNECT,
 			],
-			screenConfig: {
+			config: {
 				title: 'Choose Signer',
 				requiredStore: ['validator'],
 			},
@@ -104,7 +104,7 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		[ConnectFlowState.CREATE_EOA_CONNECT]: {
 			component: EOAConnect,
 			next: [ConnectFlowState.CREATE_DEPLOY],
-			screenConfig: {
+			config: {
 				title: 'Connect EOA Wallet',
 				hasNextButton: true,
 				requiredStore: ['eoaAddress'],
@@ -121,7 +121,7 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		[ConnectFlowState.CREATE_DEPLOY]: {
 			component: CreateDeploy,
 			next: [ConnectFlowState.CREATE_CONNECTED],
-			screenConfig: {
+			config: {
 				title: 'Deploy Smart Account',
 				requiredStore: ['eoaAddress', 'deployedAddress', 'vendor', 'validator'],
 			},
@@ -129,7 +129,7 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		[ConnectFlowState.CREATE_CONNECTED]: {
 			component: Connected,
 			next: [],
-			screenConfig: {
+			config: {
 				title: 'Connected',
 			},
 		},
@@ -139,7 +139,7 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		[ConnectFlowState.EOA_EOA_CONNECT]: {
 			component: EOAConnect,
 			next: [ConnectFlowState.EOA_ACCOUNT_CHOICE],
-			screenConfig: {
+			config: {
 				title: 'Connect EOA Wallet',
 				hasNextButton: true,
 				requiredStore: ['eoaAddress', 'validator'],
@@ -148,7 +148,7 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		[ConnectFlowState.EOA_ACCOUNT_CHOICE]: {
 			component: EOAAccountChoice,
 			next: [ConnectFlowState.EOA_CONNECTED],
-			screenConfig: {
+			config: {
 				title: 'Choose Account',
 				requiredStore: ['eoaAddress', 'validator', 'deployedAddress'],
 			},
@@ -156,7 +156,7 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		[ConnectFlowState.EOA_CONNECTED]: {
 			component: Connected,
 			next: [],
-			screenConfig: {
+			config: {
 				title: 'Connected',
 			},
 		},
@@ -217,7 +217,7 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 	})
 
 	const hasNextButton = computed(() => {
-		return (currentScreen.value?.screenConfig?.hasNextButton ?? false) && canGoNext.value
+		return (currentScreen.value?.config?.hasNextButton ?? false) && canGoNext.value
 	})
 
 	const assertValidTransition = (fromState: ConnectFlowState, toState: ConnectFlowState) => {
@@ -231,7 +231,7 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 			)
 		}
 
-		const requiredStore = currentScreen.screenConfig?.requiredStore
+		const requiredStore = currentScreen.config?.requiredStore
 		if (requiredStore) {
 			const missingFields = requiredStore.filter(key => store.value[key] === null)
 			if (missingFields.length > 0) {

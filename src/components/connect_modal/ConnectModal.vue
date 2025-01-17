@@ -47,7 +47,7 @@ function handleClose() {
 				</Button>
 			</div>
 
-			<div>{{ currentScreen?.screenConfig?.title }}</div>
+			<div>{{ currentScreen?.config?.title }}</div>
 
 			<!-- close button -->
 			<div class="w-6">
