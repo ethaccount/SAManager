@@ -91,7 +91,7 @@ const router = useRouter()
 				<div>address: {{ account?.address && shortenAddress(account.address) }}</div>
 				<div>chainId: {{ account?.chainId }}</div>
 				<div>validator: {{ account?.validator }}</div>
-				<div>vendor: {{ account?.vendor }}</div>
+				<div>accountId: {{ account?.accountId }}</div>
 			</div>
 		</div>
 

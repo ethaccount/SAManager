@@ -123,7 +123,7 @@ const CONNECT_MODAL_CONFIG: Record<ConnectModalStageKey, Stage> = {
 		next: [],
 		config: {
 			title: 'Connected',
-			requiredFields: ['deployedAddress', 'vendor', 'validator'],
+			requiredFields: ['deployedAddress', 'accountId', 'validator'],
 		},
 	},
 } as const
@@ -133,7 +133,7 @@ type ConnectModalStore = {
 	closeModal: () => void
 	eoaAddress: string | null
 	deployedAddress: string | null
-	vendor: AccountId | null
+	accountId: AccountId | null
 	validator: ValidatorKey | null
 }
 
@@ -158,7 +158,7 @@ const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		closeModal: () => {},
 		eoaAddress: null,
 		deployedAddress: null,
-		vendor: null,
+		accountId: null,
 		validator: null,
 	})
 
@@ -169,7 +169,7 @@ const useConnectModalStore = defineStore('useConnectModalStore', () => {
 			...store.value,
 			eoaAddress: null,
 			deployedAddress: null,
-			vendor: null,
+			accountId: null,
 			validator: null,
 		}
 	}
@@ -303,21 +303,21 @@ export function simulateStage(_stageKey: ConnectModalStageKey) {
 				chainId: chainId.value,
 				eoaAddress: '0x0924E969a99547374C9F4B43503652fdB28289e4',
 				deployedAddress: '0x0924E969a99547374C9F4B43503652fdB28289e4',
-				vendor: AccountId.KERNEL,
+				accountId: AccountId.KERNEL,
 				validator: 'eoa' as ValidatorKey,
 			}
 			const { setAccount } = useAccount()
 			setAccount({
 				address: account.deployedAddress,
 				chainId: account.chainId,
-				vendor: account.vendor,
+				accountId: account.accountId,
 				validator: account.validator,
 			})
 
 			updateStore({
 				eoaAddress: account.eoaAddress,
 				deployedAddress: account.deployedAddress,
-				vendor: account.vendor,
+				accountId: account.accountId,
 				validator: account.validator,
 			})
 			break

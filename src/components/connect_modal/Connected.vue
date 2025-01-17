@@ -12,8 +12,8 @@ const error = ref<string | null>(null)
 onMounted(() => {
 	const { chainId } = useApp()
 	const { setAccount } = useAccount()
-	if (!store.value.deployedAddress || !store.value.validator || !store.value.vendor) {
-		error.value = `Failed to connect to the account: ${store.value.deployedAddress} ${store.value.validator} ${store.value.vendor}`
+	if (!store.value.deployedAddress || !store.value.validator || !store.value.accountId) {
+		error.value = `Failed to connect to the account: ${store.value.deployedAddress} ${store.value.validator} ${store.value.accountId}`
 		console.error(error.value)
 		return
 	}
@@ -22,7 +22,7 @@ onMounted(() => {
 		address: store.value.deployedAddress,
 		chainId: chainId.value,
 		validator: store.value.validator,
-		vendor: store.value.vendor,
+		accountId: store.value.accountId,
 	})
 })
 
@@ -35,7 +35,7 @@ function onClickConfirm() {
 	<div>
 		<div>address: {{ account?.address ? shortenAddress(account.address) : 'N/A' }}</div>
 		<div>chainId: {{ account?.chainId }}</div>
-		<div>vendor: {{ account?.vendor }}</div>
+		<div>accountId: {{ account?.accountId }}</div>
 		<div>validator: {{ account?.validator }}</div>
 
 		<div>

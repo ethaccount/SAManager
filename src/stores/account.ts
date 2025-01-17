@@ -5,7 +5,7 @@ export type ConnectedAccount = {
 	address: string
 	chainId: string
 	validator: ValidatorKey
-	vendor: AccountId
+	accountId: AccountId
 }
 
 export const useAccountStore = defineStore(

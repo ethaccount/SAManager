@@ -37,28 +37,28 @@ watch(selectedVendor, async newVendor => {
 	}
 })
 
-function getDeployedAddress(vendor: AccountId) {
+function getDeployedAddress(accountId: AccountId) {
 	if (!store.value.eoaAddress) {
 		throw new Error('No connected address')
 	}
 
-	if (vendor === AccountId.KERNEL) {
+	if (accountId === AccountId.KERNEL) {
 		const kernel = new Kernel(RPC_URL, {
 			salt: hexlify(SALT),
 			validatorAddress: ECDSA_VALIDATOR,
 			owner: store.value.eoaAddress,
 		})
 		return kernel.getAddress()
-	} else if (vendor === AccountId.MY_ACCOUNT) {
-		const vendor = new MyAccount(RPC_URL, {
+	} else if (accountId === AccountId.MY_ACCOUNT) {
+		const myAccount = new MyAccount(RPC_URL, {
 			salt: hexlify(SALT),
 			validatorAddress: ECDSA_VALIDATOR,
 			owner: store.value.eoaAddress,
 		})
-		return vendor.getAddress()
+		return myAccount.getAddress()
 	}
 
-	throw new Error('Invalid vendor')
+	throw new Error('Invalid accountId')
 }
 
 const loadingDeploy = ref(false)
@@ -103,7 +103,7 @@ async function onClickDeploy() {
 		const accountData: ConnectedAccount = {
 			address: deployedAddress.value,
 			chainId: chainId.value,
-			vendor: selectedVendor.value,
+			accountId: selectedVendor.value,
 			validator: store.value.validator!,
 		}
 		console.log('sendop to deploy', accountData)
@@ -136,7 +136,7 @@ async function onClickDeploy() {
 		const { updateStore } = useConnectModal()
 		updateStore({
 			deployedAddress: deployedAddress.value,
-			vendor: selectedVendor.value,
+			accountId: selectedVendor.value,
 		})
 
 		goNextStage()
