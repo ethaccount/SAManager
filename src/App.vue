@@ -28,10 +28,10 @@ function onClickConnectButton() {
 
 // =============================== DEV ===============================
 
-import { simulateScreen, ConnectFlowState } from '@/stores/connect_modal'
-open()
+// import { simulateScreen, ConnectFlowState } from '@/stores/connect_modal'
+// open()
 // simulateScreen(ConnectFlowState.CREATE_CONNECTED)
-simulateScreen(ConnectFlowState.EOA_ACCOUNT_CHOICE)
+// simulateScreen(ConnectFlowState.EOA_ACCOUNT_CHOICE)
 
 // ============================== Vue Dapp ==============================
 

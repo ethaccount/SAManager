@@ -33,7 +33,6 @@ export enum ConnectFlowState {
 
 // Update Step to ModalScreen and related properties
 type ModalScreen = {
-	state: ConnectFlowState
 	component: Component
 	next: ConnectFlowState[]
 	screenConfig?: ExtendedScreenConfig[keyof ExtendedScreenConfig] | BaseScreenConfig
@@ -72,7 +71,6 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 	// Update STEPS to SCREENS
 	const SCREENS: Partial<Record<ConnectFlowState, ModalScreen>> = {
 		[ConnectFlowState.INITIAL]: {
-			state: ConnectFlowState.INITIAL,
 			component: InitialStep,
 			next: [ConnectFlowState.CREATE_SIGNER_CHOICE, ConnectFlowState.EOA_EOA_CONNECT],
 			screenConfig: {
@@ -92,7 +90,6 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		// CREATE
 		// ===============================
 		[ConnectFlowState.CREATE_SIGNER_CHOICE]: {
-			state: ConnectFlowState.CREATE_SIGNER_CHOICE,
 			component: CreateSignerChoice,
 			next: [
 				ConnectFlowState.CREATE_EOA_CONNECT,
@@ -105,7 +102,6 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 			},
 		},
 		[ConnectFlowState.CREATE_EOA_CONNECT]: {
-			state: ConnectFlowState.CREATE_EOA_CONNECT,
 			component: EOAConnect,
 			next: [ConnectFlowState.CREATE_DEPLOY],
 			screenConfig: {
@@ -115,17 +111,14 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 			},
 		},
 		[ConnectFlowState.CREATE_PASSKEY_CONNECT]: {
-			state: ConnectFlowState.CREATE_PASSKEY_CONNECT,
 			component: PasskeyLogin,
 			next: [ConnectFlowState.CREATE_DEPLOY],
 		},
 		[ConnectFlowState.CREATE_EIP7702_CONNECT]: {
-			state: ConnectFlowState.CREATE_EIP7702_CONNECT,
 			component: EOAConnect,
 			next: [ConnectFlowState.CREATE_DEPLOY],
 		},
 		[ConnectFlowState.CREATE_DEPLOY]: {
-			state: ConnectFlowState.CREATE_DEPLOY,
 			component: CreateDeploy,
 			next: [ConnectFlowState.CREATE_CONNECTED],
 			screenConfig: {
@@ -134,7 +127,6 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 			},
 		},
 		[ConnectFlowState.CREATE_CONNECTED]: {
-			state: ConnectFlowState.CREATE_CONNECTED,
 			component: Connected,
 			next: [],
 			screenConfig: {
@@ -145,7 +137,6 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		// EOA
 		// ===============================
 		[ConnectFlowState.EOA_EOA_CONNECT]: {
-			state: ConnectFlowState.EOA_EOA_CONNECT,
 			component: EOAConnect,
 			next: [ConnectFlowState.EOA_ACCOUNT_CHOICE],
 			screenConfig: {
@@ -155,7 +146,6 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 			},
 		},
 		[ConnectFlowState.EOA_ACCOUNT_CHOICE]: {
-			state: ConnectFlowState.EOA_ACCOUNT_CHOICE,
 			component: EOAAccountChoice,
 			next: [ConnectFlowState.EOA_CONNECTED],
 			screenConfig: {
@@ -164,7 +154,6 @@ export const useConnectModalStore = defineStore('useConnectModalStore', () => {
 			},
 		},
 		[ConnectFlowState.EOA_CONNECTED]: {
-			state: ConnectFlowState.EOA_CONNECTED,
 			component: Connected,
 			next: [],
 			screenConfig: {
