@@ -5,6 +5,17 @@ if (!ALCHEMY_API_KEY || !PIMLICO_API_KEY) {
 	throw new Error('ALCHEMY_API_KEY or PIMLICO_API_KEY is not set')
 }
 
+// supported chain ids in the app
+export enum CHAIN_ID {
+	SEPOLIA = '11155111',
+	MEKONG = '7078815900',
+}
+
+export const CHAIN_NAME: { [key: string]: keyof typeof CHAIN_ID } = {
+	[CHAIN_ID.SEPOLIA]: 'SEPOLIA',
+	[CHAIN_ID.MEKONG]: 'MEKONG',
+} as const
+
 export const RPC_URL = `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}`
 export const SALT = '0x0000000000000000000000000000000000000000000000000000000000000024'
 

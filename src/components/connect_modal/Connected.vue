@@ -7,7 +7,6 @@ import { shortenAddress } from '@vue-dapp/core'
 const { store } = useConnectModal()
 const { account } = useAccount()
 
-console.log(store.value)
 const error = ref<string | null>(null)
 
 onMounted(() => {
@@ -15,6 +14,7 @@ onMounted(() => {
 	const { setAccount } = useAccount()
 	if (!store.value.deployedAddress || !store.value.validator || !store.value.vendor) {
 		error.value = `Failed to connect to the account: ${store.value.deployedAddress} ${store.value.validator} ${store.value.vendor}`
+		console.error(error.value)
 		return
 	}
 

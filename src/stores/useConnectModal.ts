@@ -265,14 +265,14 @@ const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		stage,
 		stageKeyHistory,
 		stageHistory,
+		store,
+		canGoBack,
+		canGoNext,
+		hasNextButton,
 		reset,
 		goNextStage,
 		goBackStage,
 		assertStage,
-		hasNextButton,
-		canGoBack,
-		canGoNext,
-		store,
 		updateStore,
 	}
 })

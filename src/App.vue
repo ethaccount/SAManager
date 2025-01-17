@@ -34,6 +34,7 @@ function onClickConnectButton() {
 // =============================== DEV ===============================
 
 import { simulateStage, ConnectModalStageKey } from '@/stores/useConnectModal'
+import { CHAIN_ID, CHAIN_NAME } from './config'
 
 // simulateStage(ConnectModalStageKey.CREATE_CONNECTED)
 // simulateStage(ConnectModalStageKey.EOA_ACCOUNT_CHOICE)
@@ -73,7 +74,16 @@ function onClickDisconnect() {
 <template>
 	<div class="p-5 flex flex-col gap-2">
 		<div>
-			<div>app chainId: {{ chainId }}</div>
+			<Select v-model="chainId">
+				<SelectTrigger class="w-[120px]">
+					<SelectValue />
+				</SelectTrigger>
+				<SelectContent>
+					<SelectGroup>
+						<SelectItem v-for="id in CHAIN_ID" :value="id"> {{ CHAIN_NAME[id] }} </SelectItem>
+					</SelectGroup>
+				</SelectContent>
+			</Select>
 
 			<div class="mt-2" v-if="isConnected">
 				<div>{{ account?.address }}</div>
