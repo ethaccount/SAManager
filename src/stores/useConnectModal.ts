@@ -37,7 +37,8 @@ type Stage = {
 type StageConfig = {
 	title?: string
 	hasNextButton?: boolean
-	requiredStore?: (keyof ConnectModalStore)[]
+	requiredFields?: (keyof ConnectModalStore)[]
+	requiredFieldsBeforeNext?: (keyof ConnectModalStore)[]
 }
 
 const CONNECT_MODAL_CONFIG: Record<ConnectModalStageKey, Stage> = {
@@ -60,7 +61,7 @@ const CONNECT_MODAL_CONFIG: Record<ConnectModalStageKey, Stage> = {
 		],
 		config: {
 			title: 'Choose Signer',
-			requiredStore: ['validator'],
+			requiredFieldsBeforeNext: ['validator'],
 		},
 	},
 	[ConnectModalStageKey.CREATE_EOA_CONNECT]: {
@@ -69,25 +70,31 @@ const CONNECT_MODAL_CONFIG: Record<ConnectModalStageKey, Stage> = {
 		config: {
 			title: 'Connect EOA Wallet',
 			hasNextButton: true,
-			requiredStore: ['eoaAddress'],
+			requiredFields: ['validator'],
+			requiredFieldsBeforeNext: ['validator', 'eoaAddress'],
 		},
 	},
 	[ConnectModalStageKey.CREATE_PASSKEY_CONNECT]: {
 		component: PasskeyLogin,
 		next: [ConnectModalStageKey.CREATE_DEPLOY],
-		config: {},
+		config: {
+			requiredFieldsBeforeNext: ['validator'],
+		},
 	},
 	[ConnectModalStageKey.CREATE_EIP7702_CONNECT]: {
 		component: EOAConnect,
 		next: [ConnectModalStageKey.CREATE_DEPLOY],
-		config: {},
+		config: {
+			requiredFieldsBeforeNext: ['validator'],
+		},
 	},
 	[ConnectModalStageKey.CREATE_DEPLOY]: {
 		component: CreateDeploy,
 		next: [ConnectModalStageKey.CREATE_CONNECTED],
 		config: {
 			title: 'Deploy Smart Account',
-			requiredStore: ['eoaAddress', 'deployedAddress', 'vendor', 'validator'],
+			requiredFields: ['validator'],
+			requiredFieldsBeforeNext: ['deployedAddress', 'vendor', 'validator'],
 		},
 	},
 	[ConnectModalStageKey.CREATE_CONNECTED]: {
@@ -106,7 +113,7 @@ const CONNECT_MODAL_CONFIG: Record<ConnectModalStageKey, Stage> = {
 		config: {
 			title: 'Connect EOA Wallet',
 			hasNextButton: true,
-			requiredStore: ['eoaAddress', 'validator'],
+			requiredFieldsBeforeNext: ['eoaAddress', 'validator'],
 		},
 	},
 	[ConnectModalStageKey.EOA_ACCOUNT_CHOICE]: {
@@ -114,7 +121,7 @@ const CONNECT_MODAL_CONFIG: Record<ConnectModalStageKey, Stage> = {
 		next: [ConnectModalStageKey.EOA_CONNECTED],
 		config: {
 			title: 'Choose Account',
-			requiredStore: ['eoaAddress', 'validator', 'deployedAddress'],
+			requiredFieldsBeforeNext: ['eoaAddress', 'validator', 'deployedAddress'],
 		},
 	},
 	[ConnectModalStageKey.EOA_CONNECTED]: {
@@ -187,24 +194,6 @@ const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		return (stage.value?.config?.hasNextButton ?? false) && canGoNext.value
 	})
 
-	const assertValidTransition = (fromState: ConnectModalStageKey, toState: ConnectModalStageKey) => {
-		const stage = CONNECT_MODAL_CONFIG[fromState]
-
-		if (!stage?.next.includes(toState)) {
-			throw new Error(
-				`Invalid transition from ${fromState} to ${toState}. Allowed transitions: ${stage?.next.join(', ')}`,
-			)
-		}
-
-		const requiredStore = stage.config?.requiredStore
-		if (requiredStore) {
-			const missingFields = requiredStore.filter(key => store.value[key] === null)
-			if (missingFields.length > 0) {
-				throw new Error(`Missing required store fields: ${missingFields.join(', ')}`)
-			}
-		}
-	}
-
 	const goNextStage = (specificState?: ConnectModalStageKey) => {
 		if (!stageKey.value) {
 			stageKey.value = ConnectModalStageKey.INITIAL
@@ -223,7 +212,9 @@ const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		}
 
 		if (!specificState && (stage.value?.next.length ?? 0) > 1) {
-			console.warn('Multiple next states available, using the first one')
+			console.warn(
+				`Multiple next states available on ${stageKey.value}, using the first one ${stage.value?.next[0]}`,
+			)
 		}
 
 		stageKeyHistory.value.push(stageKey.value)
@@ -240,9 +231,42 @@ const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		}
 	}
 
+	// =============================== Assertions ===============================
+
 	const assertStage = (_state: ConnectModalStageKey) => {
 		if (stageKey.value !== _state) {
 			throw new Error(`Invalid state, expected ${_state} but got ${stageKey.value}`)
+		}
+	}
+
+	const assertValidTransition = (fromStateKey: ConnectModalStageKey, toStateKey: ConnectModalStageKey) => {
+		const fromStage = CONNECT_MODAL_CONFIG[fromStateKey]
+		const toStage = CONNECT_MODAL_CONFIG[toStateKey]
+
+		if (!fromStage?.next.includes(toStateKey)) {
+			throw new Error(
+				`Invalid transition from ${fromStateKey} to ${toStateKey}. Allowed transitions: ${fromStage?.next.join(
+					', ',
+				)}`,
+			)
+		}
+
+		// Check requirements for fromStage
+		const requiredFieldsBeforeNext = fromStage.config?.requiredFieldsBeforeNext
+		if (requiredFieldsBeforeNext) {
+			const missingFields = requiredFieldsBeforeNext.filter(key => !store.value[key])
+			if (missingFields.length > 0) {
+				throw new Error(`Missing requiredFieldsBeforeNext for ${fromStateKey}: ${missingFields.join(', ')}`)
+			}
+		}
+
+		// Check requirements for toStage
+		const requiredFields = toStage.config?.requiredFields
+		if (requiredFields) {
+			const missingFields = requiredFields.filter(key => !store.value[key])
+			if (missingFields.length > 0) {
+				throw new Error(`Missing required fields for ${toStateKey}: ${missingFields.join(', ')}`)
+			}
 		}
 	}
 
