@@ -10,7 +10,7 @@ import { useAccount } from './stores/account'
 import { useApp } from './stores/app'
 import { useEthers } from './stores/ethers'
 import ConnectModal from '@/components/connect_modal/ConnectModal.vue'
-
+import { shortenAddress } from '@vue-dapp/core'
 // ============================== Connect Modal ==============================
 const { goNextStage, updateStore } = useConnectModal()
 const { open: openConnectModal, close: closeConnectModal } = useModal({
@@ -88,7 +88,7 @@ const router = useRouter()
 			</Select>
 
 			<div class="mt-2" v-if="isConnected">
-				<div>{{ account?.address }}</div>
+				<div>address: {{ account?.address && shortenAddress(account.address) }}</div>
 				<div>chainId: {{ account?.chainId }}</div>
 				<div>validator: {{ account?.validator }}</div>
 				<div>vendor: {{ account?.vendor }}</div>

@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { fetchModules } from '@/core/aa'
 import { useAccount } from '@/stores/account'
 import { useApp } from '@/stores/app'
+import { shortenAddress } from '@vue-dapp/core'
 
 const modules = ref<Record<string, string[]>>({})
 
@@ -49,7 +50,7 @@ const ModuleType = {
 				<div>{{ ModuleType[typeId] }}</div>
 				<ul class="list-disc list-inside">
 					<li v-for="address in addresses" :key="address">
-						{{ address }}
+						{{ shortenAddress(address) }}
 					</li>
 				</ul>
 			</div>
