@@ -205,7 +205,6 @@ const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		}
 	}
 
-	// Update navigation methods
 	const goNextStage = (specificState?: ConnectModalStageKey) => {
 		if (!stageKey.value) {
 			stageKey.value = ConnectModalStageKey.INITIAL
@@ -275,44 +274,44 @@ export function useConnectModal() {
 // =============================== DEV ===============================
 
 export function simulateStage(state: ConnectModalStageKey) {
-	const { stageKey, updateStore } = useConnectModal()
-	if (import.meta.env.DEV) {
-		stageKey.value = state
-		switch (state) {
-			case ConnectModalStageKey.CREATE_CONNECTED:
-				const { chainId } = useApp()
-				const account = {
-					chainId: chainId.value,
-					eoaAddress: '0x0924E969a99547374C9F4B43503652fdB28289e4',
-					deployedAddress: '0x0924E969a99547374C9F4B43503652fdB28289e4',
-					vendor: 'kernel' as VendorKey,
-					validator: 'eoa' as ValidatorKey,
-				}
-				const { setAccount } = useAccount()
-				setAccount({
-					address: account.deployedAddress,
-					chainId: account.chainId,
-					vendor: account.vendor,
-					validator: account.validator,
-				})
+	if (!import.meta.env.DEV) {
+		throw new Error('Simulate stage is only available in development mode')
+	}
 
-				updateStore({
-					eoaAddress: account.eoaAddress,
-					deployedAddress: account.deployedAddress,
-					vendor: account.vendor,
-					validator: account.validator,
-				})
-				break
-			case ConnectModalStageKey.EOA_ACCOUNT_CHOICE:
-				updateStore({
-					validator: 'eoa',
-					eoaAddress: '0xd78B5013757Ea4A7841811eF770711e6248dC282',
-				})
-				break
-			default:
-				throw new Error(`Unknown state: ${state}`)
-		}
-	} else {
-		throw new Error('Simulate screen is only available in development mode')
+	const { stageKey, updateStore } = useConnectModal()
+	stageKey.value = state
+	switch (state) {
+		case ConnectModalStageKey.CREATE_CONNECTED:
+			const { chainId } = useApp()
+			const account = {
+				chainId: chainId.value,
+				eoaAddress: '0x0924E969a99547374C9F4B43503652fdB28289e4',
+				deployedAddress: '0x0924E969a99547374C9F4B43503652fdB28289e4',
+				vendor: 'kernel' as VendorKey,
+				validator: 'eoa' as ValidatorKey,
+			}
+			const { setAccount } = useAccount()
+			setAccount({
+				address: account.deployedAddress,
+				chainId: account.chainId,
+				vendor: account.vendor,
+				validator: account.validator,
+			})
+
+			updateStore({
+				eoaAddress: account.eoaAddress,
+				deployedAddress: account.deployedAddress,
+				vendor: account.vendor,
+				validator: account.validator,
+			})
+			break
+		case ConnectModalStageKey.EOA_ACCOUNT_CHOICE:
+			updateStore({
+				validator: 'eoa',
+				eoaAddress: '0xd78B5013757Ea4A7841811eF770711e6248dC282',
+			})
+			break
+		default:
+			throw new Error(`Unknown state: ${state}`)
 	}
 }
