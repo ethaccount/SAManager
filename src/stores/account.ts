@@ -1,12 +1,11 @@
-import { defineStore } from 'pinia'
-import { storeToRefs } from 'pinia'
-import { ValidatorKey, VendorKey } from '@/types'
+import { AccountId, ValidatorKey } from '@/types'
+import { defineStore, storeToRefs } from 'pinia'
 
 export type ConnectedAccount = {
 	address: string
 	chainId: string
 	validator: ValidatorKey
-	vendor: VendorKey
+	vendor: AccountId
 }
 
 export const useAccountStore = defineStore(

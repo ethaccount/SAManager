@@ -36,7 +36,7 @@ function onClickConnectButton() {
 import { simulateStage, ConnectModalStageKey } from '@/stores/useConnectModal'
 
 // simulateStage(ConnectModalStageKey.CREATE_CONNECTED)
-simulateStage(ConnectModalStageKey.EOA_ACCOUNT_CHOICE)
+// simulateStage(ConnectModalStageKey.EOA_ACCOUNT_CHOICE)
 
 // ============================== Vue Dapp ==============================
 
@@ -74,7 +74,13 @@ function onClickDisconnect() {
 	<div class="p-5 flex flex-col gap-2">
 		<div>
 			<div>app chainId: {{ chainId }}</div>
-			<div>account: {{ account }}</div>
+
+			<div class="mt-2" v-if="isConnected">
+				<div>{{ account?.address }}</div>
+				<div>chainId: {{ account?.chainId }}</div>
+				<div>validator: {{ account?.validator }}</div>
+				<div>vendor: {{ account?.vendor }}</div>
+			</div>
 		</div>
 
 		<div>

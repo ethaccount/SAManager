@@ -5,7 +5,7 @@ import EOAAccountChoice from '@/components/connect_modal/EOAAccountChoice.vue'
 import EOAConnect from '@/components/connect_modal/EOAConnect.vue'
 import InitialStep from '@/components/connect_modal/Initial.vue'
 import PasskeyLogin from '@/components/connect_modal/PasskeyLogin.vue'
-import { ValidatorKey, VendorKey } from '@/types'
+import { ValidatorKey, AccountId } from '@/types'
 import { useAccount } from './account'
 import { useApp } from './app'
 
@@ -38,7 +38,6 @@ type StageConfig = {
 	title?: string
 	hasNextButton?: boolean
 	requiredFields?: (keyof ConnectModalStore)[]
-	requiredFieldsBeforeNext?: (keyof ConnectModalStore)[]
 }
 
 const CONNECT_MODAL_CONFIG: Record<ConnectModalStageKey, Stage> = {
@@ -61,7 +60,6 @@ const CONNECT_MODAL_CONFIG: Record<ConnectModalStageKey, Stage> = {
 		],
 		config: {
 			title: 'Choose Signer',
-			requiredFieldsBeforeNext: ['validator'],
 		},
 	},
 	[ConnectModalStageKey.CREATE_EOA_CONNECT]: {
@@ -71,21 +69,18 @@ const CONNECT_MODAL_CONFIG: Record<ConnectModalStageKey, Stage> = {
 			title: 'Connect EOA Wallet',
 			hasNextButton: true,
 			requiredFields: ['validator'],
-			requiredFieldsBeforeNext: ['validator', 'eoaAddress'],
 		},
 	},
 	[ConnectModalStageKey.CREATE_PASSKEY_CONNECT]: {
 		component: PasskeyLogin,
 		next: [ConnectModalStageKey.CREATE_DEPLOY],
-		config: {
-			requiredFieldsBeforeNext: ['validator'],
-		},
+		config: {},
 	},
 	[ConnectModalStageKey.CREATE_EIP7702_CONNECT]: {
 		component: EOAConnect,
 		next: [ConnectModalStageKey.CREATE_DEPLOY],
 		config: {
-			requiredFieldsBeforeNext: ['validator'],
+			title: 'Connect EOA Wallet',
 		},
 	},
 	[ConnectModalStageKey.CREATE_DEPLOY]: {
@@ -94,7 +89,6 @@ const CONNECT_MODAL_CONFIG: Record<ConnectModalStageKey, Stage> = {
 		config: {
 			title: 'Deploy Smart Account',
 			requiredFields: ['validator'],
-			requiredFieldsBeforeNext: ['deployedAddress', 'vendor', 'validator'],
 		},
 	},
 	[ConnectModalStageKey.CREATE_CONNECTED]: {
@@ -113,7 +107,7 @@ const CONNECT_MODAL_CONFIG: Record<ConnectModalStageKey, Stage> = {
 		config: {
 			title: 'Connect EOA Wallet',
 			hasNextButton: true,
-			requiredFieldsBeforeNext: ['eoaAddress', 'validator'],
+			requiredFields: ['validator'],
 		},
 	},
 	[ConnectModalStageKey.EOA_ACCOUNT_CHOICE]: {
@@ -121,7 +115,7 @@ const CONNECT_MODAL_CONFIG: Record<ConnectModalStageKey, Stage> = {
 		next: [ConnectModalStageKey.EOA_CONNECTED],
 		config: {
 			title: 'Choose Account',
-			requiredFieldsBeforeNext: ['eoaAddress', 'validator', 'deployedAddress'],
+			requiredFields: ['eoaAddress', 'validator'],
 		},
 	},
 	[ConnectModalStageKey.EOA_CONNECTED]: {
@@ -129,6 +123,7 @@ const CONNECT_MODAL_CONFIG: Record<ConnectModalStageKey, Stage> = {
 		next: [],
 		config: {
 			title: 'Connected',
+			requiredFields: ['deployedAddress', 'vendor', 'validator'],
 		},
 	},
 } as const
@@ -138,7 +133,7 @@ type ConnectModalStore = {
 	closeModal: () => void
 	eoaAddress: string | null
 	deployedAddress: string | null
-	vendor: VendorKey | null
+	vendor: AccountId | null
 	validator: ValidatorKey | null
 }
 
@@ -256,16 +251,6 @@ const useConnectModalStore = defineStore('useConnectModalStore', () => {
 			)
 		}
 
-		// Check requirements for fromStage
-		const requiredFieldsBeforeNext = fromStage.config?.requiredFieldsBeforeNext
-		if (requiredFieldsBeforeNext) {
-			const missingFields = requiredFieldsBeforeNext.filter(key => !store.value[key])
-			if (missingFields.length > 0) {
-				throw new Error(`Missing requiredFieldsBeforeNext for ${fromStateKey}: ${missingFields.join(', ')}`)
-			}
-		}
-
-		// Check requirements for toStage
 		const requiredFields = toStage.config?.requiredFields
 		if (requiredFields) {
 			const missingFields = requiredFields.filter(key => !store.value[key])
@@ -318,7 +303,7 @@ export function simulateStage(_stageKey: ConnectModalStageKey) {
 				chainId: chainId.value,
 				eoaAddress: '0x0924E969a99547374C9F4B43503652fdB28289e4',
 				deployedAddress: '0x0924E969a99547374C9F4B43503652fdB28289e4',
-				vendor: 'kernel' as VendorKey,
+				vendor: AccountId.KERNEL,
 				validator: 'eoa' as ValidatorKey,
 			}
 			const { setAccount } = useAccount()

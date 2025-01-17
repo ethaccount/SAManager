@@ -6,9 +6,11 @@ import { ECDSA_VALIDATOR } from '@/config'
 import { shortenAddress } from '@vue-dapp/core'
 import { fetchAccountId } from '@/core/aa'
 import { Loader2 } from 'lucide-vue-next'
+import { AccountId } from '@/types'
+
 interface AccountInfo {
 	address: string
-	accountId: string
+	accountId: AccountId | null
 	loading: boolean
 }
 
@@ -31,7 +33,7 @@ onMounted(async () => {
 		const addresses = await getAccountsByECDSAValidator(store.value.eoaAddress)
 		accounts.value = addresses.map(address => ({
 			address,
-			accountId: '',
+			accountId: null,
 			loading: true,
 		}))
 		loadingAddresses.value = false
@@ -45,7 +47,6 @@ onMounted(async () => {
 				})
 				.catch(error => {
 					console.error(`Error fetching account ID for ${address}:`, error)
-					accounts.value[index].accountId = 'Error'
 					accounts.value[index].loading = false
 				}),
 		)
@@ -74,9 +75,10 @@ async function getAccountsByECDSAValidator(address: string): Promise<string[]> {
 	return sortedEvents.slice(0, 5).map(event => event.args[0]) as string[]
 }
 
-function onClickAccount(account: AccountInfo) {
+function onClickAccount(accountInfo: AccountInfo) {
 	updateStore({
-		deployedAddress: account.address,
+		vendor: accountInfo.accountId,
+		deployedAddress: accountInfo.address,
 	})
 	goNextStage()
 }

@@ -9,13 +9,14 @@ import { useEthers } from '@/stores/ethers'
 import { shortenAddress } from '@vue-dapp/core'
 import { hexlify, JsonRpcProvider } from 'ethers'
 import { Loader2 } from 'lucide-vue-next'
-import { ECDSAValidator, Kernel, MyAccount, sendop } from 'sendop'
-import { useAccount, ConnectedAccount } from '@/stores/account'
+import { ECDSAValidator, Kernel, MyAccount, sendop, Vendor } from 'sendop'
+import { ConnectedAccount } from '@/stores/account'
+import { AccountId } from '@/types'
 
 const { assertStage, goNextStage, store } = useConnectModal()
 assertStage(ConnectModalStageKey.CREATE_DEPLOY)
 
-const selectedVendor = ref<'kernel' | 'myaccount' | undefined>(undefined)
+const selectedVendor = ref<AccountId | undefined>(undefined)
 const deployedAddress = ref<string | null>(null)
 const loadingDeployedAddress = ref(false)
 
@@ -36,19 +37,19 @@ watch(selectedVendor, async newVendor => {
 	}
 })
 
-function getDeployedAddress(vendor: 'kernel' | 'myaccount') {
+function getDeployedAddress(vendor: AccountId) {
 	if (!store.value.eoaAddress) {
 		throw new Error('No connected address')
 	}
 
-	if (vendor === 'kernel') {
+	if (vendor === AccountId.KERNEL) {
 		const kernel = new Kernel(RPC_URL, {
 			salt: hexlify(SALT),
 			validatorAddress: ECDSA_VALIDATOR,
 			owner: store.value.eoaAddress,
 		})
 		return kernel.getAddress()
-	} else if (vendor === 'myaccount') {
+	} else if (vendor === AccountId.MY_ACCOUNT) {
 		const vendor = new MyAccount(RPC_URL, {
 			salt: hexlify(SALT),
 			validatorAddress: ECDSA_VALIDATOR,
@@ -68,14 +69,22 @@ async function onClickDeploy() {
 		throw new Error('No connected address')
 	}
 
-	let vendor
+	let vendor: Vendor
 
-	if (selectedVendor.value === 'kernel') {
+	if (selectedVendor.value === AccountId.KERNEL) {
 		vendor = new Kernel(RPC_URL, {
 			salt: hexlify(SALT),
 			validatorAddress: ECDSA_VALIDATOR,
 			owner: store.value.eoaAddress,
 		})
+	} else if (selectedVendor.value === AccountId.MY_ACCOUNT) {
+		vendor = new MyAccount(RPC_URL, {
+			salt: hexlify(SALT),
+			validatorAddress: ECDSA_VALIDATOR,
+			owner: store.value.eoaAddress,
+		})
+	} else {
+		throw new Error('Invalid vendor')
 	}
 
 	const { chainId, bundlerUrl } = useApp()
@@ -94,7 +103,7 @@ async function onClickDeploy() {
 		const accountData: ConnectedAccount = {
 			address: deployedAddress.value,
 			chainId: chainId.value,
-			vendor: 'kernel',
+			vendor: selectedVendor.value,
 			validator: store.value.validator!,
 		}
 		console.log('sendop to deploy', accountData)
@@ -124,9 +133,11 @@ async function onClickDeploy() {
 		const receipt = await op.wait()
 		console.log(receipt)
 
-		// store account data to app as AA connected
-		const { account } = useAccount()
-		account.value = accountData
+		const { updateStore } = useConnectModal()
+		updateStore({
+			deployedAddress: deployedAddress.value,
+			vendor: selectedVendor.value,
+		})
 
 		goNextStage()
 	} catch (err: unknown) {
@@ -147,7 +158,7 @@ async function onClickDeploy() {
 
 				<RadioGroup v-model="selectedVendor" class="grid grid-cols-2 gap-4">
 					<div>
-						<RadioGroupItem id="kernel" value="kernel" class="peer sr-only" />
+						<RadioGroupItem id="kernel" :value="AccountId.KERNEL" class="peer sr-only" />
 						<Label
 							for="kernel"
 							class="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
@@ -156,7 +167,7 @@ async function onClickDeploy() {
 						</Label>
 					</div>
 					<div>
-						<RadioGroupItem id="myaccount" value="myaccount" class="peer sr-only" />
+						<RadioGroupItem id="myaccount" :value="AccountId.MY_ACCOUNT" class="peer sr-only" />
 						<Label
 							for="myaccount"
 							class="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
