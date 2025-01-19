@@ -1,17 +1,13 @@
 <script setup lang="ts">
-import { CHARITY_PAYMASTER, ECDSA_VALIDATOR, RPC_URL, SALT } from '@/config'
-import { PimlicoBundler } from '@/core/bundler'
-import { OpBuilder } from '@/core/op_builders'
-import { MyPaymaster } from '@/core/pm_builders'
+import { ECDSA_VALIDATOR, RPC_URL, SALT } from '@/config'
 import { useApp } from '@/stores/app'
-import { useConnectModal, ConnectModalStageKey } from '@/stores/useConnectModal'
 import { useEthers } from '@/stores/ethers'
-import { shortenAddress } from '@vue-dapp/core'
-import { hexlify, JsonRpcProvider } from 'ethers'
-import { Loader2 } from 'lucide-vue-next'
-import { ECDSAValidator, Kernel, MyAccount, sendop, Vendor } from 'sendop'
-import { ConnectedAccount } from '@/stores/account'
+import { ConnectModalStageKey, useConnectModal } from '@/stores/useConnectModal'
 import { AccountId } from '@/types'
+import { shortenAddress } from '@vue-dapp/core'
+import { hexlify } from 'ethers'
+import { Loader2 } from 'lucide-vue-next'
+import { ECDSAValidator, ERC4337Account, Kernel, MyAccount } from 'sendop'
 
 const { assertStage, goNextStage, store } = useConnectModal()
 assertStage(ConnectModalStageKey.CREATE_DEPLOY)
@@ -42,13 +38,14 @@ function getDeployedAddress(accountId: AccountId) {
 		throw new Error('No connected address')
 	}
 
+	const { client } = useApp()
+
 	if (accountId === AccountId.KERNEL) {
-		const kernel = new Kernel(RPC_URL, {
+		return Kernel.getNewAddress(client.value, {
 			salt: hexlify(SALT),
 			validatorAddress: ECDSA_VALIDATOR,
 			owner: store.value.eoaAddress,
 		})
-		return kernel.getAddress()
 	} else if (accountId === AccountId.MY_ACCOUNT) {
 		const myAccount = new MyAccount(RPC_URL, {
 			salt: hexlify(SALT),
@@ -68,67 +65,48 @@ async function onClickDeploy() {
 	if (!store.value.eoaAddress) {
 		throw new Error('No connected address')
 	}
-
-	let vendor: Vendor
-
-	if (selectedVendor.value === AccountId.KERNEL) {
-		vendor = new Kernel(RPC_URL, {
-			salt: hexlify(SALT),
-			validatorAddress: ECDSA_VALIDATOR,
-			owner: store.value.eoaAddress,
-		})
-	} else if (selectedVendor.value === AccountId.MY_ACCOUNT) {
-		vendor = new MyAccount(RPC_URL, {
-			salt: hexlify(SALT),
-			validatorAddress: ECDSA_VALIDATOR,
-			owner: store.value.eoaAddress,
-		})
-	} else {
-		throw new Error('Invalid vendor')
-	}
-
-	const { chainId, bundlerUrl } = useApp()
 	if (!deployedAddress.value) {
 		throw new Error('No deployed address')
 	}
-
 	const { signer } = useEthers()
-
 	if (!signer.value) {
 		throw new Error('No signer')
 	}
 
+	const { bundler, client, rpcUrl, pmBuilder } = useApp()
+
+	let accountVendor: ERC4337Account
+
+	if (selectedVendor.value === AccountId.KERNEL) {
+		accountVendor = new Kernel({
+			client: client.value,
+			bundler: bundler.value,
+			validator: new ECDSAValidator({
+				address: ECDSA_VALIDATOR,
+				clientUrl: rpcUrl.value,
+				signer: signer.value,
+			}),
+			pmBuilder: pmBuilder.value,
+			creationOptions: {
+				salt: hexlify(SALT),
+				validatorAddress: ECDSA_VALIDATOR,
+				owner: store.value.eoaAddress,
+			},
+		})
+	} else if (selectedVendor.value === AccountId.MY_ACCOUNT) {
+		throw new Error('MyAccount not supported')
+		// vendor = new MyAccount(RPC_URL, {
+		// 	salt: hexlify(SALT),
+		// 	validatorAddress: ECDSA_VALIDATOR,
+		// 	owner: store.value.eoaAddress,
+		// })
+	} else {
+		throw new Error('Invalid vendor')
+	}
+
 	loadingDeploy.value = true
 	try {
-		const accountData: ConnectedAccount = {
-			address: deployedAddress.value,
-			chainId: chainId.value,
-			accountId: selectedVendor.value,
-			validator: store.value.validator!,
-		}
-		console.log('sendop to deploy', accountData)
-
-		const op = await sendop({
-			bundler: new PimlicoBundler(chainId.value, bundlerUrl.value),
-			from: deployedAddress.value,
-			executions: [],
-			opBuilder: new OpBuilder({
-				client: new JsonRpcProvider(RPC_URL),
-				vendor,
-				validator: new ECDSAValidator({
-					address: ECDSA_VALIDATOR,
-					clientUrl: RPC_URL,
-					signer: signer.value,
-				}),
-				from: deployedAddress.value,
-				isCreation: true,
-			}),
-			pmBuilder: new MyPaymaster({
-				chainId: chainId.value,
-				clientUrl: RPC_URL,
-				paymasterAddress: CHARITY_PAYMASTER,
-			}),
-		})
+		const op = await accountVendor.deploy()
 
 		const receipt = await op.wait()
 		console.log(receipt)
