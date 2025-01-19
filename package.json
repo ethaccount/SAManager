@@ -10,6 +10,7 @@
 		"clean": "rm -rf dist && rm -rf node_modules"
 	},
 	"dependencies": {
+		"@internationalized/date": "^3.7.0",
 		"@vee-validate/zod": "^4.15.0",
 		"@vue-dapp/coinbase": "1.5.1",
 		"@vue-dapp/core": "1.5.1",
