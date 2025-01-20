@@ -8,7 +8,7 @@ export const useEthersStore = defineStore('ethers', () => {
 
 	async function setWallet(p: EIP1193Provider) {
 		provider.value = markRaw(new ethers.BrowserProvider(p))
-		signer.value = markRaw(await provider.value.getSigner())
+		signer.value = await provider.value.getSigner()
 	}
 
 	function resetWallet() {

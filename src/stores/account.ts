@@ -1,5 +1,9 @@
+import { ECDSA_VALIDATOR } from '@/config'
 import { AccountId, ValidatorKey } from '@/types'
 import { defineStore, storeToRefs } from 'pinia'
+import { ECDSAValidator, ERC7579Validator, Kernel, MyAccount, SmartAccount } from 'sendop'
+import { useApp } from './app'
+import { useEthers } from './ethers'
 
 export type ConnectedAccount = {
 	address: string
@@ -25,11 +29,62 @@ export const useAccountStore = defineStore(
 			return account.value !== null
 		})
 
+		const { client, bundler, pmGetter } = useApp()
+		const { signer } = useEthers()
+
+		watch(account, account => {
+			console.log('account', account)
+		})
+
+		const erc7579Validator = computed<ERC7579Validator | null>(() => {
+			if (!signer.value) {
+				return null
+			}
+
+			switch (account.value?.validator) {
+				case 'eoa':
+					return new ECDSAValidator({
+						address: ECDSA_VALIDATOR,
+						client: client.value,
+						signer: signer.value,
+					})
+
+				default:
+					return null
+			}
+		})
+
+		const smartAccount = computed<SmartAccount | null>(() => {
+			if (!erc7579Validator.value) {
+				return null
+			}
+
+			switch (account.value?.accountId) {
+				case AccountId.KERNEL:
+					return new Kernel(account.value?.address, {
+						client: client.value,
+						bundler: bundler.value,
+						erc7579Validator: erc7579Validator.value,
+						pmGetter: pmGetter.value,
+					})
+				case AccountId.MY_ACCOUNT:
+					return new MyAccount(account.value?.address, {
+						client: client.value,
+						bundler: bundler.value,
+						erc7579Validator: erc7579Validator.value,
+						pmGetter: pmGetter.value,
+					})
+				default:
+					return null
+			}
+		})
+
 		return {
 			account,
 			setAccount,
 			resetAccount,
 			isConnected,
+			smartAccount,
 		}
 	},
 	{
