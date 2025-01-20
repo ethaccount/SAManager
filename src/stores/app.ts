@@ -1,9 +1,7 @@
 import { CHAIN_ID, CHARITY_PAYMASTER, PIMLICO_API_KEY, RPC_URL } from '@/config'
 import { JsonRpcProvider } from 'ethers'
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
-import { PimlicoBundler } from '@/core/bundler'
-import { MyPaymaster } from '@/core/pm_builders'
+import { MyPaymaster, PimlicoBundler } from 'sendop'
 
 export const useAppStore = defineStore('useAppStore', () => {
 	const chainId = ref<CHAIN_ID>(CHAIN_ID.SEPOLIA)
@@ -22,18 +20,16 @@ export const useAppStore = defineStore('useAppStore', () => {
 	const bundler = computed(() => {
 		return new PimlicoBundler(chainId.value, bundlerUrl.value)
 	})
+	const pmGetter = computed(() => {
+		return new MyPaymaster({
+			client: client.value,
+			paymasterAddress: CHARITY_PAYMASTER,
+		})
+	})
 
 	const setChainId = (id: CHAIN_ID) => {
 		chainId.value = id
 	}
-
-	const pmBuilder = computed(() => {
-		return new MyPaymaster({
-			chainId: chainId.value,
-			clientUrl: rpcUrl.value,
-			paymasterAddress: CHARITY_PAYMASTER,
-		})
-	})
 
 	return {
 		chainId,
@@ -42,7 +38,7 @@ export const useAppStore = defineStore('useAppStore', () => {
 		bundlerUrl,
 		bundler,
 		setChainId,
-		pmBuilder,
+		pmGetter,
 	}
 })
 

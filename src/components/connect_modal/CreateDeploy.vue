@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ECDSA_VALIDATOR, RPC_URL, SALT } from '@/config'
+import { ECDSA_VALIDATOR, SALT } from '@/config'
 import { useApp } from '@/stores/app'
 import { useEthers } from '@/stores/ethers'
 import { ConnectModalStageKey, useConnectModal } from '@/stores/useConnectModal'
@@ -7,7 +7,7 @@ import { AccountId } from '@/types'
 import { shortenAddress } from '@vue-dapp/core'
 import { hexlify } from 'ethers'
 import { Loader2 } from 'lucide-vue-next'
-import { ECDSAValidator, ERC4337Account, Kernel, MyAccount } from 'sendop'
+import { ECDSAValidator, Kernel, MyAccount, SmartAccount } from 'sendop'
 
 const { assertStage, goNextStage, store } = useConnectModal()
 assertStage(ConnectModalStageKey.CREATE_DEPLOY)
@@ -40,22 +40,27 @@ function getDeployedAddress(accountId: AccountId) {
 
 	const { client } = useApp()
 
-	if (accountId === AccountId.KERNEL) {
-		return Kernel.getNewAddress(client.value, {
-			salt: hexlify(SALT),
-			validatorAddress: ECDSA_VALIDATOR,
-			owner: store.value.eoaAddress,
-		})
-	} else if (accountId === AccountId.MY_ACCOUNT) {
-		const myAccount = new MyAccount(RPC_URL, {
-			salt: hexlify(SALT),
-			validatorAddress: ECDSA_VALIDATOR,
-			owner: store.value.eoaAddress,
-		})
-		return myAccount.getAddress()
+	const creationOptions = {
+		salt: hexlify(SALT),
+		validatorAddress: ECDSA_VALIDATOR,
+		owner: store.value.eoaAddress,
 	}
 
-	throw new Error('Invalid accountId')
+	switch (store.value.validator) {
+		case 'eoa':
+			switch (accountId) {
+				case AccountId.KERNEL:
+					return Kernel.getNewAddress(client.value, creationOptions)
+				case AccountId.MY_ACCOUNT:
+					return MyAccount.getNewAddress(client.value, creationOptions)
+				default:
+					return null
+			}
+		case 'passkey':
+			return null
+	}
+
+	return null
 }
 
 const loadingDeploy = ref(false)
@@ -73,40 +78,44 @@ async function onClickDeploy() {
 		throw new Error('No signer')
 	}
 
-	const { bundler, client, rpcUrl, pmBuilder } = useApp()
+	const { bundler, client, pmGetter } = useApp()
 
-	let accountVendor: ERC4337Account
+	let smartAccount: SmartAccount
+	let erc7579Validator = new ECDSAValidator({
+		address: ECDSA_VALIDATOR,
+		client: client.value,
+		signer: signer.value,
+	})
 
-	if (selectedVendor.value === AccountId.KERNEL) {
-		accountVendor = new Kernel({
-			client: client.value,
-			bundler: bundler.value,
-			validator: new ECDSAValidator({
-				address: ECDSA_VALIDATOR,
-				clientUrl: rpcUrl.value,
-				signer: signer.value,
-			}),
-			pmBuilder: pmBuilder.value,
-			creationOptions: {
-				salt: hexlify(SALT),
-				validatorAddress: ECDSA_VALIDATOR,
-				owner: store.value.eoaAddress,
-			},
-		})
-	} else if (selectedVendor.value === AccountId.MY_ACCOUNT) {
-		throw new Error('MyAccount not supported')
-		// vendor = new MyAccount(RPC_URL, {
-		// 	salt: hexlify(SALT),
-		// 	validatorAddress: ECDSA_VALIDATOR,
-		// 	owner: store.value.eoaAddress,
-		// })
-	} else {
-		throw new Error('Invalid vendor')
+	switch (selectedVendor.value) {
+		case AccountId.KERNEL:
+			smartAccount = new Kernel(deployedAddress.value, {
+				client: client.value,
+				bundler: bundler.value,
+				erc7579Validator,
+				pmGetter: pmGetter.value,
+			})
+			break
+		case AccountId.MY_ACCOUNT:
+			smartAccount = new MyAccount(deployedAddress.value, {
+				client: client.value,
+				bundler: bundler.value,
+				erc7579Validator,
+				pmGetter: pmGetter.value,
+			})
+			break
+		default:
+			throw new Error('Invalid vendor')
 	}
 
 	loadingDeploy.value = true
+	const creationOptions = {
+		salt: hexlify(SALT),
+		validatorAddress: ECDSA_VALIDATOR,
+		owner: store.value.eoaAddress,
+	}
 	try {
-		const op = await accountVendor.deploy()
+		const op = await smartAccount.deploy(creationOptions)
 
 		const receipt = await op.wait()
 		console.log(receipt)
