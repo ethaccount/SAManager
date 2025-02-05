@@ -11,6 +11,7 @@ declare module 'vue' {
     AccordionContent: typeof import('./components/ui/accordion/AccordionContent.vue')['default']
     AccordionItem: typeof import('./components/ui/accordion/AccordionItem.vue')['default']
     AccordionTrigger: typeof import('./components/ui/accordion/AccordionTrigger.vue')['default']
+    Address: typeof import('./components/Address.vue')['default']
     AutoForm: typeof import('./components/ui/auto-form/AutoForm.vue')['default']
     AutoFormField: typeof import('./components/ui/auto-form/AutoFormField.vue')['default']
     AutoFormFieldArray: typeof import('./components/ui/auto-form/AutoFormFieldArray.vue')['default']
