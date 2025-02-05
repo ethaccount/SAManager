@@ -2,7 +2,7 @@ import { AccountId, ValidatorKey } from '@/types'
 import { defineStore, storeToRefs } from 'pinia'
 import { ECDSA_VALIDATOR_ADDRESS, ECDSAValidator, ERC7579Validator, Kernel, MyAccount, SmartAccount } from 'sendop'
 import { useBlockchain, useBlockchainStore } from './useBlockchainStore'
-import { useEthers } from './ethers'
+import { useEOA } from './useEOAStore'
 
 export type ConnectedAccount = {
 	address: string
@@ -29,7 +29,7 @@ export const useAccountStore = defineStore(
 		})
 
 		const { client, bundler, pmGetter } = useBlockchain()
-		const { signer } = useEthers()
+		const { signer } = useEOA()
 
 		watch(account, account => {
 			console.log('Account connected', account)

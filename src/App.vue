@@ -8,7 +8,7 @@ import { VueDappModal } from '@vue-dapp/modal'
 import '@vue-dapp/modal/dist/style.css'
 import { useAccount } from './stores/account'
 import { useBlockchain } from './stores/useBlockchainStore'
-import { useEthers } from './stores/ethers'
+import { useEOA } from './stores/useEOAStore'
 import ConnectModal from '@/components/connect_modal/ConnectModal.vue'
 import Address from '@/components/Address.vue'
 
@@ -52,7 +52,7 @@ addConnectors([
 	}),
 ])
 
-const { setWallet, resetWallet } = useEthers()
+const { setWallet, resetWallet } = useEOA()
 
 watchWalletChanged(async wallet => {
 	setWallet(wallet.provider)

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { SALT } from '@/config'
-import { useEthers } from '@/stores/ethers'
+import { useEOA } from '@/stores/useEOAStore'
 import { useBlockchain } from '@/stores/useBlockchainStore'
 import { ConnectModalStageKey, useConnectModal } from '@/stores/useConnectModal'
 import { AccountId } from '@/types'
@@ -73,7 +73,7 @@ async function onClickDeploy() {
 	if (!deployedAddress.value) {
 		throw new Error('No deployed address')
 	}
-	const { signer } = useEthers()
+	const { signer } = useEOA()
 	if (!signer.value) {
 		throw new Error('No signer')
 	}
