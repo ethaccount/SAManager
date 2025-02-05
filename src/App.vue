@@ -62,7 +62,7 @@ watchDisconnect(() => {
 	resetWallet()
 })
 
-// ============================== App ==============================
+// ============================== Blockchain ==============================
 
 const { chainId } = useBlockchain()
 const { account, resetAccount, isConnected } = useSA()
