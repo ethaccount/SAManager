@@ -1,8 +1,7 @@
-import { ECDSA_VALIDATOR } from '@/config'
 import { AccountId, ValidatorKey } from '@/types'
 import { defineStore, storeToRefs } from 'pinia'
-import { ECDSAValidator, ERC7579Validator, Kernel, MyAccount, SmartAccount } from 'sendop'
-import { useBlockchain } from './useBlockchainStore'
+import { ECDSA_VALIDATOR_ADDRESS, ECDSAValidator, ERC7579Validator, Kernel, MyAccount, SmartAccount } from 'sendop'
+import { useBlockchain, useBlockchainStore } from './useBlockchainStore'
 import { useEthers } from './ethers'
 
 export type ConnectedAccount = {
@@ -33,7 +32,14 @@ export const useAccountStore = defineStore(
 		const { signer } = useEthers()
 
 		watch(account, account => {
-			console.log('account', account)
+			console.log('Account connected', account)
+			if (account) {
+				// 如果 chainId 跟 app 不一樣，要 disconnect
+				const blockchainStore = useBlockchainStore()
+				if (account.chainId !== blockchainStore.chainId) {
+					resetAccount()
+				}
+			}
 		})
 
 		const erc7579Validator = computed<ERC7579Validator | null>(() => {
@@ -44,7 +50,7 @@ export const useAccountStore = defineStore(
 			switch (account.value?.validator) {
 				case 'eoa':
 					return new ECDSAValidator({
-						address: ECDSA_VALIDATOR,
+						address: ECDSA_VALIDATOR_ADDRESS,
 						client: client.value,
 						signer: signer.value,
 					})

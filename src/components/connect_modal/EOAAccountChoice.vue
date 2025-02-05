@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { useConnectModal, ConnectModalStageKey } from '@/stores/useConnectModal'
+import { fetchAccountId } from '@/lib/aa'
 import { useBlockchain } from '@/stores/useBlockchainStore'
-import { Contract, EventLog } from 'ethers'
-import { ECDSA_VALIDATOR } from '@/config'
-import { shortenAddress } from '@vue-dapp/core'
-import { fetchAccountId } from '@/core/aa'
-import { Loader2 } from 'lucide-vue-next'
+import { ConnectModalStageKey, useConnectModal } from '@/stores/useConnectModal'
 import { AccountId } from '@/types'
+import { shortenAddress } from '@vue-dapp/core'
+import { Contract, EventLog } from 'ethers'
+import { Loader2 } from 'lucide-vue-next'
+import { ECDSA_VALIDATOR_ADDRESS } from 'sendop'
 
 interface AccountInfo {
 	address: string
@@ -63,7 +63,7 @@ onMounted(async () => {
 async function getAccountsByECDSAValidator(address: string): Promise<string[]> {
 	const { client } = useBlockchain()
 	const ecdsaValidator = new Contract(
-		ECDSA_VALIDATOR,
+		ECDSA_VALIDATOR_ADDRESS,
 		['event OwnerRegistered(address indexed kernel, address indexed owner)'],
 		client.value,
 	)

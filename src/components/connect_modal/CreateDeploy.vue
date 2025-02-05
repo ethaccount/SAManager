@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { ECDSA_VALIDATOR, SALT } from '@/config'
-import { useBlockchain } from '@/stores/useBlockchainStore'
+import { SALT } from '@/config'
 import { useEthers } from '@/stores/ethers'
+import { useBlockchain } from '@/stores/useBlockchainStore'
 import { ConnectModalStageKey, useConnectModal } from '@/stores/useConnectModal'
 import { AccountId } from '@/types'
 import { shortenAddress } from '@vue-dapp/core'
 import { hexlify } from 'ethers'
 import { Loader2 } from 'lucide-vue-next'
-import { ECDSAValidator, Kernel, MyAccount, SmartAccount } from 'sendop'
+import { ECDSA_VALIDATOR_ADDRESS, ECDSAValidator, Kernel, MyAccount, SmartAccount } from 'sendop'
 
 const { assertStage, goNextStage, store } = useConnectModal()
 assertStage(ConnectModalStageKey.CREATE_DEPLOY)
@@ -42,7 +42,7 @@ function getDeployedAddress(accountId: AccountId) {
 
 	const creationOptions = {
 		salt: hexlify(SALT),
-		validatorAddress: ECDSA_VALIDATOR,
+		validatorAddress: ECDSA_VALIDATOR_ADDRESS,
 		owner: store.value.eoaAddress,
 	}
 
@@ -82,7 +82,7 @@ async function onClickDeploy() {
 
 	let smartAccount: SmartAccount
 	let erc7579Validator = new ECDSAValidator({
-		address: ECDSA_VALIDATOR,
+		address: ECDSA_VALIDATOR_ADDRESS,
 		client: client.value,
 		signer: signer.value,
 	})
@@ -111,7 +111,7 @@ async function onClickDeploy() {
 	loadingDeploy.value = true
 	const creationOptions = {
 		salt: hexlify(SALT),
-		validatorAddress: ECDSA_VALIDATOR,
+		validatorAddress: ECDSA_VALIDATOR_ADDRESS,
 		owner: store.value.eoaAddress,
 	}
 	try {

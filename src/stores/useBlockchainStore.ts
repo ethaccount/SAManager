@@ -1,40 +1,37 @@
-import { CHAIN_ID, CHARITY_PAYMASTER, PIMLICO_API_KEY, RPC_URL } from '@/config'
-import { MyPaymaster } from '@/core/pmGetter'
+import { CHARITY_PAYMASTER_ADDRESS } from '@/address'
+import { BUNDLER_URL, CHAIN_ID, EXPLORER_URL, RPC_URL } from '@/config'
+import { MyPaymaster } from '@/lib/pmGetter'
 import { JsonRpcProvider } from 'ethers'
 import { defineStore } from 'pinia'
 import { PimlicoBundler } from 'sendop'
 
+const DEFAULT_CHAIN_ID = CHAIN_ID.LOCAL
+
 export const useBlockchainStore = defineStore('useBlockchainStore', () => {
-	const chainId = ref<CHAIN_ID>(CHAIN_ID.SEPOLIA)
-	const rpcUrl = computed(() => {
-		if (chainId.value === CHAIN_ID.SEPOLIA) {
-			return RPC_URL
-		} else {
-			throw new Error('rpcUrl: Unsupported chain')
-		}
-	})
+	const chainId = ref<CHAIN_ID>(DEFAULT_CHAIN_ID)
 
-	const bundlerUrl = computed(() => `https://api.pimlico.io/v2/${chainId.value}/rpc?apikey=${PIMLICO_API_KEY}`)
-	const client = computed(() => {
-		return new JsonRpcProvider(rpcUrl.value)
-	})
-	const bundler = computed(() => {
-		return new PimlicoBundler(chainId.value, bundlerUrl.value)
-	})
-	const pmGetter = computed(() => {
-		return new MyPaymaster({
-			client: client.value,
-			paymasterAddress: CHARITY_PAYMASTER,
-		})
-	})
-
-	const setChainId = (id: CHAIN_ID) => {
+	function setChainId(id: CHAIN_ID) {
 		chainId.value = id
 	}
+
+	const rpcUrl = computed(() => RPC_URL[chainId.value])
+
+	const explorerUrl = computed(() => `${EXPLORER_URL[chainId.value]}`)
+
+	const client = computed(() => new JsonRpcProvider(rpcUrl.value))
+
+	const bundlerUrl = computed(() => BUNDLER_URL[chainId.value])
+
+	const bundler = computed(() => new PimlicoBundler(chainId.value, bundlerUrl.value))
+
+	const pmGetter = computed(
+		() => new MyPaymaster({ client: client.value, paymasterAddress: CHARITY_PAYMASTER_ADDRESS }),
+	)
 
 	return {
 		chainId,
 		rpcUrl,
+		explorerUrl,
 		client,
 		bundlerUrl,
 		bundler,

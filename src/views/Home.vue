@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { fetchModules } from '@/core/aa'
+import { fetchModules } from '@/lib/aa'
 import { useAccount } from '@/stores/account'
 import { useBlockchain } from '@/stores/useBlockchainStore'
 import { shortenAddress } from '@vue-dapp/core'

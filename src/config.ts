@@ -7,24 +7,34 @@ if (!ALCHEMY_API_KEY || !PIMLICO_API_KEY) {
 
 // supported chain ids in the app
 export enum CHAIN_ID {
+	LOCAL = '1337',
 	SEPOLIA = '11155111',
 	MEKONG = '7078815900',
 }
 
 export const CHAIN_NAME: { [key: string]: keyof typeof CHAIN_ID } = {
+	[CHAIN_ID.LOCAL]: 'LOCAL',
 	[CHAIN_ID.SEPOLIA]: 'SEPOLIA',
 	[CHAIN_ID.MEKONG]: 'MEKONG',
 } as const
 
-export const RPC_URL = `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}`
+export const RPC_URL: { [key: string]: string } = {
+	[CHAIN_ID.LOCAL]: `http://localhost:8545`,
+	[CHAIN_ID.SEPOLIA]: `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}`,
+	[CHAIN_ID.MEKONG]: `https://rpc.mekong.ethpandaops.io`,
+}
+
+// The URL must end with a "/"
+export const EXPLORER_URL: { [key: string]: string } = {
+	[CHAIN_ID.LOCAL]: '',
+	[CHAIN_ID.SEPOLIA]: `https://sepolia.etherscan.io/address/`,
+	[CHAIN_ID.MEKONG]: `https://explorer.mekong.ethpandaops.io/`,
+}
+
+export const BUNDLER_URL: { [key: string]: string } = {
+	[CHAIN_ID.LOCAL]: 'http://localhost:4337',
+	[CHAIN_ID.SEPOLIA]: `https://api.pimlico.io/v2/sepolia/rpc?apikey=${PIMLICO_API_KEY}`,
+	[CHAIN_ID.MEKONG]: `https://api.pimlico.io/v2/mekong/rpc?apikey=${PIMLICO_API_KEY}`,
+}
+
 export const SALT = '0x0000000000000000000000000000000000000000000000000000000000000024'
-
-export const SESSION_PUBLIC_KEY = '0xb04662Edea81c9BD5717544514e7F2D14B148fF5'
-export const OWNER_ADDRESS = '0xd78B5013757Ea4A7841811eF770711e6248dC282'
-
-export const COUNTER = '0xb5be668437df263e2787e6be7ec48a09c99e3783'
-export const ECDSA_VALIDATOR = '0x0581595879706B1e690C338b6198cD5F1525Da20'
-export const WEB_AUTHN_VALIDATOR = '0x8aF44fa7E51cD6e42bc260262Fc6241e99da190d'
-export const CHARITY_PAYMASTER = '0x31aC948B6463f317fFafd9d8182D60A3B9Cd79c8'
-export const MY_ACCOUNT_FACTORY_ADDRESS = '0xd4650238fcc60f64DfCa4e095dEe0081Dd4734b0'
-export const MY_ACCOUNT_IMPLEMENTATION_ADDRESS = '0x2127c3c7374ae16ca732d799b785b42bac5ebc0e'
