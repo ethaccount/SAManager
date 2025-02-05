@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ECDSA_VALIDATOR, SALT } from '@/config'
-import { useApp } from '@/stores/app'
+import { useBlockchain } from '@/stores/useBlockchainStore'
 import { useEthers } from '@/stores/ethers'
 import { ConnectModalStageKey, useConnectModal } from '@/stores/useConnectModal'
 import { AccountId } from '@/types'
@@ -38,7 +38,7 @@ function getDeployedAddress(accountId: AccountId) {
 		throw new Error('No connected address')
 	}
 
-	const { client } = useApp()
+	const { client } = useBlockchain()
 
 	const creationOptions = {
 		salt: hexlify(SALT),
@@ -78,7 +78,7 @@ async function onClickDeploy() {
 		throw new Error('No signer')
 	}
 
-	const { bundler, client, pmGetter } = useApp()
+	const { bundler, client, pmGetter } = useBlockchain()
 
 	let smartAccount: SmartAccount
 	let erc7579Validator = new ECDSAValidator({

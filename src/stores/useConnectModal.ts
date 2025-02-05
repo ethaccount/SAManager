@@ -7,7 +7,7 @@ import InitialStep from '@/components/connect_modal/Initial.vue'
 import PasskeyLogin from '@/components/connect_modal/PasskeyLogin.vue'
 import { ValidatorKey, AccountId } from '@/types'
 import { useAccount } from './account'
-import { useApp } from './app'
+import { useBlockchain } from './useBlockchainStore'
 
 export enum ConnectModalStageKey {
 	INITIAL = 'INITIAL',
@@ -298,7 +298,7 @@ export function simulateStage(_stageKey: ConnectModalStageKey) {
 	stageKey.value = _stageKey
 	switch (_stageKey) {
 		case ConnectModalStageKey.CREATE_CONNECTED:
-			const { chainId } = useApp()
+			const { chainId } = useBlockchain()
 			const account = {
 				chainId: chainId.value,
 				eoaAddress: '0x0924E969a99547374C9F4B43503652fdB28289e4',

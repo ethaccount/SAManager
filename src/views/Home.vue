@@ -2,13 +2,13 @@
 import { ref, onMounted } from 'vue'
 import { fetchModules } from '@/core/aa'
 import { useAccount } from '@/stores/account'
-import { useApp } from '@/stores/app'
+import { useBlockchain } from '@/stores/useBlockchainStore'
 import { shortenAddress } from '@vue-dapp/core'
 
 const modules = ref<Record<string, string[]>>({})
 
 const { account, isConnected } = useAccount()
-const { client } = useApp()
+const { client } = useBlockchain()
 
 const loading = ref(false)
 watch(

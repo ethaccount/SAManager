@@ -2,7 +2,7 @@ import { ECDSA_VALIDATOR } from '@/config'
 import { AccountId, ValidatorKey } from '@/types'
 import { defineStore, storeToRefs } from 'pinia'
 import { ECDSAValidator, ERC7579Validator, Kernel, MyAccount, SmartAccount } from 'sendop'
-import { useApp } from './app'
+import { useBlockchain } from './useBlockchainStore'
 import { useEthers } from './ethers'
 
 export type ConnectedAccount = {
@@ -29,7 +29,7 @@ export const useAccountStore = defineStore(
 			return account.value !== null
 		})
 
-		const { client, bundler, pmGetter } = useApp()
+		const { client, bundler, pmGetter } = useBlockchain()
 		const { signer } = useEthers()
 
 		watch(account, account => {

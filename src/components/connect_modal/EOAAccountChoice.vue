@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useConnectModal, ConnectModalStageKey } from '@/stores/useConnectModal'
-import { useApp } from '@/stores/app'
+import { useBlockchain } from '@/stores/useBlockchainStore'
 import { Contract, EventLog } from 'ethers'
 import { ECDSA_VALIDATOR } from '@/config'
 import { shortenAddress } from '@vue-dapp/core'
@@ -38,7 +38,7 @@ onMounted(async () => {
 		}))
 		loadingAddresses.value = false
 
-		const { client } = useApp()
+		const { client } = useBlockchain()
 		const accountIdPromises = addresses.map((address, index) =>
 			fetchAccountId(address, client.value)
 				.then(accountId => {
@@ -61,7 +61,7 @@ onMounted(async () => {
 })
 
 async function getAccountsByECDSAValidator(address: string): Promise<string[]> {
-	const { client } = useApp()
+	const { client } = useBlockchain()
 	const ecdsaValidator = new Contract(
 		ECDSA_VALIDATOR,
 		['event OwnerRegistered(address indexed kernel, address indexed owner)'],

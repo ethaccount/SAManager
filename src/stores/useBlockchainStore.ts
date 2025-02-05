@@ -4,7 +4,7 @@ import { JsonRpcProvider } from 'ethers'
 import { defineStore } from 'pinia'
 import { PimlicoBundler } from 'sendop'
 
-export const useAppStore = defineStore('useAppStore', () => {
+export const useBlockchainStore = defineStore('useBlockchainStore', () => {
 	const chainId = ref<CHAIN_ID>(CHAIN_ID.SEPOLIA)
 	const rpcUrl = computed(() => {
 		if (chainId.value === CHAIN_ID.SEPOLIA) {
@@ -43,10 +43,10 @@ export const useAppStore = defineStore('useAppStore', () => {
 	}
 })
 
-export function useApp() {
-	const appStore = useAppStore()
+export function useBlockchain() {
+	const blockchainStore = useBlockchainStore()
 	return {
-		...appStore,
-		...storeToRefs(appStore),
+		...blockchainStore,
+		...storeToRefs(blockchainStore),
 	}
 }
