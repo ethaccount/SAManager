@@ -1,7 +1,8 @@
 import { CHAIN_ID, CHARITY_PAYMASTER, PIMLICO_API_KEY, RPC_URL } from '@/config'
+import { MyPaymaster } from '@/core/pmGetter'
 import { JsonRpcProvider } from 'ethers'
 import { defineStore } from 'pinia'
-import { MyPaymaster, PimlicoBundler } from 'sendop'
+import { PimlicoBundler } from 'sendop'
 
 export const useAppStore = defineStore('useAppStore', () => {
 	const chainId = ref<CHAIN_ID>(CHAIN_ID.SEPOLIA)
