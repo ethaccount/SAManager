@@ -1,7 +1,7 @@
 services:
     anvil:
         image: ghcr.io/foundry-rs/foundry:nightly-503792a1dbadd901a4c02f6fcd1de1caff1573ff
-        platform: linux/amd64/v8
+        platform: linux/amd64
         ports: ['8545:8545']
         entrypoint:
             [
@@ -27,6 +27,7 @@ services:
 
     alto:
         image: chnejohnson/alto:0.0.11
+        platform: linux/amd64
         ports: ['4337:4337']
         command: --config alto.config.json
         volumes:
@@ -38,5 +39,12 @@ services:
             retries: 10
             start_period: 10s
         depends_on:
+            anvil:
+                condition: service_healthy
+    health-check:
+        image: docker.io/library/hello-world
+        depends_on:
+            alto:
+                condition: service_healthy
             anvil:
                 condition: service_healthy
