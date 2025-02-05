@@ -24,11 +24,13 @@ export const RPC_URL: { [key: string]: string } = {
 	[CHAIN_ID.MEKONG]: `https://rpc.mekong.ethpandaops.io`,
 }
 
-// The URL must end with a "/"
+/**
+ * The URL should not end with a "/"
+ */
 export const EXPLORER_URL: { [key: string]: string } = {
 	[CHAIN_ID.LOCAL]: '',
-	[CHAIN_ID.SEPOLIA]: `https://sepolia.etherscan.io/address/`,
-	[CHAIN_ID.MEKONG]: `https://explorer.mekong.ethpandaops.io/`,
+	[CHAIN_ID.SEPOLIA]: 'https://scope.sh/11155111',
+	[CHAIN_ID.MEKONG]: `https://explorer.mekong.ethpandaops.io`,
 }
 
 export const BUNDLER_URL: { [key: string]: string } = {

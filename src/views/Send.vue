@@ -4,11 +4,11 @@ import { useSA } from '@/stores/useSA'
 import { X } from 'lucide-vue-next'
 import { Execution } from 'sendop'
 import { parseEther, Interface } from 'ethers'
-import { COUNTER } from '@/config'
+import { COUNTER_ADDRESS } from '@/address'
 
 function getDefaultExecution(): Execution {
 	return {
-		to: COUNTER,
+		to: COUNTER_ADDRESS,
 		value: '0',
 		data: new Interface(['function setNumber(uint256)']).encodeFunctionData('setNumber', [101]),
 	}

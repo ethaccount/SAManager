@@ -47,9 +47,9 @@ const ModuleType = {
 		<div v-else-if="Object.keys(modules).length > 0">
 			<div v-for="(addresses, typeId) in modules" :key="typeId" class="module-group">
 				<div>{{ ModuleType[typeId] }}</div>
-				<ul class="list-disc list-inside">
+				<ul class="flex flex-wrap gap-2">
 					<li v-for="address in addresses" :key="address">
-						{{ shortenAddress(address) }}
+						<Address :address="address" />
 					</li>
 				</ul>
 			</div>

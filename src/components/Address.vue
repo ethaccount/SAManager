@@ -1,13 +1,19 @@
 <script setup lang="ts">
 import { shortenAddress } from '@vue-dapp/core'
 import { Copy, ExternalLink, Check } from 'lucide-vue-next'
+import { useBlockchainStore } from '@/stores/useBlockchain'
 
 const props = defineProps<{
 	address?: string
 }>()
 
 const externalLink = computed(() => {
-	return `https://sepolia.etherscan.io/address/${props.address}`
+	if (!props.address) return ''
+	const blockchainStore = useBlockchainStore()
+	if (!blockchainStore.explorerUrl) {
+		return ''
+	}
+	return `${blockchainStore.explorerUrl}/address/${props.address}`
 })
 
 const isCopied = ref(false)
@@ -36,7 +42,7 @@ const onClickCopyAddress = () => {
 			</Button>
 
 			<!-- Link -->
-			<a :href="externalLink" target="_blank">
+			<a v-if="externalLink" :href="externalLink" target="_blank">
 				<Button class="address-button" variant="link" size="icon">
 					<ExternalLink class="address-button-icon" />
 				</Button>

@@ -110,14 +110,16 @@ const router = useRouter()
 					variant="link"
 					:class="{ underline: router.currentRoute.value.path === '/' }"
 					@click="router.push('/')"
-					>Modules</Button
 				>
+					Modules
+				</Button>
 				<Button
 					variant="link"
 					:class="{ underline: router.currentRoute.value.path === '/send' }"
 					@click="router.push('/send')"
-					>Send</Button
 				>
+					Send
+				</Button>
 			</div>
 
 			<router-view></router-view>
