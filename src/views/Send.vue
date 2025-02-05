@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
-import { useAccount } from '@/stores/account'
+import { useSA } from '@/stores/useSA'
 import { X } from 'lucide-vue-next'
 import { Execution } from 'sendop'
 import { parseEther, Interface } from 'ethers'
@@ -28,7 +28,7 @@ const loading = ref(false)
 const error = ref<string | null>(null)
 
 async function onClickSendOperations() {
-	const { smartAccount } = useAccount()
+	const { smartAccount } = useSA()
 	if (!smartAccount.value) {
 		console.warn('No smart account')
 		return

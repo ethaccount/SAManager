@@ -1,13 +1,13 @@
-import Connected from '@/components/connect_modal/Connected.vue'
-import CreateDeploy from '@/components/connect_modal/CreateDeploy.vue'
-import CreateSignerChoice from '@/components/connect_modal/CreateSignerChoice.vue'
-import EOAAccountChoice from '@/components/connect_modal/EOAAccountChoice.vue'
-import EOAConnect from '@/components/connect_modal/EOAConnect.vue'
-import InitialStep from '@/components/connect_modal/Initial.vue'
-import PasskeyLogin from '@/components/connect_modal/PasskeyLogin.vue'
+import Connected from '@/components/connect-modal/Connected.vue'
+import CreateDeploy from '@/components/connect-modal/CreateDeploy.vue'
+import CreateSignerChoice from '@/components/connect-modal/CreateSignerChoice.vue'
+import EOAAccountChoice from '@/components/connect-modal/EOAAccountChoice.vue'
+import EOAConnect from '@/components/connect-modal/EOAConnect.vue'
+import InitialStep from '@/components/connect-modal/Initial.vue'
+import PasskeyLogin from '@/components/connect-modal/PasskeyLogin.vue'
 import { ValidatorKey, AccountId } from '@/types'
-import { useAccount } from './account'
-import { useBlockchain } from './useBlockchainStore'
+import { useSA } from './useSA'
+import { useBlockchain } from './useBlockchain'
 
 export enum ConnectModalStageKey {
 	INITIAL = 'INITIAL',
@@ -278,10 +278,10 @@ const useConnectModalStore = defineStore('useConnectModalStore', () => {
 })
 
 export function useConnectModal() {
-	const connectModalStore = useConnectModalStore()
+	const store = useConnectModalStore()
 	return {
-		...connectModalStore,
-		...storeToRefs(connectModalStore),
+		...store,
+		...storeToRefs(store),
 	}
 }
 
@@ -306,7 +306,7 @@ export function simulateStage(_stageKey: ConnectModalStageKey) {
 				accountId: AccountId.KERNEL,
 				validator: 'eoa' as ValidatorKey,
 			}
-			const { setAccount } = useAccount()
+			const { setAccount } = useSA()
 			setAccount({
 				address: account.deployedAddress,
 				chainId: account.chainId,

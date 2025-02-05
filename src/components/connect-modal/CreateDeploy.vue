@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { SALT } from '@/config'
-import { useEOA } from '@/stores/useEOAStore'
-import { useBlockchain } from '@/stores/useBlockchainStore'
+import { useEOA } from '@/stores/useEOA'
+import { useBlockchain } from '@/stores/useBlockchain'
 import { ConnectModalStageKey, useConnectModal } from '@/stores/useConnectModal'
 import { AccountId } from '@/types'
 import { shortenAddress } from '@vue-dapp/core'

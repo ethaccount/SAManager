@@ -6,10 +6,10 @@ import { ModalsContainer, useModal } from 'vue-final-modal'
 import { useConnectModal } from '@/stores/useConnectModal'
 import { VueDappModal } from '@vue-dapp/modal'
 import '@vue-dapp/modal/dist/style.css'
-import { useAccount } from './stores/account'
-import { useBlockchain } from './stores/useBlockchainStore'
-import { useEOA } from './stores/useEOAStore'
-import ConnectModal from '@/components/connect_modal/ConnectModal.vue'
+import { useSA } from './stores/useSA'
+import { useBlockchain } from './stores/useBlockchain'
+import { useEOA } from './stores/useEOA'
+import ConnectModal from '@/components/connect-modal/ConnectModal.vue'
 import Address from '@/components/Address.vue'
 
 // ============================== Connect Modal ==============================
@@ -65,7 +65,7 @@ watchDisconnect(() => {
 // ============================== App ==============================
 
 const { chainId } = useBlockchain()
-const { account, resetAccount, isConnected } = useAccount()
+const { account, resetAccount, isConnected } = useSA()
 
 function onClickDisconnect() {
 	resetAccount()

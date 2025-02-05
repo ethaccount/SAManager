@@ -1,8 +1,8 @@
 import { AccountId, ValidatorKey } from '@/types'
 import { defineStore, storeToRefs } from 'pinia'
 import { ECDSA_VALIDATOR_ADDRESS, ECDSAValidator, ERC7579Validator, Kernel, MyAccount, SmartAccount } from 'sendop'
-import { useBlockchain, useBlockchainStore } from './useBlockchainStore'
-import { useEOA } from './useEOAStore'
+import { useBlockchain, useBlockchainStore } from './useBlockchain'
+import { useEOA } from './useEOA'
 
 export type ConnectedAccount = {
 	address: string
@@ -11,8 +11,8 @@ export type ConnectedAccount = {
 	accountId: AccountId
 }
 
-export const useAccountStore = defineStore(
-	'useAccountStore',
+export const useSAStore = defineStore(
+	'useSAStore',
 	() => {
 		const account = ref<ConnectedAccount | null>(null)
 
@@ -100,8 +100,8 @@ export const useAccountStore = defineStore(
 	},
 )
 
-export function useAccount() {
-	const store = useAccountStore()
+export function useSA() {
+	const store = useSAStore()
 	return {
 		...store,
 		...storeToRefs(store),

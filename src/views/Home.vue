@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { fetchModules } from '@/lib/aa'
-import { useAccount } from '@/stores/account'
-import { useBlockchain } from '@/stores/useBlockchainStore'
+import { useSA } from '@/stores/useSA'
+import { useBlockchain } from '@/stores/useBlockchain'
 import { shortenAddress } from '@vue-dapp/core'
 
 const modules = ref<Record<string, string[]>>({})
 
-const { account, isConnected } = useAccount()
+const { account, isConnected } = useSA()
 const { client } = useBlockchain()
 
 const loading = ref(false)

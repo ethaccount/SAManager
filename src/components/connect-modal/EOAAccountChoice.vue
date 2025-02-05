@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { fetchAccountId } from '@/lib/aa'
-import { useBlockchain } from '@/stores/useBlockchainStore'
+import { useBlockchain } from '@/stores/useBlockchain'
 import { ConnectModalStageKey, useConnectModal } from '@/stores/useConnectModal'
 import { AccountId } from '@/types'
 import { shortenAddress } from '@vue-dapp/core'
