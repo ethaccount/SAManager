@@ -6,14 +6,16 @@ import { ModalsContainer, useModal } from 'vue-final-modal'
 import { useConnectModal } from '@/stores/useConnectModal'
 import { VueDappModal } from '@vue-dapp/modal'
 import '@vue-dapp/modal/dist/style.css'
-import { useSA } from './stores/useSA'
-import { useBlockchain } from './stores/useBlockchain'
-import { useEOA } from './stores/useEOA'
+import { useSA } from '@/stores/useSA'
+import { useBlockchain } from '@/stores/useBlockchain'
+import { useEOA } from '@/stores/useEOA'
 import ConnectModal from '@/components/connect-modal/ConnectModal.vue'
+import ErrorModal from '@/components/ErrorModal.vue'
+import { useErrorModalStore } from '@/stores/useErrorModal'
 import Address from '@/components/Address.vue'
 
 // ============================== Connect Modal ==============================
-const { goNextStage, updateStore } = useConnectModal()
+const connectModalStore = useConnectModal()
 const { open: openConnectModal, close: closeConnectModal } = useModal({
 	component: ConnectModal,
 	attrs: {
@@ -22,15 +24,25 @@ const { open: openConnectModal, close: closeConnectModal } = useModal({
 	slots: {},
 })
 
-updateStore({
+connectModalStore.updateStore({
 	openModal: openConnectModal,
 	closeModal: closeConnectModal,
 })
 
 function onClickConnectButton() {
 	openConnectModal()
-	goNextStage()
+	connectModalStore.goNextStage()
 }
+
+// =============================== Error Modal ===============================
+const errorModalStore = useErrorModalStore()
+const { open: openErrorModal, close: closeErrorModal } = useModal({
+	component: ErrorModal,
+	attrs: {},
+	slots: {},
+})
+
+errorModalStore.initOpenAndCloseFn(openErrorModal, closeErrorModal)
 
 // =============================== DEV ===============================
 

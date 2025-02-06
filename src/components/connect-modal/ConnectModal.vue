@@ -2,6 +2,7 @@
 import { VueFinalModal } from 'vue-final-modal'
 import { useConnectModal } from '@/stores/useConnectModal'
 import { ChevronLeft, X } from 'lucide-vue-next'
+
 defineProps<{
 	title?: string
 }>()

@@ -53,7 +53,7 @@ onMounted(async () => {
 
 		await Promise.all(accountIdPromises)
 	} catch (error) {
-		console.error(error)
+		throw new Error('EOAAccountChoice.vue: Error fetching account IDs')
 	} finally {
 		loading.value = false
 		loadingAddresses.value = false
