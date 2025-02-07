@@ -47,6 +47,9 @@ importers:
       radix-vue:
         specifier: ^1.9.12
         version: 1.9.12(vue@3.5.13(typescript@5.7.2))
+      sendop:
+        specifier: ^0.1.0
+        version: 0.1.0(ethers@6.13.4)
       tailwind-merge:
         specifier: ^2.6.0
         version: 2.6.0
@@ -1412,6 +1415,12 @@ packages:
     resolution: {integrity: sha512-oVekP1cKtI+CTDvHWYFUcMtsK/00wmAEfyqKfNdARm8u1wNVhSgaX7A8d4UuIlUI5e84iEwOhs7ZPYRmzU9U6A==}
     engines: {node: '>=10'}
     hasBin: true
+
+  sendop@0.1.0:
+    resolution: {integrity: sha512-oVKcmy0qvTXIg53L5yQHoW9+2tlUsMRERrjSMRxiViEeKfxPR72NnveYDQQld0jEPeTU27mQT/M61nkEC14GQg==}
+    engines: {bun: '>=1.1.0'}
+    peerDependencies:
+      ethers: ^6.13.5
 
   shebang-command@2.0.0:
     resolution: {integrity: sha512-kHxr2zZpYtdmrN1qDjrrX/Z1rR1kG8Dx+gkpK1G4eXmvXswmcE1hTWBWYUzlraYw1/yZp6YuDY77YtvbN0dmDA==}
@@ -2993,6 +3002,10 @@ snapshots:
   semver@6.3.1: {}
 
   semver@7.6.3: {}
+
+  sendop@0.1.0(ethers@6.13.4):
+    dependencies:
+      ethers: 6.13.4
 
   shebang-command@2.0.0:
     dependencies:
