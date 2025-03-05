@@ -7,7 +7,8 @@
 		"dev": "vite",
 		"build": "vite build",
 		"preview": "vite preview",
-		"clean": "rm -rf dist && rm -rf node_modules"
+		"clean": "rm -rf dist && rm -rf node_modules",
+		"typecheck": "vue-tsc --noEmit"
 	},
 	"dependencies": {
 		"@internationalized/date": "^3.7.0",
@@ -21,12 +22,12 @@
 		"@vueuse/core": "^12.4.0",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
-		"ethers": "^6.13.4",
+		"ethers": "^6.13.5",
 		"lucide-vue-next": "^0.471.0",
 		"pinia": "^3.0.1",
 		"pinia-plugin-persistedstate": "^4.2.0",
 		"radix-vue": "^1.9.12",
-		"sendop": "0.2.2",
+		"sendop": "0.3.0-beta.0",
 		"tailwind-merge": "^2.6.0",
 		"tailwindcss-animate": "^1.0.7",
 		"vee-validate": "^4.15.0",
@@ -47,7 +48,7 @@
 		"unplugin-vue-components": "0.25.1",
 		"vite": "^6.2.0",
 		"vite-plugin-node-polyfills": "^0.23.0",
-		"vue-tsc": "^2.1.10"
+		"vue-tsc": "^2.2.8"
 	},
 	"packageManager": "pnpm@9.14.4+sha512.c8180b3fbe4e4bca02c94234717896b5529740a6cbadf19fa78254270403ea2f27d4e1d46a08a0f56c89b63dc8ebfd3ee53326da720273794e6200fcf0d184ab"
 }

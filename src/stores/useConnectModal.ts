@@ -142,6 +142,7 @@ const CONNECT_MODAL_CONFIG: Record<ConnectModalStageKey, Stage> = {
 		next: [ConnectModalStageKey.PASSKEY_ACCOUNT_CHOICE],
 		config: {
 			title: 'Passkey Authentication',
+			requiredFields: ['validator'],
 		},
 	},
 	[ConnectModalStageKey.PASSKEY_ACCOUNT_CHOICE]: {

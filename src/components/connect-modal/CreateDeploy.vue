@@ -7,7 +7,19 @@ import { AccountId } from '@/types'
 import { shortenAddress } from '@vue-dapp/core'
 import { hexlify } from 'ethers'
 import { Loader2 } from 'lucide-vue-next'
-import { ECDSA_VALIDATOR_ADDRESS, ECDSAValidator, Kernel, MyAccount, SmartAccount } from 'sendop'
+import {
+	ECDSA_VALIDATOR_ADDRESS,
+	WEB_AUTHN_VALIDATOR_ADDRESS,
+	ECDSAValidator,
+	ERC7579Validator,
+	Kernel,
+	KernelCreationOptions,
+	MyAccount,
+	SmartAccount,
+	WebAuthnValidator,
+} from 'sendop'
+import { usePasskey } from '@/stores/usePasskey'
+import { signMessage } from '@/lib/passkey'
 
 const { assertStage, goNextStage, store } = useConnectModal()
 assertStage(ConnectModalStageKey.CREATE_DEPLOY)
@@ -33,31 +45,54 @@ watch(selectedVendor, async newVendor => {
 	}
 })
 
-function getDeployedAddress(accountId: AccountId) {
-	if (!store.value.eoaAddress) {
-		throw new Error('No connected address')
-	}
+const creationOptions = ref<KernelCreationOptions | null>(null)
 
+function getDeployedAddress(accountId: AccountId) {
 	const { client } = useBlockchain()
 
-	const creationOptions = {
+	creationOptions.value = {
 		salt: hexlify(SALT),
 		validatorAddress: ECDSA_VALIDATOR_ADDRESS,
-		owner: store.value.eoaAddress,
+		initData: '0x',
 	}
 
 	switch (store.value.validator) {
 		case 'eoa':
+			if (!store.value.eoaAddress) {
+				throw new Error('No connected address')
+			}
+			creationOptions.value.initData = store.value.eoaAddress
 			switch (accountId) {
 				case AccountId.KERNEL:
-					return Kernel.getNewAddress(client.value, creationOptions)
+					return Kernel.getNewAddress(client.value, creationOptions.value)
 				case AccountId.MY_ACCOUNT:
-					return MyAccount.getNewAddress(client.value, creationOptions)
+					// REMOVE
+					return MyAccount.getNewAddress(client.value, {
+						salt: hexlify(SALT),
+						validatorAddress: ECDSA_VALIDATOR_ADDRESS,
+						owner: store.value.eoaAddress,
+					})
 				default:
 					return null
 			}
 		case 'passkey':
-			return null
+			const { credential } = usePasskey()
+			if (!credential.value) {
+				throw new Error('No passkey credential')
+			}
+
+			creationOptions.value.initData = WebAuthnValidator.getInitData({
+				pubKeyX: credential.value.pubX,
+				pubKeyY: credential.value.pubY,
+				authenticatorIdHash: credential.value.authenticatorIdHash,
+			})
+
+			switch (accountId) {
+				case AccountId.KERNEL:
+					return Kernel.getNewAddress(client.value, creationOptions.value)
+				default:
+					return null
+			}
 	}
 
 	return null
@@ -67,25 +102,41 @@ const loadingDeploy = ref(false)
 const errorDeploy = ref<string | null>(null)
 
 async function onClickDeploy() {
-	if (!store.value.eoaAddress) {
-		throw new Error('No connected address')
+	if (!creationOptions.value) {
+		throw new Error('No creation options')
 	}
+
 	if (!deployedAddress.value) {
 		throw new Error('No deployed address')
-	}
-	const { signer } = useEOA()
-	if (!signer.value) {
-		throw new Error('No signer')
 	}
 
 	const { bundler, client, pmGetter } = useBlockchain()
 
+	let erc7579Validator: ERC7579Validator
+
+	switch (store.value.validator) {
+		case 'eoa':
+			const { signer } = useEOA()
+			if (!signer.value) {
+				throw new Error('No signer')
+			}
+			erc7579Validator = new ECDSAValidator({
+				address: ECDSA_VALIDATOR_ADDRESS,
+				client: client.value,
+				signer: signer.value,
+			})
+			break
+		case 'passkey':
+			erc7579Validator = new WebAuthnValidator({
+				address: WEB_AUTHN_VALIDATOR_ADDRESS,
+				signMessage: signMessage,
+			})
+			break
+		default:
+			throw new Error('Invalid validator')
+	}
+
 	let smartAccount: SmartAccount
-	let erc7579Validator = new ECDSAValidator({
-		address: ECDSA_VALIDATOR_ADDRESS,
-		client: client.value,
-		signer: signer.value,
-	})
 
 	switch (selectedVendor.value) {
 		case AccountId.KERNEL:
@@ -108,14 +159,10 @@ async function onClickDeploy() {
 			throw new Error('Invalid vendor')
 	}
 
-	loadingDeploy.value = true
-	const creationOptions = {
-		salt: hexlify(SALT),
-		validatorAddress: ECDSA_VALIDATOR_ADDRESS,
-		owner: store.value.eoaAddress,
-	}
 	try {
-		const op = await smartAccount.deploy(creationOptions)
+		loadingDeploy.value = true
+
+		const op = await smartAccount.deploy(creationOptions.value)
 
 		const receipt = await op.wait()
 		console.log(receipt)
@@ -128,9 +175,7 @@ async function onClickDeploy() {
 
 		goNextStage()
 	} catch (err: unknown) {
-		const errorMessage = (err as Error).toString().match(/AA\d+[^:]+/)?.[0] || 'Error deploying'
-		errorDeploy.value = errorMessage
-		console.error(err)
+		throw err
 	} finally {
 		loadingDeploy.value = false
 	}
