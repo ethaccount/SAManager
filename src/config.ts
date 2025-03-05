@@ -1,8 +1,13 @@
 export const ALCHEMY_API_KEY = import.meta.env.VITE_ALCHEMY_API_KEY
 export const PIMLICO_API_KEY = import.meta.env.VITE_PIMLICO_API_KEY
+export const PASSKEY_RP_URL = import.meta.env.VITE_PASSKEY_RP_URL
 
 if (!ALCHEMY_API_KEY || !PIMLICO_API_KEY) {
 	throw new Error('ALCHEMY_API_KEY or PIMLICO_API_KEY is not set')
+}
+
+if (!PASSKEY_RP_URL) {
+	throw new Error('PASSKEY_RP_URL is not set')
 }
 
 // supported chain ids in the app

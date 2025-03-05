@@ -4,10 +4,11 @@ import CreateSignerChoice from '@/components/connect-modal/CreateSignerChoice.vu
 import EOAAccountChoice from '@/components/connect-modal/EOAAccountChoice.vue'
 import EOAConnect from '@/components/connect-modal/EOAConnect.vue'
 import InitialStep from '@/components/connect-modal/Initial.vue'
+import PasskeyAuth from '@/components/connect-modal/PasskeyAuth.vue'
 import PasskeyLogin from '@/components/connect-modal/PasskeyLogin.vue'
-import { ValidatorKey, AccountId } from '@/types'
-import { useSA } from './useSA'
+import { AccountId, ValidatorKey } from '@/types'
 import { useBlockchain } from './useBlockchain'
+import { useSA } from './useSA'
 
 export enum ConnectModalStageKey {
 	INITIAL = 'INITIAL',
@@ -23,9 +24,9 @@ export enum ConnectModalStageKey {
 	EOA_ACCOUNT_CHOICE = 'EOA_ACCOUNT_CHOICE',
 	EOA_CONNECTED = 'EOA_CONNECTED',
 
-	// PASSKEY_LOGIN = 'PASSKEY_LOGIN',
-	// PASSKEY_ACCOUNT_CHOICE = 'PASSKEY_ACCOUNT_CHOICE',
-	// PASSKEY_CONNECTED = 'PASSKEY_CONNECTED',
+	PASSKEY_LOGIN = 'PASSKEY_LOGIN',
+	PASSKEY_ACCOUNT_CHOICE = 'PASSKEY_ACCOUNT_CHOICE',
+	PASSKEY_CONNECTED = 'PASSKEY_CONNECTED',
 }
 
 type Stage = {
@@ -43,7 +44,11 @@ type StageConfig = {
 const CONNECT_MODAL_CONFIG: Record<ConnectModalStageKey, Stage> = {
 	[ConnectModalStageKey.INITIAL]: {
 		component: InitialStep,
-		next: [ConnectModalStageKey.CREATE_SIGNER_CHOICE, ConnectModalStageKey.EOA_EOA_CONNECT],
+		next: [
+			ConnectModalStageKey.CREATE_SIGNER_CHOICE,
+			ConnectModalStageKey.EOA_EOA_CONNECT,
+			ConnectModalStageKey.PASSKEY_LOGIN,
+		],
 		config: {
 			title: 'Connect or Create',
 		},
@@ -72,9 +77,11 @@ const CONNECT_MODAL_CONFIG: Record<ConnectModalStageKey, Stage> = {
 		},
 	},
 	[ConnectModalStageKey.CREATE_PASSKEY_CONNECT]: {
-		component: PasskeyLogin,
+		component: PasskeyAuth,
 		next: [ConnectModalStageKey.CREATE_DEPLOY],
-		config: {},
+		config: {
+			title: 'Passkey Authentication',
+		},
 	},
 	[ConnectModalStageKey.CREATE_EIP7702_CONNECT]: {
 		component: EOAConnect,
@@ -99,7 +106,7 @@ const CONNECT_MODAL_CONFIG: Record<ConnectModalStageKey, Stage> = {
 		},
 	},
 	// ===============================
-	// EOA
+	// Connect via EOA
 	// ===============================
 	[ConnectModalStageKey.EOA_EOA_CONNECT]: {
 		component: EOAConnect,
@@ -119,6 +126,31 @@ const CONNECT_MODAL_CONFIG: Record<ConnectModalStageKey, Stage> = {
 		},
 	},
 	[ConnectModalStageKey.EOA_CONNECTED]: {
+		component: Connected,
+		next: [],
+		config: {
+			title: 'Connected',
+			requiredFields: ['deployedAddress', 'accountId', 'validator'],
+		},
+	},
+	// ===============================
+	// Connect via Passkey
+	// ===============================
+	[ConnectModalStageKey.PASSKEY_LOGIN]: {
+		component: PasskeyLogin,
+		next: [ConnectModalStageKey.PASSKEY_ACCOUNT_CHOICE],
+		config: {
+			title: 'Passkey Authentication',
+		},
+	},
+	[ConnectModalStageKey.PASSKEY_ACCOUNT_CHOICE]: {
+		component: EOAAccountChoice,
+		next: [ConnectModalStageKey.PASSKEY_CONNECTED],
+		config: {
+			title: 'Choose Account',
+		},
+	},
+	[ConnectModalStageKey.PASSKEY_CONNECTED]: {
 		component: Connected,
 		next: [],
 		config: {

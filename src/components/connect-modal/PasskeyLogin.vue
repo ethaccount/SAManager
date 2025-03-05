@@ -1,7 +1,16 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+function onClickRegister() {
+	console.log('onClickRegister')
+}
+
+function onClickLogin() {
+	console.log('onClickLogin')
+}
+</script>
 
 <template>
-	<div>PasskeyLogin</div>
+	<Button class="w-full" @click="onClickRegister">Register</Button>
+	<Button class="w-full" @click="onClickLogin">Login</Button>
 </template>
 
 <style lang="css"></style>
