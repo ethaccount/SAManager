@@ -13,6 +13,7 @@ import ConnectModal from '@/components/connect-modal/ConnectModal.vue'
 import ErrorModal from '@/components/ErrorModal.vue'
 import { useErrorModalStore } from '@/stores/useErrorModal'
 import Address from '@/components/Address.vue'
+import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
 
 // ============================== Connect Modal ==============================
 const connectModalStore = useConnectModal()
@@ -84,6 +85,8 @@ function onClickDisconnect() {
 }
 
 const router = useRouter()
+
+const breakpoints = useBreakpoints(breakpointsTailwind)
 </script>
 
 <template>
@@ -139,6 +142,28 @@ const router = useRouter()
 	</div>
 	<VueDappModal dark auto-connect />
 	<ModalsContainer />
+	<Notifications
+		class="break-words"
+		:closeOnClick="false"
+		:position="breakpoints.isSmaller('md') ? 'bottom center' : 'bottom right'"
+	>
+		<template #body="{ item, close }">
+			<div class="vue-notification" :class="[item.type]">
+				<div v-if="item.title" class="notification-title flex items-center justify-between">
+					{{ item.title }}
+					<Button
+						variant="outline"
+						size="icon"
+						class="w-5 h-5 rounded-full border-none bg-transparent hover:bg-transparent shadow-none text-gray-200 hover:text-white"
+						@click="close"
+					>
+						<X />
+					</Button>
+				</div>
+				<div class="notification-content">{{ item.text }}</div>
+			</div>
+		</template>
+	</Notifications>
 </template>
 
 <style></style>

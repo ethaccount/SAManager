@@ -11,6 +11,7 @@
 	},
 	"dependencies": {
 		"@internationalized/date": "^3.7.0",
+		"@kyvg/vue3-notification": "^3.4.1",
 		"@noble/curves": "^1.8.1",
 		"@simplewebauthn/browser": "^10.0.0",
 		"@vee-validate/zod": "^4.15.0",

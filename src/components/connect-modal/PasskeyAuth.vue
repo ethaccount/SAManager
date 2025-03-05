@@ -4,23 +4,13 @@ import { register, login } from '@/lib/passkey'
 const username = ref('alice')
 
 async function onClickRegister() {
-	try {
-		const res = await register(username.value)
-		console.log('register', res)
-	} catch (e) {
-		console.error(e)
-		alert(e)
-	}
+	const res = await register(username.value)
+	console.log('register', res)
 }
 
 async function onClickLogin() {
-	try {
-		const res = await login()
-		console.log('login', res)
-	} catch (e) {
-		console.error(e)
-		alert(e)
-	}
+	const res = await login()
+	console.log('login', res)
 }
 </script>
 
