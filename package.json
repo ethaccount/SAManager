@@ -23,7 +23,7 @@
 		"clsx": "^2.1.1",
 		"ethers": "^6.13.4",
 		"lucide-vue-next": "^0.471.0",
-		"pinia": "^2.2.8",
+		"pinia": "^3.0.1",
 		"pinia-plugin-persistedstate": "^4.2.0",
 		"radix-vue": "^1.9.12",
 		"sendop": "0.2.2",

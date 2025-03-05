@@ -1,19 +1,10 @@
 import { isError, ErrorCode } from 'ethers'
 import type { ethers } from 'ethers'
 
-// Returned error is used for console.error
-export function normalizeError(unknownError: unknown): Error {
+export function parseError(unknownError: unknown): Error {
 	let err: Error
 	if (unknownError instanceof Error) {
-		if (EthersError.isEthersError(unknownError)) {
-			err = new EthersError(unknownError.message, { cause: unknownError })
-
-			if (err.message.includes('user rejected action')) {
-				err = new UserRejectedActionError(err.message, { cause: err })
-			}
-		} else {
-			err = unknownError
-		}
+		err = unknownError
 	} else {
 		err = new Error(String(unknownError))
 	}

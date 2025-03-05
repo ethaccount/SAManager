@@ -1,23 +1,28 @@
 <script setup lang="ts">
-import { register, login } from '@/lib/passkey'
+import { usePasskey } from '@/stores/usePasskey'
 
 const username = ref('alice')
 
+const { passkeyRegister, passkeyLogin, isLogin, credential } = usePasskey()
+
 async function onClickRegister() {
-	const res = await register(username.value)
-	console.log('register', res)
+	await passkeyRegister(username.value)
 }
 
 async function onClickLogin() {
-	const res = await login()
-	console.log('login', res)
+	await passkeyLogin(username.value)
 }
 </script>
 
 <template>
-	<Input v-model="username" placeholder="Username" />
-	<Button class="w-full" @click="onClickRegister">Register</Button>
-	<Button class="w-full" @click="onClickLogin">Login</Button>
+	<div v-if="!isLogin">
+		<Input v-model="username" placeholder="Username" />
+		<Button class="w-full" @click="onClickRegister">Register</Button>
+		<Button class="w-full" @click="onClickLogin">Login</Button>
+	</div>
+	<div v-else>
+		<p>Username: {{ username }}</p>
+	</div>
 </template>
 
 <style lang="css"></style>

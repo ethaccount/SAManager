@@ -14,6 +14,7 @@ import ErrorModal from '@/components/ErrorModal.vue'
 import { useErrorModalStore } from '@/stores/useErrorModal'
 import Address from '@/components/Address.vue'
 import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
+import { X } from 'lucide-vue-next'
 
 // ============================== Connect Modal ==============================
 const connectModalStore = useConnectModal()

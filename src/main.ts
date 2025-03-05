@@ -1,33 +1,36 @@
 import { createApp } from 'vue'
-import './style.css'
 import App from './App.vue'
-import { createPinia } from 'pinia'
-import { createVfm } from 'vue-final-modal'
-import 'vue-final-modal/style.css'
-import router from './router'
-import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
-import { AppError, formatErrMsg, normalizeError } from './lib/error'
 import { ERROR_NOTIFICATION_DURATION } from './config'
+import { AppError, formatErrMsg, parseError } from './lib/error'
+import './style.css'
 
 const app = createApp(App)
 
-import Notifications, { notify } from '@kyvg/vue3-notification'
-app.use(Notifications)
-
-const vfm = createVfm()
-app.use(vfm)
-
 // pinia
+import { createPinia } from 'pinia'
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
 app.use(pinia)
 
+// vue-router
+import router from './router'
 app.use(router)
+
+// vue-notification
+import Notifications, { notify } from '@kyvg/vue3-notification'
+app.use(Notifications)
+
+// vue-final-modal
+import { createVfm } from 'vue-final-modal'
+import 'vue-final-modal/style.css'
+const vfm = createVfm()
+app.use(vfm)
 
 app.mount('#app')
 
 app.config.errorHandler = (error: unknown, _vm, _info) => {
-	const err = normalizeError(error)
+	const err = parseError(error)
 	const appError = new AppError(err.message, { cause: err })
 	console.error(appError)
 

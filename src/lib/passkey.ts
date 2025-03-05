@@ -7,10 +7,17 @@ import { p256 } from '@noble/curves/p256'
 
 const credentials = 'include'
 
+export type PasskeyCredential = {
+	pubX: bigint
+	pubY: bigint
+	authenticatorId: string
+	authenticatorIdHash: string
+}
+
 /**
  * Modified from zerodev sdk toWebAuthnKey()
  */
-export async function register(username: string) {
+export async function register(username: string): Promise<PasskeyCredential> {
 	// Get registration options
 	const registerOptionsResponse = await fetch(`${PASSKEY_RP_URL}/register/options`, {
 		method: 'POST',
@@ -91,7 +98,7 @@ export async function register(username: string) {
 /**
  * Modified from zerodev sdk toWebAuthnKey()
  */
-export async function login() {
+export async function login(): Promise<PasskeyCredential> {
 	// Get login options
 	const loginOptionsResponse = await fetch(`${PASSKEY_RP_URL}/login/options`, {
 		method: 'POST',

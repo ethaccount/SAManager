@@ -81,6 +81,7 @@ const CONNECT_MODAL_CONFIG: Record<ConnectModalStageKey, Stage> = {
 		next: [ConnectModalStageKey.CREATE_DEPLOY],
 		config: {
 			title: 'Passkey Authentication',
+			hasNextButton: true,
 		},
 	},
 	[ConnectModalStageKey.CREATE_EIP7702_CONNECT]: {
