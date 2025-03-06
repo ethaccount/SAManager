@@ -9,6 +9,7 @@ import PasskeyLogin from '@/components/connect-modal/PasskeyLogin.vue'
 import { AccountId, ValidatorKey } from '@/types'
 import { useBlockchain } from './useBlockchain'
 import { useSA } from './useSA'
+import PasskeyAccountChoice from '@/components/connect-modal/PasskeyAccountChoice.vue'
 
 export enum ConnectModalStageKey {
 	INITIAL = 'INITIAL',
@@ -141,15 +142,17 @@ const CONNECT_MODAL_CONFIG: Record<ConnectModalStageKey, Stage> = {
 		component: PasskeyLogin,
 		next: [ConnectModalStageKey.PASSKEY_ACCOUNT_CHOICE],
 		config: {
-			title: 'Passkey Authentication',
+			title: 'Passkey Login',
 			requiredFields: ['validator'],
+			hasNextButton: true,
 		},
 	},
 	[ConnectModalStageKey.PASSKEY_ACCOUNT_CHOICE]: {
-		component: EOAAccountChoice,
+		component: PasskeyAccountChoice,
 		next: [ConnectModalStageKey.PASSKEY_CONNECTED],
 		config: {
 			title: 'Choose Account',
+			requiredFields: ['validator'],
 		},
 	},
 	[ConnectModalStageKey.PASSKEY_CONNECTED]: {

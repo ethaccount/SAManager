@@ -1,8 +1,18 @@
 import { AccountId, ValidatorKey } from '@/types'
 import { defineStore, storeToRefs } from 'pinia'
-import { ECDSA_VALIDATOR_ADDRESS, ECDSAValidator, ERC7579Validator, Kernel, MyAccount, SmartAccount } from 'sendop'
+import {
+	ECDSA_VALIDATOR_ADDRESS,
+	ECDSAValidator,
+	ERC7579Validator,
+	Kernel,
+	MyAccount,
+	SmartAccount,
+	WEB_AUTHN_VALIDATOR_ADDRESS,
+	WebAuthnValidator,
+} from 'sendop'
 import { useBlockchain, useBlockchainStore } from './useBlockchain'
 import { useEOA } from './useEOA'
+import { signMessage } from '@/lib/passkey'
 
 export type ConnectedAccount = {
 	address: string
@@ -25,7 +35,7 @@ export const useSAStore = defineStore(
 		}
 
 		const isConnected = computed(() => {
-			return account.value !== null
+			return !!account.value && !!erc7579Validator.value && !!smartAccount.value
 		})
 
 		const { client, bundler, pmGetter } = useBlockchain()
@@ -53,6 +63,11 @@ export const useSAStore = defineStore(
 						address: ECDSA_VALIDATOR_ADDRESS,
 						client: client.value,
 						signer: signer.value,
+					})
+				case 'passkey':
+					return new WebAuthnValidator({
+						address: WEB_AUTHN_VALIDATOR_ADDRESS,
+						signMessage,
 					})
 
 				default:

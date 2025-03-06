@@ -31,12 +31,11 @@ app.mount('#app')
 
 app.config.errorHandler = (error: unknown, _vm, _info) => {
 	const err = parseError(error)
-	const appError = new AppError(err.message, { cause: err })
-	console.error(appError)
+	console.error(err)
 
 	notify({
 		title: 'App Error',
-		text: formatErrMsg(appError),
+		text: formatErrMsg(err),
 		type: 'error',
 		duration: ERROR_NOTIFICATION_DURATION,
 	})

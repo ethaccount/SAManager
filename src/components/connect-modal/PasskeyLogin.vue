@@ -1,16 +1,23 @@
 <script setup lang="ts">
-function onClickRegister() {
-	console.log('onClickRegister')
-}
+import { usePasskey } from '@/stores/usePasskey'
 
-function onClickLogin() {
-	console.log('onClickLogin')
+const username = ref('alice')
+
+const { passkeyLogin, isLogin } = usePasskey()
+
+async function onClickLogin() {
+	await passkeyLogin(username.value)
 }
 </script>
 
 <template>
-	<Button class="w-full" @click="onClickRegister">Register</Button>
-	<Button class="w-full" @click="onClickLogin">Login</Button>
+	<div v-if="!isLogin">
+		<Input v-model="username" placeholder="Username" />
+		<Button class="w-full" @click="onClickLogin">Login</Button>
+	</div>
+	<div v-else>
+		<p>Username: {{ username }}</p>
+	</div>
 </template>
 
 <style lang="css"></style>
