@@ -52,7 +52,7 @@ function getDeployedAddress(accountId: AccountId) {
 
 	creationOptions.value = {
 		salt: hexlify(SALT),
-		validatorAddress: ECDSA_VALIDATOR_ADDRESS,
+		validatorAddress: '0x',
 		initData: '0x',
 	}
 
@@ -61,6 +61,8 @@ function getDeployedAddress(accountId: AccountId) {
 			if (!store.value.eoaAddress) {
 				throw new Error('No connected address')
 			}
+
+			creationOptions.value.validatorAddress = ECDSA_VALIDATOR_ADDRESS
 			creationOptions.value.initData = store.value.eoaAddress
 			switch (accountId) {
 				case AccountId.KERNEL:
@@ -81,6 +83,7 @@ function getDeployedAddress(accountId: AccountId) {
 				throw new Error('No passkey credential')
 			}
 
+			creationOptions.value.validatorAddress = WEB_AUTHN_VALIDATOR_ADDRESS
 			creationOptions.value.initData = WebAuthnValidator.getInitData({
 				pubKeyX: credential.value.pubX,
 				pubKeyY: credential.value.pubY,
