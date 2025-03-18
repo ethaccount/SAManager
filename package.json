@@ -27,7 +27,7 @@
 		"pinia": "^3.0.1",
 		"pinia-plugin-persistedstate": "^4.2.0",
 		"radix-vue": "^1.9.12",
-		"sendop": "0.3.0-beta.0",
+		"sendop": "0.3.0-beta.4",
 		"tailwind-merge": "^2.6.0",
 		"tailwindcss-animate": "^1.0.7",
 		"vee-validate": "^4.15.0",

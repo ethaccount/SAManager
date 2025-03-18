@@ -6,7 +6,7 @@ import { AccountId } from '@/types'
 import { shortenAddress } from '@vue-dapp/core'
 import { Contract, EventLog } from 'ethers'
 import { Loader2 } from 'lucide-vue-next'
-import { ECDSA_VALIDATOR_ADDRESS } from 'sendop'
+import { ADDRESS } from 'sendop'
 
 interface AccountInfo {
 	address: string
@@ -63,7 +63,7 @@ onMounted(async () => {
 async function getAccountsByECDSAValidator(address: string): Promise<string[]> {
 	const { client } = useBlockchain()
 	const ecdsaValidator = new Contract(
-		ECDSA_VALIDATOR_ADDRESS,
+		ADDRESS.ECDSAValidator,
 		['event OwnerRegistered(address indexed kernel, address indexed owner)'],
 		client.value,
 	)
@@ -91,7 +91,7 @@ function onClickAccount(accountInfo: AccountInfo) {
 				<div class="flex items-center justify-center">
 					<Loader2 v-if="loadingAddresses" class="w-4 h-4 mr-2 animate-spin" />
 				</div>
-
+				<div v-if="accounts.length === 0" class="text-gray-500 text-center">No accounts found</div>
 				<div
 					class="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground cursor-pointer"
 					v-for="account in accounts"

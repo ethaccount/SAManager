@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { fetchModules } from '@/lib/aa'
-import { useSA } from '@/stores/useSA'
 import { useBlockchain } from '@/stores/useBlockchain'
-import { shortenAddress } from '@vue-dapp/core'
+import { useSA } from '@/stores/useSA'
 
 const modules = ref<Record<string, string[]>>({})
 
 const { account, isConnected } = useSA()
-const { client } = useBlockchain()
+const { client, clientNoBatch } = useBlockchain()
 
 const loading = ref(false)
 watch(
@@ -23,7 +22,7 @@ watch(
 
 		loading.value = true
 		try {
-			modules.value = await fetchModules(account.value.address, client.value)
+			modules.value = await fetchModules(account.value.address, clientNoBatch.value)
 		} catch (error) {
 			console.error('Error fetching modules:', error)
 		} finally {

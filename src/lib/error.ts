@@ -3,10 +3,12 @@ import type { ethers } from 'ethers'
 
 export function parseError(unknownError: unknown): Error {
 	let err: Error
-	if (unknownError instanceof Error) {
-		err = unknownError
-	} else {
-		err = new Error(String(unknownError))
+	switch (true) {
+		case unknownError instanceof Error:
+			err = unknownError
+			break
+		default:
+			err = new Error(String(unknownError))
 	}
 	return err
 }

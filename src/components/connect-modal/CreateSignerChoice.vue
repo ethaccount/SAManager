@@ -29,7 +29,7 @@ function onClickEIP7702() {
 <template>
 	<Button class="w-full" @click="onClickEOA"> EOA </Button>
 	<Button class="w-full" @click="onClickPasskey"> Passkey </Button>
-	<Button disabled class="w-full" @click="onClickEIP7702"> EIP-7702 </Button>
+	<!-- <Button disabled class="w-full" @click="onClickEIP7702"> EIP-7702 </Button> -->
 </template>
 
 <style lang="css"></style>

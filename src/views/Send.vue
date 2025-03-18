@@ -2,13 +2,18 @@
 import { Button } from '@/components/ui/button'
 import { useSA } from '@/stores/useSA'
 import { X } from 'lucide-vue-next'
-import { Execution } from 'sendop'
 import { parseEther, Interface } from 'ethers'
-import { COUNTER_ADDRESS } from '@/address'
+import { ADDRESS } from 'sendop'
+
+type Execution = {
+	to: string
+	value: string
+	data: string
+}
 
 function getDefaultExecution(): Execution {
 	return {
-		to: COUNTER_ADDRESS,
+		to: ADDRESS.Counter,
 		value: '0',
 		data: new Interface(['function setNumber(uint256)']).encodeFunctionData('setNumber', [101]),
 	}
@@ -42,7 +47,13 @@ async function onClickSendOperations() {
 
 	try {
 		loading.value = true
-		const op = await smartAccount.value.send(execs)
+		const op = await smartAccount.value.send(
+			execs.map(e => ({
+				to: e.to,
+				value: BigInt(e.value),
+				data: e.data,
+			})),
+		)
 		const receipt = await op.wait()
 		console.log('receipt', receipt)
 	} catch (e: any) {

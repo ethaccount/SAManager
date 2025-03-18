@@ -76,6 +76,7 @@ function handleClose() {
 }
 .confirm-modal-content {
 	width: 300px;
+	min-height: 280px;
 	display: flex;
 	flex-direction: column;
 	padding: 1rem;

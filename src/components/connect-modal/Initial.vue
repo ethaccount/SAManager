@@ -27,7 +27,7 @@ function onClickPasskey() {
 <template>
 	<div class="flex flex-col gap-2 w-full">
 		<Button class="w-full" @click="onClickEOA"> EOA Managed </Button>
-		<Button disabled class="w-full"> EIP-7702 </Button>
+		<!-- <Button disabled class="w-full"> EIP-7702 </Button> -->
 		<Button class="w-full" @click="onClickPasskey"> Passkey </Button>
 
 		<div class="mt-2">

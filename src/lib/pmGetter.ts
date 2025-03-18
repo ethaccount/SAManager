@@ -1,6 +1,5 @@
-import { CHARITY_PAYMASTER_ADDRESS } from '@/address'
 import { Contract, JsonRpcProvider, toBeHex } from 'ethers'
-import { GetPaymasterStubDataResult, PaymasterGetter, UserOp } from 'sendop'
+import { GetPaymasterStubDataResult, PaymasterGetter, UserOp, ADDRESS } from 'sendop'
 
 export class MyPaymaster implements PaymasterGetter {
 	#client: JsonRpcProvider
@@ -18,7 +17,7 @@ export class MyPaymaster implements PaymasterGetter {
 	}
 
 	async getPaymasterStubData(userOp: UserOp): Promise<GetPaymasterStubDataResult> {
-		if (this.#paymasterAddress === CHARITY_PAYMASTER_ADDRESS) {
+		if (this.#paymasterAddress === ADDRESS.CharityPaymaster) {
 			return {
 				sponsor: {
 					name: 'My Wallet',

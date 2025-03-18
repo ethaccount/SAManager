@@ -1,11 +1,12 @@
 <script setup lang="ts">
+import { parseError } from '@/lib/error'
 import { useConnectModal } from '@/stores/useConnectModal'
 import { RdnsEnum, shortenAddress, useVueDapp, type RDNS } from '@vue-dapp/core'
 import { useVueDappModal } from '@vue-dapp/modal'
 
 const emit = defineEmits(['next'])
 
-const { providerDetails, wallet, address, status, connectTo, error, isConnected, watchWalletChanged } = useVueDapp()
+const { providerDetails, wallet, address, status, connectTo, isConnected, watchWalletChanged } = useVueDapp()
 
 const providerList = computed(() => {
 	return providerDetails.value.slice().sort((a, b) => {
@@ -17,9 +18,26 @@ const providerList = computed(() => {
 	})
 })
 
+const connectError = ref<string | null>(null)
+
 async function onClickWallet(rdns: RDNS) {
+	connectError.value = null
 	useVueDappModal().close()
-	await connectTo('BrowserWallet', { target: 'rdns', rdns })
+	try {
+		await connectTo('BrowserWallet', { target: 'rdns', rdns })
+	} catch (err: unknown) {
+		const e = parseError(err)
+
+		// Do not show error when the user cancels their action
+		if (
+			e.message.includes('user rejected action') ||
+			e.message.includes('User rejected the request.') ||
+			e.message.includes('4001')
+		) {
+			return
+		}
+		connectError.value = e.message
+	}
 }
 
 const { updateStore } = useConnectModal()
@@ -63,7 +81,7 @@ watchWalletChanged(
 				</div>
 			</div>
 
-			<p class="text-red-500">{{ error }}</p>
+			<p class="text-red-500">{{ connectError }}</p>
 		</div>
 	</div>
 </template>

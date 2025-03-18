@@ -48,7 +48,7 @@ errorModalStore.initOpenAndCloseFn(openErrorModal, closeErrorModal)
 
 // =============================== DEV ===============================
 
-import { simulateStage, ConnectModalStageKey } from '@/stores/useConnectModal'
+// import { simulateStage, ConnectModalStageKey } from '@/stores/useConnectModal'
 import { CHAIN_ID, CHAIN_NAME } from './config'
 
 // simulateStage(ConnectModalStageKey.CREATE_CONNECTED)

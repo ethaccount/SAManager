@@ -1,14 +1,13 @@
 import { AccountId, ValidatorKey } from '@/types'
 import { defineStore, storeToRefs } from 'pinia'
 import {
-	ECDSA_VALIDATOR_ADDRESS,
-	ECDSAValidator,
+	ADDRESS,
+	EOAValidatorModule,
 	ERC7579Validator,
-	Kernel,
-	MyAccount,
+	KernelV3Account,
+	NexusAccount,
 	SmartAccount,
-	WEB_AUTHN_VALIDATOR_ADDRESS,
-	WebAuthnValidator,
+	WebAuthnValidatorModule,
 } from 'sendop'
 import { useBlockchain, useBlockchainStore } from './useBlockchain'
 import { useEOA } from './useEOA'
@@ -42,12 +41,12 @@ export const useSAStore = defineStore(
 		const { signer } = useEOA()
 
 		watch(account, account => {
-			console.log('Account connected', account)
 			if (account) {
 				// 如果 chainId 跟 app 不一樣，要 disconnect
 				const blockchainStore = useBlockchainStore()
 				if (account.chainId !== blockchainStore.chainId) {
 					resetAccount()
+					console.error('Account chainId mismatch', account.chainId, blockchainStore.chainId)
 				}
 			}
 		})
@@ -59,14 +58,13 @@ export const useSAStore = defineStore(
 
 			switch (account.value?.validator) {
 				case 'eoa':
-					return new ECDSAValidator({
-						address: ECDSA_VALIDATOR_ADDRESS,
-						client: client.value,
+					return new EOAValidatorModule({
+						address: ADDRESS.ECDSAValidator,
 						signer: signer.value,
 					})
 				case 'passkey':
-					return new WebAuthnValidator({
-						address: WEB_AUTHN_VALIDATOR_ADDRESS,
+					return new WebAuthnValidatorModule({
+						address: ADDRESS.WebAuthnValidator,
 						signMessage,
 					})
 
@@ -82,17 +80,19 @@ export const useSAStore = defineStore(
 
 			switch (account.value?.accountId) {
 				case AccountId.KERNEL:
-					return new Kernel(account.value?.address, {
+					return new KernelV3Account({
+						address: account.value?.address,
 						client: client.value,
 						bundler: bundler.value,
-						erc7579Validator: erc7579Validator.value,
+						validator: erc7579Validator.value,
 						pmGetter: pmGetter.value,
 					})
-				case AccountId.MY_ACCOUNT:
-					return new MyAccount(account.value?.address, {
+				case AccountId.NEXUS:
+					return new NexusAccount({
+						address: account.value?.address,
 						client: client.value,
 						bundler: bundler.value,
-						erc7579Validator: erc7579Validator.value,
+						validator: erc7579Validator.value,
 						pmGetter: pmGetter.value,
 					})
 				default:
