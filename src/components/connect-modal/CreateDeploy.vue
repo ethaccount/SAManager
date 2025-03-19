@@ -21,6 +21,7 @@ import {
 	RHINESTONE_ATTESTER_ADDRESS,
 	SmartAccount,
 	WebAuthnValidatorModule,
+	DEV_ATTESTER_ADDRESS,
 } from 'sendop'
 
 const { assertStage, goNextStage, store } = useConnectModal()
@@ -62,7 +63,7 @@ function getComputedAddress(accountId: AccountId) {
 		validatorInitData: '0x',
 		bootstrap: 'initNexusWithSingleValidator',
 		registryAddress: ADDRESS.Registry,
-		attesters: [RHINESTONE_ATTESTER_ADDRESS, BICONOMY_ATTESTER_ADDRESS],
+		attesters: [RHINESTONE_ATTESTER_ADDRESS, BICONOMY_ATTESTER_ADDRESS, DEV_ATTESTER_ADDRESS],
 		threshold: 1,
 	}
 

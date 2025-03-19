@@ -57,8 +57,8 @@ importers:
         specifier: ^1.9.12
         version: 1.9.12(vue@3.5.13(typescript@5.7.2))
       sendop:
-        specifier: 0.3.0-beta.4
-        version: 0.3.0-beta.4(ethers@6.13.5)
+        specifier: 0.3.0-beta.5
+        version: 0.3.0-beta.5(ethers@6.13.5)
       tailwind-merge:
         specifier: ^2.6.0
         version: 2.6.0
@@ -210,8 +210,8 @@ packages:
     resolution: {integrity: sha512-L6mZmwFDK6Cjh1nRCLXpa6no13ZIioJDz7mdkzHv399pThrTa/k0nUlNaenOeh2kWu/iaOQYElEpKPUswUa9Vg==}
     engines: {node: '>=6.9.0'}
 
-  '@coinbase/wallet-sdk@4.3.0':
-    resolution: {integrity: sha512-T3+SNmiCw4HzDm4we9wCHCxlP0pqCiwKe4sOwPH3YAK2KSKjxPRydKu6UQJrdONFVLG7ujXvbd/6ZqmvJb8rkw==}
+  '@coinbase/wallet-sdk@4.3.1':
+    resolution: {integrity: sha512-t4dF5T4C9wdaiyZmAEBA+7wfORla6nTeE2ZsbPvHhEmKPoO/okyspq6jNmyBvf1hPPq5tajLm1ePStrznhEFvA==}
 
   '@esbuild/aix-ppc64@0.25.0':
     resolution: {integrity: sha512-O7vun9Sf8DFjH2UtqK8Ku3LkquL9SZL8OLY1T5NZkA34+wG3OQF7cl4Ql8vdNzM6fzBbYfLaiRLIOZ+2FOCgBQ==}
@@ -1816,8 +1816,8 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  sendop@0.3.0-beta.4:
-    resolution: {integrity: sha512-T2Sqg0CeGdK+m22bsJQ69gJCL5n623kS4wyGlTlm424PYR54HDGdaIUeCIf0DuZNXSW+VYYjPCHBImjHTA0/Bw==}
+  sendop@0.3.0-beta.5:
+    resolution: {integrity: sha512-TkmcekM0AN0lzeaILHrBTFXxcpkgJR8T2P9WLDz8dhOyn5Cd/LeIIOWmhxHRO1vl5LKekVkicZxaGkJZkQbLcw==}
     engines: {bun: '>=1.1.0'}
     peerDependencies:
       ethers: ^6.13.5
@@ -2322,7 +2322,7 @@ snapshots:
       '@babel/helper-string-parser': 7.25.9
       '@babel/helper-validator-identifier': 7.25.9
 
-  '@coinbase/wallet-sdk@4.3.0':
+  '@coinbase/wallet-sdk@4.3.1':
     dependencies:
       '@noble/hashes': 1.7.1
       clsx: 1.2.1
@@ -2657,7 +2657,7 @@ snapshots:
 
   '@vue-dapp/coinbase@1.5.1(@vue-dapp/core@1.5.1(pinia@3.0.1(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2)))(vue@3.5.13(typescript@5.7.2)))':
     dependencies:
-      '@coinbase/wallet-sdk': 4.3.0
+      '@coinbase/wallet-sdk': 4.3.1
       '@vue-dapp/core': 1.5.1(pinia@3.0.1(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2)))(vue@3.5.13(typescript@5.7.2))
 
   '@vue-dapp/core@1.5.1(pinia@3.0.1(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2)))(vue@3.5.13(typescript@5.7.2))':
@@ -3996,7 +3996,7 @@ snapshots:
 
   semver@7.6.3: {}
 
-  sendop@0.3.0-beta.4(ethers@6.13.5):
+  sendop@0.3.0-beta.5(ethers@6.13.5):
     dependencies:
       ethers: 6.13.5
 
