@@ -45,7 +45,6 @@ declare module 'vue' {
     Checkbox: typeof import('./components/ui/checkbox/Checkbox.vue')['default']
     Connected: typeof import('./components/connect-modal/Connected.vue')['default']
     ConnectModal: typeof import('./components/connect-modal/ConnectModal.vue')['default']
-    copy: typeof import('./components/connect-modal/EOAAccountChoice copy.vue')['default']
     CreateDeploy: typeof import('./components/connect-modal/CreateDeploy.vue')['default']
     CreateSignerChoice: typeof import('./components/connect-modal/CreateSignerChoice.vue')['default']
     EOAAccountChoice: typeof import('./components/connect-modal/EOAAccountChoice.vue')['default']
