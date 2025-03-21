@@ -30,8 +30,8 @@ function onClickPasskey() {
 		<!-- <Button disabled class="w-full"> EIP-7702 </Button> -->
 		<Button class="w-full" @click="onClickPasskey"> Passkey </Button>
 
-		<div class="mt-2">
-			<Button class="w-full" @click="onClickCreate"> Create New Account </Button>
+		<div class="mt-5 text-center">
+			<a class="underline cursor-pointer hover:text-gray-500" @click="onClickCreate"> Create New Account </a>
 		</div>
 	</div>
 </template>

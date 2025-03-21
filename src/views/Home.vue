@@ -2,6 +2,7 @@
 import { fetchModules } from '@/lib/aa'
 import { useBlockchain } from '@/stores/useBlockchain'
 import { useSA } from '@/stores/useSA'
+import { ERC7579_MODULE_TYPE } from 'sendop'
 
 const modules = ref<Record<string, string[]>>({})
 
@@ -32,11 +33,8 @@ watch(
 	{ immediate: true },
 )
 
-const ModuleType = {
-	1: 'Validation',
-	2: 'Execution',
-	3: 'Fallback',
-	4: 'Hooks',
+const getModuleTypeName = (typeId: number): string => {
+	return ERC7579_MODULE_TYPE[typeId] || 'Unknown'
 }
 </script>
 
@@ -45,7 +43,7 @@ const ModuleType = {
 		<div v-if="loading">Loading modules...</div>
 		<div v-else-if="Object.keys(modules).length > 0">
 			<div v-for="(addresses, typeId) in modules" :key="typeId" class="module-group">
-				<div>{{ ModuleType[typeId] }}</div>
+				<div>{{ getModuleTypeName(Number(typeId)) }}</div>
 				<ul class="flex flex-wrap gap-2">
 					<li v-for="address in addresses" :key="address">
 						<Address :address="address" />

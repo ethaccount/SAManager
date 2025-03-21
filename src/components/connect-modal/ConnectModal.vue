@@ -37,8 +37,8 @@ function handleClose() {
 		content-class="confirm-modal-content"
 		overlay-transition="vfm-fade"
 		content-transition="vfm-fade"
-		:click-to-close="false"
-		:esc-to-close="false"
+		:click-to-close="true"
+		:esc-to-close="true"
 	>
 		<div class="flex justify-between items-center">
 			<!-- back button -->

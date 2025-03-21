@@ -3,6 +3,9 @@ export const PIMLICO_API_KEY = import.meta.env.VITE_PIMLICO_API_KEY
 export const PASSKEY_RP_URL = import.meta.env.VITE_PASSKEY_RP_URL
 export const SALT = import.meta.env.VITE_SALT
 
+// built-in constants: https://vite.dev/guide/env-and-mode#built-in-constants
+export const IS_DEV = !import.meta.env.PROD
+
 if (!ALCHEMY_API_KEY) {
 	throw new Error('ALCHEMY_API_KEY is not set')
 }

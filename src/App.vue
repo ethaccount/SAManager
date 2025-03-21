@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { CoinbaseWalletConnector } from '@vue-dapp/coinbase'
 import { BrowserWalletConnector, useVueDapp } from '@vue-dapp/core'
 import { ModalsContainer, useModal } from 'vue-final-modal'
 // import { useColorMode } from '@vueuse/core'
@@ -58,13 +57,7 @@ import { CHAIN_ID, CHAIN_NAME } from './config'
 
 const { addConnectors, watchWalletChanged, watchDisconnect } = useVueDapp()
 
-addConnectors([
-	new BrowserWalletConnector(),
-	new CoinbaseWalletConnector({
-		appName: 'Vue Dapp',
-		jsonRpcUrl: 'https://ethereum-rpc.publicnode.com',
-	}),
-])
+addConnectors([new BrowserWalletConnector()])
 
 const { setWallet, resetWallet } = useEOA()
 
@@ -78,7 +71,7 @@ watchDisconnect(() => {
 
 // ============================== Blockchain ==============================
 
-const { chainId } = useBlockchain()
+const { chainId, chainIds } = useBlockchain()
 const { account, resetAccount, isConnected } = useSA()
 
 function onClickDisconnect() {
@@ -99,7 +92,9 @@ const breakpoints = useBreakpoints(breakpointsTailwind)
 				</SelectTrigger>
 				<SelectContent>
 					<SelectGroup>
-						<SelectItem v-for="id in CHAIN_ID" :value="id"> {{ CHAIN_NAME[id] }} </SelectItem>
+						<SelectItem v-for="id in chainIds" :value="id" :key="id">
+							{{ CHAIN_NAME[id] }}
+						</SelectItem>
 					</SelectGroup>
 				</SelectContent>
 			</Select>

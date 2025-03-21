@@ -23,9 +23,6 @@ importers:
       '@vee-validate/zod':
         specifier: ^4.15.0
         version: 4.15.0(vue@3.5.13(typescript@5.7.2))(zod@3.24.1)
-      '@vue-dapp/coinbase':
-        specifier: 1.5.1
-        version: 1.5.1(@vue-dapp/core@1.5.1(pinia@3.0.1(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2)))(vue@3.5.13(typescript@5.7.2)))
       '@vue-dapp/core':
         specifier: 1.5.1
         version: 1.5.1(pinia@3.0.1(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2)))(vue@3.5.13(typescript@5.7.2))
@@ -111,6 +108,9 @@ importers:
       vite:
         specifier: ^6.2.0
         version: 6.2.0(@types/node@22.10.6)(jiti@2.4.2)(yaml@2.6.1)
+      vite-bundle-analyzer:
+        specifier: ^0.18.1
+        version: 0.18.1
       vite-plugin-node-polyfills:
         specifier: ^0.23.0
         version: 0.23.0(rollup@4.34.9)(vite@6.2.0(@types/node@22.10.6)(jiti@2.4.2)(yaml@2.6.1))
@@ -209,9 +209,6 @@ packages:
   '@babel/types@7.26.5':
     resolution: {integrity: sha512-L6mZmwFDK6Cjh1nRCLXpa6no13ZIioJDz7mdkzHv399pThrTa/k0nUlNaenOeh2kWu/iaOQYElEpKPUswUa9Vg==}
     engines: {node: '>=6.9.0'}
-
-  '@coinbase/wallet-sdk@4.3.1':
-    resolution: {integrity: sha512-t4dF5T4C9wdaiyZmAEBA+7wfORla6nTeE2ZsbPvHhEmKPoO/okyspq6jNmyBvf1hPPq5tajLm1ePStrznhEFvA==}
 
   '@esbuild/aix-ppc64@0.25.0':
     resolution: {integrity: sha512-O7vun9Sf8DFjH2UtqK8Ku3LkquL9SZL8OLY1T5NZkA34+wG3OQF7cl4Ql8vdNzM6fzBbYfLaiRLIOZ+2FOCgBQ==}
@@ -618,11 +615,6 @@ packages:
   '@volar/typescript@2.4.11':
     resolution: {integrity: sha512-2DT+Tdh88Spp5PyPbqhyoYavYCPDsqbHLFwcUI9K1NlY1YgUJvujGdrqUp0zWxnW7KWNTr3xSpMuv2WnaTKDAw==}
 
-  '@vue-dapp/coinbase@1.5.1':
-    resolution: {integrity: sha512-h7+TUTCtFwb1rt6kLu/et3Yu7MeFyBkBGcsz0dUxra119nPILxt3IBKvav8hvnX5V7Ae37ydhM/VtXsfamAkQA==}
-    peerDependencies:
-      '@vue-dapp/core': '*'
-
   '@vue-dapp/core@1.5.1':
     resolution: {integrity: sha512-ihbk2dsySKHoApna0jDkUg3+ac3G3Cdxl4Is0suMmXFsjnWrlTy4l6fBUAYGHn/B8fRpXs41l/aHuI53zrJ5Jg==}
     peerDependencies:
@@ -938,10 +930,6 @@ packages:
   class-variance-authority@0.7.1:
     resolution: {integrity: sha512-Ka+9Trutv7G8M6WT6SeiRWz792K5qEqIGEGzXKhAE6xOWAY6pPH8U+9IY3oCMv6kqTmLsv7Xh/2w2RigkePMsg==}
 
-  clsx@1.2.1:
-    resolution: {integrity: sha512-EcR6r5a8bj6pu3ycsa/E/cKVGuTgZJZdsyUYHOksG/UHIiKfjxzRxYJpyVBwYaQeOvghal9fcc4PidlgzugAQg==}
-    engines: {node: '>=6'}
-
   clsx@2.1.1:
     resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
     engines: {node: '>=6'}
@@ -1114,9 +1102,6 @@ packages:
   ethers@6.13.5:
     resolution: {integrity: sha512-+knKNieu5EKRThQJWwqaJ10a6HE9sSehGeqWN65//wE7j47ZpFhKAnHB/JJFibwwg61I/koxaPsXbXpD/skNOQ==}
     engines: {node: '>=14.0.0'}
-
-  eventemitter3@5.0.1:
-    resolution: {integrity: sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA==}
 
   events@3.3.0:
     resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
@@ -1713,9 +1698,6 @@ packages:
     resolution: {integrity: sha512-dle9A3yYxlBSrt8Fu+IpjGT8SY8hN0mlaA6GY8t0P5PjIOZemULz/E2Bnm/2dcUOena75OTNkHI76uZBNUUq3A==}
     engines: {node: ^10 || ^12 || >=14}
 
-  preact@10.25.1:
-    resolution: {integrity: sha512-frxeZV2vhQSohQwJ7FvlqC40ze89+8friponWUFeVEkaCfhC6Eu4V0iND5C9CXz8JLndV07QRDeXzH1+Anz5Og==}
-
   process-nextick-args@2.0.1:
     resolution: {integrity: sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag==}
 
@@ -2057,6 +2039,10 @@ packages:
     peerDependencies:
       vue: ^3.4.26
 
+  vite-bundle-analyzer@0.18.1:
+    resolution: {integrity: sha512-VQgrvxRuiZuOhM61p85lGpxzWR3TUbgn1LYtCBL09LUVoKy+yoxPwWTq+ihuPqT5L4tp0Jiiaa/dGYIRF8Guag==}
+    hasBin: true
+
   vite-plugin-node-polyfills@0.23.0:
     resolution: {integrity: sha512-4n+Ys+2bKHQohPBKigFlndwWQ5fFKwaGY6muNDMTb0fSQLyBzS+jjUNRZG9sKF0S/Go4ApG6LFnUGopjkILg3w==}
     peerDependencies:
@@ -2321,13 +2307,6 @@ snapshots:
     dependencies:
       '@babel/helper-string-parser': 7.25.9
       '@babel/helper-validator-identifier': 7.25.9
-
-  '@coinbase/wallet-sdk@4.3.1':
-    dependencies:
-      '@noble/hashes': 1.7.1
-      clsx: 1.2.1
-      eventemitter3: 5.0.1
-      preact: 10.25.1
 
   '@esbuild/aix-ppc64@0.25.0':
     optional: true
@@ -2654,11 +2633,6 @@ snapshots:
       '@volar/language-core': 2.4.11
       path-browserify: 1.0.1
       vscode-uri: 3.0.8
-
-  '@vue-dapp/coinbase@1.5.1(@vue-dapp/core@1.5.1(pinia@3.0.1(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2)))(vue@3.5.13(typescript@5.7.2)))':
-    dependencies:
-      '@coinbase/wallet-sdk': 4.3.1
-      '@vue-dapp/core': 1.5.1(pinia@3.0.1(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2)))(vue@3.5.13(typescript@5.7.2))
 
   '@vue-dapp/core@1.5.1(pinia@3.0.1(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2)))(vue@3.5.13(typescript@5.7.2))':
     dependencies:
@@ -3055,8 +3029,6 @@ snapshots:
     dependencies:
       clsx: 2.1.1
 
-  clsx@1.2.1: {}
-
   clsx@2.1.1: {}
 
   color-convert@2.0.1:
@@ -3259,8 +3231,6 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
-
-  eventemitter3@5.0.1: {}
 
   events@3.3.0: {}
 
@@ -3854,8 +3824,6 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  preact@10.25.1: {}
-
   process-nextick-args@2.0.1: {}
 
   process@0.11.10: {}
@@ -4313,6 +4281,8 @@ snapshots:
       '@vue/devtools-api': 7.7.0
       type-fest: 4.32.0
       vue: 3.5.13(typescript@5.7.2)
+
+  vite-bundle-analyzer@0.18.1: {}
 
   vite-plugin-node-polyfills@0.23.0(rollup@4.34.9)(vite@6.2.0(@types/node@22.10.6)(jiti@2.4.2)(yaml@2.6.1)):
     dependencies:
