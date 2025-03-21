@@ -148,7 +148,7 @@ const breakpoints = useBreakpoints(breakpointsTailwind)
 				<div v-if="item.title" class="notification-title flex items-center justify-between">
 					{{ item.title }}
 
-					<X :size="16" class="cursor-pointer hover:text-gray-300" @click="close" />
+					<X :size="16" class="cursor-pointer text-gray-200 hover:text-white" @click="close" />
 				</div>
 				<div class="notification-content">{{ item.text }}</div>
 			</div>
