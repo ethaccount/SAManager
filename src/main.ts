@@ -34,8 +34,8 @@ app.config.errorHandler = (error: unknown, _vm, _info) => {
 	console.error(err)
 
 	notify({
-		title: 'App Error',
-		text: formatErrMsg(err),
+		title: err.name,
+		text: err.message,
 		type: 'error',
 		duration: ERROR_NOTIFICATION_DURATION,
 	})

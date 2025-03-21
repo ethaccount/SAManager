@@ -13,14 +13,6 @@ export function parseError(unknownError: unknown): Error {
 	return err
 }
 
-export function formatErrMsg(error: Error): string {
-	if (error instanceof AppError) {
-		return error.message
-	}
-
-	return `${error.name}: ${error.message}`
-}
-
 function getDetailedErrorMessage(err: Error): string {
 	let messages: string[] = []
 
