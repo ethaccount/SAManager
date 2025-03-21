@@ -37,8 +37,14 @@ export const useSAStore = defineStore(
 			return !!account.value && !!erc7579Validator.value && !!smartAccount.value
 		})
 
-		const { client, bundler, pmGetter } = useBlockchain()
+		const { client, bundler, pmGetter, chainId } = useBlockchain()
 		const { signer } = useEOA()
+
+		watch(chainId, chainId => {
+			if (chainId !== account.value?.chainId) {
+				resetAccount()
+			}
+		})
 
 		watch(account, account => {
 			if (account) {
