@@ -24,15 +24,17 @@ const accounts = ref<AccountInfo[]>([])
 const loading = ref(false)
 const loadingAddresses = ref(false)
 
+const { clientNoBatch } = useBlockchain()
+
 onMounted(async () => {
-	loading.value = true
-	loadingAddresses.value = true
-
-	if (!credential.value) {
-		throw new Error('PasskeyAccountChoice: No passkey credential found')
-	}
-
 	try {
+		loading.value = true
+		loadingAddresses.value = true
+
+		if (!credential.value) {
+			throw new Error('PasskeyAccountChoice: No passkey credential found')
+		}
+
 		const addresses = await getAccountsByWebAuthnValidator(credential.value.authenticatorIdHash)
 		accounts.value = addresses.map(address => ({
 			address,
@@ -41,9 +43,8 @@ onMounted(async () => {
 		}))
 		loadingAddresses.value = false
 
-		const { client } = useBlockchain()
 		const accountIdPromises = addresses.map((address, index) =>
-			fetchAccountId(address, client.value)
+			fetchAccountId(address, clientNoBatch.value)
 				.then(accountId => {
 					accounts.value[index].accountId = accountId
 					accounts.value[index].loading = false
@@ -56,7 +57,7 @@ onMounted(async () => {
 
 		await Promise.all(accountIdPromises)
 	} catch (error) {
-		throw new Error('PasskeyAccountChoice.vue: Error fetching account IDs')
+		throw error
 	} finally {
 		loading.value = false
 		loadingAddresses.value = false
@@ -64,13 +65,12 @@ onMounted(async () => {
 })
 
 async function getAccountsByWebAuthnValidator(authenticatorIdHash: string): Promise<string[]> {
-	const { client } = useBlockchain()
 	const webAuthnValidator = new Contract(
 		ADDRESS.WebAuthnValidator,
 		[
 			'event WebAuthnPublicKeyRegistered(address indexed kernel, bytes32 indexed authenticatorIdHash, uint256 pubKeyX, uint256 pubKeyY)',
 		],
-		client.value,
+		clientNoBatch.value,
 	)
 
 	const events = (await webAuthnValidator.queryFilter(

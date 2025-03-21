@@ -1,7 +1,7 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import { ERROR_NOTIFICATION_DURATION } from './config'
-import { AppError, formatErrMsg, parseError } from './lib/error'
+import { parseError } from './lib/error'
 import './style.css'
 
 const app = createApp(App)

@@ -22,14 +22,16 @@ const accounts = ref<AccountInfo[]>([])
 const loading = ref(false)
 const loadingAddresses = ref(false)
 
-onMounted(async () => {
-	loading.value = true
-	loadingAddresses.value = true
-	if (!store.value.eoaAddress) {
-		throw new Error('EOAAccountChoice: !store.value.eoaAddress')
-	}
+const { clientNoBatch } = useBlockchain()
 
+onMounted(async () => {
 	try {
+		loading.value = true
+		loadingAddresses.value = true
+		if (!store.value.eoaAddress) {
+			throw new Error('EOAAccountChoice: !store.value.eoaAddress')
+		}
+
 		const addresses = await getAccountsByECDSAValidator(store.value.eoaAddress)
 		accounts.value = addresses.map(address => ({
 			address,
@@ -38,9 +40,8 @@ onMounted(async () => {
 		}))
 		loadingAddresses.value = false
 
-		const { client } = useBlockchain()
 		const accountIdPromises = addresses.map((address, index) =>
-			fetchAccountId(address, client.value)
+			fetchAccountId(address, clientNoBatch.value)
 				.then(accountId => {
 					accounts.value[index].accountId = accountId
 					accounts.value[index].loading = false
@@ -53,7 +54,7 @@ onMounted(async () => {
 
 		await Promise.all(accountIdPromises)
 	} catch (error) {
-		throw new Error('EOAAccountChoice.vue: Error fetching account IDs')
+		throw error
 	} finally {
 		loading.value = false
 		loadingAddresses.value = false
@@ -61,11 +62,10 @@ onMounted(async () => {
 })
 
 async function getAccountsByECDSAValidator(address: string): Promise<string[]> {
-	const { client } = useBlockchain()
 	const ecdsaValidator = new Contract(
 		ADDRESS.ECDSAValidator,
 		['event OwnerRegistered(address indexed kernel, address indexed owner)'],
-		client.value,
+		clientNoBatch.value,
 	)
 	const events = (await ecdsaValidator.queryFilter(
 		ecdsaValidator.filters.OwnerRegistered(null, address),
