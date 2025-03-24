@@ -34,6 +34,15 @@ export const useSAStore = defineStore(
 		}
 
 		const isConnected = computed(() => {
+			if (!account.value) {
+				console.log('isConnected: no account', account.value)
+			}
+			if (!erc7579Validator.value) {
+				console.log('isConnected: no erc7579Validator', erc7579Validator.value)
+			}
+			if (!smartAccount.value) {
+				console.log('isConnected: no smartAccount', smartAccount.value)
+			}
 			return !!account.value && !!erc7579Validator.value && !!smartAccount.value
 		})
 

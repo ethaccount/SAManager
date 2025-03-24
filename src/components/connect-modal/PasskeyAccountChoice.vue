@@ -82,6 +82,14 @@ async function getAccountsByWebAuthnValidator(authenticatorIdHash: string): Prom
 }
 
 function onClickAccount(accountInfo: AccountInfo) {
+	if (loading.value) {
+		return
+	}
+
+	if (!accountInfo.accountId) {
+		throw new Error('PasskeyAccountChoice: No account ID found')
+	}
+
 	updateStore({
 		accountId: accountInfo.accountId,
 		deployedAddress: accountInfo.address,

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { usePasskey } from '@/stores/usePasskey'
-
-const username = ref('alice')
+import { useConnectModal } from '@/stores/useConnectModal'
+const username = ref('ethaccount-demo')
 
 const { passkeyRegister, passkeyLogin, isLogin, credential } = usePasskey()
 
@@ -10,7 +10,22 @@ async function onClickRegister() {
 }
 
 async function onClickLogin() {
-	await passkeyLogin(username.value)
+	try {
+		await passkeyLogin(username.value)
+	} catch (error: unknown) {
+		if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+			throw new Error('Failed to connect to passkey server')
+		}
+		if (error instanceof Error && error.name === 'NotAllowedError') {
+			return
+		}
+		throw error
+	}
+}
+
+function onClickNext() {
+	const { goNextStage } = useConnectModal()
+	goNextStage()
 }
 </script>
 
@@ -18,10 +33,12 @@ async function onClickLogin() {
 	<div v-if="!isLogin">
 		<Input v-model="username" placeholder="Username" />
 		<Button class="w-full" @click="onClickRegister">Register</Button>
+		<p class="text-center">or</p>
 		<Button class="w-full" @click="onClickLogin">Login</Button>
 	</div>
 	<div v-else>
-		<p>Username: {{ username }}</p>
+		<p class="text-center">Username: {{ username }}</p>
+		<Button class="w-full" @click="onClickNext">Next</Button>
 	</div>
 </template>
 
