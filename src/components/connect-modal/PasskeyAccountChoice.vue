@@ -86,10 +86,6 @@ function onClickAccount(accountInfo: AccountInfo) {
 		return
 	}
 
-	if (!accountInfo.accountId) {
-		throw new Error('PasskeyAccountChoice: No account ID found')
-	}
-
 	updateStore({
 		accountId: accountInfo.accountId,
 		deployedAddress: accountInfo.address,

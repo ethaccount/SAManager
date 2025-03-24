@@ -76,9 +76,13 @@ async function getAccountsByECDSAValidator(address: string): Promise<string[]> {
 }
 
 function onClickAccount(accountInfo: AccountInfo) {
+	if (loading.value) {
+		return
+	}
+
 	updateStore({
 		accountId: accountInfo.accountId,
-		deployedAddress: accountInfo.address,
+		deployedAddress: store.value.deployedAddress,
 	})
 	goNextStage()
 }
