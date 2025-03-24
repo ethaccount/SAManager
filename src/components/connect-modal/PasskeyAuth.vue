@@ -9,7 +9,10 @@ async function onClickRegister() {
 	await passkeyRegister(username.value)
 }
 
+const loading = ref(false)
+
 async function onClickLogin() {
+	loading.value = true
 	try {
 		await passkeyLogin(username.value)
 	} catch (error: unknown) {
@@ -20,6 +23,8 @@ async function onClickLogin() {
 			return
 		}
 		throw error
+	} finally {
+		loading.value = false
 	}
 }
 
@@ -34,7 +39,7 @@ function onClickNext() {
 		<Input v-model="username" placeholder="Username" />
 		<Button class="w-full" @click="onClickRegister">Register</Button>
 		<p class="text-center">or</p>
-		<Button class="w-full" @click="onClickLogin">Login</Button>
+		<Button class="w-full" :disabled="loading" :loading="loading" @click="onClickLogin">Login</Button>
 	</div>
 	<div v-else>
 		<p class="text-center">Username: {{ username }}</p>

@@ -84,58 +84,63 @@ const breakpoints = useBreakpoints(breakpointsTailwind)
 </script>
 
 <template>
-	<div class="p-5 flex flex-col gap-2">
-		<div>
-			<Select v-model="chainId">
-				<SelectTrigger class="w-[120px]">
-					<SelectValue />
-				</SelectTrigger>
-				<SelectContent>
-					<SelectGroup>
-						<SelectItem v-for="id in chainIds" :value="id" :key="id">
-							{{ CHAIN_NAME[id] }}
-						</SelectItem>
-					</SelectGroup>
-				</SelectContent>
-			</Select>
+	<div>
+		<div class="p-5 flex flex-col gap-2">
+			<div>
+				<Select v-model="chainId">
+					<SelectTrigger class="w-[120px]">
+						<SelectValue />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectGroup>
+							<SelectItem v-for="id in chainIds" :value="id" :key="id">
+								{{ CHAIN_NAME[id] }}
+							</SelectItem>
+						</SelectGroup>
+					</SelectContent>
+				</Select>
 
-			<div class="mt-2" v-if="isConnected">
-				<div>
-					address:
-					<Address :address="account?.address" />
+				<div class="mt-2" v-if="isConnected">
+					<div>
+						address:
+						<Address :address="account?.address" />
+					</div>
+					<div>chainId: {{ account?.chainId }}</div>
+					<div>validator: {{ account?.validator }}</div>
+					<div>accountId: {{ account?.accountId }}</div>
 				</div>
-				<div>chainId: {{ account?.chainId }}</div>
-				<div>validator: {{ account?.validator }}</div>
-				<div>accountId: {{ account?.accountId }}</div>
+			</div>
+
+			<div>
+				<Button v-if="!isConnected" @click="onClickConnectButton">Connect Smart Account</Button>
+				<Button v-else @click="onClickDisconnect">Disconnect</Button>
+			</div>
+
+			<div v-if="isConnected">
+				<div class="flex justify-center gap-2">
+					<Button
+						variant="link"
+						:class="{ underline: router.currentRoute.value.path === '/' }"
+						@click="router.push('/')"
+					>
+						Modules
+					</Button>
+					<Button
+						variant="link"
+						:class="{ underline: router.currentRoute.value.path === '/send' }"
+						@click="router.push('/send')"
+					>
+						Send
+					</Button>
+				</div>
+
+				<router-view></router-view>
 			</div>
 		</div>
 
-		<div>
-			<Button v-if="!isConnected" @click="onClickConnectButton">Connect Smart Account</Button>
-			<Button v-else @click="onClickDisconnect">Disconnect</Button>
-		</div>
-
-		<div v-if="isConnected">
-			<div class="flex justify-center gap-2">
-				<Button
-					variant="link"
-					:class="{ underline: router.currentRoute.value.path === '/' }"
-					@click="router.push('/')"
-				>
-					Modules
-				</Button>
-				<Button
-					variant="link"
-					:class="{ underline: router.currentRoute.value.path === '/send' }"
-					@click="router.push('/send')"
-				>
-					Send
-				</Button>
-			</div>
-
-			<router-view></router-view>
-		</div>
+		<FooterMeta />
 	</div>
+
 	<VueDappModal dark auto-connect />
 	<ModalsContainer />
 	<Notifications

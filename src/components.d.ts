@@ -51,6 +51,7 @@ declare module 'vue' {
     EOAAccountChoice: typeof import('./components/connect-modal/EOAAccountChoice.vue')['default']
     EOAConnect: typeof import('./components/connect-modal/EOAConnect.vue')['default']
     ErrorModal: typeof import('./components/ErrorModal.vue')['default']
+    FooterMeta: typeof import('./components/FooterMeta.vue')['default']
     FormControl: typeof import('./components/ui/form/FormControl.vue')['default']
     FormDescription: typeof import('./components/ui/form/FormDescription.vue')['default']
     FormItem: typeof import('./components/ui/form/FormItem.vue')['default']
