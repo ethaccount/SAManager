@@ -48,7 +48,7 @@ errorModalStore.initOpenAndCloseFn(openErrorModal, closeErrorModal)
 // =============================== DEV ===============================
 
 // import { simulateStage, ConnectModalStageKey } from '@/stores/useConnectModal'
-import { CHAIN_ID, CHAIN_NAME } from './config'
+import { CHAIN_ID, CHAIN_NAME, PASSKEY_RP_URL } from './config'
 
 // simulateStage(ConnectModalStageKey.CREATE_CONNECTED)
 // simulateStage(ConnectModalStageKey.EOA_ACCOUNT_CHOICE)
@@ -81,6 +81,28 @@ function onClickDisconnect() {
 const router = useRouter()
 
 const breakpoints = useBreakpoints(breakpointsTailwind)
+
+// check passkey rp health
+async function checkPasskeyRPHealth(): Promise<boolean> {
+	try {
+		const baseUrl = new URL(PASSKEY_RP_URL).origin
+		const healthUrl = baseUrl + '/health'
+		console.log('checking passkey rp health on', healthUrl)
+		const response = await fetch(healthUrl)
+		const data = await response.json()
+		return data.status === 'ok'
+	} catch (error: unknown) {
+		console.error('Passkey RP health check failed:', error)
+		return false
+	}
+}
+
+onMounted(async () => {
+	const isHealthy = await checkPasskeyRPHealth()
+	if (isHealthy) {
+		console.log('Passkey RP service is healthy')
+	}
+})
 </script>
 
 <template>
