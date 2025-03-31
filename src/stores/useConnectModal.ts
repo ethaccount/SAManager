@@ -38,7 +38,6 @@ type Stage = {
 
 type StageConfig = {
 	title?: string
-	hasNextButton?: boolean
 	requiredFields?: (keyof ConnectModalStore)[]
 }
 
@@ -73,7 +72,6 @@ const CONNECT_MODAL_CONFIG: Record<ConnectModalStageKey, Stage> = {
 		next: [ConnectModalStageKey.CREATE_DEPLOY],
 		config: {
 			title: 'Connect EOA Wallet',
-			hasNextButton: true,
 			requiredFields: ['validator'],
 		},
 	},
@@ -114,7 +112,6 @@ const CONNECT_MODAL_CONFIG: Record<ConnectModalStageKey, Stage> = {
 		next: [ConnectModalStageKey.EOA_ACCOUNT_CHOICE],
 		config: {
 			title: 'Connect EOA Wallet',
-			hasNextButton: true,
 			requiredFields: ['validator'],
 		},
 	},
@@ -225,10 +222,6 @@ const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		return (stage.value?.next.length ?? 0) > 0
 	})
 
-	const hasNextButton = computed(() => {
-		return (stage.value?.config?.hasNextButton ?? false) && canGoNext.value
-	})
-
 	const goNextStage = (specificState?: ConnectModalStageKey) => {
 		if (!stageKey.value) {
 			stageKey.value = ConnectModalStageKey.INITIAL
@@ -303,7 +296,6 @@ const useConnectModalStore = defineStore('useConnectModalStore', () => {
 		store,
 		canGoBack,
 		canGoNext,
-		hasNextButton,
 		reset,
 		goNextStage,
 		goBackStage,

@@ -52,6 +52,11 @@ watchWalletChanged(
 		immediate: true,
 	},
 )
+
+function onClickNext() {
+	const { goNextStage } = useConnectModal()
+	goNextStage()
+}
 </script>
 
 <template>
@@ -78,6 +83,7 @@ watchWalletChanged(
 				<div v-if="status === 'connecting'">Connecting...</div>
 				<div v-if="isConnected" class="flex flex-col gap-1">
 					<div>{{ shortenAddress(address || '') }}</div>
+					<Button class="w-full" @click="onClickNext">Next</Button>
 				</div>
 			</div>
 
