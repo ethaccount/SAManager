@@ -19,9 +19,14 @@ export const usePasskeyStore = defineStore(
 			credential.value = res
 		}
 
+		async function passkeyLogout() {
+			username.value = ''
+			credential.value = null
+		}
+
 		const isLogin = computed(() => !!credential.value && !!username.value)
 
-		return { username, credential, passkeyRegister, passkeyLogin, isLogin }
+		return { username, credential, passkeyRegister, passkeyLogin, isLogin, passkeyLogout }
 	},
 	{
 		persist: {

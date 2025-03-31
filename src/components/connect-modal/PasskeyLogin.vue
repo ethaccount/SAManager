@@ -29,6 +29,11 @@ function onClickNext() {
 	const { goNextStage } = useConnectModal()
 	goNextStage()
 }
+
+function onClickLogout() {
+	const { passkeyLogout } = usePasskey()
+	passkeyLogout()
+}
 </script>
 
 <template>
@@ -38,6 +43,7 @@ function onClickNext() {
 	</div>
 	<div v-else>
 		<p class="text-center">Username: {{ username }}</p>
+		<Button class="w-full" @click="onClickLogout">Logout</Button>
 		<Button class="w-full" @click="onClickNext">Next</Button>
 	</div>
 </template>
