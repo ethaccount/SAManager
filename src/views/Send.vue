@@ -4,6 +4,7 @@ import { useSA } from '@/stores/useSA'
 import { X } from 'lucide-vue-next'
 import { parseEther, Interface } from 'ethers'
 import { ADDRESS } from 'sendop'
+import { notify } from '@kyvg/vue3-notification'
 
 type Execution = {
 	to: string
@@ -54,11 +55,40 @@ async function onClickSendOperations() {
 				data: e.data,
 			})),
 		)
+		console.info(`opHash: ${op.hash}`)
+
+		const waitingToast = Date.now()
+		notify({
+			id: waitingToast,
+			title: 'Waiting for User Operation',
+			text: `op hash: ${op.hash}`,
+			type: 'info',
+			duration: -1,
+		})
+
 		const receipt = await op.wait()
-		console.log('receipt', receipt)
+
+		if (!receipt.success) {
+			throw new Error(`UserOp is unsuccessful: ${JSON.stringify(receipt)}`)
+		}
+
+		notify.close(waitingToast)
+
+		notify({
+			title: 'User Operation Successful',
+			text: `op hash: ${op.hash}`,
+			type: 'success',
+		})
 	} catch (e: any) {
 		console.error(e)
 		error.value = e.message
+
+		notify({
+			title: 'User Operation Failed',
+			text: e.message,
+			type: 'error',
+			duration: 5000,
+		})
 	} finally {
 		loading.value = false
 	}
