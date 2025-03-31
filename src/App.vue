@@ -48,7 +48,8 @@ errorModalStore.initOpenAndCloseFn(openErrorModal, closeErrorModal)
 // =============================== DEV ===============================
 
 // import { simulateStage, ConnectModalStageKey } from '@/stores/useConnectModal'
-import { CHAIN_ID, CHAIN_NAME, PASSKEY_RP_URL } from './config'
+import { CHAIN_ID, CHAIN_NAME, ERROR_NOTIFICATION_DURATION, PASSKEY_RP_URL } from './config'
+import { notify } from '@kyvg/vue3-notification'
 
 // simulateStage(ConnectModalStageKey.CREATE_CONNECTED)
 // simulateStage(ConnectModalStageKey.EOA_ACCOUNT_CHOICE)
@@ -93,6 +94,14 @@ async function checkPasskeyRPHealth(): Promise<boolean> {
 		return data.status === 'ok'
 	} catch (error: unknown) {
 		console.error('Passkey RP health check failed:', error)
+		if (error instanceof Error) {
+			notify({
+				title: 'Passkey RP health check failed',
+				text: error.message,
+				type: 'error',
+				duration: ERROR_NOTIFICATION_DURATION,
+			})
+		}
 		return false
 	}
 }
