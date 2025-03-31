@@ -3,16 +3,30 @@ import { usePasskey } from '@/stores/usePasskey'
 import { useConnectModal } from '@/stores/useConnectModal'
 const username = ref('ethaccount-demo')
 
-const { passkeyRegister, passkeyLogin, isLogin, credential } = usePasskey()
+const { passkeyRegister, passkeyLogin, isLogin } = usePasskey()
+
+const loadingRegister = ref(false)
+const loadingLogin = ref(false)
 
 async function onClickRegister() {
-	await passkeyRegister(username.value)
+	loadingRegister.value = true
+	try {
+		await passkeyRegister(username.value)
+	} catch (error: unknown) {
+		if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+			throw new Error('Failed to connect to passkey server')
+		}
+		if (error instanceof Error && error.name === 'NotAllowedError') {
+			return
+		}
+		throw error
+	} finally {
+		loadingRegister.value = false
+	}
 }
 
-const loading = ref(false)
-
 async function onClickLogin() {
-	loading.value = true
+	loadingLogin.value = true
 	try {
 		await passkeyLogin(username.value)
 	} catch (error: unknown) {
@@ -24,7 +38,7 @@ async function onClickLogin() {
 		}
 		throw error
 	} finally {
-		loading.value = false
+		loadingLogin.value = false
 	}
 }
 
@@ -42,9 +56,11 @@ function onClickLogout() {
 <template>
 	<div v-if="!isLogin">
 		<Input v-model="username" placeholder="Username" />
-		<Button class="w-full" @click="onClickRegister">Register</Button>
+		<Button class="w-full" :disabled="loadingRegister" :loading="loadingRegister" @click="onClickRegister">
+			Register
+		</Button>
 		<p class="text-center">or</p>
-		<Button class="w-full" :disabled="loading" :loading="loading" @click="onClickLogin">Login</Button>
+		<Button class="w-full" :disabled="loadingLogin" :loading="loadingLogin" @click="onClickLogin">Login</Button>
 	</div>
 	<div v-else>
 		<p class="text-center">Username: {{ username }}</p>
