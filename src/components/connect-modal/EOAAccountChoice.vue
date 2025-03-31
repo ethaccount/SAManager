@@ -82,7 +82,7 @@ function onClickAccount(accountInfo: AccountInfo) {
 
 	updateStore({
 		accountId: accountInfo.accountId,
-		deployedAddress: store.value.deployedAddress,
+		deployedAddress: accountInfo.address,
 	})
 	goNextStage()
 }
