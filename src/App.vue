@@ -123,14 +123,14 @@ const breakpoints = useBreakpoints(breakpointsTailwind)
 						:class="{ underline: router.currentRoute.value.path === '/' }"
 						@click="router.push('/')"
 					>
-						Modules
+						Send
 					</Button>
 					<Button
 						variant="link"
-						:class="{ underline: router.currentRoute.value.path === '/send' }"
-						@click="router.push('/send')"
+						:class="{ underline: router.currentRoute.value.path === '/modules' }"
+						@click="router.push('/modules')"
 					>
-						Send
+						Modules
 					</Button>
 				</div>
 
