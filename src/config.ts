@@ -31,6 +31,16 @@ export enum CHAIN_ID {
 	BASE_SEPOLIA = '84532',
 }
 
+export const DEFAULT_CHAIN_ID = CHAIN_ID.SEPOLIA
+
+export function isSupportedChainId(chainId: string | number | bigint): chainId is CHAIN_ID {
+	try {
+		return Object.values(CHAIN_ID).includes(chainId.toString() as CHAIN_ID)
+	} catch (error) {
+		return false
+	}
+}
+
 export const CHAIN_NAME: { [key: string]: string } = {
 	[CHAIN_ID.LOCAL]: 'Local',
 	[CHAIN_ID.SEPOLIA]: 'Sepolia',

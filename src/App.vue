@@ -2,18 +2,37 @@
 import { BrowserWalletConnector, useVueDapp } from '@vue-dapp/core'
 import { ModalsContainer, useModal } from 'vue-final-modal'
 // import { useColorMode } from '@vueuse/core'
-import { useConnectModal } from '@/stores/useConnectModal'
-import { VueDappModal } from '@vue-dapp/modal'
-import '@vue-dapp/modal/dist/style.css'
-import { useSA } from '@/stores/useSA'
-import { useBlockchain } from '@/stores/useBlockchain'
-import { useEOA } from '@/stores/useEOA'
+import { useChainIdRoute } from '@/app/useChainIdRoute'
+import Address from '@/components/Address.vue'
 import ConnectModal from '@/components/connect-modal/ConnectModal.vue'
 import ErrorModal from '@/components/ErrorModal.vue'
+import { useBlockchain } from '@/stores/useBlockchain'
+import { useConnectModal } from '@/stores/useConnectModal'
+import { useEOA } from '@/stores/useEOA'
 import { useErrorModalStore } from '@/stores/useErrorModal'
-import Address from '@/components/Address.vue'
+import { useSA } from '@/stores/useSA'
+import { VueDappModal } from '@vue-dapp/modal'
+import '@vue-dapp/modal/dist/style.css'
 import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
 import { X } from 'lucide-vue-next'
+import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { CHAIN_NAME, ERROR_NOTIFICATION_DURATION, IS_DEV, PASSKEY_RP_URL } from './config'
+
+const router = useRouter()
+const { chainId, chainIds } = useBlockchain()
+
+useChainIdRoute()
+
+onMounted(async () => {
+	// check passkey rp health in production
+	if (!IS_DEV) {
+		const isHealthy = await checkPasskeyRPHealth()
+		if (isHealthy) {
+			console.log('Passkey RP service is healthy')
+		}
+	}
+})
 
 // ============================== Connect Modal ==============================
 const connectModalStore = useConnectModal()
@@ -48,7 +67,6 @@ errorModalStore.initOpenAndCloseFn(openErrorModal, closeErrorModal)
 // =============================== DEV ===============================
 
 // import { simulateStage, ConnectModalStageKey } from '@/stores/useConnectModal'
-import { CHAIN_ID, CHAIN_NAME, ERROR_NOTIFICATION_DURATION, PASSKEY_RP_URL } from './config'
 import { notify } from '@kyvg/vue3-notification'
 
 // simulateStage(ConnectModalStageKey.CREATE_CONNECTED)
@@ -72,14 +90,11 @@ watchDisconnect(() => {
 
 // ============================== Blockchain ==============================
 
-const { chainId, chainIds } = useBlockchain()
 const { account, resetAccount, isConnected } = useSA()
 
 function onClickDisconnect() {
 	resetAccount()
 }
-
-const router = useRouter()
 
 const breakpoints = useBreakpoints(breakpointsTailwind)
 
@@ -105,13 +120,6 @@ async function checkPasskeyRPHealth(): Promise<boolean> {
 		return false
 	}
 }
-
-onMounted(async () => {
-	const isHealthy = await checkPasskeyRPHealth()
-	if (isHealthy) {
-		console.log('Passkey RP service is healthy')
-	}
-})
 </script>
 
 <template>

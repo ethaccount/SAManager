@@ -5,13 +5,22 @@ const router = createRouter({
 	routes: [
 		{
 			path: '/',
-			name: 'Send',
-			component: () => import('@/views/Send.vue'),
-		},
-		{
-			path: '/modules',
-			name: 'Modules',
-			component: () => import('@/views/Modules.vue'),
+			redirect: '/:chainId',
+			children: [
+				{
+					path: '/:chainId',
+					children: [
+						{
+							path: '',
+							component: () => import('@/views/Send.vue'),
+						},
+						{
+							path: '/:chainId/modules',
+							component: () => import('@/views/Modules.vue'),
+						},
+					],
+				},
+			],
 		},
 	],
 })
