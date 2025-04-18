@@ -2,12 +2,22 @@
 
 > ⚠️ **WARNING**: This project is under active development. Use at your own risk.
 
-## Dev commands
+## Dev
+
+### Commands
 
 ```
 pnpm dev
 pnpm build
 pnpm typecheck
+```
+
+
+[shadcn-vue](https://shadcn-vue.com/docs/components/button.html)
+
+
+```
+pnpm dlx shadcn-vue@2.1.0 add button
 ```
 
 ## Credits
