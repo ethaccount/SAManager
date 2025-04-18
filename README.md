@@ -1,6 +1,6 @@
-# ethaccount-vue
+# Smart Account Manager
 
-> ⚠️ **WARNING**: This project is under active development. Use at your own risk. The code has not been audited and may contain security vulnerabilities. Users are responsible for their own security when using this software.
+> ⚠️ **WARNING**: This project is under active development. Use at your own risk.
 
 ## Dev commands
 
