@@ -38,7 +38,9 @@ const externalLink = computed(() => {
 	</div>
 </template>
 
-<style lang="css">
+<style lang="css" scoped>
+@reference "../style.css";
+
 .address-button {
 	@apply w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-black;
 }
