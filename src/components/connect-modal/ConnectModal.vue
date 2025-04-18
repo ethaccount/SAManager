@@ -71,6 +71,7 @@ function handleClose() {
 	align-items: center;
 }
 .confirm-modal-content {
+	@apply border border-border;
 	width: 300px;
 	min-height: 280px;
 	display: flex;

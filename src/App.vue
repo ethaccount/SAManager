@@ -75,10 +75,11 @@ async function checkPasskeyRPHealth(): Promise<boolean> {
 <template>
 	<div class="">
 		<Header />
+		<main class="container flex-1 pt-14 pb-5">
+			<router-view />
+		</main>
 
-		<div class="container py-6">
-			<router-view></router-view>
-		</div>
+		<ThemeToggle class="fixed bottom-4 left-4" />
 	</div>
 
 	<VueDappModal dark auto-connect />

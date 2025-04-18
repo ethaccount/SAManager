@@ -24,6 +24,7 @@ function onClickCloseSidebar() {
 		:content-transition="'account-drawer-slide'"
 		:click-to-close="true"
 		:esc-to-close="true"
+		:lock-scroll="false"
 	>
 		<div class="account-drawer-visual-container">hello</div>
 	</VueFinalModal>
