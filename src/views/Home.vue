@@ -64,7 +64,7 @@ function onClickConnectButton() {
 					<CardDescription>Schedule recurring transactions and manage automated tasks</CardDescription>
 				</CardHeader>
 				<CardFooter class="mt-auto pt-4">
-					<RouterLink :to="{ name: 'home', params: { chainId } }" class="w-full">
+					<RouterLink :to="{ name: 'scheduling-transfer', params: { chainId } }" class="w-full">
 						<Button variant="outline" class="w-full">Get Started</Button>
 					</RouterLink>
 				</CardFooter>
@@ -79,7 +79,7 @@ function onClickConnectButton() {
 					<CardDescription>Set up account recovery mechanisms and secure your assets</CardDescription>
 				</CardHeader>
 				<CardFooter class="mt-auto pt-4">
-					<RouterLink :to="{ name: 'home' }" class="w-full">
+					<RouterLink :to="{ name: 'recovery-setup', params: { chainId } }" class="w-full">
 						<Button variant="outline" class="w-full">Get Started</Button>
 					</RouterLink>
 				</CardFooter>

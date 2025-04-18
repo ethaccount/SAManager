@@ -57,13 +57,13 @@ function onClickConnectButton() {
 					Send
 				</RouterLink>
 				<RouterLink
-					:to="{ name: 'home', params: { chainId } }"
+					:to="{ name: 'scheduling-transfer', params: { chainId } }"
 					class="transition-colors hover:text-foreground/80 text-foreground/60"
 				>
 					Scheduling
 				</RouterLink>
 				<RouterLink
-					:to="{ name: 'home', params: { chainId } }"
+					:to="{ name: 'recovery-setup', params: { chainId } }"
 					class="transition-colors hover:text-foreground/80 text-foreground/60"
 				>
 					Recovery
