@@ -12,7 +12,7 @@ const emit = defineEmits<{
 	(e: 'close'): void
 }>()
 
-const { stage, goNextStage, goBackStage, reset, canGoBack, hasNextButton } = useConnectModal()
+const { stage, goNextStage, goBackStage, reset, canGoBack } = useConnectModal()
 
 onUnmounted(() => {
 	reset()
@@ -60,10 +60,6 @@ function handleClose() {
 
 		<div v-if="stage">
 			<component :is="stage.component" />
-		</div>
-
-		<div v-if="hasNextButton" class="flex flex-col">
-			<Button class="w-full" variant="outline" @click="handleNext"> Next </Button>
 		</div>
 	</VueFinalModal>
 </template>
