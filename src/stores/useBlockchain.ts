@@ -1,8 +1,7 @@
 import { BUNDLER_URL, CHAIN_ID, EXPLORER_URL, IS_DEV, RPC_URL } from '@/config'
-import { MyPaymaster } from '@/lib/pmGetter'
 import { JsonRpcProvider } from 'ethers'
 import { defineStore } from 'pinia'
-import { ADDRESS, AlchemyBundler, PimlicoBundler } from 'sendop'
+import { ADDRESS, AlchemyBundler, PimlicoBundler, PublicPaymaster } from 'sendop'
 
 const DEFAULT_CHAIN_ID = IS_DEV ? CHAIN_ID.LOCAL : CHAIN_ID.SEPOLIA
 
@@ -10,6 +9,7 @@ export const useBlockchainStore = defineStore(
 	'useBlockchainStore',
 	() => {
 		const chainId = ref<CHAIN_ID>(DEFAULT_CHAIN_ID)
+		const chainIdBigInt = computed(() => BigInt(chainId.value))
 
 		function setChainId(id: CHAIN_ID) {
 			chainId.value = id
@@ -32,18 +32,16 @@ export const useBlockchainStore = defineStore(
 		const bundlerUrl = computed(() => BUNDLER_URL[chainId.value])
 		const bundler = computed(() => {
 			if (bundlerUrl.value.includes('alchemy')) {
-				return new AlchemyBundler(chainId.value, bundlerUrl.value, {
+				return new AlchemyBundler(chainIdBigInt.value, bundlerUrl.value, {
 					parseError: true,
 				})
 			}
-			return new PimlicoBundler(chainId.value, bundlerUrl.value, {
+			return new PimlicoBundler(chainIdBigInt.value, bundlerUrl.value, {
 				parseError: true,
 			})
 		})
 
-		const pmGetter = computed(
-			() => new MyPaymaster({ client: client.value, paymasterAddress: ADDRESS.CharityPaymaster }),
-		)
+		const pmGetter = computed(() => new PublicPaymaster(ADDRESS.PublicPaymaster))
 
 		return {
 			chainId,

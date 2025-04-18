@@ -54,8 +54,8 @@ importers:
         specifier: ^1.9.12
         version: 1.9.12(vue@3.5.13(typescript@5.7.2))
       sendop:
-        specifier: 0.3.0-beta.5
-        version: 0.3.0-beta.5(ethers@6.13.5)
+        specifier: 0.4.0-beta.0
+        version: 0.4.0-beta.0(ethers@6.13.5)
       tailwind-merge:
         specifier: ^2.6.0
         version: 2.6.0
@@ -1798,8 +1798,8 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  sendop@0.3.0-beta.5:
-    resolution: {integrity: sha512-TkmcekM0AN0lzeaILHrBTFXxcpkgJR8T2P9WLDz8dhOyn5Cd/LeIIOWmhxHRO1vl5LKekVkicZxaGkJZkQbLcw==}
+  sendop@0.4.0-beta.0:
+    resolution: {integrity: sha512-Kb8MxufxKI6AmJ+w5GZLeWXdvOe5mWu1f/0UCDM1lPqcoUqHgBj3qYyMktG4r7B55LecFQYgWNM0z/WmKQOzVA==}
     engines: {bun: '>=1.1.0'}
     peerDependencies:
       ethers: ^6.13.5
@@ -2185,6 +2185,9 @@ packages:
 
   zod@3.24.1:
     resolution: {integrity: sha512-muH7gBL9sI1nciMZV67X5fTKKBLtwpZ5VBp1vsOQzj1MhrBZ4wlVCm3gedKZWLp0Oyel8sIGfeiz54Su+OVT+A==}
+
+  zod@3.24.3:
+    resolution: {integrity: sha512-HhY1oqzWCQWuUqvBFnsyrtZRhyPeR7SUGv+C4+MsisMuVfSPx8HpwWqH8tRahSlt6M3PiFAcoeFhZAqIXTxoSg==}
 
 snapshots:
 
@@ -3964,9 +3967,10 @@ snapshots:
 
   semver@7.6.3: {}
 
-  sendop@0.3.0-beta.5(ethers@6.13.5):
+  sendop@0.4.0-beta.0(ethers@6.13.5):
     dependencies:
       ethers: 6.13.5
+      zod: 3.24.3
 
   set-function-length@1.2.2:
     dependencies:
@@ -4379,3 +4383,5 @@ snapshots:
   yocto-queue@0.1.0: {}
 
   zod@3.24.1: {}
+
+  zod@3.24.3: {}
