@@ -16,6 +16,6 @@ export function useChainIdRoute() {
 	}
 
 	watch(chainId, () => {
-		router.replace({ path: `/${chainId.value}` })
+		router.replace({ params: { chainId: chainId.value } })
 	})
 }

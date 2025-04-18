@@ -61,6 +61,7 @@ declare module 'vue' {
     Initial: typeof import('./components/connect-modal/Initial.vue')['default']
     Input: typeof import('./components/ui/input/Input.vue')['default']
     Label: typeof import('./components/ui/label/Label.vue')['default']
+    NetworkSelector: typeof import('./components/NetworkSelector.vue')['default']
     PasskeyAccountChoice: typeof import('./components/connect-modal/PasskeyAccountChoice.vue')['default']
     PasskeyAuth: typeof import('./components/connect-modal/PasskeyAuth.vue')['default']
     PasskeyLogin: typeof import('./components/connect-modal/PasskeyLogin.vue')['default']

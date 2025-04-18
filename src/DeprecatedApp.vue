@@ -126,18 +126,7 @@ async function checkPasskeyRPHealth(): Promise<boolean> {
 	<div class="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors">
 		<div class="p-5 flex flex-col gap-2">
 			<div class="flex justify-between items-center">
-				<Select v-model="chainId">
-					<SelectTrigger class="w-[120px]">
-						<SelectValue />
-					</SelectTrigger>
-					<SelectContent>
-						<SelectGroup>
-							<SelectItem v-for="id in chainIds" :value="id" :key="id">
-								{{ CHAIN_NAME[id] }}
-							</SelectItem>
-						</SelectGroup>
-					</SelectContent>
-				</Select>
+				<NetworkSelector />
 				<ThemeToggle />
 			</div>
 

@@ -71,6 +71,7 @@ function onClickConnectButton() {
 			</nav>
 
 			<div class="flex items-center justify-end space-x-4">
+				<NetworkSelector />
 				<ThemeToggle />
 				<div v-if="isConnected" class="flex items-center space-x-4">
 					<Address :address="account?.accountId || ''" />
