@@ -6,6 +6,8 @@ import { RouterLink } from 'vue-router'
 import { useConnectModal } from '@/stores/useConnectModal'
 import { useModal } from 'vue-final-modal'
 import ConnectModal from '@/components/connect-modal/ConnectModal.vue'
+import { useBlockchain } from '@/stores/useBlockchain'
+const { chainId } = useBlockchain()
 
 // ============================== Connect Modal ==============================
 const connectModalStore = useConnectModal()
@@ -47,7 +49,7 @@ function onClickConnectButton() {
 					<CardDescription>Send tokens and execute transactions with your smart account</CardDescription>
 				</CardHeader>
 				<CardFooter class="mt-auto pt-4">
-					<RouterLink :to="{ name: 'send/token' }" class="w-full">
+					<RouterLink :to="{ name: 'send-token', params: { chainId } }" class="w-full">
 						<Button variant="outline" class="w-full">Get Started</Button>
 					</RouterLink>
 				</CardFooter>
@@ -62,7 +64,7 @@ function onClickConnectButton() {
 					<CardDescription>Schedule recurring transactions and manage automated tasks</CardDescription>
 				</CardHeader>
 				<CardFooter class="mt-auto pt-4">
-					<RouterLink :to="{ name: 'scheduling/transfer' }" class="w-full">
+					<RouterLink :to="{ name: 'home', params: { chainId } }" class="w-full">
 						<Button variant="outline" class="w-full">Get Started</Button>
 					</RouterLink>
 				</CardFooter>
@@ -77,7 +79,7 @@ function onClickConnectButton() {
 					<CardDescription>Set up account recovery mechanisms and secure your assets</CardDescription>
 				</CardHeader>
 				<CardFooter class="mt-auto pt-4">
-					<RouterLink :to="{ name: 'recovery/setup' }" class="w-full">
+					<RouterLink :to="{ name: 'home' }" class="w-full">
 						<Button variant="outline" class="w-full">Get Started</Button>
 					</RouterLink>
 				</CardFooter>

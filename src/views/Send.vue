@@ -33,7 +33,7 @@ const removeExecution = (index: number) => {
 const loading = ref(false)
 const error = ref<string | null>(null)
 
-async function onClickSendOperations() {
+async function onClickSendsend-token() {
 	const { smartAccount } = useSA()
 	if (!smartAccount.value) {
 		console.warn('No smart account')
@@ -118,7 +118,7 @@ async function onClickSendOperations() {
 
 		<div class="flex gap-2">
 			<Button variant="outline" @click="addExecution">Add Execution</Button>
-			<Button :loading="loading" @click="onClickSendOperations">Send Operations</Button>
+			<Button :loading="loading" @click="onClickSendsend - token">Send send-token</Button>
 		</div>
 
 		<div v-if="error" class="text-red-500">{{ error }}</div>

@@ -3,12 +3,15 @@ import Address from '@/components/Address.vue'
 import ConnectModal from '@/components/connect-modal/ConnectModal.vue'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import { Button } from '@/components/ui/button'
+import { useBlockchain } from '@/stores/useBlockchain'
 import { useConnectModal } from '@/stores/useConnectModal'
 import { useSA } from '@/stores/useSA'
 import '@vue-dapp/modal/dist/style.css'
 import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
 import { useModal } from 'vue-final-modal'
 import { RouterLink } from 'vue-router'
+
+const { chainId } = useBlockchain()
 
 const { account, resetAccount, isConnected } = useSA()
 
@@ -42,26 +45,29 @@ function onClickConnectButton() {
 		class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
 	>
 		<div class="container flex h-14 items-center">
-			<RouterLink to="/" class="mr-6 flex items-center space-x-2">
+			<RouterLink :to="{ name: 'home', params: { chainId } }" class="mr-6 flex items-center space-x-2">
 				<span class="font-bold">SAManager</span>
 			</RouterLink>
 
 			<nav class="flex items-center space-x-6 text-sm font-medium flex-1">
 				<RouterLink
-					:to="{ name: 'send/token' }"
+					:to="{ name: 'send-token', params: { chainId } }"
 					class="transition-colors hover:text-foreground/80 text-foreground/60"
-					>Send</RouterLink
 				>
+					Send
+				</RouterLink>
 				<RouterLink
-					:to="{ name: 'scheduling/transfer' }"
+					:to="{ name: 'home', params: { chainId } }"
 					class="transition-colors hover:text-foreground/80 text-foreground/60"
-					>Scheduling</RouterLink
 				>
+					Scheduling
+				</RouterLink>
 				<RouterLink
-					:to="{ name: 'recovery/setup' }"
+					:to="{ name: 'home', params: { chainId } }"
 					class="transition-colors hover:text-foreground/80 text-foreground/60"
-					>Recovery</RouterLink
 				>
+					Recovery
+				</RouterLink>
 			</nav>
 
 			<div class="flex items-center justify-end space-x-4">

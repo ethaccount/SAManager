@@ -1,10 +1,7 @@
 <script lang="ts" setup>
 import { useChainIdRoute } from '@/app/useChainIdRoute'
-import ConnectModal from '@/components/connect-modal/ConnectModal.vue'
 import ErrorModal from '@/components/ErrorModal.vue'
-import { useConnectModal } from '@/stores/useConnectModal'
 import { useErrorModalStore } from '@/stores/useErrorModal'
-import { useSA } from '@/stores/useSA'
 import { VueDappModal } from '@vue-dapp/modal'
 import '@vue-dapp/modal/dist/style.css'
 import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
