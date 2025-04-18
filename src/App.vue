@@ -1,14 +1,8 @@
 <script lang="ts" setup>
-import { BrowserWalletConnector, useVueDapp } from '@vue-dapp/core'
-import { ModalsContainer, useModal } from 'vue-final-modal'
 import { useChainIdRoute } from '@/app/useChainIdRoute'
-import Address from '@/components/Address.vue'
 import ConnectModal from '@/components/connect-modal/ConnectModal.vue'
 import ErrorModal from '@/components/ErrorModal.vue'
-import ThemeToggle from '@/components/ThemeToggle.vue'
-import { useBlockchain } from '@/stores/useBlockchain'
 import { useConnectModal } from '@/stores/useConnectModal'
-import { useEOA } from '@/stores/useEOA'
 import { useErrorModalStore } from '@/stores/useErrorModal'
 import { useSA } from '@/stores/useSA'
 import { VueDappModal } from '@vue-dapp/modal'
@@ -16,13 +10,12 @@ import '@vue-dapp/modal/dist/style.css'
 import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
 import { X } from 'lucide-vue-next'
 import { onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { CHAIN_NAME, ERROR_NOTIFICATION_DURATION, IS_DEV, PASSKEY_RP_URL } from './config'
-
-const router = useRouter()
-const { chainId, chainIds } = useBlockchain()
+import { ModalsContainer, useModal } from 'vue-final-modal'
+import { useSetupVueDapp } from './app/useSetupVueDapp'
+import { ERROR_NOTIFICATION_DURATION, IS_DEV, PASSKEY_RP_URL } from './config'
 
 useChainIdRoute()
+useSetupVueDapp()
 
 onMounted(async () => {
 	// check passkey rp health in production
@@ -33,26 +26,6 @@ onMounted(async () => {
 		}
 	}
 })
-
-// ============================== Connect Modal ==============================
-const connectModalStore = useConnectModal()
-const { open: openConnectModal, close: closeConnectModal } = useModal({
-	component: ConnectModal,
-	attrs: {
-		onClose: () => closeConnectModal(),
-	},
-	slots: {},
-})
-
-connectModalStore.updateStore({
-	openModal: openConnectModal,
-	closeModal: closeConnectModal,
-})
-
-function onClickConnectButton() {
-	openConnectModal()
-	connectModalStore.goNextStage()
-}
 
 // =============================== Error Modal ===============================
 const errorModalStore = useErrorModalStore()
@@ -69,32 +42,13 @@ errorModalStore.initOpenAndCloseFn(openErrorModal, closeErrorModal)
 // import { simulateStage, ConnectModalStageKey } from '@/stores/useConnectModal'
 import { notify } from '@kyvg/vue3-notification'
 
-// simulateStage(ConnectModalStageKey.CREATE_CONNECTED)
-// simulateStage(ConnectModalStageKey.EOA_ACCOUNT_CHOICE)
-
-// ============================== Vue Dapp ==============================
-
-const { addConnectors, watchWalletChanged, watchDisconnect } = useVueDapp()
-
-addConnectors([new BrowserWalletConnector()])
-
-const { setWallet, resetWallet } = useEOA()
-
-watchWalletChanged(async wallet => {
-	setWallet(wallet.provider)
-})
-
-watchDisconnect(() => {
-	resetWallet()
-})
-
 // ============================== Blockchain ==============================
 
-const { account, resetAccount, isConnected } = useSA()
+// const { account, resetAccount, isConnected } = useSA()
 
-function onClickDisconnect() {
-	resetAccount()
-}
+// function onClickDisconnect() {
+// 	resetAccount()
+// }
 
 const breakpoints = useBreakpoints(breakpointsTailwind)
 
@@ -123,64 +77,12 @@ async function checkPasskeyRPHealth(): Promise<boolean> {
 </script>
 
 <template>
-	<div class="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors">
-		<div class="p-5 flex flex-col gap-2">
-			<div class="flex justify-between items-center">
-				<Select v-model="chainId">
-					<SelectTrigger class="w-[120px]">
-						<SelectValue />
-					</SelectTrigger>
-					<SelectContent>
-						<SelectGroup>
-							<SelectItem v-for="id in chainIds" :value="id" :key="id">
-								{{ CHAIN_NAME[id] }}
-							</SelectItem>
-						</SelectGroup>
-					</SelectContent>
-				</Select>
-				<ThemeToggle />
-			</div>
+	<div class="">
+		<Header />
 
-			<div>
-				<div class="mt-2" v-if="isConnected">
-					<div>
-						address:
-						<Address :address="account?.address" />
-					</div>
-					<div>chainId: {{ account?.chainId }}</div>
-					<div>validator: {{ account?.validator }}</div>
-					<div>accountId: {{ account?.accountId }}</div>
-				</div>
-			</div>
-
-			<div>
-				<Button v-if="!isConnected" @click="onClickConnectButton">Connect Smart Account</Button>
-				<Button v-else @click="onClickDisconnect">Disconnect</Button>
-			</div>
-
-			<div v-if="isConnected">
-				<div class="flex justify-center gap-2">
-					<Button
-						variant="link"
-						:class="{ underline: router.currentRoute.value.path === '/' }"
-						@click="router.push('/')"
-					>
-						Send
-					</Button>
-					<Button
-						variant="link"
-						:class="{ underline: router.currentRoute.value.path === '/modules' }"
-						@click="router.push('/modules')"
-					>
-						Modules
-					</Button>
-				</div>
-
-				<router-view></router-view>
-			</div>
+		<div class="container py-6">
+			<router-view></router-view>
 		</div>
-
-		<FooterMeta />
 	</div>
 
 	<VueDappModal dark auto-connect />
@@ -203,4 +105,8 @@ async function checkPasskeyRPHealth(): Promise<boolean> {
 	</Notifications>
 </template>
 
-<style></style>
+<style>
+.container {
+	@apply mx-auto w-full max-w-[1200px] px-4;
+}
+</style>
