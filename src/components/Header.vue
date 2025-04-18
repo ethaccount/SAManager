@@ -3,11 +3,10 @@ import Address from '@/components/Address.vue'
 import ConnectModal from '@/components/connect-modal/ConnectModal.vue'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import { Button } from '@/components/ui/button'
+import { useAccountDrawer } from '@/lib/useAccountDrawer'
 import { useBlockchain } from '@/stores/useBlockchain'
 import { useConnectModal } from '@/stores/useConnectModal'
 import { useSA } from '@/stores/useSA'
-import '@vue-dapp/modal/dist/style.css'
-import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
 import { useModal } from 'vue-final-modal'
 import { RouterLink } from 'vue-router'
 
@@ -37,6 +36,11 @@ connectModalStore.updateStore({
 function onClickConnectButton() {
 	openConnectModal()
 	connectModalStore.goNextStage()
+}
+
+function onClickAccountButton() {
+	const { openAccountDrawer } = useAccountDrawer()
+	openAccountDrawer()
 }
 </script>
 
@@ -78,6 +82,7 @@ function onClickConnectButton() {
 					<Button variant="outline" size="sm" @click="onClickDisconnect">Disconnect</Button>
 				</div>
 				<Button v-else variant="outline" size="sm" @click="onClickConnectButton">Add Account</Button>
+				<Button variant="outline" size="lg" @click="onClickAccountButton">0x1234...5678</Button>
 			</div>
 		</div>
 	</header>
