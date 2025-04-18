@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import { BrowserWalletConnector, useVueDapp } from '@vue-dapp/core'
 import { ModalsContainer, useModal } from 'vue-final-modal'
-// import { useColorMode } from '@vueuse/core'
 import { useChainIdRoute } from '@/app/useChainIdRoute'
 import Address from '@/components/Address.vue'
 import ConnectModal from '@/components/connect-modal/ConnectModal.vue'
 import ErrorModal from '@/components/ErrorModal.vue'
+import ThemeToggle from '@/components/ThemeToggle.vue'
 import { useBlockchain } from '@/stores/useBlockchain'
 import { useConnectModal } from '@/stores/useConnectModal'
 import { useEOA } from '@/stores/useEOA'
@@ -123,9 +123,9 @@ async function checkPasskeyRPHealth(): Promise<boolean> {
 </script>
 
 <template>
-	<div>
+	<div class="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors">
 		<div class="p-5 flex flex-col gap-2">
-			<div>
+			<div class="flex justify-between items-center">
 				<Select v-model="chainId">
 					<SelectTrigger class="w-[120px]">
 						<SelectValue />
@@ -138,7 +138,10 @@ async function checkPasskeyRPHealth(): Promise<boolean> {
 						</SelectGroup>
 					</SelectContent>
 				</Select>
+				<ThemeToggle />
+			</div>
 
+			<div>
 				<div class="mt-2" v-if="isConnected">
 					<div>
 						address:

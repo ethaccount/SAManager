@@ -88,5 +88,6 @@ declare module 'vue' {
     TabsList: typeof import('./components/ui/tabs/TabsList.vue')['default']
     TabsTrigger: typeof import('./components/ui/tabs/TabsTrigger.vue')['default']
     Textarea: typeof import('./components/ui/textarea/Textarea.vue')['default']
+    ThemeToggle: typeof import('./components/ThemeToggle.vue')['default']
   }
 }
