@@ -82,7 +82,7 @@ async function checkPasskeyRPHealth(): Promise<boolean> {
 		<ThemeToggle class="fixed bottom-4 left-4" />
 	</div>
 
-	<VueDappModal dark auto-connect />
+	<VueDappModal dark />
 	<ModalsContainer />
 	<Notifications
 		class="break-words"

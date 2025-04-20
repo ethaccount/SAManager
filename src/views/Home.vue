@@ -39,6 +39,20 @@ function onClickConnectButton() {
 			</p>
 		</div>
 
+		<div class="flex flex-col sm:flex-row justify-center gap-4 w-full max-w-4xl">
+			<Button size="lg" class="mt-4 w-full sm:w-auto" @click="onClickConnectButton">
+				<Plus class="w-5 h-5 mr-2" />
+				Import Existing Account
+			</Button>
+
+			<RouterLink :to="{ name: 'create' }" class="w-full sm:w-auto">
+				<Button size="lg" variant="outline" class="mt-4 w-full">
+					<Wallet class="w-5 h-5 mr-2" />
+					Create New Account
+				</Button>
+			</RouterLink>
+		</div>
+
 		<div class="grid gap-6 md:grid-cols-3 w-full max-w-4xl">
 			<Card class="flex flex-col">
 				<CardHeader>
@@ -84,20 +98,6 @@ function onClickConnectButton() {
 					</RouterLink>
 				</CardFooter>
 			</Card>
-		</div>
-
-		<div class="flex flex-col sm:flex-row justify-center gap-4 w-full max-w-4xl">
-			<Button size="lg" class="mt-4 w-full sm:w-auto" @click="onClickConnectButton">
-				<Plus class="w-5 h-5 mr-2" />
-				Import Existing Account
-			</Button>
-
-			<RouterLink :to="{ name: 'create' }" class="w-full sm:w-auto">
-				<Button size="lg" variant="outline" class="mt-4 w-full">
-					<Wallet class="w-5 h-5 mr-2" />
-					Create New Account
-				</Button>
-			</RouterLink>
 		</div>
 	</div>
 </template>
