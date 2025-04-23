@@ -15,6 +15,7 @@ import { RouterLink } from 'vue-router'
 import { useModal } from 'vue-final-modal'
 
 import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
+import { shortenAddress } from '@vue-dapp/core'
 const breakpoints = useBreakpoints(breakpointsTailwind)
 
 const { chainId } = useBlockchain()
@@ -120,24 +121,12 @@ function onClickAccountButton() {
 
 			<div class="flex items-center sm:gap-4" :class="{ 'gap-3': breakpoints.isSmaller('sm') }">
 				<NetworkSelector />
-				<div v-if="isConnected" class="flex items-center space-x-4">
-					<!-- <Address :address="account?.accountId || ''" class="hidden sm:block" />
-					<Button variant="outline" size="sm" @click="onClickDisconnect">Disconnect</Button> -->
-					<Button
-						variant="outline"
-						:size="breakpoints.isSmaller('sm') ? 'sm' : 'lg'"
-						@click="onClickAccountButton"
-						class="sm:w-auto sm:px-4 w-12 h-12 p-0 rounded-full sm:rounded-md"
-						>0x13</Button
-					>
-				</div>
-				<Button
-					v-else
-					variant="outline"
-					:size="breakpoints.isSmaller('sm') ? 'sm' : 'lg'"
-					@click="onClickConnectButton"
-					>Add Account</Button
-				>
+
+				<Button v-if="isConnected" variant="outline" @click="onClickAccountButton">
+					{{ shortenAddress(account?.address || '') }}
+				</Button>
+
+				<Button v-else variant="outline" @click="onClickConnectButton"> Import </Button>
 			</div>
 		</div>
 	</header>
