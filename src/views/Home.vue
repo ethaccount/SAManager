@@ -1,13 +1,12 @@
 <script setup lang="ts">
+import ConnectModal from '@/components/connect-modal/ConnectModal.vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Clock, Plus, Send, Shield, Wallet } from 'lucide-vue-next'
-import { RouterLink } from 'vue-router'
+import { toRoute } from '@/lib/router'
 import { useConnectModal } from '@/stores/useConnectModal'
+import { Clock, Plus, Send, Shield, Wallet } from 'lucide-vue-next'
 import { useModal } from 'vue-final-modal'
-import ConnectModal from '@/components/connect-modal/ConnectModal.vue'
-import { useBlockchain } from '@/stores/useBlockchain'
-const { chainId } = useBlockchain()
+import { RouterLink } from 'vue-router'
 
 // ============================== Connect Modal ==============================
 const connectModalStore = useConnectModal()
@@ -35,7 +34,7 @@ function onClickConnectButton() {
 		<div class="text-center space-y-4">
 			<h1 class="text-4xl font-bold tracking-tight">Welcome to Smart Account Manager</h1>
 			<p class="text-xl text-muted-foreground max-w-2xl">
-				Manage your smart accounts with clarity and efficiency
+				An Alternative Interface for your Ethereum Smart Account
 			</p>
 		</div>
 
@@ -53,17 +52,17 @@ function onClickConnectButton() {
 			</RouterLink>
 		</div>
 
-		<div class="grid gap-6 md:grid-cols-3 w-full max-w-4xl">
+		<div class="grid gap-6 md:grid-cols-3 w-full max-w-3xl">
 			<Card class="flex flex-col">
 				<CardHeader>
 					<div class="bg-primary/10 p-3 rounded-full w-fit">
 						<Send class="h-6 w-6 text-primary" />
 					</div>
 					<CardTitle class="mt-4">Send</CardTitle>
-					<CardDescription>Send tokens and execute transactions with your smart account</CardDescription>
+					<CardDescription>Send tokens or execute transactions with your smart account</CardDescription>
 				</CardHeader>
 				<CardFooter class="mt-auto pt-4">
-					<RouterLink :to="{ name: 'send-token', params: { chainId } }" class="w-full">
+					<RouterLink :to="toRoute('send-token')" class="w-full">
 						<Button variant="outline" class="w-full">Get Started</Button>
 					</RouterLink>
 				</CardFooter>
@@ -78,7 +77,7 @@ function onClickConnectButton() {
 					<CardDescription>Schedule recurring transactions and manage automated tasks</CardDescription>
 				</CardHeader>
 				<CardFooter class="mt-auto pt-4">
-					<RouterLink :to="{ name: 'scheduling-transfer', params: { chainId } }" class="w-full">
+					<RouterLink :to="toRoute('scheduling-transfer')" class="w-full">
 						<Button variant="outline" class="w-full">Get Started</Button>
 					</RouterLink>
 				</CardFooter>
@@ -93,7 +92,7 @@ function onClickConnectButton() {
 					<CardDescription>Set up account recovery mechanisms and secure your assets</CardDescription>
 				</CardHeader>
 				<CardFooter class="mt-auto pt-4">
-					<RouterLink :to="{ name: 'recovery-setup', params: { chainId } }" class="w-full">
+					<RouterLink :to="toRoute('recovery-setup')" class="w-full">
 						<Button variant="outline" class="w-full">Get Started</Button>
 					</RouterLink>
 				</CardFooter>

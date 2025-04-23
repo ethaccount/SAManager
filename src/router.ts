@@ -47,12 +47,12 @@ const router = createRouter({
 						{
 							path: '/:chainId/send/token',
 							name: 'send-token',
-							component: () => import('@/views/UnderConstruction.vue'),
+							component: () => import('@/views/SendToken.vue'),
 						},
 						{
 							path: '/:chainId/send/raw',
 							name: 'send-raw',
-							component: () => import('@/views/UnderConstruction.vue'),
+							component: () => import('@/views/SendRaw.vue'),
 						},
 						// Scheduling
 						{

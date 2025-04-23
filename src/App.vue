@@ -73,14 +73,10 @@ async function checkPasskeyRPHealth(): Promise<boolean> {
 </script>
 
 <template>
-	<div class="">
-		<Header />
-		<main class="container flex-1 pt-14 pb-5">
-			<router-view />
-		</main>
+	<Header />
+	<MainLayout />
 
-		<ThemeToggle class="fixed bottom-4 left-4" />
-	</div>
+	<ThemeToggle class="fixed bottom-4 left-4" />
 
 	<VueDappModal dark />
 	<ModalsContainer />
