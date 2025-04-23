@@ -3,12 +3,13 @@ import { useChainIdRoute } from '@/app/useChainIdRoute'
 import ErrorModal from '@/components/ErrorModal.vue'
 import { useErrorModalStore } from '@/stores/useErrorModal'
 import { VueDappModal } from '@vue-dapp/modal'
-import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
+import { breakpointsTailwind, useBreakpoints, useColorMode } from '@vueuse/core'
 import { X } from 'lucide-vue-next'
 import { onMounted } from 'vue'
 import { ModalsContainer, useModal } from 'vue-final-modal'
 import { useSetupVueDapp } from './app/useSetupVueDapp'
 import { ERROR_NOTIFICATION_DURATION, IS_DEV, PASSKEY_RP_URL } from './config'
+import { Toaster } from 'vue-sonner'
 
 useChainIdRoute()
 useSetupVueDapp()
@@ -70,6 +71,8 @@ async function checkPasskeyRPHealth(): Promise<boolean> {
 		return false
 	}
 }
+
+const mode = useColorMode()
 </script>
 
 <template>
@@ -78,8 +81,13 @@ async function checkPasskeyRPHealth(): Promise<boolean> {
 
 	<ThemeToggle class="fixed bottom-4 left-4" />
 
-	<VueDappModal dark />
+	<VueDappModal :dark="mode === 'dark'" />
 	<ModalsContainer />
+	<Toaster
+		:theme="mode === 'dark' ? 'dark' : 'light'"
+		richColors
+		:position="breakpoints.isSmaller('md') ? 'top-center' : 'bottom-right'"
+	/>
 	<Notifications
 		class="break-words"
 		:closeOnClick="false"

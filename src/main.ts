@@ -4,6 +4,9 @@ import { ERROR_NOTIFICATION_DURATION } from './config'
 import { parseError } from './lib/error'
 import './style.css'
 
+// vue-spring-bottom-sheet
+import '@douxcode/vue-spring-bottom-sheet/dist/style.css'
+
 const app = createApp(App)
 
 // pinia

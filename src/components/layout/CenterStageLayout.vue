@@ -1,7 +1,7 @@
 <script setup lang="ts"></script>
 
 <template>
-	<div class="max-w-lg mx-auto py-5">
+	<div class="max-w-lg mx-auto">
 		<slot />
 	</div>
 </template>

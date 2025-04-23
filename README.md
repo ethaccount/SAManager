@@ -20,6 +20,11 @@ pnpm typecheck
 pnpm dlx shadcn-vue@2.1.0 add button
 ```
 
+### Components
+
+Toast: https://vue-sonner.robertshaw.id/
+Bottom Sheet: https://github.com/megaarmos/vue-spring-bottom-sheet
+
 ## Credits
 
 - Favicon generated using [favicon.io](https://favicon.io/emoji-favicons/diamond-with-a-dot/)
