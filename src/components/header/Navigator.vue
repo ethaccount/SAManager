@@ -17,18 +17,20 @@ const { chainId } = useBlockchain()
 		>
 			Send
 		</RouterLink>
-		<RouterLink
+		<!-- <RouterLink
 			:to="{ name: 'scheduling-transfer', params: { chainId } }"
 			class="transition-colors hover:text-foreground/80 text-foreground/60"
+			disabled
 		>
 			Scheduling
 		</RouterLink>
 		<RouterLink
 			:to="{ name: 'recovery-setup', params: { chainId } }"
 			class="transition-colors hover:text-foreground/80 text-foreground/60"
+			disabled
 		>
 			Recovery
-		</RouterLink>
+		</RouterLink> -->
 	</nav>
 
 	<!-- Mobile Navigation -->
@@ -38,18 +40,20 @@ const { chainId } = useBlockchain()
 				<Menu class="h-5 w-5" />
 			</Button>
 		</SheetTrigger>
+
 		<SheetContent side="top" class="w-full sm:hidden">
 			<SheetHeader>
-				<SheetTitle>Menu</SheetTitle>
+				<SheetTitle>SAManager</SheetTitle>
+				<SheetDescription></SheetDescription>
 			</SheetHeader>
 			<nav class="flex flex-col gap-4 mt-4">
 				<RouterLink
 					:to="{ name: 'send-token', params: { chainId } }"
 					class="transition-colors hover:text-foreground/80 text-foreground/60"
 				>
-					Send
+					<Button variant="ghost" class="w-full justify-start">Send</Button>
 				</RouterLink>
-				<RouterLink
+				<!-- <RouterLink
 					:to="{ name: 'scheduling-transfer', params: { chainId } }"
 					class="transition-colors hover:text-foreground/80 text-foreground/60"
 				>
@@ -60,7 +64,7 @@ const { chainId } = useBlockchain()
 					class="transition-colors hover:text-foreground/80 text-foreground/60"
 				>
 					Recovery
-				</RouterLink>
+				</RouterLink> -->
 			</nav>
 		</SheetContent>
 	</Sheet>
