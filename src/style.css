@@ -75,3 +75,14 @@
 	--vsbs-padding-x: 1rem; /* 16px */
 	--vsbs-handle-background: hsl(var(--muted) / 0.5);
 }
+
+/* Only show focus rings for keyboard navigation */
+@layer base {
+	*:focus:not(:focus-visible) {
+		@apply outline-none ring-0;
+	}
+
+	*:focus-visible {
+		@apply outline-none ring-1 ring-primary/30;
+	}
+}
