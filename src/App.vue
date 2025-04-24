@@ -7,21 +7,25 @@ import { breakpointsTailwind, useBreakpoints, useColorMode } from '@vueuse/core'
 import { X } from 'lucide-vue-next'
 import { onMounted } from 'vue'
 import { ModalsContainer, useModal } from 'vue-final-modal'
+import { toast, Toaster } from 'vue-sonner'
 import { useSetupVueDapp } from './app/useSetupVueDapp'
-import { ERROR_NOTIFICATION_DURATION, IS_DEV, PASSKEY_RP_URL } from './config'
-import { Toaster } from 'vue-sonner'
+import { ERROR_NOTIFICATION_DURATION, PASSKEY_RP_URL } from './config'
 
 useChainIdRoute()
 useSetupVueDapp()
 
 onMounted(async () => {
-	// check passkey rp health in production
-	if (!IS_DEV) {
-		const isHealthy = await checkPasskeyRPHealth()
-		if (isHealthy) {
-			console.log('Passkey RP service is healthy')
-		}
-	}
+	// if (!IS_DEV) {
+	// 	const isHealthy = await checkPasskeyRPHealth()
+	// 	if (isHealthy) {
+	// 		console.log('Passkey RP service is healthy')
+	// 	}
+	// }
+
+	toast.info('Under Construction', {
+		description: 'This website is actively developed',
+		duration: 5000,
+	})
 })
 
 // =============================== Error Modal ===============================
