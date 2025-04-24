@@ -4,8 +4,15 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { useBlockchain } from '@/stores/useBlockchain'
 import { Menu } from 'lucide-vue-next'
 import { RouterLink } from 'vue-router'
+import { ref } from 'vue'
 
 const { chainId } = useBlockchain()
+
+const isOpen = ref(false)
+
+const closeSheet = () => {
+	isOpen.value = false
+}
 </script>
 
 <template>
@@ -34,7 +41,7 @@ const { chainId } = useBlockchain()
 	</nav>
 
 	<!-- Mobile Navigation -->
-	<Sheet>
+	<Sheet v-model:open="isOpen">
 		<SheetTrigger asChild class="sm:hidden">
 			<Button variant="ghost" size="icon">
 				<Menu class="h-5 w-5" />
@@ -43,13 +50,14 @@ const { chainId } = useBlockchain()
 
 		<SheetContent side="top" class="w-full sm:hidden">
 			<SheetHeader>
-				<SheetTitle>SAManager</SheetTitle>
+				<SheetTitle></SheetTitle>
 				<SheetDescription></SheetDescription>
 			</SheetHeader>
 			<nav class="flex flex-col gap-4 mt-4">
 				<RouterLink
 					:to="{ name: 'send-token', params: { chainId } }"
 					class="transition-colors hover:text-foreground/80 text-foreground/60"
+					@click="closeSheet"
 				>
 					<Button variant="ghost" class="w-full justify-start">Send</Button>
 				</RouterLink>

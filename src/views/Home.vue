@@ -38,16 +38,18 @@ function onClickConnectButton() {
 			</p>
 		</div>
 
-		<div class="flex flex-col sm:flex-row justify-center gap-4 w-full max-w-4xl">
-			<Button size="lg" class="mt-4 w-full sm:w-auto" @click="onClickConnectButton">
+		<div class="inline-flex justify-center gap-2 w-auto px-4">
+			<Button size="lg" @click="onClickConnectButton">
 				<Plus class="w-5 h-5 mr-2" />
-				Import Existing Account
+				<span class="hidden sm:inline">Import Existing Account</span>
+				<span class="sm:hidden">Import</span>
 			</Button>
 
-			<RouterLink :to="{ name: 'create' }" class="w-full sm:w-auto">
-				<Button size="lg" variant="outline" class="mt-4 w-full">
+			<RouterLink :to="{ name: 'create' }">
+				<Button size="lg" variant="outline">
 					<Wallet class="w-5 h-5 mr-2" />
-					Create New Account
+					<span class="hidden sm:inline">Create New Account</span>
+					<span class="sm:hidden">Create</span>
 				</Button>
 			</RouterLink>
 		</div>
