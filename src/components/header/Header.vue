@@ -62,7 +62,7 @@ function onClickAccountButton() {
 				<Navigator />
 			</div>
 
-			<div class="flex items-center sm:gap-4" :class="{ 'gap-3': breakpoints.isSmaller('sm') }">
+			<div class="flex items-center gap-2 sm:gap-4" :class="{ 'gap-3': breakpoints.isSmaller('sm') }">
 				<NetworkSelector />
 				<AccountButton />
 			</div>

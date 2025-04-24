@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { X } from 'lucide-vue-next'
+import { X, Plus } from 'lucide-vue-next'
 import { useSA } from '@/stores/useSA'
 import { parseEther } from 'ethers'
 import { notify } from '@kyvg/vue3-notification'
+import { Textarea } from '@/components/ui/textarea'
 
 type Execution = {
 	to: string
@@ -34,6 +35,10 @@ const addExecution = () => {
 const removeExecution = (index: number) => {
 	executions.value.splice(index, 1)
 }
+
+const isValidExecutions = computed(() => {
+	return executions.value.every(exec => exec.to.trim() !== '' && exec.value.trim() !== '' && exec.data.trim() !== '')
+})
 
 async function onClickSend() {
 	const { smartAccount } = useSA()
@@ -98,57 +103,79 @@ async function onClickSend() {
 </script>
 
 <template>
-	<Card>
-		<CardHeader>
-			<div>
-				<CardTitle>Send Raw Transaction</CardTitle>
-				<CardDescription>Send raw transactions with custom data</CardDescription>
+	<Card class="w-full bg-background/50 backdrop-blur-sm border-none shadow-none">
+		<CardContent class="pt-6">
+			<div class="mb-4">
+				<Button
+					class="w-full bg-primary/90 hover:bg-primary disabled:opacity-50"
+					size="lg"
+					:loading="loading"
+					@click="onClickSend"
+					:disabled="!isValidExecutions"
+				>
+					Send
+				</Button>
 			</div>
-		</CardHeader>
 
-		<CardContent class="space-y-4">
-			<div v-for="(tx, index) in executions" :key="index" class="p-4 border rounded-lg">
-				<div class="flex justify-between items-center mb-2">
-					<h3 class="text-sm font-medium">Execution {{ index + 1 }}</h3>
+			<div class="space-y-3">
+				<div
+					v-for="(tx, index) in executions"
+					:key="index"
+					class="relative p-4 rounded-xl bg-muted/30 border border-border/50 backdrop-blur-sm transition-all duration-200 hover:border-border"
+				>
 					<Button
-						variant="destructive"
+						variant="ghost"
 						size="icon"
 						@click="removeExecution(index)"
 						:disabled="executions.length === 1"
+						class="absolute -right-2 -top-2 h-6 w-6 opacity-50 hover:opacity-100 hover:bg-destructive/10 rounded-full bg-background shadow-sm"
 					>
-						<X class="h-4 w-4" />
+						<X class="h-3 w-3" />
 					</Button>
-				</div>
 
-				<div class="space-y-2">
-					<div class="space-y-2">
-						<Label>To Address</Label>
-						<Input v-model="tx.to" placeholder="0x..." />
-					</div>
+					<div class="space-y-3">
+						<Input
+							v-model="tx.to"
+							placeholder="To Address (0x...)"
+							class="border-none bg-muted placeholder:text-muted-foreground/50"
+						/>
 
-					<div class="space-y-2">
-						<Label>Value (ETH)</Label>
-						<Input v-model="tx.value" placeholder="0.0" type="number" />
-					</div>
+						<Input
+							v-model="tx.value"
+							placeholder="Value (ETH)"
+							type="number"
+							class="border-none bg-muted text-lg placeholder:text-muted-foreground/50"
+						/>
 
-					<div class="space-y-2">
-						<Label>Call Data</Label>
-						<Input v-model="tx.data" placeholder="0x..." />
+						<Textarea
+							v-model="tx.data"
+							placeholder="Call Data (0x...)"
+							class="border-none bg-muted placeholder:text-muted-foreground/50 font-mono min-h-[80px] resize-y"
+						/>
 					</div>
 				</div>
 			</div>
 
-			<Button variant="outline" class="w-full" @click="addExecution"> Add Another Execution </Button>
-		</CardContent>
+			<Button
+				variant="ghost"
+				class="w-full mt-3 border border-dashed border-border/50 hover:border-primary hover:bg-primary/5"
+				@click="addExecution"
+			>
+				<Plus class="mr-2 h-4 w-4" />
+				Add Execution
+			</Button>
 
-		<CardFooter class="flex flex-col gap-4">
-			<Button class="w-full" :loading="loading" @click="onClickSend"> Send </Button>
-
-			<div v-if="error" class="w-full p-4 bg-destructive/10 text-destructive rounded-md text-sm">
+			<div v-if="error" class="w-full mt-4 p-4 bg-destructive/10 text-destructive rounded-md text-sm">
 				{{ error }}
 			</div>
-		</CardFooter>
+		</CardContent>
 	</Card>
 </template>
 
-<style lang="css" scoped></style>
+<style lang="css" scoped>
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+</style>

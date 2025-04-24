@@ -34,7 +34,7 @@ function onClickConnectButton() {
 		<div class="text-center space-y-4">
 			<h1 class="text-4xl font-bold tracking-tight">Welcome to Smart Account Manager</h1>
 			<p class="text-xl text-muted-foreground max-w-2xl">
-				An Alternative Interface for your Ethereum Smart Account
+				An alternative interface to access your ERC-4337 accounts.
 			</p>
 		</div>
 
