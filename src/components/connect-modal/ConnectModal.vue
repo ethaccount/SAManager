@@ -71,13 +71,12 @@ function handleClose() {
 	align-items: center;
 }
 .confirm-modal-content {
-	@apply border border-border;
+	@apply border border-border bg-background;
 	width: 300px;
 	min-height: 280px;
 	display: flex;
 	flex-direction: column;
 	padding: 1rem;
-	background: #fff;
 	border-radius: 0.5rem;
 }
 .confirm-modal-content > * + * {
@@ -91,8 +90,5 @@ function handleClose() {
 	padding: 0 8px;
 	border: 1px solid;
 	border-radius: 0.5rem;
-}
-.dark .confirm-modal-content {
-	background: #000;
 }
 </style>

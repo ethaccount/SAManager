@@ -54,7 +54,7 @@ function onClickConnectButton() {
 			</RouterLink>
 		</div>
 
-		<div class="grid gap-6 md:grid-cols-3 w-full max-w-3xl">
+		<div class="grid gap-6 sm:grid-cols-3 w-full max-w-3xl">
 			<Card class="flex flex-col">
 				<CardHeader>
 					<div class="bg-primary/10 p-3 rounded-full w-fit">
