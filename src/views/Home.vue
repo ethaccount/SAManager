@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { toRoute } from '@/lib/router'
 import { useConnectModal } from '@/stores/useConnectModal'
+import { useImportAccountModal } from '@/stores/useImportAccountModal'
 import { Clock, Plus, Send, Shield, Wallet } from 'lucide-vue-next'
 import { useModal } from 'vue-final-modal'
 import { RouterLink } from 'vue-router'
@@ -23,9 +24,8 @@ connectModalStore.updateStore({
 	closeModal: closeConnectModal,
 })
 
-function onClickConnectButton() {
-	openConnectModal()
-	connectModalStore.goNextStage()
+async function onClickImportAccount() {
+	await useImportAccountModal().openModal()
 }
 </script>
 
@@ -34,18 +34,18 @@ function onClickConnectButton() {
 		<div class="text-center space-y-4">
 			<h1 class="text-4xl font-bold tracking-tight">Welcome to Smart Account Manager</h1>
 			<p class="text-xl text-muted-foreground max-w-2xl">
-				An alternative interface to access your ERC-4337 accounts.
+				An alternative interface to access your ERC-4337 smart accounts.
 			</p>
 		</div>
 
 		<div class="inline-flex justify-center gap-2 w-auto px-4">
-			<Button size="lg" @click="onClickConnectButton">
+			<Button size="lg" @click="onClickImportAccount">
 				<Plus class="w-5 h-5 mr-2" />
 				<span class="hidden sm:inline">Import Existing Account</span>
 				<span class="sm:hidden">Import</span>
 			</Button>
 
-			<RouterLink :to="{ name: 'create' }">
+			<RouterLink :to="toRoute('create')">
 				<Button size="lg" variant="outline">
 					<Wallet class="w-5 h-5 mr-2" />
 					<span class="hidden sm:inline">Create New Account</span>
