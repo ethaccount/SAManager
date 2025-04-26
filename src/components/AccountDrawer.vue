@@ -68,7 +68,7 @@ function selectAccount(account: Account) {
 
 			<!-- Sign-in Options Section -->
 			<div class="mb-6">
-				<h3 class="text-sm font-semibold uppercase tracking-wider mb-3">Sign In Options</h3>
+				<h3 class="text-sm font-semibold uppercase tracking-wider mb-3">Keys</h3>
 				<div class="space-y-2">
 					<div class="flex justify-between items-center p-3 border rounded-lg">
 						<span>EOA Wallet</span>
@@ -83,7 +83,7 @@ function selectAccount(account: Account) {
 
 			<!-- Account List Section -->
 			<div>
-				<h3 class="text-sm font-semibold uppercase tracking-wider mb-3">Your Accounts</h3>
+				<h3 class="text-sm font-semibold uppercase tracking-wider mb-3">Imported Accounts</h3>
 				<div class="max-h-[200px] overflow-y-auto space-y-2">
 					<Button
 						v-for="account in accounts"

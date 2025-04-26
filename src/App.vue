@@ -51,8 +51,6 @@ import { notify } from '@kyvg/vue3-notification'
 // 	resetAccount()
 // }
 
-const breakpoints = useBreakpoints(breakpointsTailwind)
-
 // check passkey rp health
 async function checkPasskeyRPHealth(): Promise<boolean> {
 	try {
@@ -77,6 +75,7 @@ async function checkPasskeyRPHealth(): Promise<boolean> {
 }
 
 const mode = useColorMode()
+const breakpoints = useBreakpoints(breakpointsTailwind)
 </script>
 
 <template>
@@ -91,6 +90,7 @@ const mode = useColorMode()
 		:theme="mode === 'dark' ? 'dark' : 'light'"
 		richColors
 		:position="breakpoints.isSmaller('md') ? 'top-center' : 'bottom-right'"
+		closeButton
 	/>
 	<Notifications
 		class="break-words"

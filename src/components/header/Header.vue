@@ -1,16 +1,13 @@
 <script lang="ts" setup>
 import ConnectModal from '@/components/connect-modal/ConnectModal.vue'
-import { Button } from '@/components/ui/button'
 import { useAccountDrawer } from '@/lib/useAccountDrawer'
 import { useBlockchain } from '@/stores/useBlockchain'
 import { useConnectModal } from '@/stores/useConnectModal'
+import { useImportedAccounts } from '@/stores/useImportedAccounts'
 import { useSA } from '@/stores/useSA'
 import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
-
 import { useModal } from 'vue-final-modal'
-
-import { shortenAddress } from '@vue-dapp/core'
 import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
 const breakpoints = useBreakpoints(breakpointsTailwind)
 
@@ -46,6 +43,8 @@ function onClickAccountButton() {
 	const { openAccountDrawer } = useAccountDrawer()
 	openAccountDrawer()
 }
+
+const { hasImportedAccounts } = useImportedAccounts()
 </script>
 
 <template>
@@ -64,7 +63,7 @@ function onClickAccountButton() {
 
 			<div class="flex items-center gap-2 sm:gap-4" :class="{ 'gap-3': breakpoints.isSmaller('sm') }">
 				<NetworkSelector />
-				<AccountButton />
+				<AccountButton v-if="hasImportedAccounts" />
 			</div>
 		</div>
 	</header>
