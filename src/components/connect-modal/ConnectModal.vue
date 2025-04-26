@@ -33,8 +33,8 @@ function handleClose() {
 
 <template>
 	<VueFinalModal
-		class="confirm-modal"
-		content-class="confirm-modal-content"
+		class="connect-modal"
+		content-class="connect-modal-content"
 		overlay-transition="vfm-fade"
 		content-transition="vfm-fade"
 		:click-to-close="true"
@@ -65,12 +65,12 @@ function handleClose() {
 </template>
 
 <style>
-.confirm-modal {
+.connect-modal {
 	display: flex;
 	justify-content: center;
 	align-items: center;
 }
-.confirm-modal-content {
+.connect-modal-content {
 	@apply border border-border bg-background;
 	width: 300px;
 	min-height: 280px;
@@ -79,13 +79,13 @@ function handleClose() {
 	padding: 1rem;
 	border-radius: 0.5rem;
 }
-.confirm-modal-content > * + * {
+.connect-modal-content > * + * {
 	margin: 0.5rem 0;
 }
-.confirm-modal-content h1 {
+.connect-modal-content h1 {
 	font-size: 1.375rem;
 }
-.confirm-modal-content button {
+.connect-modal-content button {
 	margin: 0.25rem 0 0 auto;
 	padding: 0 8px;
 	border: 1px solid;
