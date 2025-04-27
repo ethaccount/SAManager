@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Card } from '@/components/ui/card'
-import { Code, Key, LinkIcon, Wallet } from 'lucide-vue-next'
+import { Code, Key, LinkIcon, Wallet, ChevronRight } from 'lucide-vue-next'
 
 type AccountOption = {
 	title: string
@@ -10,23 +10,23 @@ type AccountOption = {
 
 const accountOptions: AccountOption[] = [
 	{
-		title: 'EOA Wallet',
-		description: 'Import your account by connecting a traditional cryptocurrency wallet',
-		icon: Wallet,
-	},
-	{
 		title: 'Passkey',
-		description: 'Import your account using your passkey for this site',
+		description: 'Import an account using your passkey for this site',
 		icon: Key,
 	},
 	{
-		title: 'EIP-7702',
-		description: 'Import your EIP-7702 upgraded account by connecting your cryptocurrency wallet',
+		title: 'EOA-Owned',
+		description: 'Import an account controlled by an EOA in a wallet',
+		icon: Wallet,
+	},
+	{
+		title: 'Smart EOAs',
+		description: 'Import an EIP-7702 upgraded EOA that has smart account capabilities',
 		icon: Code,
 	},
 	{
 		title: 'Address',
-		description: 'Import your account by entering your account address and choose verification method',
+		description: 'Import an account by entering your account address',
 		icon: LinkIcon,
 	},
 ]
@@ -50,6 +50,7 @@ const onClickAccountOption = (option: AccountOption) => {}
 					<span class="font-medium truncate w-full">{{ option.title }}</span>
 					<span class="text-sm text-muted-foreground break-words w-full">{{ option.description }}</span>
 				</div>
+				<ChevronRight class="h-5 w-5 text-muted-foreground shrink-0" />
 			</div>
 		</Card>
 	</div>
