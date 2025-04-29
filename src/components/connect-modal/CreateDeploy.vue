@@ -22,6 +22,7 @@ import {
 	SmartAccount,
 	WebAuthnValidatorModule,
 	DEV_ATTESTER_ADDRESS,
+	ModularSmartAccount,
 } from 'sendop'
 
 const { assertStage, goNextStage, store } = useConnectModal()
@@ -77,9 +78,9 @@ function getComputedAddress(accountId: AccountId) {
 			creationOptions.value.validatorInitData = store.value.eoaAddress
 			switch (accountId) {
 				case AccountId.KERNEL:
-					return KernelV3Account.getNewAddress(client.value, creationOptions.value)
+					return KernelV3Account.computeAccountAddress(client.value, creationOptions.value)
 				case AccountId.NEXUS:
-					return NexusAccount.getNewAddress(client.value, creationOptions.value)
+					return NexusAccount.computeAccountAddress(client.value, creationOptions.value)
 				default:
 					return null
 			}
@@ -98,9 +99,9 @@ function getComputedAddress(accountId: AccountId) {
 
 			switch (accountId) {
 				case AccountId.KERNEL:
-					return KernelV3Account.getNewAddress(client.value, creationOptions.value)
+					return KernelV3Account.computeAccountAddress(client.value, creationOptions.value)
 				case AccountId.NEXUS:
-					return NexusAccount.getNewAddress(client.value, creationOptions.value)
+					return NexusAccount.computeAccountAddress(client.value, creationOptions.value)
 				default:
 					return null
 			}
@@ -146,7 +147,7 @@ async function onClickDeploy() {
 			throw new Error('Invalid validator')
 	}
 
-	let smartAccount: SmartAccount
+	let smartAccount: ModularSmartAccount<KernelCreationOptions | NexusCreationOptions>
 
 	switch (selectedVendor.value) {
 		case AccountId.KERNEL:

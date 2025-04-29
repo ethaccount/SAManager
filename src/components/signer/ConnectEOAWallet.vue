@@ -4,7 +4,7 @@ import { RdnsEnum, shortenAddress, useVueDapp, type RDNS } from '@vue-dapp/core'
 import { useVueDappModal } from '@vue-dapp/modal'
 import { computed, ref } from 'vue'
 
-const emit = defineEmits(['confirm'])
+const emit = defineEmits<{ (e: 'confirm', address: string): void }>()
 
 const { providerDetails, wallet, address, status, connectTo, isConnected } = useVueDapp()
 
@@ -41,7 +41,10 @@ async function onClickWallet(rdns: RDNS) {
 }
 
 const onClickConfirm = () => {
-	emit('confirm')
+	if (!address.value) {
+		throw new Error('No address found')
+	}
+	emit('confirm', address.value)
 }
 </script>
 

@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { Card } from '@/components/ui/card'
+import { IAMStageKey, useImportAccountModal } from '@/stores/useImportAccountModal'
 import { Code, Key, LinkIcon, Wallet, ChevronRight } from 'lucide-vue-next'
 
 type AccountOption = {
 	title: string
 	description: string
 	icon: Component
+	nextStageKey: IAMStageKey | null
 }
 
 const accountOptions: AccountOption[] = [
@@ -13,25 +15,35 @@ const accountOptions: AccountOption[] = [
 		title: 'Passkey',
 		description: 'Import an account using your passkey for this site',
 		icon: Key,
+		nextStageKey: null,
 	},
 	{
 		title: 'EOA-Owned',
 		description: 'Import an account controlled by an EOA in a wallet',
 		icon: Wallet,
+		nextStageKey: IAMStageKey.CONNECT_EOA_WALLET,
 	},
 	{
 		title: 'Smart EOAs',
 		description: 'Import an EIP-7702 upgraded EOA that has smart account capabilities',
 		icon: Code,
+		nextStageKey: null,
 	},
 	{
 		title: 'Address',
 		description: 'Import an account by entering your account address',
 		icon: LinkIcon,
+		nextStageKey: null,
 	},
 ]
 
-const onClickAccountOption = (option: AccountOption) => {}
+const onClickAccountOption = (option: AccountOption) => {
+	const { goNextStage } = useImportAccountModal()
+
+	if (option.nextStageKey) {
+		goNextStage(option.nextStageKey)
+	}
+}
 </script>
 
 <template>
@@ -40,6 +52,11 @@ const onClickAccountOption = (option: AccountOption) => {}
 			v-for="option in accountOptions"
 			:key="option.title"
 			class="hover:bg-accent cursor-pointer transition-colors"
+			:class="{
+				'opacity-50': option.nextStageKey === null,
+				'cursor-default': option.nextStageKey === null,
+				'hover:bg-transparent': option.nextStageKey === null,
+			}"
 			@click="onClickAccountOption(option)"
 		>
 			<div class="flex items-center gap-4 w-full p-4">

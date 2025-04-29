@@ -1,23 +1,14 @@
 <script setup lang="ts">
-import { useImportAccountModalStore } from '@/stores/useImportAccountModal'
+import { useImportAccountModal } from '@/stores/useImportAccountModal'
 import { ChevronLeft, X } from 'lucide-vue-next'
 import { VueFinalModal } from 'vue-final-modal'
-
-const props = withDefaults(
-	defineProps<{
-		title?: string
-	}>(),
-	{
-		title: 'Import Account',
-	},
-)
 
 const emit = defineEmits<{
 	(e: 'connect'): void
 	(e: 'close'): void
 }>()
 
-const { stage, canGoBack, goBackStage, reset } = useImportAccountModalStore()
+const { stage, canGoBack, goBackStage, reset } = useImportAccountModal()
 
 onUnmounted(() => {
 	reset()
@@ -49,7 +40,7 @@ function onClickClose() {
 				</Button>
 			</div>
 
-			<div>{{ props.title }}</div>
+			<div>{{ stage.title }}</div>
 
 			<!-- close button -->
 			<Button variant="ghost" size="icon" @click="onClickClose">
@@ -57,8 +48,8 @@ function onClickClose() {
 			</Button>
 		</div>
 
-		<div v-if="stage">
-			<component :is="stage.component" />
+		<div class="mt-4">
+			<component :is="stage.component" v-bind="stage.attrs ?? {}" />
 		</div>
 	</VueFinalModal>
 </template>

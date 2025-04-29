@@ -44,7 +44,7 @@ function onClickAccountButton() {
 	openAccountDrawer()
 }
 
-const { hasImportedAccounts } = useImportedAccounts()
+const { hasAccounts } = useImportedAccounts()
 </script>
 
 <template>
@@ -63,7 +63,7 @@ const { hasImportedAccounts } = useImportedAccounts()
 
 			<div class="flex items-center gap-2 sm:gap-4" :class="{ 'gap-3': breakpoints.isSmaller('sm') }">
 				<NetworkSelector />
-				<AccountButton v-if="hasImportedAccounts" />
+				<AccountButton v-if="hasAccounts" />
 			</div>
 		</div>
 	</header>

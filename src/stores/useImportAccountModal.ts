@@ -1,43 +1,108 @@
+import AccountOptions from '@/components/ImportAccountModal/AccountOptions.vue'
+import ConfirmImport from '@/components/ImportAccountModal/ConfirmImport.vue'
 import ImportAccountModal from '@/components/ImportAccountModal/ImportAccountModal.vue'
 import ImportOptions from '@/components/ImportAccountModal/ImportOptions.vue'
+import ConnectEOAWallet from '@/components/signer/ConnectEOAWallet.vue'
 import { defineStore, storeToRefs } from 'pinia'
 import { ref, computed, Component } from 'vue'
 import { useModal } from 'vue-final-modal'
 
-export enum ImportModalStageKey {
+// IAM: Import Account Modal
+
+export enum IAMStageKey {
 	INITIAL = 'INITIAL',
+
+	// CONNECT_PASSKEY,
+	// PASSKEY_ACCOUNT_OPTIONS,
+	// CONFIRM_IMPORT_BY_PASSKEY,
+
+	CONNECT_EOA_WALLET = 'CONNECT_EOA_WALLET',
+	EOA_ACCOUNT_OPTIONS = 'EOA_ACCOUNT_OPTIONS',
+	CONFIRM_IMPORT_BY_EOA = 'CONFIRM_IMPORT_BY_EOA',
+
+	// CONNECT_SMART_EOA,
+	// CONFIRM_IMPORT_BY_SMART_EOA,
+
+	// ADDRESS_INPUT,
+	// ADDRESS_VALIDATION,
+	// CONFIRM_IMPORT_BY_ADDRESS,
 }
 
-type Stage = {
-	component: Component
-	next: ImportModalStageKey[]
-	config: {
-		title?: string
-		requiredFields?: string[]
-	}
+/*
+
+passkey -> connect passkey -> passkey account options -> confirm import
+eoa -> connect eoa -> eoa account options -> confirm import
+smart eoa -> connect eoa -> confirm import
+address -> input address -> address validation -> connect eoa or passkey -> confirm import
+
+*/
+
+type IAMFormData = {
+	address?: string
 }
 
-const IMPORT_MODAL_CONFIG: Record<ImportModalStageKey, Stage> = {
-	[ImportModalStageKey.INITIAL]: {
+// Type-safe component props
+type ComponentProps<T> = T extends new () => { $props: infer P } ? P : never
+
+export type IAMStage<T extends Component = Component> = {
+	component: T
+	next: IAMStageKey[]
+	title?: string
+	attrs?: ComponentProps<T>
+	requiredFields?: string[]
+}
+
+const IAM_CONFIG: Record<IAMStageKey, IAMStage<any>> = {
+	[IAMStageKey.INITIAL]: {
 		component: ImportOptions,
-		next: [],
-		config: {
-			title: 'Import Account',
+		next: [IAMStageKey.CONNECT_EOA_WALLET],
+		title: 'Import Account',
+	},
+	[IAMStageKey.CONNECT_EOA_WALLET]: {
+		component: ConnectEOAWallet,
+		next: [IAMStageKey.EOA_ACCOUNT_OPTIONS],
+		title: 'Connect EOA Wallet',
+		attrs: {
+			onConfirm: (address: string) => {
+				const store = useImportAccountModalStore()
+				store.updateFormData({ address })
+				store.goNextStage(IAMStageKey.EOA_ACCOUNT_OPTIONS)
+			},
 		},
+	},
+	[IAMStageKey.EOA_ACCOUNT_OPTIONS]: {
+		component: AccountOptions,
+		next: [IAMStageKey.CONFIRM_IMPORT_BY_EOA],
+		title: 'Select an Account',
+		attrs: {
+			mode: 'eoa',
+			eoaAddress: () => useImportAccountModalStore().formData.address,
+		},
+	},
+	[IAMStageKey.CONFIRM_IMPORT_BY_EOA]: {
+		component: ConfirmImport,
+		next: [],
+		title: 'Confirm Import',
 	},
 }
 
 export const useImportAccountModalStore = defineStore('useImportAccountModalStore', () => {
-	const stageKey = ref<ImportModalStageKey | null>(ImportModalStageKey.INITIAL)
-	const stageKeyHistory = ref<ImportModalStageKey[]>([])
-	const stage = computed<Stage | null>(() => {
-		if (!stageKey.value) return null
-		return IMPORT_MODAL_CONFIG[stageKey.value] ?? null
+	const stageKey = ref<IAMStageKey>(IAMStageKey.INITIAL)
+	const stageKeyHistory = ref<IAMStageKey[]>([])
+	const formData = ref<IAMFormData>({})
+
+	const stage = computed<IAMStage>(() => {
+		return IAM_CONFIG[stageKey.value]
 	})
 
 	const reset = () => {
-		stageKey.value = ImportModalStageKey.INITIAL
+		stageKey.value = IAMStageKey.INITIAL
 		stageKeyHistory.value = []
+		formData.value = {}
+	}
+
+	const updateFormData = (data: Partial<IAMFormData>) => {
+		formData.value = { ...formData.value, ...data }
 	}
 
 	const canGoBack = computed(() => {
@@ -48,31 +113,10 @@ export const useImportAccountModalStore = defineStore('useImportAccountModalStor
 		return (stage.value?.next.length ?? 0) > 0
 	})
 
-	const goNextStage = (specificState?: ImportModalStageKey) => {
-		if (!stageKey.value) {
-			stageKey.value = ImportModalStageKey.INITIAL
-			return
-		}
-
-		const nextState = specificState ?? stage.value?.next[0]
-		if (!nextState) {
-			throw new Error('No next state found')
-		}
-
-		assertValidTransition(stageKey.value, nextState)
-
-		if (!specificState && (stage.value?.next.length ?? 0) === 0) {
-			throw new Error('No next state available')
-		}
-
-		if (!specificState && (stage.value?.next.length ?? 0) > 1) {
-			console.warn(
-				`Multiple next states available on ${stageKey.value}, using the first one ${stage.value?.next[0]}`,
-			)
-		}
-
+	const goNextStage = (nextStageKey: IAMStageKey) => {
+		assertValidTransition(stageKey.value, nextStageKey)
 		stageKeyHistory.value.push(stageKey.value)
-		stageKey.value = nextState
+		stageKey.value = nextStageKey
 	}
 
 	const goBackStage = () => {
@@ -103,6 +147,8 @@ export const useImportAccountModalStore = defineStore('useImportAccountModalStor
 		goNextStage,
 		goBackStage,
 		reset,
+		formData,
+		updateFormData,
 	}
 })
 
@@ -114,9 +160,9 @@ export function useImportAccountModal() {
 	}
 }
 
-const assertValidTransition = (fromStateKey: ImportModalStageKey, toStateKey: ImportModalStageKey) => {
-	const fromStage = IMPORT_MODAL_CONFIG[fromStateKey]
-	const toStage = IMPORT_MODAL_CONFIG[toStateKey]
+const assertValidTransition = (fromStateKey: IAMStageKey, toStateKey: IAMStageKey) => {
+	const fromStage = IAM_CONFIG[fromStateKey]
+	const toStage = IAM_CONFIG[toStateKey]
 
 	if (!fromStage?.next.includes(toStateKey)) {
 		throw new Error(
@@ -126,7 +172,7 @@ const assertValidTransition = (fromStateKey: ImportModalStageKey, toStateKey: Im
 		)
 	}
 
-	const requiredFields = toStage.config?.requiredFields
+	const requiredFields = toStage.requiredFields
 	// if (requiredFields) {
 	// 	const missingFields = requiredFields.filter(key => !store.value[key])
 	// 	if (missingFields.length > 0) {

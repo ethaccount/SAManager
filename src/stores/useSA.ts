@@ -5,6 +5,7 @@ import {
 	EOAValidatorModule,
 	ERC7579Validator,
 	KernelV3Account,
+	ModularSmartAccount,
 	NexusAccount,
 	SmartAccount,
 	WebAuthnValidatorModule,
@@ -78,7 +79,7 @@ export const useSAStore = defineStore(
 			}
 		})
 
-		const smartAccount = computed<SmartAccount | null>(() => {
+		const smartAccount = computed<ModularSmartAccount<any> | null>(() => {
 			if (!erc7579Validator.value) {
 				return null
 			}
