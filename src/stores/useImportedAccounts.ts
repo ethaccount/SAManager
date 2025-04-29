@@ -1,5 +1,7 @@
+import { CHAIN_ID } from '@/config'
 import { defineStore, storeToRefs } from 'pinia'
 import { EntryPointVersion } from 'sendop'
+import { toast } from 'vue-sonner'
 
 export enum AccountId {
 	'kernel.advanced.v0.3.1',
@@ -38,38 +40,58 @@ export const SUPPORTED_ACCOUNTS: Record<
 	},
 }
 
+export type AccountType = 'Smart Account' | 'Smart EOA'
+
 export type ImportedAccount = {
-	type: 'Smart Account' | 'Smart EOA'
+	type: AccountType
 	address: string
-	chainId: bigint
+	chainId: CHAIN_ID
 	vOptions: ValidationOption[]
 	accountId: AccountId
 	initCode: string | null
 }
 
+export type ValidationType = 'EOA-Owned' | 'Passkey'
+
 export type ValidationOption = {
-	type: 'EOA' | 'Passkey'
+	type: ValidationType
 	publicKey: string
 }
 
-export const useImportedAccountsStore = defineStore('useImportedAccountsStore', () => {
-	const accounts = ref<ImportedAccount[]>([
-		{
-			type: 'Smart Account',
-			address: '0x0000000000000000000000000000000000000000',
-			chainId: 11155111n,
-			vOptions: [],
-			accountId: AccountId['kernel.advanced.v0.3.1'],
-			initCode: null,
-		},
-	])
-	const hasAccounts = computed(() => accounts.value.length > 0)
+export const useImportedAccountsStore = defineStore(
+	'useImportedAccountsStore',
+	() => {
+		const accounts = ref<ImportedAccount[]>([])
+		const hasAccounts = computed(() => accounts.value.length > 0)
 
-	return {
-		accounts,
-		hasAccounts,
-	}
-})
+		function addAccount(account: Omit<ImportedAccount, 'initCode'>) {
+			if (accounts.value.find(a => a.address === account.address)) {
+				toast.info('Account already exists')
+				return
+			}
+			accounts.value.push({
+				...account,
+				initCode: null,
+			})
+		}
+
+		function removeAccount(account: ImportedAccount) {
+			accounts.value = accounts.value.filter(a => a.address !== account.address)
+		}
+
+		return {
+			accounts,
+			hasAccounts,
+			addAccount,
+			removeAccount,
+		}
+	},
+	{
+		persist: {
+			pick: ['accounts'],
+		},
+	},
+)
 
 export function useImportedAccounts() {
 	const store = useImportedAccountsStore()

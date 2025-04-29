@@ -3,6 +3,7 @@ import ConfirmImport from '@/components/ImportAccountModal/ConfirmImport.vue'
 import ImportAccountModal from '@/components/ImportAccountModal/ImportAccountModal.vue'
 import ImportOptions from '@/components/ImportAccountModal/ImportOptions.vue'
 import ConnectEOAWallet from '@/components/signer/ConnectEOAWallet.vue'
+import { AccountId, AccountType, ValidationOption } from '@/stores/useImportedAccounts'
 import { defineStore, storeToRefs } from 'pinia'
 import { ref, computed, Component } from 'vue'
 import { useModal } from 'vue-final-modal'
@@ -39,6 +40,9 @@ address -> input address -> address validation -> connect eoa or passkey -> conf
 
 type IAMFormData = {
 	address?: string
+	accountId?: AccountId
+	vOptions?: ValidationOption[]
+	type?: AccountType
 }
 
 // Type-safe component props
@@ -64,9 +68,8 @@ const IAM_CONFIG: Record<IAMStageKey, IAMStage<any>> = {
 		title: 'Connect EOA Wallet',
 		attrs: {
 			onConfirm: (address: string) => {
-				const store = useImportAccountModalStore()
-				store.updateFormData({ address })
-				store.goNextStage(IAMStageKey.EOA_ACCOUNT_OPTIONS)
+				useImportAccountModal().updateFormData({ vOptions: [{ type: 'EOA-Owned', publicKey: address }] })
+				useImportAccountModal().goNextStage(IAMStageKey.EOA_ACCOUNT_OPTIONS)
 			},
 		},
 	},
@@ -76,13 +79,33 @@ const IAM_CONFIG: Record<IAMStageKey, IAMStage<any>> = {
 		title: 'Select an Account',
 		attrs: {
 			mode: 'eoa',
-			eoaAddress: () => useImportAccountModalStore().formData.address,
+			eoaAddress: () => {
+				const vOption = useImportAccountModalStore().formData.vOptions?.find(v => v.type === 'EOA-Owned')
+				if (!vOption) throw new Error('EOA_ACCOUNT_OPTIONS: No EOA address found')
+				return vOption.publicKey
+			},
+			onAccountSelected: (account: { address: string; accountId: AccountId }) => {
+				useImportAccountModal().updateFormData({
+					address: account.address,
+					accountId: account.accountId,
+
+					type: 'Smart Account',
+				})
+				useImportAccountModal().goNextStage(IAMStageKey.CONFIRM_IMPORT_BY_EOA)
+			},
 		},
 	},
 	[IAMStageKey.CONFIRM_IMPORT_BY_EOA]: {
 		component: ConfirmImport,
 		next: [],
 		title: 'Confirm Import',
+		attrs: {
+			address: () => useImportAccountModalStore().formData.address,
+			accountId: () => useImportAccountModalStore().formData.accountId,
+			vOptions: () => useImportAccountModalStore().formData.vOptions,
+			type: () => useImportAccountModalStore().formData.type,
+		},
+		requiredFields: ['address', 'accountId', 'vOptions', 'type'],
 	},
 }
 
@@ -163,6 +186,7 @@ export function useImportAccountModal() {
 const assertValidTransition = (fromStateKey: IAMStageKey, toStateKey: IAMStageKey) => {
 	const fromStage = IAM_CONFIG[fromStateKey]
 	const toStage = IAM_CONFIG[toStateKey]
+	const store = useImportAccountModalStore()
 
 	if (!fromStage?.next.includes(toStateKey)) {
 		throw new Error(
@@ -173,10 +197,10 @@ const assertValidTransition = (fromStateKey: IAMStageKey, toStateKey: IAMStageKe
 	}
 
 	const requiredFields = toStage.requiredFields
-	// if (requiredFields) {
-	// 	const missingFields = requiredFields.filter(key => !store.value[key])
-	// 	if (missingFields.length > 0) {
-	// 		throw new Error(`Missing required fields for ${toStateKey}: ${missingFields.join(', ')}`)
-	// 	}
-	// }
+	if (requiredFields) {
+		const missingFields = requiredFields.filter(key => !store.formData[key as keyof IAMFormData])
+		if (missingFields.length > 0) {
+			throw new Error(`Missing required fields for ${toStateKey}: ${missingFields.join(', ')}`)
+		}
+	}
 }

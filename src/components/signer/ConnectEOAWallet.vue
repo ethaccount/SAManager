@@ -79,7 +79,7 @@ const onClickConfirm = () => {
 			<div v-if="isConnected" class="flex flex-col gap-3 p-4 bg-secondary rounded-[--radius] border">
 				<div class="flex items-center gap-2 text-foreground">
 					<span>✓</span>
-					<span>Wallet Connected</span>
+					<span>{{ wallet.providerInfo?.name }} Connected</span>
 				</div>
 				<div class="flex items-center justify-between">
 					<code class="px-3 py-1 bg-muted rounded-[--radius] text-muted-foreground">

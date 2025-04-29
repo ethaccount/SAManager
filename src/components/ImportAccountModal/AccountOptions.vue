@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { fetchAccountId } from '@/lib/aa'
 import { useBlockchain } from '@/stores/useBlockchain'
-import { IAMStageKey, useImportAccountModal } from '@/stores/useImportAccountModal'
+import { useImportAccountModal } from '@/stores/useImportAccountModal'
+import { AccountId } from '@/stores/useImportedAccounts'
 import { usePasskey } from '@/stores/usePasskey'
-import { AccountId } from '@/types'
 import { shortenAddress } from '@vue-dapp/core'
 import { Contract, EventLog } from 'ethers'
 import { ChevronRight, Loader2 } from 'lucide-vue-next'
@@ -16,6 +16,16 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+const emit = defineEmits<{
+	(
+		e: 'accountSelected',
+		account: {
+			address: string
+			accountId: AccountId
+		},
+	): void
+}>()
 
 // Types
 interface AccountInfo {
@@ -109,17 +119,9 @@ async function getAccountsByWebAuthnValidator(authenticatorIdHash: string): Prom
 	return sortedEvents.slice(0, 5).map(event => event.args[0]) as string[]
 }
 
-function onClickAccount() {
+function onClickAccount(account: { address: string; accountId: AccountId }) {
 	if (loading.value) return
-
-	switch (props.mode) {
-		case 'eoa':
-			goNextStage(IAMStageKey.CONFIRM_IMPORT_BY_EOA)
-			break
-		case 'passkey':
-			// goNextStage(IAMStageKey.CONFIRM_IMPORT_BY_PASSKEY)
-			break
-	}
+	emit('accountSelected', account)
 }
 </script>
 
@@ -138,7 +140,8 @@ function onClickAccount() {
 			<div
 				v-for="account in accounts"
 				:key="account.address"
-				@click="onClickAccount(account)"
+				:disabled="!account.accountId"
+				@click="onClickAccount({ address: account.address, accountId: account.accountId as AccountId })"
 				class="group flex items-center justify-between p-4 rounded-lg border transition-all hover:bg-accent cursor-pointer"
 				:class="{ 'opacity-50 cursor-not-allowed': account.loading }"
 			>

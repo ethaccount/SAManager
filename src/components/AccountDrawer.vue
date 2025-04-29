@@ -4,6 +4,8 @@ import { X } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { ref } from 'vue'
 import { useConnectSignerModal } from '@/stores/useConnectSignerModal'
+import { ImportedAccount, useImportedAccounts } from '@/stores/useImportedAccounts'
+import { shortenAddress } from '@vue-dapp/core'
 
 // Types for account data
 interface Account {
@@ -11,33 +13,27 @@ interface Account {
 	type: 'SA' | '7702'
 }
 
-defineProps<{
-	title?: string
-	currentAddress?: string
-}>()
-
 const emit = defineEmits<{
 	(e: 'connect'): void
 	(e: 'close'): void
-	(e: 'select', account: Account): void
+	(e: 'select', account: ImportedAccount): void
 }>()
 
-// Mock data for accounts list
-const accounts = ref<Account[]>([
-	{ address: '0x1234...5678', type: 'SA' },
-	{ address: '0x8765...4321', type: '7702' },
-	// Add more mock accounts as needed
-])
+const { accounts } = useImportedAccounts()
 
-const selectedAccount = ref<Account | null>(null)
+const selectedAccount = ref<ImportedAccount>(accounts.value[0])
 
 function onClickCloseSidebar() {
 	emit('close')
 }
 
-function selectAccount(account: Account) {
+function selectAccount(account: ImportedAccount) {
 	selectedAccount.value = account
 	emit('select', account)
+}
+
+function removeAccount(account: ImportedAccount) {
+	useImportedAccounts().removeAccount(account)
 }
 
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
@@ -55,13 +51,22 @@ const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 	>
 		<div class="account-drawer-visual-container">
 			<!-- Header Section -->
-			<div class="flex justify-between items-center mb-6">
-				<span class="text-sm font-medium truncate">
-					{{ currentAddress || '0x0000...0000' }}
-				</span>
-				<Button variant="ghost" size="icon" @click="onClickCloseSidebar">
-					<X class="h-4 w-4" />
-				</Button>
+			<div class="flex justify-between items-start mb-6">
+				<div class="w-full flex justify-between items-start gap-2">
+					<div class="p-1.5">
+						<div class="flex justify-between items-center mb-1">
+							<span class="font-medium truncate">{{ shortenAddress(selectedAccount.address) }}</span>
+						</div>
+						<div class="flex flex-col text-xs text-muted-foreground">
+							<span class="text-xs text-muted-foreground">{{ selectedAccount.type }}</span>
+							<span>{{ selectedAccount.accountId }}</span>
+							<span>{{ selectedAccount.vOptions.map(v => v.type).join(', ') }}</span>
+						</div>
+					</div>
+					<Button variant="ghost" size="icon" @click="onClickCloseSidebar">
+						<X class="h-4 w-4" />
+					</Button>
+				</div>
 			</div>
 
 			<!-- Account Settings Section -->
@@ -71,7 +76,7 @@ const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 
 			<!-- Sign-in Options Section -->
 			<div class="mb-6">
-				<h3 class="text-sm font-semibold uppercase tracking-wider mb-3">Keys</h3>
+				<h3 class="text-sm font-semibold tracking-wider mb-3">Signers</h3>
 				<div class="space-y-2">
 					<div class="flex justify-between items-center p-3 border rounded-lg">
 						<span>EOA Wallet</span>
@@ -85,22 +90,35 @@ const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 			</div>
 
 			<!-- Account List Section -->
-			<div>
-				<h3 class="text-sm font-semibold uppercase tracking-wider mb-3">Imported Accounts</h3>
-				<div class="max-h-[200px] overflow-y-auto space-y-2">
-					<Button
-						v-for="account in accounts"
+			<div class="h-[calc(100%-200px)]">
+				<h3 class="text-sm font-semibold tracking-wider mb-3">Accounts</h3>
+				<div class="h-full overflow-y-auto space-y-2 pr-3 pt-2">
+					<div
+						v-for="account in accounts.filter(a => a.address !== selectedAccount.address)"
 						:key="account.address"
-						variant="ghost"
-						:class="[
-							'w-full justify-between',
-							selectedAccount?.address === account.address ? 'bg-accent font-medium' : '',
-						]"
+						class="relative group p-3 rounded-lg border transition-colors hover:bg-accent cursor-pointer overflow-visible"
 						@click="selectAccount(account)"
 					>
-						<span class="truncate">{{ account.address }}</span>
-						<span class="text-sm text-muted-foreground">{{ account.type }}</span>
-					</Button>
+						<div>
+							<div class="flex justify-between items-center mb-1">
+								<span class="font-medium truncate">{{ shortenAddress(account.address) }}</span>
+								<span class="text-xs text-muted-foreground">{{ account.type }}</span>
+							</div>
+							<div class="flex justify-between items-center text-xs text-muted-foreground">
+								<span>{{ account.accountId }}</span>
+								<span>{{ account.vOptions.map(v => v.type).join(', ') }}</span>
+							</div>
+						</div>
+
+						<Button
+							variant="ghost"
+							size="icon"
+							class="absolute rounded-full -right-2 -top-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground z-[60]"
+							@click.stop="removeAccount(account)"
+						>
+							<X class="h-4 w-4" />
+						</Button>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -118,7 +136,7 @@ const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 }
 
 .account-drawer-visual-container {
-	@apply p-4 h-full border border-border bg-background shadow-xl rounded-xl;
+	@apply p-4 h-full border border-border bg-background shadow-xl rounded-xl flex flex-col;
 }
 
 .account-drawer-slide-enter-active,
@@ -129,5 +147,33 @@ const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 .account-drawer-slide-enter-from,
 .account-drawer-slide-leave-to {
 	transform: translateX(100%);
+}
+
+/* Custom scrollbar styling */
+.overflow-y-auto {
+	scrollbar-width: thin;
+	scrollbar-color: theme('colors.accent.DEFAULT') transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar {
+	width: 4px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+	background-color: theme('colors.accent.DEFAULT');
+	border-radius: 20px;
+}
+
+/* Add new styles */
+.bg-accent\/5 {
+	background-color: rgb(var(--accent) / 0.05);
+}
+
+.bg-accent\/10 {
+	background-color: rgb(var(--accent) / 0.1);
 }
 </style>
