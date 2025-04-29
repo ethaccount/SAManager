@@ -12,9 +12,17 @@ const router = createRouter({
 					children: [
 						// Playground
 						{
-							path: '/:chainId/playground',
-							name: 'playground',
-							component: () => import('@/views/Playground.vue'),
+							path: '/:chainId/test',
+							children: [
+								{
+									path: '/:chainId/test/playground',
+									component: () => import('@/views/test/Playground.vue'),
+								},
+								{
+									path: '/:chainId/test/connect',
+									component: () => import('@/views/test/Connect.vue'),
+								},
+							],
 						},
 						// Home
 						{
