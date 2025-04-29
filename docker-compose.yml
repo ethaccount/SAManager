@@ -7,13 +7,13 @@ services:
             [
                 'anvil',
                 '--fork-url',
-                'https://eth-sepolia.g.alchemy.com/v2/${VITE_ALCHEMY_API_KEY}',
-                '--fork-block-number',
-                '7932749',
+                'https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}',
                 '--host',
                 '0.0.0.0',
                 '--chain-id',
                 '1337',
+                '--hardfork',
+                'prague',
             ]
         healthcheck:
             test:
@@ -26,7 +26,7 @@ services:
             retries: 5
 
     alto:
-        image: chnejohnson/alto:0.0.11
+        image: chnejohnson/alto:0.0.18
         platform: linux/amd64
         ports: ['4337:4337']
         command: --config alto.config.json
