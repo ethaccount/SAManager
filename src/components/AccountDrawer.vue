@@ -3,6 +3,7 @@ import { VueFinalModal } from 'vue-final-modal'
 import { X } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { ref } from 'vue'
+import { useConnectSignerModal } from '@/stores/useConnectSignerModal'
 
 // Types for account data
 interface Account {
@@ -38,6 +39,8 @@ function selectAccount(account: Account) {
 	selectedAccount.value = account
 	emit('select', account)
 }
+
+const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 </script>
 
 <template>
@@ -72,11 +75,11 @@ function selectAccount(account: Account) {
 				<div class="space-y-2">
 					<div class="flex justify-between items-center p-3 border rounded-lg">
 						<span>EOA Wallet</span>
-						<Button variant="outline" size="sm">Connect</Button>
+						<Button variant="outline" size="sm" @click="openConnectEOAWallet">Connect</Button>
 					</div>
 					<div class="flex justify-between items-center p-3 border rounded-lg">
 						<span>Passkey</span>
-						<Button variant="outline" size="sm">Connect</Button>
+						<Button variant="outline" size="sm" @click="openConnectPasskeyBoth">Connect</Button>
 					</div>
 				</div>
 			</div>

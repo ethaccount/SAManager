@@ -50,6 +50,7 @@ declare module 'vue' {
     ConnectEOAWallet: typeof import('./components/signer/ConnectEOAWallet.vue')['default']
     ConnectModal: typeof import('./components/connect-modal/ConnectModal.vue')['default']
     ConnectPasskey: typeof import('./components/signer/ConnectPasskey.vue')['default']
+    ConnectSignerModal: typeof import('./components/signer/ConnectSignerModal.vue')['default']
     CopyButton: typeof import('./components/utils/CopyButton.vue')['default']
     CreateDeploy: typeof import('./components/connect-modal/CreateDeploy.vue')['default']
     CreateSignerChoice: typeof import('./components/connect-modal/CreateSignerChoice.vue')['default']
