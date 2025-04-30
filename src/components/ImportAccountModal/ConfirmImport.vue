@@ -68,9 +68,11 @@ const onClickConfirm = () => {
 				<span class="text-sm text-muted-foreground">Validation Options</span>
 				<span class="font-medium text-foreground">
 					{{
-						vOptions()
-							.map(v => v.type)
-							.join(', ')
+						vOptions()?.length
+							? vOptions()
+									.map(v => v.type)
+									.join(', ')
+							: 'None'
 					}}
 				</span>
 			</div>

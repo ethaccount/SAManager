@@ -8,6 +8,7 @@ import { shortenAddress } from '@vue-dapp/core'
 import { Contract, EventLog } from 'ethers'
 import { ChevronRight, Loader2 } from 'lucide-vue-next'
 import { ADDRESS } from 'sendop'
+import { toast } from 'vue-sonner'
 
 // Props
 interface Props {
@@ -30,7 +31,7 @@ const emit = defineEmits<{
 // Types
 interface AccountInfo {
 	address: string
-	accountId: AccountId | null
+	accountId: string | null
 	loading: boolean
 }
 
@@ -119,9 +120,23 @@ async function getAccountsByWebAuthnValidator(authenticatorIdHash: string): Prom
 	return sortedEvents.slice(0, 5).map(event => event.args[0]) as string[]
 }
 
-function onClickAccount(account: { address: string; accountId: AccountId }) {
-	if (loading.value) return
-	emit('accountSelected', account)
+function onClickAccount(account: { address: string; accountId: string | null }) {
+	if (loading.value) {
+		toast.error('Still loading...')
+		return
+	}
+	if (!account.accountId) {
+		toast.error('Account ID is null')
+		return
+	}
+	if (AccountId[account.accountId] === null) {
+		toast.error('Account ID not supported')
+		return
+	}
+	emit('accountSelected', {
+		address: account.address,
+		accountId: AccountId[account.accountId],
+	})
 }
 </script>
 
@@ -141,7 +156,7 @@ function onClickAccount(account: { address: string; accountId: AccountId }) {
 				v-for="account in accounts"
 				:key="account.address"
 				:disabled="!account.accountId"
-				@click="onClickAccount({ address: account.address, accountId: account.accountId as AccountId })"
+				@click="onClickAccount({ address: account.address, accountId: account.accountId })"
 				class="group flex items-center justify-between p-4 rounded-lg border transition-all hover:bg-accent cursor-pointer"
 				:class="{ 'opacity-50 cursor-not-allowed': account.loading }"
 			>
