@@ -1,33 +1,11 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
-import { CHAIN_ID, CHAIN_NAME } from '@/lib/network'
+import { CHAIN_ID, displayChainName, SUPPORTED_BUNDLER, SUPPORTED_ENTRY_POINT, SUPPORTED_NODE } from '@/lib/network'
 import { useNetwork } from '@/stores/useNetwork'
-import { ref, watch } from 'vue'
-
-// Add new interfaces/types
-interface EntryPoint {
-	version: string
-	address: string
-}
-
-interface Bundler {
-	name: string
-	address: string
-}
-
-interface EthereumNode {
-	name: string
-	url: string
-}
-
-// Add refs for each selection
-const { chainId, chainIds } = useNetwork()
-const isOpen = ref(false)
-const selectedBundler = ref<string>('')
-const selectedEntryPoint = ref<string>('0.7')
-const selectedNode = ref<string>('alchemy')
+import { Check } from 'lucide-vue-next'
 
 // Watch for popover state changes to toggle body scroll lock
+const isOpen = ref(false)
 watch(isOpen, newValue => {
 	if (newValue) {
 		document.body.style.overflow = 'hidden'
@@ -36,37 +14,64 @@ watch(isOpen, newValue => {
 	}
 })
 
-// Constants for selections
-const bundlers: Bundler[] = [
-	{ name: 'Pimlico Bundler', address: '0x...' },
-	{ name: 'Alchemy Bundler', address: '0x...' },
-]
+const {
+	selectedChainId,
+	supportedChainIds,
+	selectedNode,
+	selectedBundler,
+	selectedEntryPoint,
+	supportedBundlers,
+	supportedNodes,
+	supportedEntryPoints,
+} = useNetwork()
 
-const entryPoints: EntryPoint[] = [
-	{ version: '0.7', address: '0x...' },
-	{ version: '0.8', address: '0x...' },
-]
-
-const nodes: EthereumNode[] = [
-	{ name: 'Alchemy Node', url: 'https://...' },
-	{ name: 'Public Node', url: 'https://...' },
-]
-
-function selectNetwork(id: CHAIN_ID) {
-	chainId.value = id
-	isOpen.value = false // Close popover after selection
+function displayBundlerName(bundler: SUPPORTED_BUNDLER) {
+	switch (bundler) {
+		case SUPPORTED_BUNDLER.PIMLICO:
+			return 'Pimlico Bundler'
+		case SUPPORTED_BUNDLER.ALCHEMY:
+			return 'Alchemy Bundler'
+		default:
+			return 'Unknown Bundler'
+	}
 }
 
-function selectBundler(bundler: Bundler) {
-	selectedBundler.value = bundler.name
+function displayNodeName(node: SUPPORTED_NODE) {
+	switch (node) {
+		case SUPPORTED_NODE.ALCHEMY:
+			return 'Alchemy Node'
+		case SUPPORTED_NODE.PUBLIC_NODE:
+			return 'Public Node'
+		default:
+			return 'Unknown Node'
+	}
 }
 
-function selectEntryPoint(ep: EntryPoint) {
-	selectedEntryPoint.value = ep.version
+function displayEntryPointName(ep: SUPPORTED_ENTRY_POINT) {
+	switch (ep) {
+		case 'v0.7':
+			return 'v0.7'
+		case 'v0.8':
+			return 'v0.8'
+		default:
+			return 'Unknown Entry Point'
+	}
 }
 
-function selectNode(node: EthereumNode) {
-	selectedNode.value = node.name
+function onClickChain(id: CHAIN_ID) {
+	selectedChainId.value = id
+}
+
+function onClickBundler(bundler: SUPPORTED_BUNDLER) {
+	selectedBundler.value = bundler
+}
+
+function onClickEntryPoint(ep: SUPPORTED_ENTRY_POINT) {
+	selectedEntryPoint.value = ep
+}
+
+function onClickNode(node: SUPPORTED_NODE) {
+	selectedNode.value = node
 }
 </script>
 
@@ -74,39 +79,41 @@ function selectNode(node: EthereumNode) {
 	<Popover v-model:open="isOpen">
 		<PopoverTrigger as-child>
 			<Button variant="outline">
-				{{ CHAIN_NAME[chainId] }}
+				{{ displayChainName(selectedChainId) }}
 			</Button>
 		</PopoverTrigger>
 
 		<PopoverContent class="w-80 max-h-[80vh] overflow-y-auto p-4 divide-y">
-			<!-- Networks Section -->
+			<!-- Chain Section -->
 			<div class="py-3 first:pt-0 last:pb-0">
 				<h3 class="text-sm font-semibold uppercase tracking-wider mb-3">Network</h3>
 				<div class="flex flex-col gap-1">
 					<Button
-						v-for="id in chainIds"
+						v-for="id in supportedChainIds"
 						:key="id"
 						variant="ghost"
-						:class="['justify-start', chainId === id ? 'bg-accent font-medium' : '']"
-						@click="selectNetwork(id)"
+						:class="['justify-between', selectedChainId === id ? 'bg-accent font-medium' : '']"
+						@click="onClickChain(id)"
 					>
-						{{ CHAIN_NAME[id] }}
+						{{ displayChainName(id) }}
+						<Check v-if="selectedChainId === id" class="h-4 w-4" />
 					</Button>
 				</div>
 			</div>
 
-			<!-- Bundlers Section -->
+			<!-- Bundler Section -->
 			<div class="py-3">
 				<h3 class="text-sm font-semibold uppercase tracking-wider mb-3">Bundler</h3>
 				<div class="flex flex-col gap-1">
 					<Button
-						v-for="bundler in bundlers"
-						:key="bundler.name"
+						v-for="bundler in supportedBundlers"
+						:key="bundler"
 						variant="ghost"
-						:class="['justify-start', selectedBundler === bundler.name ? 'bg-accent font-medium' : '']"
-						@click="selectBundler(bundler)"
+						:class="['justify-between', selectedBundler === bundler ? 'bg-accent font-medium' : '']"
+						@click="onClickBundler(bundler)"
 					>
-						{{ bundler.name }}
+						{{ displayBundlerName(bundler) }}
+						<Check v-if="selectedBundler === bundler" class="h-4 w-4" />
 					</Button>
 				</div>
 			</div>
@@ -116,29 +123,31 @@ function selectNode(node: EthereumNode) {
 				<h3 class="text-sm font-semibold uppercase tracking-wider mb-3">Entry Point</h3>
 				<div class="flex flex-col gap-1">
 					<Button
-						v-for="ep in entryPoints"
-						:key="ep.version"
+						v-for="ep in supportedEntryPoints"
+						:key="ep"
 						variant="ghost"
-						:class="['justify-start', selectedEntryPoint === ep.version ? 'bg-accent font-medium' : '']"
-						@click="selectEntryPoint(ep)"
+						:class="['justify-between', selectedEntryPoint === ep ? 'bg-accent font-medium' : '']"
+						@click="onClickEntryPoint(ep)"
 					>
-						Entry Point v{{ ep.version }}
+						{{ displayEntryPointName(ep) }}
+						<Check v-if="selectedEntryPoint === ep" class="h-4 w-4" />
 					</Button>
 				</div>
 			</div>
 
-			<!-- Ethereum Nodes Section -->
+			<!-- Node Section -->
 			<div class="py-3">
-				<h3 class="text-sm font-semibold uppercase tracking-wider mb-3">Ethereum Node</h3>
+				<h3 class="text-sm font-semibold uppercase tracking-wider mb-3">Node</h3>
 				<div class="flex flex-col gap-1">
 					<Button
-						v-for="node in nodes"
-						:key="node.name"
+						v-for="node in supportedNodes"
+						:key="node"
 						variant="ghost"
-						:class="['justify-start', selectedNode === node.name ? 'bg-accent font-medium' : '']"
-						@click="selectNode(node)"
+						:class="['justify-between', selectedNode === node ? 'bg-accent font-medium' : '']"
+						@click="onClickNode(node)"
 					>
-						{{ node.name }}
+						{{ displayNodeName(node) }}
+						<Check v-if="selectedNode === node" class="h-4 w-4" />
 					</Button>
 				</div>
 			</div>

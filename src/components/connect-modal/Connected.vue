@@ -10,7 +10,7 @@ const { account } = useSA()
 const error = ref<string | null>(null)
 
 onMounted(() => {
-	const { chainId } = useNetwork()
+	const { selectedChainId } = useNetwork()
 	const { setAccount } = useSA()
 	if (!store.value.deployedAddress || !store.value.validator || !store.value.accountId) {
 		error.value = `Failed to connect to the account: ${store.value.deployedAddress} ${store.value.validator} ${store.value.accountId}`
@@ -20,7 +20,7 @@ onMounted(() => {
 
 	setAccount({
 		address: store.value.deployedAddress,
-		chainId: chainId.value,
+		chainId: selectedChainId.value,
 		validator: store.value.validator,
 		accountId: store.value.accountId,
 	})

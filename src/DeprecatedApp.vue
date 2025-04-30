@@ -18,7 +18,7 @@ import { useRouter } from 'vue-router'
 import { ERROR_NOTIFICATION_DURATION, IS_DEV, PASSKEY_RP_URL } from './config'
 
 const router = useRouter()
-const { chainId, chainIds } = useNetwork()
+const { selectedChainId, supportedChainIds } = useNetwork()
 
 useChainIdRoute()
 

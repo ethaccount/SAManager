@@ -38,11 +38,11 @@ export const useSAStore = defineStore(
 			return !!account.value && !!erc7579Validator.value && !!smartAccount.value
 		})
 
-		const { client, bundler, pmGetter, chainId } = useNetwork()
+		const { client, bundler, pmGetter, selectedChainId } = useNetwork()
 		const { signer } = useEOA()
 
-		watch(chainId, chainId => {
-			if (chainId !== account.value?.chainId) {
+		watch(selectedChainId, selectedChainId => {
+			if (selectedChainId !== account.value?.chainId) {
 				resetAccount()
 			}
 		})
@@ -51,9 +51,9 @@ export const useSAStore = defineStore(
 			if (account) {
 				// 如果 chainId 跟 app 不一樣，要 disconnect
 				const networkStore = useNetworkStore()
-				if (account.chainId !== networkStore.chainId) {
+				if (account.chainId !== networkStore.selectedChainId) {
 					resetAccount()
-					console.error('Account chainId mismatch', account.chainId, networkStore.chainId)
+					console.error('Account chainId mismatch', account.chainId, networkStore.selectedChainId)
 				}
 			}
 		})

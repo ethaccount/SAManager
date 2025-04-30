@@ -6,7 +6,7 @@ import { Menu } from 'lucide-vue-next'
 import { RouterLink } from 'vue-router'
 import { ref } from 'vue'
 
-const { chainId } = useNetwork()
+const { selectedChainId } = useNetwork()
 
 const isOpen = ref(false)
 
@@ -19,7 +19,7 @@ const closeSheet = () => {
 	<!-- Desktop Navigation -->
 	<nav class="hidden sm:flex items-center space-x-6 text-sm font-medium">
 		<RouterLink
-			:to="{ name: 'send-token', params: { chainId } }"
+			:to="{ name: 'send-token', params: { chainId: selectedChainId } }"
 			class="transition-colors hover:text-foreground/80 text-foreground/60"
 		>
 			Send
@@ -55,7 +55,7 @@ const closeSheet = () => {
 			</SheetHeader>
 			<nav class="flex flex-col gap-4 mt-4">
 				<RouterLink
-					:to="{ name: 'send-token', params: { chainId } }"
+					:to="{ name: 'send-token', params: { chainId: selectedChainId } }"
 					class="transition-colors hover:text-foreground/80 text-foreground/60"
 					@click="closeSheet"
 				>

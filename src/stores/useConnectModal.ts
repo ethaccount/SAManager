@@ -325,9 +325,9 @@ export function simulateStage(_stageKey: ConnectModalStageKey) {
 	stageKey.value = _stageKey
 	switch (_stageKey) {
 		case ConnectModalStageKey.CREATE_CONNECTED:
-			const { chainId } = useNetwork()
+			const { selectedChainId } = useNetwork()
 			const account = {
-				chainId: chainId.value,
+				chainId: selectedChainId.value,
 				eoaAddress: '0x0924E969a99547374C9F4B43503652fdB28289e4',
 				deployedAddress: '0x0924E969a99547374C9F4B43503652fdB28289e4',
 				accountId: AccountId.KERNEL,

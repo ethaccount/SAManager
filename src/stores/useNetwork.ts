@@ -1,65 +1,108 @@
-import { IS_DEV } from '@/config'
-import { BUNDLER_URL, CHAIN_ID, EXPLORER_URL, RPC_URL } from '@/lib/network'
+import { ALCHEMY_API_KEY, IS_DEV, PIMLICO_API_KEY } from '@/config'
+import { CHAIN_ID, EXPLORER_URL, SUPPORTED_BUNDLER, SUPPORTED_ENTRY_POINT, SUPPORTED_NODE } from '@/lib/network'
 import { JsonRpcProvider } from 'ethers'
+import { alchemy, publicNode } from 'evm-providers'
 import { defineStore } from 'pinia'
-import { ADDRESS, AlchemyBundler, PimlicoBundler, PublicPaymaster } from 'sendop'
+import { ADDRESS, AlchemyBundler, Bundler, EntryPointVersion, PimlicoBundler, PublicPaymaster } from 'sendop'
 
-const DEFAULT_CHAIN_ID = IS_DEV ? CHAIN_ID.LOCAL : CHAIN_ID.SEPOLIA
+export const DEFAULT_CHAIN_ID = IS_DEV ? CHAIN_ID.LOCAL : CHAIN_ID.SEPOLIA
+export const DEFAULT_ENTRY_POINT_VERSION: EntryPointVersion = 'v0.7'
+export const DEFAULT_NODE = SUPPORTED_NODE.ALCHEMY
+export const DEFAULT_BUNDLER = SUPPORTED_BUNDLER.PIMLICO
 
 export const useNetworkStore = defineStore(
 	'useNetworkStore',
 	() => {
-		const chainId = ref<CHAIN_ID>(DEFAULT_CHAIN_ID)
-		const chainIdBigInt = computed(() => BigInt(chainId.value))
+		const selectedChainId = ref<CHAIN_ID>(DEFAULT_CHAIN_ID)
+		const chainIdBigInt = computed(() => BigInt(selectedChainId.value))
 
-		function setChainId(id: CHAIN_ID) {
-			chainId.value = id
-		}
-
-		const chainIds = computed(() => {
+		const supportedChainIds = computed(() => {
 			if (IS_DEV) {
 				return Object.values(CHAIN_ID)
 			}
 			return Object.values(CHAIN_ID).filter(id => id !== CHAIN_ID.LOCAL)
 		})
 
-		const rpcUrl = computed(() => RPC_URL[chainId.value])
+		const supportedNodes = computed(() => {
+			return Object.values(SUPPORTED_NODE)
+		})
+		const selectedNode = ref<SUPPORTED_NODE>(DEFAULT_NODE)
 
-		const explorerUrl = computed(() => `${EXPLORER_URL[chainId.value]}`)
+		const rpcUrl = computed(() => {
+			switch (selectedNode.value) {
+				case SUPPORTED_NODE.ALCHEMY:
+					return alchemy(Number(selectedChainId.value) as any, ALCHEMY_API_KEY)
+				case SUPPORTED_NODE.PUBLIC_NODE:
+					return publicNode(Number(selectedChainId.value) as any)
+			}
+		})
+
+		const explorerUrl = computed(() => `${EXPLORER_URL[selectedChainId.value]}`)
+
+		const supportedEntryPoints = computed<SUPPORTED_ENTRY_POINT[]>(() => {
+			return ['v0.7', 'v0.8']
+		})
+
+		const selectedEntryPoint = ref<EntryPointVersion>(DEFAULT_ENTRY_POINT_VERSION)
+
+		const supportedBundlers = computed<SUPPORTED_BUNDLER[]>(() => {
+			return Object.values(SUPPORTED_BUNDLER)
+		})
+
+		const selectedBundler = ref<SUPPORTED_BUNDLER>(DEFAULT_BUNDLER)
+
+		const bundlerUrl = computed(() => {
+			if (selectedChainId.value === CHAIN_ID.LOCAL) {
+				return `http://localhost:4337`
+			}
+			switch (selectedBundler.value) {
+				case SUPPORTED_BUNDLER.PIMLICO:
+					return `https://api.pimlico.io/v2/${selectedChainId.value}/rpc?apikey=${PIMLICO_API_KEY}`
+				case SUPPORTED_BUNDLER.ALCHEMY:
+					return alchemy(Number(selectedChainId.value) as any, ALCHEMY_API_KEY)
+			}
+		})
 
 		const client = computed(() => new JsonRpcProvider(rpcUrl.value))
 		const clientNoBatch = computed(() => new JsonRpcProvider(rpcUrl.value, undefined, { batchMaxCount: 1 }))
 
-		const bundlerUrl = computed(() => BUNDLER_URL[chainId.value])
-		const bundler = computed(() => {
-			if (bundlerUrl.value.includes('alchemy')) {
-				return new AlchemyBundler(chainIdBigInt.value, bundlerUrl.value, {
-					parseError: true,
-				})
-			}
-			return new PimlicoBundler(chainIdBigInt.value, bundlerUrl.value, {
+		const bundler = computed<Bundler>(() => {
+			const bundlerOptions = {
 				parseError: true,
-			})
+				debug: true,
+			}
+
+			switch (selectedBundler.value) {
+				case SUPPORTED_BUNDLER.PIMLICO:
+					return new PimlicoBundler(chainIdBigInt.value, bundlerUrl.value, bundlerOptions)
+				case SUPPORTED_BUNDLER.ALCHEMY:
+					return new AlchemyBundler(chainIdBigInt.value, bundlerUrl.value, bundlerOptions)
+			}
 		})
 
 		const pmGetter = computed(() => new PublicPaymaster(ADDRESS.PublicPaymaster))
 
 		return {
-			chainId,
-			chainIds,
+			selectedChainId,
+			supportedChainIds,
 			rpcUrl,
 			explorerUrl,
 			client,
 			clientNoBatch,
 			bundlerUrl,
 			bundler,
-			setChainId,
+			supportedBundlers,
+			selectedEntryPoint,
+			selectedBundler,
+			selectedNode,
 			pmGetter,
+			supportedNodes,
+			supportedEntryPoints,
 		}
 	},
 	{
 		persist: {
-			pick: ['chainId'],
+			pick: ['selectedChainId'],
 		},
 	},
 )

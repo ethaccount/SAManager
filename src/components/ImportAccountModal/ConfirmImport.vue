@@ -15,7 +15,7 @@ const props = defineProps<{
 	type: () => AccountType
 }>()
 
-const { chainId } = useNetwork()
+const { selectedChainId } = useNetwork()
 const isSuccess = ref(false)
 
 const onClickConfirm = () => {
@@ -24,7 +24,7 @@ const onClickConfirm = () => {
 		accountId: props.accountId(),
 		vOptions: props.vOptions(),
 		type: props.type(),
-		chainId: chainId.value,
+		chainId: selectedChainId.value,
 	})
 	isSuccess.value = true
 	// setTimeout(() => {
@@ -51,7 +51,7 @@ const onClickConfirm = () => {
 		<div v-if="!isSuccess" class="w-full max-w-sm space-y-3 bg-muted/30 rounded-lg p-4">
 			<div class="flex justify-between items-center">
 				<span class="text-sm text-muted-foreground">Chain ID</span>
-				<span class="font-medium text-foreground">{{ CHAIN_NAME[chainId] }}</span>
+				<span class="font-medium text-foreground">{{ CHAIN_NAME[selectedChainId] }}</span>
 			</div>
 			<div class="flex justify-between items-center">
 				<span class="text-sm text-muted-foreground">Account</span>

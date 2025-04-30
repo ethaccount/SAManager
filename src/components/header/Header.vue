@@ -11,7 +11,7 @@ import { useModal } from 'vue-final-modal'
 import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
 const breakpoints = useBreakpoints(breakpointsTailwind)
 
-const { chainId } = useNetwork()
+const { selectedChainId } = useNetwork()
 const { account, resetAccount, isConnected } = useSA()
 const isOpen = ref(false)
 
@@ -54,7 +54,10 @@ const { hasAccounts } = useImportedAccounts()
 		<div class="h-[56px] flex w-full max-w-6xl mx-auto justify-between items-center">
 			<div class="flex items-center gap-2 sm:gap-6">
 				<!-- SAManager -->
-				<RouterLink :to="{ name: 'home', params: { chainId } }" class="flex items-center gap-2">
+				<RouterLink
+					:to="{ name: 'home', params: { chainId: selectedChainId } }"
+					class="flex items-center gap-2"
+				>
 					<h1 class="font-semibold text-lg" :class="{ 'text-md': breakpoints.isSmaller('sm') }">SAManager</h1>
 				</RouterLink>
 
