@@ -9,7 +9,7 @@ const props = defineProps<{
 
 const emit = defineEmits(['confirm'])
 
-const username = ref('ethaccount-demo')
+const username = ref('test-user')
 
 const { passkeyRegister, passkeyLogin, isLogin } = usePasskey()
 
@@ -82,7 +82,7 @@ function onClickLogout() {
 </script>
 
 <template>
-	<div class="flex flex-col gap-4 p-4 max-w-md mx-auto">
+	<div class="flex flex-col gap-4 p-4">
 		<div v-if="!isLogin" class="flex flex-col gap-3">
 			<div class="space-y-2">
 				<label for="username" class="text-sm font-medium text-muted-foreground">Username</label>

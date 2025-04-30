@@ -55,10 +55,10 @@ const title = computed(() => {
 			</Button>
 		</div>
 
-		<ConnectEOAWallet v-if="props.type === 'eoa-wallet'" />
-		<ConnectPasskey mode="both" v-if="props.type === 'passkey-both'" />
-		<ConnectPasskey mode="register" v-if="props.type === 'passkey-only-register'" />
-		<ConnectPasskey mode="login" v-if="props.type === 'passkey-only-login'" />
+		<ConnectEOAWallet v-if="props.type === 'eoa-wallet'" @confirm="emit('close')" />
+		<ConnectPasskey mode="both" v-if="props.type === 'passkey-both'" @confirm="emit('close')" />
+		<ConnectPasskey mode="register" v-if="props.type === 'passkey-only-register'" @confirm="emit('close')" />
+		<ConnectPasskey mode="login" v-if="props.type === 'passkey-only-login'" @confirm="emit('close')" />
 	</VueFinalModal>
 </template>
 

@@ -3,20 +3,20 @@ import { useModal } from 'vue-final-modal'
 import ConnectSignerModal from '@/components/signer/ConnectSignerModal.vue'
 
 export const useConnectSignerModalStore = defineStore('useConnectSignerModalStore', () => {
-	const { open: openConnectEOAWallet } = useModal({
+	const { open: openConnectEOAWallet, close: closeConnectEOAWallet } = useModal({
 		component: ConnectSignerModal,
 		attrs: {
 			type: 'eoa-wallet',
-			onClose: () => close(),
+			onClose: () => closeConnectEOAWallet(),
 		},
 		slots: {},
 	})
 
-	const { open: openConnectPasskeyBoth } = useModal({
+	const { open: openConnectPasskeyBoth, close: closeConnectPasskeyBoth } = useModal({
 		component: ConnectSignerModal,
 		attrs: {
 			type: 'passkey-both',
-			onClose: () => close(),
+			onClose: () => closeConnectPasskeyBoth(),
 		},
 		slots: {},
 	})

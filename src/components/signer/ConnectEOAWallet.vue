@@ -49,7 +49,7 @@ const onClickConfirm = () => {
 </script>
 
 <template>
-	<div class="flex flex-col gap-4 p-4 max-w-md mx-auto">
+	<div class="flex flex-col gap-4 p-4 w-full mx-auto">
 		<div class="flex flex-col gap-3">
 			<div class="grid gap-2">
 				<Button

@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { VueFinalModal } from 'vue-final-modal'
-import { X } from 'lucide-vue-next'
+import { X, Power } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { ref } from 'vue'
 import { useConnectSignerModal } from '@/stores/useConnectSignerModal'
 import { ImportedAccount, useImportedAccounts } from '@/stores/useImportedAccounts'
-import { shortenAddress } from '@vue-dapp/core'
+import { shortenAddress, useVueDapp } from '@vue-dapp/core'
 
 // Types for account data
 interface Account {
@@ -22,6 +22,8 @@ const emit = defineEmits<{
 const { accounts } = useImportedAccounts()
 
 const selectedAccount = ref<ImportedAccount>(accounts.value[0])
+
+const { wallet, address, isConnected, disconnect } = useVueDapp()
 
 function onClickCloseSidebar() {
 	emit('close')
@@ -78,9 +80,22 @@ const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 			<div class="mb-6">
 				<h3 class="text-sm font-semibold tracking-wider mb-3">Signers</h3>
 				<div class="space-y-2">
-					<div class="flex justify-between items-center p-3 border rounded-lg">
-						<span>EOA Wallet</span>
-						<Button variant="outline" size="sm" @click="openConnectEOAWallet">Connect</Button>
+					<div class="flex flex-col p-3 border rounded-lg" :class="{ 'bg-secondary': isConnected }">
+						<div v-if="!isConnected" class="flex justify-between items-center">
+							<span>EOA Wallet</span>
+							<Button variant="outline" size="sm" @click="openConnectEOAWallet"> Connect </Button>
+						</div>
+						<div v-if="isConnected" class="">
+							<div class="flex justify-between items-center gap-2 text-sm text-muted-foreground">
+								<div>{{ wallet.providerInfo?.name }} Connected</div>
+								<Button variant="ghost" size="icon" @click="disconnect">
+									<Power class="w-4 h-4" />
+								</Button>
+							</div>
+							<div class="text-xs">
+								{{ shortenAddress(address || '') }}
+							</div>
+						</div>
 					</div>
 					<div class="flex justify-between items-center p-3 border rounded-lg">
 						<span>Passkey</span>
