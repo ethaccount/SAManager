@@ -7,7 +7,7 @@ import ConnectEOAWallet from '@/components/signer/ConnectEOAWallet.vue'
 import { AccountType, ValidationOption } from '@/stores/useImportedAccounts'
 import { defineStore, storeToRefs } from 'pinia'
 import { useModal } from 'vue-final-modal'
-import { AccountId } from '@/lib/supportedAccounts'
+import { AccountId } from '@/lib/account'
 
 // IAM: Import Account Modal
 

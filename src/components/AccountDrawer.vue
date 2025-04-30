@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
-import { displayAccountName } from '@/lib/supportedAccounts'
-import { displayChainName } from '@/lib/supportedChains'
+import { displayAccountName } from '@/lib/account'
+import { displayChainName } from '@/lib/network'
 import { useConnectSignerModal } from '@/stores/useConnectSignerModal'
 import { ImportedAccount, useImportedAccounts } from '@/stores/useImportedAccounts'
 import { shortenAddress, useVueDapp } from '@vue-dapp/core'

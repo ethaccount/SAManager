@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
-import { CHAIN_ID, CHAIN_NAME } from '@/lib/supportedChains'
+import { CHAIN_ID, CHAIN_NAME } from '@/lib/network'
 import { useBlockchain } from '@/stores/useBlockchain'
 import { ref, watch } from 'vue'
 

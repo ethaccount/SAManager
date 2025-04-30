@@ -1,5 +1,5 @@
-import { CHAIN_ID } from '@/lib/supportedChains'
-import { AccountId } from '@/lib/supportedAccounts'
+import { CHAIN_ID } from '@/lib/network'
+import { AccountId } from '@/lib/account'
 import { defineStore, storeToRefs } from 'pinia'
 import { toast } from 'vue-sonner'
 
