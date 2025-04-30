@@ -64,18 +64,6 @@
 	}
 }
 
-/* vue-spring-bottom-sheet */
-:root {
-	--vsbs-backdrop-bg: hsl(var(--background) / 0.8);
-	--vsbs-shadow-color: hsl(var(--muted) / 0.2);
-	--vsbs-background: hsl(var(--background));
-	--vsbs-border-radius: var(--radius);
-	--vsbs-max-width: 640px;
-	--vsbs-border-color: hsl(var(--border));
-	--vsbs-padding-x: 1rem; /* 16px */
-	--vsbs-handle-background: hsl(var(--muted) / 0.5);
-}
-
 /* Only show focus rings for keyboard navigation */
 @layer base {
 	*:focus:not(:focus-visible) {

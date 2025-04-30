@@ -113,6 +113,7 @@ declare module 'vue' {
     TabsTrigger: typeof import('./components/ui/tabs/TabsTrigger.vue')['default']
     Textarea: typeof import('./components/ui/textarea/Textarea.vue')['default']
     ThemeToggle: typeof import('./components/utils/ThemeToggle.vue')['default']
+    TransactionModal: typeof import('./components/TransactionModal.vue')['default']
     ValidateSmartEOA: typeof import('./components/ImportAccountModal/ValidateSmartEOA.vue')['default']
   }
 }

@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useTransactionModal } from '@/lib/useTransactionModal'
+import { ZeroAddress } from 'ethers'
 import { Plus, X } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 
@@ -39,8 +41,8 @@ const paymasters: Paymaster[] = [
 
 function getDefaultTransfer(): TokenTransfer {
 	return {
-		recipient: '',
-		amount: '',
+		recipient: '0xd78B5013757Ea4A7841811eF770711e6248dC282',
+		amount: '0.01',
 		tokenId: tokens[0].id,
 	}
 }
@@ -69,16 +71,7 @@ const removeTransfer = (index: number) => {
 }
 
 const onClickReview = () => {
-	if (!simulationDone.value) {
-		// Mock simulation
-		console.log('Simulating transactions...', transfers.value)
-		simulationDone.value = true
-	} else {
-		// Mock sending
-		console.log('Sending transactions...', transfers.value)
-		// Reset after sending
-		simulationDone.value = false
-	}
+	useTransactionModal().openModal()
 }
 
 const handleAtomicChange = (checked: boolean) => {

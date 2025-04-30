@@ -11,7 +11,6 @@
 		"typecheck": "vue-tsc --noEmit"
 	},
 	"dependencies": {
-		"@douxcode/vue-spring-bottom-sheet": "^2.1.1",
 		"@internationalized/date": "^3.7.0",
 		"@kyvg/vue3-notification": "^3.4.1",
 		"@noble/curves": "^1.8.1",
