@@ -2,8 +2,9 @@
 import { Button } from '@/components/ui/button'
 import { displayAccountName } from '@/lib/account'
 import { displayChainName } from '@/lib/network'
+import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
 import { ImportedAccount, useAccounts } from '@/stores/useAccounts'
-import { useConnectSignerModal } from '@/stores/useConnectSignerModal'
+
 import { shortenAddress, useVueDapp } from '@vue-dapp/core'
 import { Power, X } from 'lucide-vue-next'
 import { VueFinalModal } from 'vue-final-modal'

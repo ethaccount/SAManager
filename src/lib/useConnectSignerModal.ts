@@ -1,8 +1,7 @@
-import { defineStore, storeToRefs } from 'pinia'
-import { useModal } from 'vue-final-modal'
 import ConnectSignerModal from '@/components/signer/ConnectSignerModal.vue'
+import { useModal } from 'vue-final-modal'
 
-export const useConnectSignerModalStore = defineStore('useConnectSignerModalStore', () => {
+export function useConnectSignerModal() {
 	const { open: openConnectEOAWallet, close: closeConnectEOAWallet } = useModal({
 		component: ConnectSignerModal,
 		attrs: {
@@ -24,13 +23,5 @@ export const useConnectSignerModalStore = defineStore('useConnectSignerModalStor
 	return {
 		openConnectEOAWallet,
 		openConnectPasskeyBoth,
-	}
-})
-
-export function useConnectSignerModal() {
-	const store = useConnectSignerModalStore()
-	return {
-		...store,
-		...storeToRefs(store),
 	}
 }
