@@ -4,7 +4,7 @@ import { ModalsContainer, useModal } from 'vue-final-modal'
 import { useChainIdRoute } from '@/app/useChainIdRoute'
 import ConnectModal from '@/components/connect-modal/ConnectModal.vue'
 import ErrorModal from '@/components/ErrorModal.vue'
-import { useBlockchain } from '@/stores/useBlockchain'
+import { useNetwork } from '@/stores/useNetwork'
 import { useConnectModal } from '@/stores/useConnectModal'
 import { useEOA } from '@/stores/useEOA'
 import { useErrorModalStore } from '@/stores/useErrorModal'
@@ -18,7 +18,7 @@ import { useRouter } from 'vue-router'
 import { ERROR_NOTIFICATION_DURATION, IS_DEV, PASSKEY_RP_URL } from './config'
 
 const router = useRouter()
-const { chainId, chainIds } = useBlockchain()
+const { chainId, chainIds } = useNetwork()
 
 useChainIdRoute()
 

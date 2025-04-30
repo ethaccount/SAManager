@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
-import { useBlockchain } from '@/stores/useBlockchain'
+import { useNetwork } from '@/stores/useNetwork'
 import { Menu } from 'lucide-vue-next'
 import { RouterLink } from 'vue-router'
 import { ref } from 'vue'
 
-const { chainId } = useBlockchain()
+const { chainId } = useNetwork()
 
 const isOpen = ref(false)
 

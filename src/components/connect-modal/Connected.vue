@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useSA } from '@/stores/useSA'
 import { useConnectModal } from '@/stores/useConnectModal'
-import { useBlockchain } from '@/stores/useBlockchain'
+import { useNetwork } from '@/stores/useNetwork'
 import { shortenAddress } from '@vue-dapp/core'
 
 const { store } = useConnectModal()
@@ -10,7 +10,7 @@ const { account } = useSA()
 const error = ref<string | null>(null)
 
 onMounted(() => {
-	const { chainId } = useBlockchain()
+	const { chainId } = useNetwork()
 	const { setAccount } = useSA()
 	if (!store.value.deployedAddress || !store.value.validator || !store.value.accountId) {
 		error.value = `Failed to connect to the account: ${store.value.deployedAddress} ${store.value.validator} ${store.value.accountId}`

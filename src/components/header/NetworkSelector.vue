@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 import { CHAIN_ID, CHAIN_NAME } from '@/lib/network'
-import { useBlockchain } from '@/stores/useBlockchain'
+import { useNetwork } from '@/stores/useNetwork'
 import { ref, watch } from 'vue'
 
 // Add new interfaces/types
@@ -21,7 +21,7 @@ interface EthereumNode {
 }
 
 // Add refs for each selection
-const { chainId, chainIds } = useBlockchain()
+const { chainId, chainIds } = useNetwork()
 const isOpen = ref(false)
 const selectedBundler = ref<string>('')
 const selectedEntryPoint = ref<string>('0.7')

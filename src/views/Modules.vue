@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { fetchModules } from '@/lib/aa'
-import { useBlockchain } from '@/stores/useBlockchain'
+import { useNetwork } from '@/stores/useNetwork'
 import { useSA } from '@/stores/useSA'
 import { ERC7579_MODULE_TYPE } from 'sendop'
 
 const modules = ref<Record<string, string[]>>({})
 
 const { account, isConnected } = useSA()
-const { client, clientNoBatch } = useBlockchain()
+const { client, clientNoBatch } = useNetwork()
 
 const loading = ref(false)
 watch(

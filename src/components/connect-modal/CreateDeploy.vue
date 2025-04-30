@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { SALT } from '@/config'
 import { signMessage } from '@/lib/passkey'
-import { useBlockchain } from '@/stores/useBlockchain'
+import { useNetwork } from '@/stores/useNetwork'
 import { ConnectModalStageKey, useConnectModal } from '@/stores/useConnectModal'
 import { useEOA } from '@/stores/useEOA'
 import { usePasskey } from '@/stores/usePasskey'
@@ -56,7 +56,7 @@ watch(selectedVendor, async newVendor => {
 const creationOptions = ref<KernelCreationOptions | NexusCreationOptions | null>(null)
 
 function getComputedAddress(accountId: AccountId) {
-	const { client } = useBlockchain()
+	const { client } = useNetwork()
 
 	creationOptions.value = {
 		salt: hexlify(SALT),
@@ -122,7 +122,7 @@ async function onClickDeploy() {
 		throw new Error('No deployed address')
 	}
 
-	const { bundler, client, pmGetter } = useBlockchain()
+	const { bundler, client, pmGetter } = useNetwork()
 
 	let erc7579Validator: ERC7579Validator
 

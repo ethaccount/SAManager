@@ -6,8 +6,8 @@ import { ADDRESS, AlchemyBundler, PimlicoBundler, PublicPaymaster } from 'sendop
 
 const DEFAULT_CHAIN_ID = IS_DEV ? CHAIN_ID.LOCAL : CHAIN_ID.SEPOLIA
 
-export const useBlockchainStore = defineStore(
-	'useBlockchainStore',
+export const useNetworkStore = defineStore(
+	'useNetworkStore',
 	() => {
 		const chainId = ref<CHAIN_ID>(DEFAULT_CHAIN_ID)
 		const chainIdBigInt = computed(() => BigInt(chainId.value))
@@ -64,10 +64,10 @@ export const useBlockchainStore = defineStore(
 	},
 )
 
-export function useBlockchain() {
-	const blockchainStore = useBlockchainStore()
+export function useNetwork() {
+	const store = useNetworkStore()
 	return {
-		...blockchainStore,
-		...storeToRefs(blockchainStore),
+		...store,
+		...storeToRefs(store),
 	}
 }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { fetchAccountId } from '@/lib/aa'
-import { useBlockchain } from '@/stores/useBlockchain'
+import { useNetwork } from '@/stores/useNetwork'
 import { ConnectModalStageKey, useConnectModal } from '@/stores/useConnectModal'
 import { usePasskey } from '@/stores/usePasskey'
 import { AccountId } from '@/types'
@@ -24,7 +24,7 @@ const accounts = ref<AccountInfo[]>([])
 const loading = ref(false)
 const loadingAddresses = ref(false)
 
-const { clientNoBatch } = useBlockchain()
+const { clientNoBatch } = useNetwork()
 
 onMounted(async () => {
 	try {

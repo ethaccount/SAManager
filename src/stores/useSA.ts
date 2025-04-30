@@ -10,7 +10,7 @@ import {
 	SmartAccount,
 	WebAuthnValidatorModule,
 } from 'sendop'
-import { useBlockchain, useBlockchainStore } from './useBlockchain'
+import { useNetwork, useNetworkStore } from './useNetwork'
 import { useEOA } from './useEOA'
 import { signMessage } from '@/lib/passkey'
 
@@ -38,7 +38,7 @@ export const useSAStore = defineStore(
 			return !!account.value && !!erc7579Validator.value && !!smartAccount.value
 		})
 
-		const { client, bundler, pmGetter, chainId } = useBlockchain()
+		const { client, bundler, pmGetter, chainId } = useNetwork()
 		const { signer } = useEOA()
 
 		watch(chainId, chainId => {
@@ -50,10 +50,10 @@ export const useSAStore = defineStore(
 		watch(account, account => {
 			if (account) {
 				// 如果 chainId 跟 app 不一樣，要 disconnect
-				const blockchainStore = useBlockchainStore()
-				if (account.chainId !== blockchainStore.chainId) {
+				const networkStore = useNetworkStore()
+				if (account.chainId !== networkStore.chainId) {
 					resetAccount()
-					console.error('Account chainId mismatch', account.chainId, blockchainStore.chainId)
+					console.error('Account chainId mismatch', account.chainId, networkStore.chainId)
 				}
 			}
 		})

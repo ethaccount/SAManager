@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import ConnectModal from '@/components/connect-modal/ConnectModal.vue'
 import { useAccountDrawer } from '@/lib/useAccountDrawer'
-import { useBlockchain } from '@/stores/useBlockchain'
+import { useNetwork } from '@/stores/useNetwork'
 import { useConnectModal } from '@/stores/useConnectModal'
 import { useImportedAccounts } from '@/stores/useImportedAccounts'
 import { useSA } from '@/stores/useSA'
@@ -11,7 +11,7 @@ import { useModal } from 'vue-final-modal'
 import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
 const breakpoints = useBreakpoints(breakpointsTailwind)
 
-const { chainId } = useBlockchain()
+const { chainId } = useNetwork()
 const { account, resetAccount, isConnected } = useSA()
 const isOpen = ref(false)
 

@@ -1,7 +1,7 @@
-import { useBlockchain } from '@/stores/useBlockchain'
+import { useNetwork } from '@/stores/useNetwork'
 
 export function toRoute(name: string) {
-	const { chainId } = useBlockchain()
+	const { chainId } = useNetwork()
 	return {
 		name,
 		params: {

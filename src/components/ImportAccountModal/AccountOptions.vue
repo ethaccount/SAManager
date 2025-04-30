@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { fetchAccountId } from '@/lib/aa'
-import { useBlockchain } from '@/stores/useBlockchain'
+import { useNetwork } from '@/stores/useNetwork'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
 import { AccountId } from '@/lib/account'
 import { usePasskey } from '@/stores/usePasskey'
@@ -38,7 +38,7 @@ interface AccountInfo {
 // Stores
 const { goNextStage } = useImportAccountModal()
 const { credential } = usePasskey()
-const { clientNoBatch } = useBlockchain()
+const { clientNoBatch } = useNetwork()
 
 // State
 const accounts = ref<AccountInfo[]>([])

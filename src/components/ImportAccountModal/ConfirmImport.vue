@@ -4,7 +4,7 @@ import { CheckCircle2 } from 'lucide-vue-next'
 import { ref } from 'vue'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
 import { AccountType, useImportedAccounts, ValidationOption } from '@/stores/useImportedAccounts'
-import { useBlockchain } from '@/stores/useBlockchain'
+import { useNetwork } from '@/stores/useNetwork'
 import { CHAIN_NAME } from '@/lib/network'
 import { AccountId, displayAccountName } from '@/lib/account'
 
@@ -15,7 +15,7 @@ const props = defineProps<{
 	type: () => AccountType
 }>()
 
-const { chainId } = useBlockchain()
+const { chainId } = useNetwork()
 const isSuccess = ref(false)
 
 const onClickConfirm = () => {
