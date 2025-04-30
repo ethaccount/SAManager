@@ -4,9 +4,10 @@ import ImportAccountModal from '@/components/ImportAccountModal/ImportAccountMod
 import ImportOptions from '@/components/ImportAccountModal/ImportOptions.vue'
 import ValidateSmartEOA from '@/components/ImportAccountModal/ValidateSmartEOA.vue'
 import ConnectEOAWallet from '@/components/signer/ConnectEOAWallet.vue'
-import { AccountId, AccountType, ValidationOption } from '@/stores/useImportedAccounts'
+import { AccountType, ValidationOption } from '@/stores/useImportedAccounts'
 import { defineStore, storeToRefs } from 'pinia'
 import { useModal } from 'vue-final-modal'
+import { AccountId } from '@/lib/supportedAccounts'
 
 // IAM: Import Account Modal
 

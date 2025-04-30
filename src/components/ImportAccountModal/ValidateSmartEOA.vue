@@ -3,7 +3,7 @@ import { useBlockchain } from '@/stores/useBlockchain'
 import { ADDRESS, getSmartEOADelegateAddress, isSameAddress } from 'sendop'
 import { ref, onMounted } from 'vue'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
-import { AccountId } from '@/stores/useImportedAccounts'
+import { AccountId } from '@/lib/supportedAccounts'
 import { Button } from '@/components/ui/button'
 import { Loader2, CheckCircle2, XCircle, ArrowLeft } from 'lucide-vue-next'
 

@@ -3,9 +3,10 @@ import { shortenAddress } from '@vue-dapp/core'
 import { CheckCircle2 } from 'lucide-vue-next'
 import { ref } from 'vue'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
-import { AccountId, AccountType, useImportedAccounts, ValidationOption } from '@/stores/useImportedAccounts'
+import { AccountType, useImportedAccounts, ValidationOption } from '@/stores/useImportedAccounts'
 import { useBlockchain } from '@/stores/useBlockchain'
 import { CHAIN_NAME } from '@/config'
+import { AccountId, displayAccountName } from '@/lib/supportedAccounts'
 
 const props = defineProps<{
 	address: () => string
@@ -53,8 +54,8 @@ const onClickConfirm = () => {
 				<span class="font-medium text-foreground">{{ CHAIN_NAME[chainId] }}</span>
 			</div>
 			<div class="flex justify-between items-center">
-				<span class="text-sm text-muted-foreground">Account ID</span>
-				<span class="font-medium text-foreground">{{ accountId() }}</span>
+				<span class="text-sm text-muted-foreground">Account</span>
+				<span class="font-medium text-foreground">{{ displayAccountName(accountId()) }}</span>
 			</div>
 			<div class="flex justify-between items-center">
 				<span class="text-sm text-muted-foreground">Address</span>

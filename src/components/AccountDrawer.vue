@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { VueFinalModal } from 'vue-final-modal'
-import { X, Power } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
-import { ref } from 'vue'
+import { displayAccountName } from '@/lib/supportedAccounts'
 import { useConnectSignerModal } from '@/stores/useConnectSignerModal'
 import { ImportedAccount, useImportedAccounts } from '@/stores/useImportedAccounts'
 import { shortenAddress, useVueDapp } from '@vue-dapp/core'
+import { Power, X } from 'lucide-vue-next'
+import { VueFinalModal } from 'vue-final-modal'
 
 // Types for account data
 interface Account {
@@ -61,7 +61,7 @@ const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 						</div>
 						<div class="flex flex-col text-xs text-muted-foreground">
 							<span class="text-xs text-muted-foreground">{{ selectedAccount.type }}</span>
-							<span>{{ selectedAccount.accountId }}</span>
+							<span>{{ displayAccountName(selectedAccount.accountId) }}</span>
 							<span>{{ selectedAccount.vOptions.map(v => v.type).join(', ') }}</span>
 						</div>
 					</div>
@@ -120,7 +120,7 @@ const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 								<span class="text-xs text-muted-foreground">{{ account.type }}</span>
 							</div>
 							<div class="flex justify-between items-center text-xs text-muted-foreground">
-								<span>{{ account.accountId }}</span>
+								<span>{{ displayAccountName(account.accountId) }}</span>
 								<span>{{ account.vOptions.map(v => v.type).join(', ') }}</span>
 							</div>
 						</div>

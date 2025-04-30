@@ -2,7 +2,7 @@
 import { fetchAccountId } from '@/lib/aa'
 import { useBlockchain } from '@/stores/useBlockchain'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
-import { AccountId } from '@/stores/useImportedAccounts'
+import { AccountId } from '@/lib/supportedAccounts'
 import { usePasskey } from '@/stores/usePasskey'
 import { shortenAddress } from '@vue-dapp/core'
 import { Contract, EventLog } from 'ethers'
