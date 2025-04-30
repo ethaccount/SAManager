@@ -1,9 +1,9 @@
 import { createApp } from 'vue'
+import { toast } from 'vue-sonner'
 import App from './App.vue'
 import { ERROR_NOTIFICATION_DURATION } from './config'
 import { parseError } from './lib/error'
 import './style.css'
-import { toast } from 'vue-sonner'
 
 // vue-spring-bottom-sheet
 import '@douxcode/vue-spring-bottom-sheet/dist/style.css'
@@ -22,7 +22,7 @@ import router from './router'
 app.use(router)
 
 // vue-notification
-import Notifications, { notify } from '@kyvg/vue3-notification'
+import Notifications from '@kyvg/vue3-notification'
 app.use(Notifications)
 
 // vue-final-modal
@@ -38,16 +38,8 @@ app.config.errorHandler = (error: unknown, _vm, _info) => {
 	const err = parseError(error)
 	console.error(err)
 
-	// why not show?
 	toast.error(err.name, {
 		description: err.message,
-		duration: ERROR_NOTIFICATION_DURATION,
-	})
-
-	notify({
-		title: err.name,
-		text: err.message,
-		type: 'error',
 		duration: ERROR_NOTIFICATION_DURATION,
 	})
 }

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 import { displayAccountName } from '@/lib/supportedAccounts'
+import { displayChainName } from '@/lib/supportedChains'
 import { useConnectSignerModal } from '@/stores/useConnectSignerModal'
 import { ImportedAccount, useImportedAccounts } from '@/stores/useImportedAccounts'
 import { shortenAddress, useVueDapp } from '@vue-dapp/core'
@@ -60,8 +61,11 @@ const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 							<span class="font-medium truncate">{{ shortenAddress(selectedAccount.address) }}</span>
 						</div>
 						<div class="flex flex-col text-xs text-muted-foreground">
-							<span class="text-xs text-muted-foreground">{{ selectedAccount.type }}</span>
-							<span>{{ displayAccountName(selectedAccount.accountId) }}</span>
+							<div class="flex gap-2">
+								<span>{{ displayAccountName(selectedAccount.accountId) }}</span>
+								<span>{{ displayChainName(selectedAccount.chainId) }}</span>
+							</div>
+
 							<span>{{ selectedAccount.vOptions.map(v => v.type).join(', ') }}</span>
 						</div>
 					</div>
@@ -117,11 +121,14 @@ const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 						<div>
 							<div class="flex justify-between items-center mb-1">
 								<span class="font-medium truncate">{{ shortenAddress(account.address) }}</span>
-								<span class="text-xs text-muted-foreground">{{ account.type }}</span>
+								<span class="text-xs text-muted-foreground">
+									{{ displayChainName(account.chainId) }}
+								</span>
+								<!-- <span class="text-xs text-muted-foreground">{{ account.type }}</span> -->
 							</div>
 							<div class="flex justify-between items-center text-xs text-muted-foreground">
 								<span>{{ displayAccountName(account.accountId) }}</span>
-								<span>{{ account.vOptions.map(v => v.type).join(', ') }}</span>
+								<!-- <span>{{ account.vOptions.map(v => v.type).join(', ') }}</span> -->
 							</div>
 						</div>
 

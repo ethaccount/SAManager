@@ -1,4 +1,5 @@
-import { BUNDLER_URL, CHAIN_ID, EXPLORER_URL, IS_DEV, RPC_URL } from '@/config'
+import { IS_DEV } from '@/config'
+import { BUNDLER_URL, CHAIN_ID, EXPLORER_URL, RPC_URL } from '@/lib/supportedChains'
 import { JsonRpcProvider } from 'ethers'
 import { defineStore } from 'pinia'
 import { ADDRESS, AlchemyBundler, PimlicoBundler, PublicPaymaster } from 'sendop'

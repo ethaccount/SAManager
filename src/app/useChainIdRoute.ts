@@ -1,4 +1,4 @@
-import { CHAIN_ID, DEFAULT_CHAIN_ID, isSupportedChainId } from '@/config'
+import { CHAIN_ID, DEFAULT_CHAIN_ID, isSupportedChainId } from '@/lib/supportedChains'
 import { useBlockchain } from '@/stores/useBlockchain'
 import { useRouter } from 'vue-router'
 

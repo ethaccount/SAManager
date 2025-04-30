@@ -28,7 +28,7 @@ const accountOptions: AccountOption[] = [
 		type: 'Smart Account',
 	},
 	{
-		title: 'Smart EOAs',
+		title: 'Smart EOA',
 		description: 'Import an EIP-7702 upgraded EOA that has smart account capabilities',
 		icon: Code,
 		nextStageKey: IAMStageKey.CONNECT_SMART_EOA,

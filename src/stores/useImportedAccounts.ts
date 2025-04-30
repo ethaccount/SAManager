@@ -1,4 +1,4 @@
-import { CHAIN_ID } from '@/config'
+import { CHAIN_ID } from '@/lib/supportedChains'
 import { AccountId } from '@/lib/supportedAccounts'
 import { defineStore, storeToRefs } from 'pinia'
 import { toast } from 'vue-sonner'

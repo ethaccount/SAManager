@@ -2,10 +2,8 @@
 import { BrowserWalletConnector, useVueDapp } from '@vue-dapp/core'
 import { ModalsContainer, useModal } from 'vue-final-modal'
 import { useChainIdRoute } from '@/app/useChainIdRoute'
-import Address from '@/components/Address.vue'
 import ConnectModal from '@/components/connect-modal/ConnectModal.vue'
 import ErrorModal from '@/components/ErrorModal.vue'
-import ThemeToggle from '@/components/ThemeToggle.vue'
 import { useBlockchain } from '@/stores/useBlockchain'
 import { useConnectModal } from '@/stores/useConnectModal'
 import { useEOA } from '@/stores/useEOA'
@@ -17,7 +15,7 @@ import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
 import { X } from 'lucide-vue-next'
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { CHAIN_NAME, ERROR_NOTIFICATION_DURATION, IS_DEV, PASSKEY_RP_URL } from './config'
+import { ERROR_NOTIFICATION_DURATION, IS_DEV, PASSKEY_RP_URL } from './config'
 
 const router = useRouter()
 const { chainId, chainIds } = useBlockchain()
