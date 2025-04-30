@@ -3,7 +3,7 @@ import ConnectModal from '@/components/connect-modal/ConnectModal.vue'
 import { useAccountDrawer } from '@/lib/useAccountDrawer'
 import { useNetwork } from '@/stores/useNetwork'
 import { useConnectModal } from '@/stores/useConnectModal'
-import { useImportedAccounts } from '@/stores/useImportedAccounts'
+import { useAccounts } from '@/stores/useAccounts'
 import { useSA } from '@/stores/useSA'
 import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
@@ -44,7 +44,7 @@ function onClickAccountButton() {
 	openAccountDrawer()
 }
 
-const { hasAccounts } = useImportedAccounts()
+const { hasAccounts } = useAccounts()
 </script>
 
 <template>

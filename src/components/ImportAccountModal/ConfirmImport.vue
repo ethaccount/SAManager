@@ -3,7 +3,7 @@ import { shortenAddress } from '@vue-dapp/core'
 import { CheckCircle2 } from 'lucide-vue-next'
 import { ref } from 'vue'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
-import { AccountType, useImportedAccounts, ValidationOption } from '@/stores/useImportedAccounts'
+import { AccountType, useAccounts, ValidationOption } from '@/stores/useAccounts'
 import { useNetwork } from '@/stores/useNetwork'
 import { CHAIN_NAME } from '@/lib/network'
 import { AccountId, displayAccountName } from '@/lib/account'
@@ -19,7 +19,7 @@ const { selectedChainId } = useNetwork()
 const isSuccess = ref(false)
 
 const onClickConfirm = () => {
-	useImportedAccounts().addAccount({
+	useAccounts().addAccount({
 		address: props.address(),
 		accountId: props.accountId(),
 		vOptions: props.vOptions(),

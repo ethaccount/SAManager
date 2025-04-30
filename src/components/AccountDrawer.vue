@@ -2,44 +2,31 @@
 import { Button } from '@/components/ui/button'
 import { displayAccountName } from '@/lib/account'
 import { displayChainName } from '@/lib/network'
+import { ImportedAccount, useAccounts } from '@/stores/useAccounts'
 import { useConnectSignerModal } from '@/stores/useConnectSignerModal'
-import { ImportedAccount, useImportedAccounts } from '@/stores/useImportedAccounts'
 import { shortenAddress, useVueDapp } from '@vue-dapp/core'
 import { Power, X } from 'lucide-vue-next'
 import { VueFinalModal } from 'vue-final-modal'
 
-// Types for account data
-interface Account {
-	address: string
-	type: 'SA' | '7702'
-}
-
 const emit = defineEmits<{
-	(e: 'connect'): void
 	(e: 'close'): void
-	(e: 'select', account: ImportedAccount): void
 }>()
-
-const { accounts } = useImportedAccounts()
-
-const selectedAccount = ref<ImportedAccount>(accounts.value[0])
-
-const { wallet, address, isConnected, disconnect } = useVueDapp()
 
 function onClickCloseSidebar() {
 	emit('close')
 }
 
-function selectAccount(account: ImportedAccount) {
-	selectedAccount.value = account
-	emit('select', account)
-}
-
-function removeAccount(account: ImportedAccount) {
-	useImportedAccounts().removeAccount(account)
-}
-
+const { accounts, selectedAccount } = useAccounts()
+const { wallet, address, isConnected, disconnect } = useVueDapp()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
+
+function onClickSelectAccount(account: ImportedAccount) {
+	selectedAccount.value = account
+}
+
+function onClickRemoveAccount(account: ImportedAccount) {
+	useAccounts().removeAccount(account)
+}
 </script>
 
 <template>
@@ -56,7 +43,7 @@ const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 			<!-- Header Section -->
 			<div class="flex justify-between items-start mb-6">
 				<div class="w-full flex justify-between items-start gap-2">
-					<div class="p-1.5">
+					<div v-if="selectedAccount" class="p-1.5">
 						<div class="flex justify-between items-center mb-1">
 							<span class="font-medium truncate">{{ shortenAddress(selectedAccount.address) }}</span>
 						</div>
@@ -113,10 +100,10 @@ const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 				<h3 class="text-sm font-semibold tracking-wider mb-3">Accounts</h3>
 				<div class="h-full overflow-y-auto space-y-2 pr-3 pt-2">
 					<div
-						v-for="account in accounts.filter(a => a.address !== selectedAccount.address)"
+						v-for="account in accounts.filter(a => a.address !== selectedAccount?.address)"
 						:key="account.address"
 						class="relative group p-3 rounded-lg border transition-colors hover:bg-accent cursor-pointer overflow-visible"
-						@click="selectAccount(account)"
+						@click="onClickSelectAccount(account)"
 					>
 						<div>
 							<div class="flex justify-between items-center mb-1">
@@ -136,7 +123,7 @@ const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 							variant="ghost"
 							size="icon"
 							class="absolute rounded-full -right-2 -top-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground z-[60]"
-							@click.stop="removeAccount(account)"
+							@click.stop="onClickRemoveAccount(account)"
 						>
 							<X class="h-4 w-4" />
 						</Button>

@@ -21,9 +21,10 @@ export type ValidationOption = {
 	publicKey: string
 }
 
-export const useImportedAccountsStore = defineStore(
-	'useImportedAccountsStore',
+export const useAccountsStore = defineStore(
+	'useAccountsStore',
 	() => {
+		const selectedAccount = ref<ImportedAccount | null>(null)
 		const accounts = ref<ImportedAccount[]>([])
 		const hasAccounts = computed(() => accounts.value.length > 0)
 
@@ -36,13 +37,25 @@ export const useImportedAccountsStore = defineStore(
 				...account,
 				initCode: null,
 			})
+
+			if (accounts.value.length === 1) {
+				selectedAccount.value = accounts.value[0]
+			}
 		}
 
 		function removeAccount(account: ImportedAccount) {
 			accounts.value = accounts.value.filter(a => a.address !== account.address)
+			if (selectedAccount.value?.address === account.address) {
+				if (accounts.value.length > 0) {
+					selectedAccount.value = accounts.value[0]
+				} else {
+					selectedAccount.value = null
+				}
+			}
 		}
 
 		return {
+			selectedAccount,
 			accounts,
 			hasAccounts,
 			addAccount,
@@ -51,13 +64,13 @@ export const useImportedAccountsStore = defineStore(
 	},
 	{
 		persist: {
-			pick: ['accounts'],
+			pick: ['accounts', 'selectedAccount'],
 		},
 	},
 )
 
-export function useImportedAccounts() {
-	const store = useImportedAccountsStore()
+export function useAccounts() {
+	const store = useAccountsStore()
 	return {
 		...store,
 		...storeToRefs(store),
