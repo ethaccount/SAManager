@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+import { toRoute } from '@/lib/router'
 import { useNetwork } from '@/stores/useNetwork'
 import { Menu } from 'lucide-vue-next'
 import { RouterLink } from 'vue-router'
-import { ref } from 'vue'
 
 const { selectedChainId } = useNetwork()
 
@@ -18,10 +18,7 @@ const closeSheet = () => {
 <template>
 	<!-- Desktop Navigation -->
 	<nav class="hidden sm:flex items-center space-x-6 text-sm font-medium">
-		<RouterLink
-			:to="{ name: 'send-token', params: { chainId: selectedChainId } }"
-			class="transition-colors hover:text-foreground/80 text-foreground/60"
-		>
+		<RouterLink :to="toRoute('send-token')" class="transition-colors hover:text-foreground/80 text-foreground/60">
 			Send
 		</RouterLink>
 		<!-- <RouterLink

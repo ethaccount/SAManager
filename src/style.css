@@ -66,11 +66,12 @@
 
 /* Only show focus rings for keyboard navigation */
 @layer base {
+	/* If something is focused by mouse/touch (not keyboard), remove all rings/outlines */
 	*:focus:not(:focus-visible) {
-		@apply outline-none ring-0;
+		@apply !outline-none !ring-0;
 	}
 
 	*:focus-visible {
-		@apply outline-none ring-1 ring-primary/30;
+		@apply !ring-1 !ring-primary/50;
 	}
 }

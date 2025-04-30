@@ -1,50 +1,11 @@
 <script lang="ts" setup>
-import ConnectModal from '@/components/connect-modal/ConnectModal.vue'
-import { useAccountDrawer } from '@/lib/useAccountDrawer'
-import { useNetwork } from '@/stores/useNetwork'
-import { useConnectModal } from '@/stores/useConnectModal'
+import { toRoute } from '@/lib/router'
 import { useAccounts } from '@/stores/useAccounts'
-import { useSA } from '@/stores/useSA'
-import { ref } from 'vue'
-import { RouterLink } from 'vue-router'
-import { useModal } from 'vue-final-modal'
 import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
-const breakpoints = useBreakpoints(breakpointsTailwind)
-
-const { selectedChainId } = useNetwork()
-const { account, resetAccount, isConnected } = useSA()
-const isOpen = ref(false)
-
-function onClickDisconnect() {
-	resetAccount()
-}
-
-// ============================== Connect Modal ==============================
-const connectModalStore = useConnectModal()
-const { open: openConnectModal, close: closeConnectModal } = useModal({
-	component: ConnectModal,
-	attrs: {
-		onClose: () => closeConnectModal(),
-	},
-	slots: {},
-})
-
-connectModalStore.updateStore({
-	openModal: openConnectModal,
-	closeModal: closeConnectModal,
-})
-
-function onClickConnectButton() {
-	openConnectModal()
-	connectModalStore.goNextStage()
-}
-
-function onClickAccountButton() {
-	const { openAccountDrawer } = useAccountDrawer()
-	openAccountDrawer()
-}
+import { RouterLink } from 'vue-router'
 
 const { hasAccounts } = useAccounts()
+const breakpoints = useBreakpoints(breakpointsTailwind)
 </script>
 
 <template>
@@ -54,11 +15,10 @@ const { hasAccounts } = useAccounts()
 		<div class="h-[56px] flex w-full max-w-6xl mx-auto justify-between items-center">
 			<div class="flex items-center gap-2 sm:gap-6">
 				<!-- SAManager -->
-				<RouterLink
-					:to="{ name: 'home', params: { chainId: selectedChainId } }"
-					class="flex items-center gap-2"
-				>
-					<h1 class="font-semibold text-lg" :class="{ 'text-md': breakpoints.isSmaller('sm') }">SAManager</h1>
+				<RouterLink :to="toRoute('home')" class="flex items-center gap-2">
+					<div class="font-semibold text-lg" :class="{ 'text-md': breakpoints.isSmaller('sm') }">
+						SAManager
+					</div>
 				</RouterLink>
 
 				<Navigator />
