@@ -3,7 +3,7 @@ import { SALT } from '@/config'
 import { signMessage } from '@/lib/passkey'
 import { useNetwork } from '@/stores/useNetwork'
 import { ConnectModalStageKey, useConnectModal } from '@/stores/useConnectModal'
-import { useEOA } from '@/stores/useEOA'
+import { useEOAWallet } from '@/stores/useEOAWallet'
 import { usePasskey } from '@/stores/usePasskey'
 import { AccountId } from '@/types'
 import { shortenAddress } from '@vue-dapp/core'
@@ -128,7 +128,7 @@ async function onClickDeploy() {
 
 	switch (store.value.validator) {
 		case 'eoa':
-			const { signer } = useEOA()
+			const { signer } = useEOAWallet()
 			if (!signer.value) {
 				throw new Error('No signer')
 			}

@@ -6,7 +6,7 @@ import ConnectModal from '@/components/connect-modal/ConnectModal.vue'
 import ErrorModal from '@/components/ErrorModal.vue'
 import { useNetwork } from '@/stores/useNetwork'
 import { useConnectModal } from '@/stores/useConnectModal'
-import { useEOA } from '@/stores/useEOA'
+import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useErrorModalStore } from '@/stores/useErrorModal'
 import { useSA } from '@/stores/useSA'
 import { VueDappModal } from '@vue-dapp/modal'
@@ -76,7 +76,7 @@ const { addConnectors, watchWalletChanged, watchDisconnect } = useVueDapp()
 
 addConnectors([new BrowserWalletConnector()])
 
-const { setWallet, resetWallet } = useEOA()
+const { setWallet, resetWallet } = useEOAWallet()
 
 watchWalletChanged(async wallet => {
 	setWallet(wallet.provider)

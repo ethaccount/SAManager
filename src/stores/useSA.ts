@@ -11,7 +11,7 @@ import {
 	WebAuthnValidatorModule,
 } from 'sendop'
 import { useNetwork, useNetworkStore } from './useNetwork'
-import { useEOA } from './useEOA'
+import { useEOAWallet } from './useEOAWallet'
 import { signMessage } from '@/lib/passkey'
 
 export type ConnectedAccount = {
@@ -39,7 +39,7 @@ export const useSAStore = defineStore(
 		})
 
 		const { client, bundler, pmGetter, selectedChainId } = useNetwork()
-		const { signer } = useEOA()
+		const { signer } = useEOAWallet()
 
 		watch(selectedChainId, selectedChainId => {
 			if (selectedChainId !== account.value?.chainId) {
