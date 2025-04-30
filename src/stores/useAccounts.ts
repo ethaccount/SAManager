@@ -1,7 +1,10 @@
 import { CHAIN_ID } from '@/lib/network'
-import { AccountId } from '@/lib/account'
+import { AccountId, checkAccountIsConnected } from '@/lib/account'
 import { defineStore, storeToRefs } from 'pinia'
 import { toast } from 'vue-sonner'
+import { useEOAWallet } from './useEOAWallet'
+import { useVueDapp } from '@vue-dapp/core'
+import { isSameAddress } from 'sendop'
 
 export type AccountType = 'Smart Account' | 'Smart EOA'
 
@@ -27,6 +30,11 @@ export const useAccountsStore = defineStore(
 		const selectedAccount = ref<ImportedAccount | null>(null)
 		const accounts = ref<ImportedAccount[]>([])
 		const hasAccounts = computed(() => accounts.value.length > 0)
+
+		const isConnected = computed(() => {
+			if (!selectedAccount.value) return false
+			return checkAccountIsConnected(selectedAccount.value)
+		})
 
 		function addAccount(account: Omit<ImportedAccount, 'initCode'>) {
 			if (accounts.value.find(a => a.address === account.address)) {
@@ -58,6 +66,7 @@ export const useAccountsStore = defineStore(
 			selectedAccount,
 			accounts,
 			hasAccounts,
+			isConnected,
 			addAccount,
 			removeAccount,
 		}

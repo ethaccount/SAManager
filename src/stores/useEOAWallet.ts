@@ -25,10 +25,10 @@ export const useEOAWalletStore = defineStore('useEOAWalletStore', () => {
 })
 
 export function useEOAWallet() {
-	const eoaStore = useEOAWalletStore()
+	const store = useEOAWalletStore()
 
 	return {
-		...eoaStore,
-		...storeToRefs(eoaStore),
+		...store,
+		...storeToRefs(store),
 	}
 }

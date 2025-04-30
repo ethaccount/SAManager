@@ -1,4 +1,6 @@
-import { EntryPointVersion } from 'sendop'
+import { ImportedAccount } from '@/stores/useAccounts'
+import { useEOAWallet } from '@/stores/useEOAWallet'
+import { EntryPointVersion, isSameAddress } from 'sendop'
 
 export enum AccountId {
 	'kernel.advanced.v0.3.1' = 'kernel.advanced.v0.3.1',
@@ -47,4 +49,36 @@ export const SUPPORTED_ACCOUNTS: Record<
 
 export function displayAccountName(accountId: AccountId) {
 	return ACCOUNT_ID_TO_NAME[accountId]
+}
+
+export function checkAccountIsConnected(account: ImportedAccount) {
+	if (!account) return false
+
+	if (account.type === 'Smart Account') {
+		const { signer } = useEOAWallet()
+		if (signer.value?.address) {
+			if (isSameAddress(signer.value.address, account.address)) {
+				return true
+			}
+		}
+	}
+
+	const vOptions = account.vOptions
+	for (const vOption of vOptions) {
+		switch (vOption.type) {
+			case 'EOA-Owned':
+				const { signer } = useEOAWallet()
+				if (signer.value?.address) {
+					if (isSameAddress(signer.value.address, vOption.publicKey)) {
+						return true
+					}
+				}
+				break
+			case 'Passkey':
+				// TODO: Implement passkey isConnected
+				return false
+		}
+	}
+
+	return false
 }

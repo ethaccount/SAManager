@@ -6,7 +6,7 @@ import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
 import { ImportedAccount, useAccounts } from '@/stores/useAccounts'
 
 import { shortenAddress, useVueDapp } from '@vue-dapp/core'
-import { Power, X } from 'lucide-vue-next'
+import { Power, X, CircleDot } from 'lucide-vue-next'
 import { VueFinalModal } from 'vue-final-modal'
 
 const emit = defineEmits<{
@@ -17,8 +17,8 @@ function onClickCloseSidebar() {
 	emit('close')
 }
 
-const { accounts, selectedAccount } = useAccounts()
-const { wallet, address, isConnected, disconnect } = useVueDapp()
+const { accounts, selectedAccount, isConnected } = useAccounts()
+const { wallet, address, isConnected: isEOAWalletConnected, disconnect } = useVueDapp()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 
 function onClickSelectAccount(account: ImportedAccount) {
@@ -46,7 +46,10 @@ function onClickRemoveAccount(account: ImportedAccount) {
 				<div class="w-full flex justify-between items-start gap-2">
 					<div v-if="selectedAccount" class="p-1.5">
 						<div class="flex justify-between items-center mb-1">
-							<span class="font-medium truncate">{{ shortenAddress(selectedAccount.address) }}</span>
+							<div class="flex items-center gap-2">
+								<CircleDot class="w-3 h-3" :class="isConnected ? 'text-green-500' : 'text-red-500'" />
+								<span class="font-medium truncate">{{ shortenAddress(selectedAccount.address) }}</span>
+							</div>
 						</div>
 						<div class="flex flex-col text-xs text-muted-foreground">
 							<div class="flex gap-2">
@@ -54,7 +57,9 @@ function onClickRemoveAccount(account: ImportedAccount) {
 								<span>{{ displayChainName(selectedAccount.chainId) }}</span>
 							</div>
 
-							<span>{{ selectedAccount.vOptions.map(v => v.type).join(', ') }}</span>
+							<div v-for="vOption in selectedAccount.vOptions" :key="vOption.type" class="mt-1">
+								<span>{{ vOption.type }}: {{ shortenAddress(vOption.publicKey) }}</span>
+							</div>
 						</div>
 					</div>
 					<Button variant="ghost" size="icon" @click="onClickCloseSidebar">
@@ -72,12 +77,12 @@ function onClickRemoveAccount(account: ImportedAccount) {
 			<div class="mb-6">
 				<h3 class="text-sm font-semibold tracking-wider mb-3">Signers</h3>
 				<div class="space-y-2">
-					<div class="flex flex-col p-3 border rounded-lg" :class="{ 'bg-secondary': isConnected }">
-						<div v-if="!isConnected" class="flex justify-between items-center">
+					<div class="flex flex-col p-3 border rounded-lg" :class="{ 'bg-secondary': isEOAWalletConnected }">
+						<div v-if="!isEOAWalletConnected" class="flex justify-between items-center">
 							<span>EOA Wallet</span>
 							<Button variant="outline" size="sm" @click="openConnectEOAWallet"> Connect </Button>
 						</div>
-						<div v-if="isConnected" class="">
+						<div v-if="isEOAWalletConnected" class="">
 							<div class="flex justify-between items-center gap-2 text-sm text-muted-foreground">
 								<div>{{ wallet.providerInfo?.name }} Connected</div>
 								<Button variant="ghost" size="icon" @click="disconnect">
