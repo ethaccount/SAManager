@@ -34,7 +34,7 @@ const router = createRouter({
 						{
 							path: '/:chainId/create',
 							name: 'create',
-							component: () => import('@/views/UnderConstruction.vue'),
+							component: () => import('@/views/Create.vue'),
 						},
 						// Account Management
 						{
