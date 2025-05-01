@@ -2,11 +2,8 @@
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { toRoute } from '@/lib/router'
-import { useNetwork } from '@/stores/useNetwork'
 import { Menu } from 'lucide-vue-next'
 import { RouterLink } from 'vue-router'
-
-const { selectedChainId } = useNetwork()
 
 const isOpen = ref(false)
 
@@ -22,14 +19,14 @@ const closeSheet = () => {
 			Send
 		</RouterLink>
 		<!-- <RouterLink
-			:to="{ name: 'scheduling-transfer', params: { chainId } }"
+			:to="toRoute('scheduling-transfer')"
 			class="transition-colors hover:text-foreground/80 text-foreground/60"
 			disabled
 		>
 			Scheduling
 		</RouterLink>
 		<RouterLink
-			:to="{ name: 'recovery-setup', params: { chainId } }"
+			:to="toRoute('recovery-setup')"
 			class="transition-colors hover:text-foreground/80 text-foreground/60"
 			disabled
 		>
@@ -52,20 +49,20 @@ const closeSheet = () => {
 			</SheetHeader>
 			<nav class="flex flex-col gap-4 mt-4">
 				<RouterLink
-					:to="{ name: 'send-token', params: { chainId: selectedChainId } }"
+					:to="toRoute('send-token')"
 					class="transition-colors hover:text-foreground/80 text-foreground/60"
 					@click="closeSheet"
 				>
 					<Button variant="ghost" class="w-full justify-start">Send</Button>
 				</RouterLink>
 				<!-- <RouterLink
-					:to="{ name: 'scheduling-transfer', params: { chainId } }"
+					:to="toRoute('scheduling-transfer')"
 					class="transition-colors hover:text-foreground/80 text-foreground/60"
 				>
 					Scheduling
 				</RouterLink>
 				<RouterLink
-					:to="{ name: 'recovery-setup', params: { chainId } }"
+					:to="toRoute('recovery-setup')"
 					class="transition-colors hover:text-foreground/80 text-foreground/60"
 				>
 					Recovery
