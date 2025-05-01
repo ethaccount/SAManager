@@ -29,11 +29,11 @@ export enum AccountId {
 }
 
 export const ACCOUNT_ID_TO_NAME: Record<AccountId, string> = {
-	[AccountId['kernel.advanced.v0.3.1']]: 'Kernel v0.3.1',
-	[AccountId['biconomy.nexus.1.0.2']]: 'Nexus v1.0.2',
-	[AccountId['rhinestone.safe7579.v1.0.0']]: 'Safe7579 v1',
-	[AccountId['infinitism.Simple7702Account.0.8.0']]: 'Simple7702Account v0.8',
-	[AccountId['infinitism.SimpleAccount.0.8.0']]: 'SimpleAccount v0.8',
+	[AccountId['kernel.advanced.v0.3.1']]: 'Kernel',
+	[AccountId['biconomy.nexus.1.0.2']]: 'Nexus',
+	[AccountId['rhinestone.safe7579.v1.0.0']]: 'Safe7579',
+	[AccountId['infinitism.Simple7702Account.0.8.0']]: 'Simple7702Account',
+	[AccountId['infinitism.SimpleAccount.0.8.0']]: 'SimpleAccount',
 }
 
 export const SUPPORTED_ACCOUNTS: Record<
