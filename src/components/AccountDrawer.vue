@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
-import { displayAccountName } from '@/lib/account'
+import { displayAccountName, ImportedAccount } from '@/lib/account'
 import { displayChainName } from '@/lib/network'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
-import { ImportedAccount, useAccounts } from '@/stores/useAccounts'
+import { useAccounts } from '@/stores/useAccounts'
 
 import { shortenAddress, useVueDapp } from '@vue-dapp/core'
 import { Power, X, CircleDot } from 'lucide-vue-next'

@@ -3,16 +3,16 @@ import { shortenAddress } from '@vue-dapp/core'
 import { CheckCircle2 } from 'lucide-vue-next'
 import { ref } from 'vue'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
-import { AccountType, useAccounts, ValidationOption } from '@/stores/useAccounts'
+import { useAccounts } from '@/stores/useAccounts'
 import { useNetwork } from '@/stores/useNetwork'
 import { CHAIN_NAME } from '@/lib/network'
-import { AccountId, displayAccountName } from '@/lib/account'
+import { AccountId, displayAccountName, ValidationOption, AccountCategory } from '@/lib/account'
 
 const props = defineProps<{
 	address: () => string
 	accountId: () => AccountId
 	vOptions: () => ValidationOption[]
-	type: () => AccountType
+	category: () => AccountCategory
 }>()
 
 const { selectedChainId } = useNetwork()
@@ -23,7 +23,7 @@ const onClickConfirm = () => {
 		address: props.address(),
 		accountId: props.accountId(),
 		vOptions: props.vOptions(),
-		type: props.type(),
+		category: props.category(),
 		chainId: selectedChainId.value,
 	})
 	isSuccess.value = true
@@ -63,7 +63,7 @@ const onClickConfirm = () => {
 			</div>
 			<div class="flex justify-between items-center">
 				<span class="text-sm text-muted-foreground">Type</span>
-				<span class="font-medium text-foreground">{{ type() }}</span>
+				<span class="font-medium text-foreground">{{ category() }}</span>
 			</div>
 			<div class="flex justify-between items-center">
 				<span class="text-sm text-muted-foreground">Validation Options</span>

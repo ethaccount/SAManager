@@ -1,28 +1,6 @@
-import { CHAIN_ID } from '@/lib/network'
-import { AccountId, checkAccountIsConnected } from '@/lib/account'
+import { checkAccountIsConnected, ImportedAccount } from '@/lib/account'
 import { defineStore, storeToRefs } from 'pinia'
 import { toast } from 'vue-sonner'
-import { useEOAWallet } from './useEOAWallet'
-import { useVueDapp } from '@vue-dapp/core'
-import { isSameAddress } from 'sendop'
-
-export type AccountType = 'Smart Account' | 'Smart EOA'
-
-export type ImportedAccount = {
-	type: AccountType
-	address: string
-	chainId: CHAIN_ID
-	vOptions: ValidationOption[]
-	accountId: AccountId
-	initCode: string | null
-}
-
-export type ValidationType = 'EOA-Owned' | 'Passkey'
-
-export type ValidationOption = {
-	type: ValidationType
-	publicKey: string
-}
 
 export const useAccountsStore = defineStore(
 	'useAccountsStore',

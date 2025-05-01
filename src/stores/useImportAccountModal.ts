@@ -4,10 +4,9 @@ import ImportAccountModal from '@/components/ImportAccountModal/ImportAccountMod
 import ImportOptions from '@/components/ImportAccountModal/ImportOptions.vue'
 import ValidateSmartEOA from '@/components/ImportAccountModal/ValidateSmartEOA.vue'
 import ConnectEOAWallet from '@/components/signer/ConnectEOAWallet.vue'
-import { AccountType, ValidationOption } from '@/stores/useAccounts'
+import { AccountCategory, AccountId, ValidationOption } from '@/lib/account'
 import { defineStore, storeToRefs } from 'pinia'
 import { useModal } from 'vue-final-modal'
-import { AccountId } from '@/lib/account'
 
 // IAM: Import Account Modal
 
@@ -44,7 +43,7 @@ type IAMFormData = {
 	address?: string
 	accountId?: AccountId
 	vOptions?: ValidationOption[]
-	type?: AccountType
+	type?: AccountCategory
 }
 
 type ComponentProps<T> = T extends new () => { $props: infer P } ? P : never
