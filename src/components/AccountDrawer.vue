@@ -2,9 +2,10 @@
 import { Button } from '@/components/ui/button'
 import { displayAccountName, ImportedAccount } from '@/lib/account'
 import { displayChainName } from '@/lib/network'
+import { toRoute } from '@/lib/router'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
 import { useAccounts } from '@/stores/useAccounts'
-
+import { useRouter } from 'vue-router'
 import { shortenAddress, useVueDapp } from '@vue-dapp/core'
 import { Power, X, CircleDot } from 'lucide-vue-next'
 import { VueFinalModal } from 'vue-final-modal'
@@ -27,6 +28,13 @@ function onClickSelectAccount(account: ImportedAccount) {
 
 function onClickRemoveAccount(account: ImportedAccount) {
 	useAccounts().removeAccount(account)
+}
+
+const router = useRouter()
+
+function onClickAccountSettings() {
+	if (!selectedAccount.value) return
+	router.push(toRoute('account', { address: selectedAccount.value.address }))
 }
 </script>
 
@@ -70,7 +78,14 @@ function onClickRemoveAccount(account: ImportedAccount) {
 
 			<!-- Account Settings Section -->
 			<div class="mb-6">
-				<Button variant="outline" class="w-full justify-start"> Account Settings </Button>
+				<Button
+					:disabled="!selectedAccount"
+					variant="outline"
+					class="w-full justify-start"
+					@click="onClickAccountSettings"
+				>
+					Account Settings
+				</Button>
 			</div>
 
 			<!-- Sign-in Options Section -->
