@@ -7,9 +7,17 @@ import { displayChainName } from '@/lib/network'
 import { toRoute } from '@/lib/router'
 import { useAccounts } from '@/stores/useAccounts'
 import { shortenAddress } from '@vue-dapp/core'
+import { watchImmediate } from '@vueuse/core'
 import { ArrowLeft, Copy, ExternalLink } from 'lucide-vue-next'
 
+const router = useRouter()
 const { selectedAccount } = useAccounts()
+
+watchImmediate(selectedAccount, () => {
+	if (selectedAccount.value) {
+		router.replace(toRoute('account-settings', { address: selectedAccount.value.address }))
+	}
+})
 
 const copyToClipboard = (text: string) => {
 	navigator.clipboard.writeText(text)
@@ -68,8 +76,6 @@ const crossChainAccounts = [
 	{ chain: 'Base', address: '0xabcd...efgh' },
 	{ chain: 'Base Sepolia', address: '0x9876...5432' },
 ]
-
-const router = useRouter()
 </script>
 
 <template>

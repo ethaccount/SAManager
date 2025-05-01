@@ -98,6 +98,7 @@ export const useNetworkStore = defineStore(
 			pmGetter,
 			supportedNodes,
 			supportedEntryPoints,
+			chainIdBigInt,
 		}
 	},
 	{

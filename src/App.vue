@@ -9,7 +9,7 @@ import { onMounted } from 'vue'
 import { ModalsContainer, useModal } from 'vue-final-modal'
 import { toast, Toaster } from 'vue-sonner'
 import { useSetupVueDapp } from './app/useSetupVueDapp'
-import { ERROR_NOTIFICATION_DURATION, PASSKEY_RP_URL } from './config'
+import { ERROR_NOTIFICATION_DURATION, IS_DEV, PASSKEY_RP_URL } from './config'
 
 useChainIdRoute()
 useSetupVueDapp()
@@ -21,11 +21,12 @@ onMounted(async () => {
 	// 		console.log('Passkey RP service is healthy')
 	// 	}
 	// }
-
-	toast.info('Under Construction', {
-		description: 'This website is actively developed',
-		duration: 5000,
-	})
+	if (!IS_DEV) {
+		toast.info('Under Construction', {
+			description: 'This website is actively developed',
+			duration: 5000,
+		})
+	}
 })
 
 // =============================== Error Modal ===============================

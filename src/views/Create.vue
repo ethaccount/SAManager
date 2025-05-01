@@ -4,29 +4,74 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { SALT } from '@/config'
 import { ACCOUNT_ID_TO_NAME, AccountId, displayAccountName, SUPPORTED_ACCOUNTS, ValidationType } from '@/lib/account'
+import { toRoute } from '@/lib/router'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
+import { useAccounts } from '@/stores/useAccounts'
+import { useEOAWallet } from '@/stores/useEOAWallet'
+import { useNetwork } from '@/stores/useNetwork'
 import { shortenAddress, useVueDapp } from '@vue-dapp/core'
 import { isAddress } from 'ethers'
 import { Power } from 'lucide-vue-next'
+import {
+	ADDRESS,
+	BICONOMY_ATTESTER_ADDRESS,
+	EOAValidatorModule,
+	KernelV3Account,
+	NexusAccount,
+	NexusCreationOptions,
+	RHINESTONE_ATTESTER_ADDRESS,
+	Safe7579Account,
+	Safe7579CreationOptions,
+} from 'sendop'
+import { toast } from 'vue-sonner'
 
-const { wallet, address, isConnected: isEOAWalletConnected, disconnect } = useVueDapp()
+const VALIDATORS: {
+	[key: string]: {
+		name: string
+		description: string
+		type: ValidationType
+	}
+} = {
+	ECDSA: {
+		name: 'ECDSA Validator',
+		description: 'Standard EOA wallet signature',
+		type: 'EOA-Owned',
+	},
+	WebAuthn: {
+		name: 'WebAuthn Validator',
+		description: 'Passkey validation',
+		type: 'Passkey',
+	},
+	// Ownable: {
+	// 	name: 'Ownable Validator',
+	// 	description: 'Multisig wallet validation',
+	// 	type: 'EOA-Owned',
+	// },
+} as const
+
+const router = useRouter()
+const { client, selectedChainId } = useNetwork()
+const { wallet, address, disconnect } = useVueDapp()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 
-const accountTypes = Object.entries(SUPPORTED_ACCOUNTS)
-	.filter(([_, data]) => !data.onlySmartEOA)
+const supportedAccounts = Object.entries(SUPPORTED_ACCOUNTS)
+	.filter(([_, data]) => data.isModular)
 	.map(([id]) => ({
 		id: id as AccountId,
 		name: ACCOUNT_ID_TO_NAME[id as AccountId],
 		description: `Supports EntryPoint ${SUPPORTED_ACCOUNTS[id as AccountId].entryPointVersion}`,
 	}))
 
-const selectedAccountType = ref<AccountId>(accountTypes[0].id)
+const selectedAccountType = ref<AccountId>(supportedAccounts[0].id)
 const shouldDeploy = ref(false)
-const computedAddress = ref<string>('')
+const isComputingAddress = ref(false)
 
 const selectedValidator = ref<Extract<keyof typeof VALIDATORS, string>>('ECDSA')
 const selectedValidationType = computed(() => VALIDATORS[selectedValidator.value].type)
+
+const { signer, isEOAWalletConnected } = useEOAWallet()
 
 const isSignerConnected = computed(() => {
 	if (!selectedValidator.value) return false
@@ -41,37 +86,140 @@ const isSignerConnected = computed(() => {
 	}
 })
 
-const onClickReview = () => {
+const vOptionPublicKey = computed(() => {
+	if (!selectedValidator.value) return false
+	switch (selectedValidationType.value) {
+		case 'EOA-Owned':
+			return signer.value?.address
+		case 'Passkey':
+			// TODO: Add passkey connection check
+			return false
+		default:
+			return false
+	}
+})
+
+function onClickReview() {
 	console.log('Review')
 }
 
-const onClickImport = () => {
-	console.log('Import')
+function onClickImport() {
+	const { importAccount, selectAccount } = useAccounts()
+
+	if (!computedAddress.value) {
+		throw new Error('onClickImport: Invalid computed address')
+	}
+
+	if (!initCode.value) {
+		throw new Error('onClickImport: Invalid init code')
+	}
+
+	if (!vOptionPublicKey.value) {
+		throw new Error('onClickImport: Invalid validator public key')
+	}
+
+	importAccount({
+		accountId: selectedAccountType.value,
+		category: 'Smart Account',
+		address: computedAddress.value,
+		chainId: selectedChainId.value,
+		vOptions: [
+			{
+				type: selectedValidationType.value,
+				publicKey: vOptionPublicKey.value,
+			},
+		],
+		initCode: initCode.value,
+	})
+
+	toast.success('Account imported successfully')
+
+	selectAccount(computedAddress.value, selectedChainId.value)
+
+	router.push(toRoute('account-settings', { address: computedAddress.value }))
 }
 
-const VALIDATORS: {
-	[key: string]: {
-		name: string
-		description: string
-		type: ValidationType
+const computedAddress = ref<string>('')
+const initCode = ref<string>('')
+
+watch([isSignerConnected, selectedValidator, selectedAccountType], async () => {
+	if (isSignerConnected.value) {
+		isComputingAddress.value = true
+		try {
+			switch (selectedValidator.value) {
+				case 'ECDSA':
+					if (!signer.value) {
+						throw new Error('No signer found')
+					}
+
+					switch (selectedAccountType.value) {
+						case AccountId['kernel.advanced.v0.3.1']:
+							{
+								const creationOption = {
+									salt: SALT,
+									validatorAddress: ADDRESS.ECDSAValidator,
+									validatorInitData: EOAValidatorModule.getInitData(signer.value.address),
+								}
+								computedAddress.value = await KernelV3Account.computeAccountAddress(
+									client.value,
+									creationOption,
+								)
+								initCode.value = KernelV3Account.getInitCode(creationOption)
+							}
+							break
+						case AccountId['biconomy.nexus.1.0.2']:
+							{
+								const creationOption: NexusCreationOptions = {
+									salt: SALT,
+									validatorAddress: ADDRESS.ECDSAValidator,
+									validatorInitData: EOAValidatorModule.getInitData(signer.value.address),
+									bootstrap: 'initNexusWithSingleValidator',
+									registryAddress: ADDRESS.Registry,
+									attesters: [RHINESTONE_ATTESTER_ADDRESS, BICONOMY_ATTESTER_ADDRESS],
+									threshold: 1,
+								}
+								computedAddress.value = await NexusAccount.computeAccountAddress(
+									client.value,
+									creationOption,
+								)
+								initCode.value = NexusAccount.getInitCode(creationOption)
+							}
+							break
+						case AccountId['rhinestone.safe7579.v1.0.0']:
+							{
+								const creationOption: Safe7579CreationOptions = {
+									salt: SALT,
+									validatorAddress: ADDRESS.ECDSAValidator,
+									validatorInitData: EOAValidatorModule.getInitData(signer.value.address),
+									owners: [signer.value.address],
+									ownersThreshold: 1,
+									attesters: [RHINESTONE_ATTESTER_ADDRESS, BICONOMY_ATTESTER_ADDRESS],
+									attestersThreshold: 1,
+								}
+								computedAddress.value = await Safe7579Account.computeAccountAddress(
+									client.value,
+									creationOption,
+								)
+								initCode.value = Safe7579Account.getInitCode(creationOption)
+							}
+							break
+					}
+					break
+				case 'WebAuthn':
+					// computedAddress.value = await WebAuthnValidator.computeAccountAddress(client.value, {
+					// 	salt: SALT,
+					// 	validatorAddress: VALIDATORS[selectedValidator.value].address,
+					// 	validatorInitData: '',
+					// })
+					break
+			}
+		} catch (error) {
+			console.error('Error computing address:', error)
+		} finally {
+			isComputingAddress.value = false
+		}
 	}
-} = {
-	ECDSA: {
-		name: 'EOA-Owned',
-		description: 'Standard EOA wallet signature',
-		type: 'EOA-Owned',
-	},
-	WebAuthn: {
-		name: 'Passkey',
-		description: 'Passkey validation',
-		type: 'Passkey',
-	},
-	// Ownable: {
-	// 	name: 'Ownable Validator',
-	// 	description: 'Multisig wallet validation',
-	// 	type: 'EOA-Owned',
-	// },
-} as const
+})
 </script>
 
 <template>
@@ -93,26 +241,34 @@ const VALIDATORS: {
 					</SelectTrigger>
 
 					<SelectContent>
-						<SelectItem v-for="type in accountTypes" :key="type.id" :value="type.id" class="cursor-pointer">
+						<SelectItem
+							v-for="supportedAccount in supportedAccounts"
+							:key="supportedAccount.id"
+							:value="supportedAccount.id"
+							class="cursor-pointer"
+						>
 							<div class="flex flex-col py-1">
 								<div class="flex items-center justify-between w-full">
-									<span class="font-medium">{{ type.name }}</span>
+									<span class="font-medium">{{ supportedAccount.name }}</span>
 									<span class="text-xs text-muted-foreground rounded-full bg-muted px-2.5 py-0.5">
-										EntryPoint {{ SUPPORTED_ACCOUNTS[type.id].entryPointVersion }}
+										EntryPoint {{ SUPPORTED_ACCOUNTS[supportedAccount.id].entryPointVersion }}
 									</span>
 								</div>
-								<span class="text-xs text-muted-foreground mt-0.5">{{ type.id }}</span>
+								<span class="text-xs text-muted-foreground mt-0.5">{{ supportedAccount.id }}</span>
 							</div>
 						</SelectItem>
 					</SelectContent>
 				</Select>
 
-				<!-- Validator selector -->
+				<!-- Validation selector -->
 				<Select v-model="selectedValidator">
 					<SelectTrigger class="w-full bg-muted/30 border-border/50 hover:border-primary transition-colors">
 						<SelectValue placeholder="Select Validation Type">
-							<div class="flex items-center justify-between w-full">
-								{{ VALIDATORS[selectedValidator].name }}
+							<div class="flex items-center justify-between w-full gap-2">
+								<div>{{ VALIDATORS[selectedValidator].name }}</div>
+								<div class="text-xs text-muted-foreground">
+									{{ VALIDATORS[selectedValidator].type }}
+								</div>
 							</div>
 						</SelectValue>
 					</SelectTrigger>
@@ -125,7 +281,12 @@ const VALIDATORS: {
 							class="cursor-pointer"
 						>
 							<div class="flex flex-col py-1">
-								<span class="font-medium">{{ validator.name }}</span>
+								<div class="flex items-center justify-between w-full gap-2">
+									<span class="font-medium">{{ validator.name }}</span>
+									<span class="text-xs text-muted-foreground">
+										{{ validator.type }}
+									</span>
+								</div>
 								<span class="text-xs text-muted-foreground mt-0.5">
 									{{ validator.description }}
 								</span>
@@ -135,7 +296,7 @@ const VALIDATORS: {
 				</Select>
 
 				<!-- Signer connection -->
-				<div v-if="selectedValidator">
+				<div v-if="selectedValidator === 'ECDSA'">
 					<div
 						class="flex flex-col p-3 border rounded-lg bg-muted/30"
 						:class="{ 'bg-secondary': isEOAWalletConnected }"
@@ -162,19 +323,34 @@ const VALIDATORS: {
 					</div>
 				</div>
 
-				<div v-if="isSignerConnected" class="space-y-3">
-					<div class="flex items-center space-x-2">
-						<Switch id="deploy" v-model="shouldDeploy" />
-						<Label for="deploy">Deploy Contract</Label>
+				<div v-if="selectedValidator === 'WebAuthn'">
+					<div class="flex justify-between items-center p-3 border rounded-lg">
+						<span>Passkey</span>
+						<Button variant="outline" size="sm" @click="openConnectPasskeyBoth">Connect</Button>
 					</div>
 				</div>
 
-				<div
-					v-if="isSignerConnected && isAddress(computedAddress)"
-					class="p-4 rounded-lg bg-muted/30 space-y-1.5"
-				>
+				<div v-if="isSignerConnected" class="space-y-3">
+					<div class="flex items-center space-x-2">
+						<Switch id="deploy-switch" v-model="shouldDeploy" />
+						<Label for="deploy-switch">Deploy Contract</Label>
+					</div>
+				</div>
+
+				<div v-if="isSignerConnected" class="p-4 rounded-lg bg-muted/30 space-y-1.5">
 					<div class="text-sm text-muted-foreground">Computed Account Address</div>
-					<div class="font-mono text-sm break-all bg-background/50 p-2 rounded border border-border/50">
+					<div
+						v-if="isComputingAddress"
+						class="animate-pulse flex space-x-1.5 items-center bg-background/50 p-2 rounded border border-border/50"
+					>
+						<div class="h-1 w-1 bg-primary rounded-full animate-bounce"></div>
+						<div class="h-1 w-1 bg-primary rounded-full animate-bounce [animation-delay:0.2s]"></div>
+						<div class="h-1 w-1 bg-primary rounded-full animate-bounce [animation-delay:0.4s]"></div>
+					</div>
+					<div
+						v-else-if="isAddress(computedAddress)"
+						class="font-mono text-sm break-all bg-background/50 p-2 rounded border border-border/50"
+					>
 						{{ computedAddress }}
 					</div>
 				</div>

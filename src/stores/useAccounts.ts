@@ -1,4 +1,5 @@
 import { checkAccountIsConnected, ImportedAccount } from '@/lib/account'
+import { CHAIN_ID } from '@/lib/network'
 import { defineStore, storeToRefs } from 'pinia'
 import { toast } from 'vue-sonner'
 
@@ -14,19 +15,32 @@ export const useAccountsStore = defineStore(
 			return checkAccountIsConnected(selectedAccount.value)
 		})
 
-		function addAccount(account: Omit<ImportedAccount, 'initCode'>) {
-			if (accounts.value.find(a => a.address === account.address)) {
+		function importAccount(account: ImportedAccount | Omit<ImportedAccount, 'initCode'>) {
+			// TODO: check all fields are valid
+			if (!account.address || !account.chainId || !account.accountId || !account.category) {
+				throw new Error(`importAccount: Invalid values: ${JSON.stringify(account)}`)
+			}
+
+			if (accounts.value.find(a => a.address === account.address && a.chainId === account.chainId)) {
 				toast.info('Account already exists')
 				return
 			}
 			accounts.value.push({
-				...account,
 				initCode: null,
+				...account,
 			})
 
 			if (accounts.value.length === 1) {
 				selectedAccount.value = accounts.value[0]
 			}
+		}
+
+		function selectAccount(address: string, chainId: CHAIN_ID) {
+			const account = accounts.value.find(a => a.address === address && a.chainId === chainId)
+			if (!account) {
+				throw new Error(`selectAccount: Account not found: ${address} ${chainId}`)
+			}
+			selectedAccount.value = account
 		}
 
 		function removeAccount(account: ImportedAccount) {
@@ -45,8 +59,9 @@ export const useAccountsStore = defineStore(
 			accounts,
 			hasAccounts,
 			isConnected,
-			addAccount,
+			importAccount,
 			removeAccount,
+			selectAccount,
 		}
 	},
 	{

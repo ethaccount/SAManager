@@ -35,6 +35,7 @@ const router = useRouter()
 function onClickAccountSettings() {
 	if (!selectedAccount.value) return
 	router.push(toRoute('account-settings', { address: selectedAccount.value.address }))
+	emit('close')
 }
 </script>
 
@@ -117,14 +118,19 @@ function onClickAccountSettings() {
 				</div>
 			</div>
 
-			<!-- Account List Section -->
+			<!-- Account List -->
 			<div class="h-[calc(100%-200px)]">
 				<h3 class="text-sm font-semibold tracking-wider mb-3">Accounts</h3>
 				<div class="h-full overflow-y-auto space-y-2 pr-3 pt-2">
 					<div
-						v-for="account in accounts.filter(a => a.address !== selectedAccount?.address)"
+						v-for="account in accounts"
 						:key="account.address"
 						class="relative group p-3 rounded-lg border transition-colors hover:bg-accent cursor-pointer overflow-visible"
+						:class="{
+							'bg-accent':
+								account.address === selectedAccount?.address &&
+								account.chainId === selectedAccount?.chainId,
+						}"
 						@click="onClickSelectAccount(account)"
 					>
 						<div>

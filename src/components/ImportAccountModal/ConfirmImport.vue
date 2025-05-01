@@ -19,7 +19,7 @@ const { selectedChainId } = useNetwork()
 const isSuccess = ref(false)
 
 const onClickConfirm = () => {
-	useAccounts().addAccount({
+	useAccounts().importAccount({
 		address: props.address(),
 		accountId: props.accountId(),
 		vOptions: props.vOptions(),

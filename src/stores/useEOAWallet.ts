@@ -16,11 +16,16 @@ export const useEOAWalletStore = defineStore('useEOAWalletStore', () => {
 		signer.value = null
 	}
 
+	const isEOAWalletConnected = computed(() => {
+		return signer.value !== null
+	})
+
 	return {
 		provider,
 		signer,
 		setWallet,
 		resetWallet,
+		isEOAWalletConnected,
 	}
 })
 
