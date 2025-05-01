@@ -39,23 +39,8 @@ const router = createRouter({
 						// Account Management
 						{
 							path: '/:chainId/:address',
-							name: 'account',
-							component: () => import('@/views/UnderConstruction.vue'),
-						},
-						{
-							path: '/:chainId/:address/modules',
-							name: 'account-modules',
-							component: () => import('@/views/UnderConstruction.vue'),
-						},
-						{
-							path: '/:chainId/:address/sessions',
-							name: 'account-sessions',
-							component: () => import('@/views/UnderConstruction.vue'),
-						},
-						{
-							path: '/:chainId/:address/paymasters',
-							name: 'account-paymasters',
-							component: () => import('@/views/UnderConstruction.vue'),
+							name: 'account-settings',
+							component: () => import('@/views/AccountSettings.vue'),
 						},
 						// Send
 						{

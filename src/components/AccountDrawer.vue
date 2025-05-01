@@ -34,7 +34,7 @@ const router = useRouter()
 
 function onClickAccountSettings() {
 	if (!selectedAccount.value) return
-	router.push(toRoute('account', { address: selectedAccount.value.address }))
+	router.push(toRoute('account-settings', { address: selectedAccount.value.address }))
 }
 </script>
 
@@ -43,6 +43,7 @@ function onClickAccountSettings() {
 		class="account-drawer"
 		content-class="account-drawer-content"
 		hide-overlay
+		background="interactive"
 		:content-transition="'account-drawer-slide'"
 		:click-to-close="true"
 		:esc-to-close="true"
