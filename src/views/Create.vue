@@ -11,11 +11,11 @@ import { AccountId, ACCOUNT_ID_TO_NAME, SUPPORTED_ACCOUNTS } from '@/lib/account
 
 // Filter only modular accounts as they're the only ones that can be created
 const accountTypes = Object.entries(SUPPORTED_ACCOUNTS)
-	.filter(([_, data]) => data.isModular)
+	.filter(([_, data]) => !data.onlySmartEOA)
 	.map(([id]) => ({
 		id: id as AccountId,
 		name: ACCOUNT_ID_TO_NAME[id as AccountId],
-		description: `Supports EntryPoint ${SUPPORTED_ACCOUNTS[id as AccountId].supportedEps.join(', ')}`,
+		description: `Supports EntryPoint ${SUPPORTED_ACCOUNTS[id as AccountId].entryPointVersion}`,
 	}))
 
 const selectedAccountType = ref<AccountId>(accountTypes[0].id)
@@ -76,7 +76,7 @@ const onClickReview = () => {
 								<div class="flex items-center justify-between w-full">
 									<span class="font-medium">{{ ACCOUNT_ID_TO_NAME[selectedAccountType] }}</span>
 									<span class="text-xs text-muted-foreground rounded-full bg-muted px-2.5 py-0.5">
-										EntryPoint {{ SUPPORTED_ACCOUNTS[selectedAccountType].supportedEps.join(', ') }}
+										EntryPoint {{ SUPPORTED_ACCOUNTS[selectedAccountType].entryPointVersion }}
 									</span>
 								</div>
 							</SelectValue>
@@ -92,7 +92,7 @@ const onClickReview = () => {
 									<div class="flex items-center justify-between w-full">
 										<span class="font-medium">{{ type.name }}</span>
 										<span class="text-xs text-muted-foreground rounded-full bg-muted px-2.5 py-0.5">
-											EntryPoint {{ SUPPORTED_ACCOUNTS[type.id].supportedEps.join(', ') }}
+											EntryPoint {{ SUPPORTED_ACCOUNTS[type.id].entryPointVersion }}
 										</span>
 									</div>
 									<span class="text-xs text-muted-foreground mt-0.5">{{ type.id }}</span>

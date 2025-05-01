@@ -2,8 +2,6 @@ import { useEOAWallet } from '@/stores/useEOAWallet'
 import { EntryPointVersion, isSameAddress } from 'sendop'
 import { CHAIN_ID } from './network'
 
-export type AccountCategory = 'Smart Account' | 'Smart EOA'
-
 export type ImportedAccount = {
 	accountId: AccountId
 	category: AccountCategory
@@ -13,12 +11,14 @@ export type ImportedAccount = {
 	initCode: string | null
 }
 
-export type ValidationType = 'EOA-Owned' | 'Passkey'
+export type AccountCategory = 'Smart Account' | 'Smart EOA'
 
 export type ValidationOption = {
 	type: ValidationType
 	publicKey: string
 }
+
+export type ValidationType = 'EOA-Owned' | 'Passkey'
 
 export enum AccountId {
 	'kernel.advanced.v0.3.1' = 'kernel.advanced.v0.3.1',
@@ -39,29 +39,35 @@ export const ACCOUNT_ID_TO_NAME: Record<AccountId, string> = {
 export const SUPPORTED_ACCOUNTS: Record<
 	AccountId,
 	{
-		supportedEps: EntryPointVersion[]
+		entryPointVersion: EntryPointVersion
 		isModular: boolean
+		onlySmartEOA: boolean
 	}
 > = {
 	[AccountId['kernel.advanced.v0.3.1']]: {
-		supportedEps: ['v0.7'],
+		entryPointVersion: 'v0.7',
 		isModular: true,
+		onlySmartEOA: false,
 	},
 	[AccountId['biconomy.nexus.1.0.2']]: {
-		supportedEps: ['v0.7'],
+		entryPointVersion: 'v0.7',
 		isModular: true,
+		onlySmartEOA: false,
 	},
 	[AccountId['rhinestone.safe7579.v1.0.0']]: {
-		supportedEps: ['v0.7'],
+		entryPointVersion: 'v0.7',
 		isModular: true,
+		onlySmartEOA: false,
 	},
 	[AccountId['infinitism.SimpleAccount.0.8.0']]: {
-		supportedEps: ['v0.8'],
+		entryPointVersion: 'v0.8',
 		isModular: false,
+		onlySmartEOA: false,
 	},
 	[AccountId['infinitism.Simple7702Account.0.8.0']]: {
-		supportedEps: ['v0.8'],
+		entryPointVersion: 'v0.8',
 		isModular: false,
+		onlySmartEOA: true,
 	},
 }
 
