@@ -11,8 +11,13 @@ export function useChainIdRoute() {
 	if (isSupportedChainId(urlChainId)) {
 		selectedChainId.value = urlChainId as CHAIN_ID
 	} else {
-		router.replace({ path: `/${DEFAULT_CHAIN_ID}` })
-		selectedChainId.value = DEFAULT_CHAIN_ID
+		// selectedChainId may be stored in localStorage
+		if (selectedChainId.value) {
+			router.replace({ path: `/${selectedChainId.value}` })
+		} else {
+			router.replace({ path: `/${DEFAULT_CHAIN_ID}` })
+			selectedChainId.value = DEFAULT_CHAIN_ID
+		}
 	}
 
 	watch(selectedChainId, () => {

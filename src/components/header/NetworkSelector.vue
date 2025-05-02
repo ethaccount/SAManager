@@ -28,33 +28,22 @@ const {
 function displayBundlerName(bundler: SUPPORTED_BUNDLER) {
 	switch (bundler) {
 		case SUPPORTED_BUNDLER.PIMLICO:
-			return 'Pimlico Bundler'
+			return 'Pimlico'
 		case SUPPORTED_BUNDLER.ALCHEMY:
-			return 'Alchemy Bundler'
+			return 'Alchemy'
 		default:
-			return 'Unknown Bundler'
+			return 'Unknown'
 	}
 }
 
 function displayNodeName(node: SUPPORTED_NODE) {
 	switch (node) {
 		case SUPPORTED_NODE.ALCHEMY:
-			return 'Alchemy Node'
+			return 'Alchemy'
 		case SUPPORTED_NODE.PUBLIC_NODE:
 			return 'Public Node'
 		default:
-			return 'Unknown Node'
-	}
-}
-
-function displayEntryPointName(ep: SUPPORTED_ENTRY_POINT) {
-	switch (ep) {
-		case 'v0.7':
-			return 'v0.7'
-		case 'v0.8':
-			return 'v0.8'
-		default:
-			return 'Unknown Entry Point'
+			return 'Unknown'
 	}
 }
 
@@ -114,23 +103,6 @@ function onClickNode(node: SUPPORTED_NODE) {
 					>
 						{{ displayBundlerName(bundler) }}
 						<Check v-if="selectedBundler === bundler" class="h-4 w-4" />
-					</Button>
-				</div>
-			</div>
-
-			<!-- Entry Points Section -->
-			<div class="py-3">
-				<h3 class="text-sm font-semibold uppercase tracking-wider mb-3">Entry Point</h3>
-				<div class="flex flex-col gap-1">
-					<Button
-						v-for="ep in supportedEntryPoints"
-						:key="ep"
-						variant="ghost"
-						:class="['justify-between', selectedEntryPoint === ep ? 'bg-accent font-medium' : '']"
-						@click="onClickEntryPoint(ep)"
-					>
-						{{ displayEntryPointName(ep) }}
-						<Check v-if="selectedEntryPoint === ep" class="h-4 w-4" />
 					</Button>
 				</div>
 			</div>

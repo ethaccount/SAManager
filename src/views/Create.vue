@@ -12,6 +12,7 @@ import { useAccounts } from '@/stores/useAccounts'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useNetwork } from '@/stores/useNetwork'
 import { shortenAddress, useVueDapp } from '@vue-dapp/core'
+import { watchImmediate } from '@vueuse/core'
 import { isAddress } from 'ethers'
 import { Power } from 'lucide-vue-next'
 import {
@@ -142,8 +143,8 @@ function onClickImport() {
 const computedAddress = ref<string>('')
 const initCode = ref<string>('')
 
-watch([isSignerConnected, selectedValidator, selectedAccountType], async () => {
-	if (isSignerConnected.value) {
+watchImmediate([isSignerConnected, selectedValidator, selectedAccountType], async () => {
+	if (isSignerConnected.value && selectedValidator.value && selectedAccountType.value) {
 		isComputingAddress.value = true
 		try {
 			switch (selectedValidator.value) {
