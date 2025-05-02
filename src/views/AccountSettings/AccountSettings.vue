@@ -108,7 +108,7 @@ const crossChainAccounts = [
 						<div class="flex items-center gap-1">
 							<div
 								class="text-xs rounded-full px-2.5 py-0.5"
-								:class="isDeployed ? 'bg-green-500' : 'bg-yellow-500/10 text-yellow-500'"
+								:class="isDeployed ? 'bg-green-800' : 'bg-yellow-500/10 text-yellow-500'"
 							>
 								{{ isDeployed ? 'Deployed' : 'Not Deployed' }}
 							</div>

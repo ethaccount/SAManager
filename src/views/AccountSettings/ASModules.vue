@@ -3,14 +3,37 @@ import { fetchModules } from '@/lib/aa'
 import { useAccounts } from '@/stores/useAccounts'
 import { useNetwork } from '@/stores/useNetwork'
 import { watchImmediate } from '@vueuse/core'
-import { ERC7579_MODULE_TYPE } from 'sendop'
+import { ADDRESS, ERC7579_MODULE_TYPE, isSameAddress } from 'sendop'
+import { toast } from 'vue-sonner'
 
 const { selectedAccount, isDeployed } = useAccounts()
 const { client, clientNoBatch } = useNetwork()
 
 const loading = ref(false)
 const modules = ref<Record<string, string[]>>({})
-const installedModules = ref<{ id: string; name: string; address: string }[]>([])
+const modulesByType = ref<Record<ERC7579_MODULE_TYPE, { id: string; address: string }[]>>({} as any)
+
+// Module type labels mapping
+const MODULE_TYPE_LABELS = {
+	[ERC7579_MODULE_TYPE.VALIDATOR]: 'Validator Modules',
+	[ERC7579_MODULE_TYPE.EXECUTOR]: 'Executor Modules',
+	[ERC7579_MODULE_TYPE.HOOK]: 'Hook Modules',
+	[ERC7579_MODULE_TYPE.FALLBACK]: 'Fallback Modules',
+} as const
+
+const SUPPORTED_MODULE_NAMES = {
+	[ADDRESS.ECDSAValidator]: 'ECDSA Validator',
+	[ADDRESS.WebAuthnValidator]: 'WebAuthn Validator',
+	[ADDRESS.SmartSession]: 'Smart Session',
+	[ADDRESS.OwnableValidator]: 'Ownable Validator',
+}
+
+// Helper function to get module name
+const getModuleName = (address: string) => {
+	return (
+		Object.entries(SUPPORTED_MODULE_NAMES).find(([addr]) => isSameAddress(addr, address))?.[1] || 'Unknown Module'
+	)
+}
 
 // Watch for account changes and fetch modules
 watchImmediate(selectedAccount, async () => {
@@ -21,14 +44,16 @@ watchImmediate(selectedAccount, async () => {
 		const fetchedModules = await fetchModules(selectedAccount.value.address, clientNoBatch.value)
 		modules.value = fetchedModules
 
-		// Transform modules into the format we need for the UI
-		installedModules.value = Object.entries(fetchedModules).flatMap(([typeId, addresses]) =>
-			addresses.map(address => ({
+		// Group modules by type
+		const grouped = {} as Record<ERC7579_MODULE_TYPE, { id: string; address: string }[]>
+		Object.entries(fetchedModules).forEach(([typeId, addresses]) => {
+			const type = Number(typeId) as ERC7579_MODULE_TYPE
+			grouped[type] = addresses.map(address => ({
 				id: address,
-				name: `${ERC7579_MODULE_TYPE[Number(typeId)]} (${address.slice(0, 6)}...${address.slice(-4)})`,
 				address,
-			})),
-		)
+			}))
+		})
+		modulesByType.value = grouped
 	} catch (error) {
 		console.error('Error fetching modules:', error)
 	} finally {
@@ -36,9 +61,25 @@ watchImmediate(selectedAccount, async () => {
 	}
 })
 
-const onClickRemove = (moduleId: string) => {
-	installedModules.value = installedModules.value.filter(m => m.id !== moduleId)
+const onlyOneValidator = computed(() => {
+	return modulesByType.value[ERC7579_MODULE_TYPE.VALIDATOR]?.length === 1
+})
+
+const onClickRemove = (moduleId: string, type: ERC7579_MODULE_TYPE) => {
+	// Prevent removing the last validator module
+	if (type === ERC7579_MODULE_TYPE.VALIDATOR && onlyOneValidator.value) {
+		toast.error('Cannot remove the last validator module')
+		return
+	}
+	modulesByType.value[type] = modulesByType.value[type]?.filter(m => m.id !== moduleId) || []
 }
+
+// Helper to get available module types
+const availableTypes = computed(() => {
+	return Object.keys(modulesByType.value)
+		.map(Number)
+		.filter(type => modulesByType.value[type]?.length > 0)
+})
 </script>
 
 <template>
@@ -46,24 +87,36 @@ const onClickRemove = (moduleId: string) => {
 		<div class="space-y-6 p-6">
 			<div v-if="loading" class="text-sm text-muted-foreground">Loading modules...</div>
 
-			<div v-else class="space-y-4">
+			<div v-else class="space-y-6">
 				<div v-if="!isDeployed" class="text-sm text-muted-foreground">Account is not deployed</div>
-				<div v-else-if="installedModules.length === 0" class="text-sm text-muted-foreground">
+				<div v-else-if="availableTypes.length === 0" class="text-sm text-muted-foreground">
 					No modules installed
 				</div>
-				<div v-else class="grid gap-2">
-					<div
-						v-for="module in installedModules"
-						:key="module.id"
-						class="flex items-center justify-between p-3 border rounded-md"
-					>
-						<div>
-							<div class="font-medium">{{ module.name }}</div>
-							<div class="text-sm text-muted-foreground">{{ module.address }}</div>
+				<template v-else>
+					<div v-for="type in availableTypes" :key="type" class="space-y-3">
+						<h3 class="text-sm font-medium">{{ MODULE_TYPE_LABELS[type] }}</h3>
+						<div class="grid gap-2">
+							<div
+								v-for="module in modulesByType[type]"
+								:key="module.id"
+								class="flex items-center justify-between p-3 border rounded-md bg-card"
+							>
+								<div class="space-y-1">
+									<div class="text-sm font-medium">{{ getModuleName(module.address) }}</div>
+									<div class="text-xs text-muted-foreground break-all">{{ module.address }}</div>
+								</div>
+								<Button
+									:disabled="onlyOneValidator"
+									variant="outline"
+									size="sm"
+									@click="onClickRemove(module.id, type)"
+								>
+									Remove
+								</Button>
+							</div>
 						</div>
-						<Button variant="outline" size="sm" @click="onClickRemove(module.id)"> Remove </Button>
 					</div>
-				</div>
+				</template>
 			</div>
 		</div>
 	</Card>

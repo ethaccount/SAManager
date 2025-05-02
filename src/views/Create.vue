@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useTransactionModal } from '@/components/TransactionModal/useTransactionModal'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -13,7 +14,7 @@ import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useNetwork } from '@/stores/useNetwork'
 import { shortenAddress } from '@vue-dapp/core'
 import { watchImmediate } from '@vueuse/core'
-import { isAddress } from 'ethers'
+import { getBytes, hexlify, isAddress, toBeHex } from 'ethers'
 import { Power } from 'lucide-vue-next'
 import {
 	ADDRESS,
@@ -25,6 +26,7 @@ import {
 	RHINESTONE_ATTESTER_ADDRESS,
 	Safe7579Account,
 	Safe7579CreationOptions,
+	toBytes32,
 } from 'sendop'
 import { toast } from 'vue-sonner'
 
@@ -72,6 +74,14 @@ const isComputingAddress = ref(false)
 const selectedValidator = ref<Extract<keyof typeof VALIDATORS, string>>('ECDSA')
 const selectedValidationType = computed(() => VALIDATORS[selectedValidator.value].type)
 
+// Add custom salt handling
+const customSalt = ref<number | null>(null)
+const computedSalt = computed(() => {
+	if (!customSalt.value) return SALT
+	console.log(customSalt.value)
+	return toBytes32(BigInt(customSalt.value))
+})
+
 const { signer, isEOAWalletConnected } = useEOAWallet()
 
 const isSignerConnected = computed(() => {
@@ -101,7 +111,37 @@ const vOptionPublicKey = computed(() => {
 })
 
 function onClickReview() {
-	console.log('Review')
+	const { importAccount, selectAccount } = useAccounts()
+
+	if (!computedAddress.value) {
+		throw new Error('onClickImport: Invalid computed address')
+	}
+
+	if (!initCode.value) {
+		throw new Error('onClickImport: Invalid init code')
+	}
+
+	if (!vOptionPublicKey.value) {
+		throw new Error('onClickImport: Invalid validator public key')
+	}
+
+	importAccount({
+		accountId: selectedAccountType.value,
+		category: 'Smart Account',
+		address: computedAddress.value,
+		chainId: selectedChainId.value,
+		vOptions: [
+			{
+				type: selectedValidationType.value,
+				publicKey: vOptionPublicKey.value,
+			},
+		],
+		initCode: initCode.value,
+	})
+
+	selectAccount(computedAddress.value, selectedChainId.value)
+
+	useTransactionModal().openModal([])
 }
 
 function onClickImport() {
@@ -143,8 +183,8 @@ function onClickImport() {
 const computedAddress = ref<string>('')
 const initCode = ref<string>('')
 
-watchImmediate([isSignerConnected, selectedValidator, selectedAccountType], async () => {
-	if (isSignerConnected.value && selectedValidator.value && selectedAccountType.value) {
+watchImmediate([isSignerConnected, selectedValidator, selectedAccountType, computedSalt], async () => {
+	if (isSignerConnected.value && selectedValidator.value && selectedAccountType.value && computedSalt.value) {
 		isComputingAddress.value = true
 		try {
 			switch (selectedValidator.value) {
@@ -157,7 +197,7 @@ watchImmediate([isSignerConnected, selectedValidator, selectedAccountType], asyn
 						case AccountId['kernel.advanced.v0.3.1']:
 							{
 								const creationOption = {
-									salt: SALT,
+									salt: computedSalt.value,
 									validatorAddress: ADDRESS.ECDSAValidator,
 									validatorInitData: EOAValidatorModule.getInitData(signer.value.address),
 								}
@@ -171,7 +211,7 @@ watchImmediate([isSignerConnected, selectedValidator, selectedAccountType], asyn
 						case AccountId['biconomy.nexus.1.0.2']:
 							{
 								const creationOption: NexusCreationOptions = {
-									salt: SALT,
+									salt: computedSalt.value,
 									validatorAddress: ADDRESS.ECDSAValidator,
 									validatorInitData: EOAValidatorModule.getInitData(signer.value.address),
 									bootstrap: 'initNexusWithSingleValidator',
@@ -189,7 +229,7 @@ watchImmediate([isSignerConnected, selectedValidator, selectedAccountType], asyn
 						case AccountId['rhinestone.safe7579.v1.0.0']:
 							{
 								const creationOption: Safe7579CreationOptions = {
-									salt: SALT,
+									salt: computedSalt.value,
 									validatorAddress: ADDRESS.ECDSAValidator,
 									validatorInitData: EOAValidatorModule.getInitData(signer.value.address),
 									owners: [signer.value.address],
@@ -208,7 +248,7 @@ watchImmediate([isSignerConnected, selectedValidator, selectedAccountType], asyn
 					break
 				case 'WebAuthn':
 					// computedAddress.value = await WebAuthnValidator.computeAccountAddress(client.value, {
-					// 	salt: SALT,
+					// 	salt: computedSalt.value,
 					// 	validatorAddress: VALIDATORS[selectedValidator.value].address,
 					// 	validatorInitData: '',
 					// })
@@ -332,6 +372,19 @@ watchImmediate([isSignerConnected, selectedValidator, selectedAccountType], asyn
 				</div>
 
 				<div v-if="isSignerConnected" class="space-y-3">
+					<!-- Add custom salt input -->
+					<div class="flex flex-col gap-1.5">
+						<Label for="custom-salt">Custom Salt (Optional)</Label>
+						<input
+							id="custom-salt"
+							v-model="customSalt"
+							type="number"
+							placeholder="Enter a number for custom salt"
+							class="w-full px-3 py-2 bg-muted/30 border border-border/50 rounded-lg focus:border-primary transition-colors"
+						/>
+						<span class="text-xs text-muted-foreground">Leave empty to use default salt</span>
+					</div>
+
 					<div class="flex items-center space-x-2">
 						<Switch id="deploy-switch" v-model="shouldDeploy" />
 						<Label for="deploy-switch">Deploy Contract</Label>

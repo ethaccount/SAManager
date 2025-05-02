@@ -53,11 +53,11 @@ async function onClickEstimate() {
 		error.value = null
 		status.value = TransactionStatus.Estimating
 		await handleEstimate(props.executions)
-		status.value = TransactionStatus.Reviewing
+		status.value = TransactionStatus.Sign
 	} catch (e: unknown) {
 		console.error(e)
 		error.value = e instanceof Error ? e.message : 'Failed to estimate gas'
-		status.value = TransactionStatus.Reviewing
+		status.value = TransactionStatus.Estimation
 	}
 }
 
@@ -66,11 +66,11 @@ async function onClickSign() {
 		error.value = null
 		status.value = TransactionStatus.Signing
 		await handleSign()
-		status.value = TransactionStatus.Reviewing
+		status.value = TransactionStatus.Send
 	} catch (e: unknown) {
 		console.error(e)
 		error.value = e instanceof Error ? e.message : 'Failed to sign transaction'
-		status.value = TransactionStatus.Reviewing
+		status.value = TransactionStatus.Sign
 	}
 }
 
@@ -82,7 +82,7 @@ async function onClickSend() {
 	} catch (e: unknown) {
 		console.error(e)
 		error.value = e instanceof Error ? e.message : 'Failed to send transaction'
-		status.value = TransactionStatus.Failed
+		status.value = TransactionStatus.Estimation
 	}
 }
 </script>
@@ -231,9 +231,10 @@ async function onClickSend() {
 				<!-- Paymaster Selection -->
 				<div class="space-y-3">
 					<div class="text-sm font-medium">Gas Payment</div>
-					<Select v-model="selectedPaymaster">
+					<Select v-model="selectedPaymaster" :disabled="status !== TransactionStatus.Estimation">
 						<SelectTrigger
 							class="w-full bg-muted/30 border-border/50 hover:border-primary transition-colors"
+							:class="{ 'opacity-50 cursor-not-allowed': status !== TransactionStatus.Estimation }"
 						>
 							<SelectValue placeholder="Select Paymaster">
 								<div class="flex items-center justify-between w-full">
@@ -268,32 +269,80 @@ async function onClickSend() {
 			</div>
 
 			<!-- Footer -->
-			<div class="mt-2 space-y-3">
+			<div class="mt-5 space-y-3">
 				<!-- Error message display -->
 				<div v-if="error" class="p-3 bg-destructive/20 text-destructive text-sm rounded-lg">
 					{{ error }}
 				</div>
 
-				<!-- Status display
-				<div v-if="status !== TransactionStatus.Reviewing" class="text-sm text-center mb-2">
-					<span v-if="status === TransactionStatus.Signing">Please sign the transaction...</span>
-					<span v-if="status === TransactionStatus.Sending">Sending transaction...</span>
-					<span v-if="status === TransactionStatus.Pending">Transaction pending...</span>
-					<span v-if="status === TransactionStatus.Success" class="text-green-500">
-						Transaction successful!
-					</span>
-					<span v-if="status === TransactionStatus.Failed" class="text-destructive">Transaction failed</span>
-				</div> -->
+				<!-- Transaction Status Display -->
+				<div
+					v-if="status === TransactionStatus.Success || status === TransactionStatus.Failed"
+					class="p-4 rounded-lg text-center space-y-2"
+				>
+					<template v-if="status === TransactionStatus.Success">
+						<div class="flex flex-col items-center justify-center py-4">
+							<!-- Larger success checkmark with animation -->
+							<div class="mb-4">
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									class="size-16 text-emerald-500 animate-[scale_0.3s_ease-in-out]"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+								>
+									<circle cx="12" cy="12" r="10" class="opacity-20" />
+									<path
+										class="animate-[dash_0.5s_ease-in-out_forwards]"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										d="M7.5 12.5l3 3 6-6.5"
+										style="stroke-dasharray: 20; stroke-dashoffset: 20"
+									/>
+								</svg>
+							</div>
+							<h3 class="text-xl font-semibold text-emerald-500 mb-2">Transaction Successful!</h3>
+							<p class="text-sm text-muted-foreground">
+								Your transaction has been confirmed on the blockchain
+							</p>
+						</div>
+					</template>
+
+					<template v-if="status === TransactionStatus.Failed">
+						<div class="flex flex-col items-center justify-center py-4">
+							<div class="mb-4">
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									class="size-16 text-destructive animate-[scale_0.3s_ease-in-out]"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+								>
+									<circle cx="12" cy="12" r="10" class="opacity-20" />
+									<path
+										class="animate-[dash_0.5s_ease-in-out_forwards]"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										d="M8 8l8 8m0-8l-8 8"
+										style="stroke-dasharray: 20; stroke-dashoffset: 20"
+									/>
+								</svg>
+							</div>
+							<h3 class="text-xl font-semibold text-destructive mb-2">Transaction Failed</h3>
+							<p class="text-sm text-muted-foreground">
+								{{ error || 'Transaction could not be processed' }}
+							</p>
+						</div>
+					</template>
+				</div>
 
 				<!-- Action buttons for each stage -->
 				<div class="space-y-2">
 					<!-- Estimate Button -->
 					<Button
-						v-if="
-							status === TransactionStatus.Reviewing ||
-							status === TransactionStatus.Estimating ||
-							status === TransactionStatus.Failed
-						"
+						v-if="status === TransactionStatus.Estimation || status === TransactionStatus.Estimating"
 						class="w-full"
 						size="lg"
 						:disabled="!canEstimate"
@@ -305,12 +354,7 @@ async function onClickSend() {
 
 					<!-- Sign Button -->
 					<Button
-						v-if="
-							userOp &&
-							(status === TransactionStatus.Reviewing ||
-								status === TransactionStatus.Signing ||
-								status === TransactionStatus.Failed)
-						"
+						v-if="(userOp && status === TransactionStatus.Sign) || status === TransactionStatus.Signing"
 						class="w-full"
 						size="lg"
 						:disabled="!canSign"
@@ -323,11 +367,9 @@ async function onClickSend() {
 					<!-- Send Button -->
 					<Button
 						v-if="
-							userOp?.signature &&
-							(status === TransactionStatus.Reviewing ||
-								status === TransactionStatus.Sending ||
-								status === TransactionStatus.Pending ||
-								status === TransactionStatus.Failed)
+							(userOp?.signature && status === TransactionStatus.Send) ||
+							status === TransactionStatus.Sending ||
+							status === TransactionStatus.Pending
 						"
 						class="w-full"
 						size="lg"
@@ -335,7 +377,13 @@ async function onClickSend() {
 						:loading="status === TransactionStatus.Sending || status === TransactionStatus.Pending"
 						@click="onClickSend"
 					>
-						{{ status === TransactionStatus.Sending ? 'Sending...' : 'Send Transaction' }}
+						{{
+							status === TransactionStatus.Sending
+								? 'Sending...'
+								: status === TransactionStatus.Pending
+								? 'Pending...'
+								: 'Send Transaction'
+						}}
 					</Button>
 				</div>
 			</div>
@@ -363,5 +411,22 @@ async function onClickSend() {
 
 :deep(.select-content) {
 	@apply w-[var(--radix-select-trigger-width)];
+}
+
+@keyframes scale {
+	0% {
+		transform: scale(0.8);
+		opacity: 0;
+	}
+	100% {
+		transform: scale(1);
+		opacity: 1;
+	}
+}
+
+@keyframes dash {
+	to {
+		stroke-dashoffset: 0;
+	}
 }
 </style>

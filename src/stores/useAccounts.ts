@@ -1,7 +1,15 @@
 import { AccountId, checkAccountIsConnected, ImportedAccount } from '@/lib/account'
 import { CHAIN_ID } from '@/lib/network'
 import { defineStore, storeToRefs } from 'pinia'
-import { ADDRESS, EOAValidatorModule, ERC7579Validator, KernelV3Account, NexusAccount, Safe7579Account } from 'sendop'
+import {
+	ADDRESS,
+	EOAValidatorModule,
+	ERC7579Validator,
+	isSameAddress,
+	KernelV3Account,
+	NexusAccount,
+	Safe7579Account,
+} from 'sendop'
 import { toast } from 'vue-sonner'
 import { useEOAWallet } from './useEOAWallet'
 import { useNetwork } from './useNetwork'
@@ -86,7 +94,7 @@ export const useAccountsStore = defineStore(
 				throw new Error(`importAccount: Invalid values: ${JSON.stringify(account)}`)
 			}
 
-			if (accounts.value.find(a => a.address === account.address && a.chainId === account.chainId)) {
+			if (accounts.value.find(a => isSameAddress(a.address, account.address) && a.chainId === account.chainId)) {
 				toast.info('Account already exists')
 				return
 			}
@@ -94,6 +102,8 @@ export const useAccountsStore = defineStore(
 				initCode: null,
 				...account,
 			})
+
+			toast.success('Account imported successfully')
 
 			if (accounts.value.length === 1) {
 				selectedAccount.value = accounts.value[0]

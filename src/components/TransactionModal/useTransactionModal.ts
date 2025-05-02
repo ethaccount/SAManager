@@ -13,13 +13,14 @@ import {
 	signUserOp,
 	UserOp,
 } from 'sendop'
-
 import { useModal } from 'vue-final-modal'
 
 export enum TransactionStatus {
-	Reviewing = 'Reviewing',
+	Estimation = 'Estimation',
 	Estimating = 'Estimating',
+	Sign = 'Sign',
 	Signing = 'Signing',
+	Send = 'Send',
 	Sending = 'Sending',
 	Pending = 'Pending',
 	Success = 'Success',
@@ -62,24 +63,24 @@ export function useTransactionModal() {
 		{ id: 'public', name: 'Public Paymaster', description: 'Use public paymaster for gas sponsorship' },
 	] as const
 
-	const selectedPaymaster = ref<(typeof paymasters)[number]['id']>('none')
+	const selectedPaymaster = ref<(typeof paymasters)[number]['id']>('public')
 
-	const status = ref<TransactionStatus>(TransactionStatus.Reviewing)
+	const status = ref<TransactionStatus>(TransactionStatus.Estimation)
 
 	const canEstimate = computed(() => {
-		if (status.value !== TransactionStatus.Reviewing && status.value !== TransactionStatus.Failed) return false
+		if (status.value !== TransactionStatus.Estimation) return false
 		if (!selectedValidationMethod.value) return false
 		if (!selectedPaymaster.value) return false
 		return true
 	})
 
 	const canSign = computed(() => {
-		if (status.value !== TransactionStatus.Reviewing && status.value !== TransactionStatus.Failed) return false
+		if (status.value !== TransactionStatus.Sign) return false
 		return userOp.value !== null
 	})
 
 	const canSend = computed(() => {
-		if (status.value !== TransactionStatus.Reviewing && status.value !== TransactionStatus.Failed) return false
+		if (status.value !== TransactionStatus.Send) return false
 		return userOp.value !== null && userOp.value.signature !== undefined
 	})
 
@@ -141,14 +142,31 @@ export function useTransactionModal() {
 		if (!userOp.value) {
 			throw new Error('Transaction not signed')
 		}
-		const op = await sendUserOp(bundler.value, userOp.value)
-		const receipt = await op.wait()
+		try {
+			const op = await sendUserOp(bundler.value, userOp.value)
 
-		if (receipt.success) {
-			status.value = TransactionStatus.Success
-		} else {
-			status.value = TransactionStatus.Failed
-			throw new Error('Transaction failed on chain')
+			status.value = TransactionStatus.Pending
+			const receipt = await op.wait()
+
+			if (receipt.success) {
+				status.value = TransactionStatus.Success
+
+				// remove initCode from selected account
+				if (selectedAccount.value) {
+					selectedAccount.value.initCode = null
+				} else {
+					throw new Error('handleSend: Account not found for initCode removal')
+				}
+			} else {
+				status.value = TransactionStatus.Failed
+			}
+		} catch (e: unknown) {
+			if (e instanceof Error) {
+				if (e.cause instanceof JsonRpcError) {
+					throw new Error(e.cause.message)
+				}
+			}
+			throw new Error('Failed to send transaction', { cause: e })
 		}
 	}
 
