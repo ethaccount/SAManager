@@ -8,18 +8,9 @@ import { useNetwork } from '@/stores/useNetwork'
 import { shortenAddress } from '@vue-dapp/core'
 import { formatEther } from 'ethers'
 import { CircleDot, X } from 'lucide-vue-next'
-import {
-	ADDRESS,
-	createUserOp,
-	estimateUserOp,
-	Execution,
-	getPaymasterData,
-	PublicPaymaster,
-	sendUserOp,
-	signUserOp,
-	UserOp,
-} from 'sendop'
+import { Execution } from 'sendop'
 import { VueFinalModal } from 'vue-final-modal'
+import { TransactionStatus, useTransactionModal } from './useTransactionModal'
 
 const props = withDefaults(
 	defineProps<{
@@ -34,123 +25,34 @@ const emit = defineEmits<{
 	(e: 'close'): void
 }>()
 
-const { client, bundler, selectedChainId } = useNetwork()
-const { selectedAccount, opGetter } = useAccounts()
-
 function onClickClose() {
 	emit('close')
 }
 
-// Validation method selection
-const availableValidationMethods = computed(() => {
-	if (!selectedAccount.value?.vOptions) return []
-	return selectedAccount.value.vOptions.map(opt => ({
-		type: opt.type,
-		publicKey: opt.publicKey,
-	}))
-})
+const { selectedChainId } = useNetwork()
+const { selectedAccount } = useAccounts()
+const {
+	userOp,
+	status,
+	canEstimate,
+	canSign,
+	canSend,
+	selectedPaymaster,
+	paymasters,
+	availableValidationMethods,
+	selectedValidationMethod,
+	handleEstimate,
+	handleSign,
+	handleSend,
+} = useTransactionModal()
 
-const selectedValidationMethod = ref(availableValidationMethods.value[0]?.type || null)
-
-// Paymaster selection
-const paymasters = [
-	{ id: 'none', name: 'No Paymaster', description: 'Pay gas fees with native tokens' },
-	{ id: 'public', name: 'Public Paymaster', description: 'Use public paymaster for gas sponsorship' },
-] as const
-
-const selectedPaymaster = ref<(typeof paymasters)[number]['id']>('none')
-
-enum TransactionStatus {
-	Reviewing = 'Reviewing',
-	Estimating = 'Estimating',
-	Signing = 'Signing',
-	Sending = 'Sending',
-	Pending = 'Pending',
-	Success = 'Success',
-	Failed = 'Failed',
-}
-
-const status = ref<TransactionStatus>(TransactionStatus.Reviewing)
 const error = ref<string | null>(null)
-
-// Stage-specific computed properties
-const canEstimate = computed(() => {
-	if (status.value !== TransactionStatus.Reviewing && status.value !== TransactionStatus.Failed) return false
-	if (!selectedValidationMethod.value) return false
-	if (!selectedPaymaster.value) return false
-	return true
-})
-
-const canSign = computed(() => {
-	if (status.value !== TransactionStatus.Reviewing && status.value !== TransactionStatus.Failed) return false
-	return userOp.value !== null
-})
-
-const canSend = computed(() => {
-	if (status.value !== TransactionStatus.Reviewing && status.value !== TransactionStatus.Failed) return false
-	return userOp.value !== null && userOp.value.signature !== undefined
-})
-
-const userOp = ref<UserOp | null>(null)
-
-const pmGetter = computed(() => {
-	switch (selectedPaymaster.value) {
-		case 'public':
-			return new PublicPaymaster(ADDRESS.PublicPaymaster)
-		default:
-			return undefined
-	}
-})
-
-async function handleEstimate() {
-	if (!opGetter.value || !selectedAccount.value) {
-		throw new Error('Account not selected')
-	}
-
-	console.log(await opGetter.value.getSender())
-
-	let _userOp = await createUserOp(
-		bundler.value,
-		props.executions,
-		opGetter.value,
-		selectedAccount.value.initCode || undefined,
-	)
-	const estimation = await estimateUserOp(_userOp, bundler.value, opGetter.value, pmGetter.value)
-	_userOp = estimation.userOp
-	if (!estimation.pmIsFinal && pmGetter.value) {
-		_userOp = await getPaymasterData(_userOp, pmGetter.value)
-	}
-
-	userOp.value = _userOp
-}
-
-async function handleSign() {
-	if (!userOp.value || !opGetter.value || !selectedAccount.value) {
-		throw new Error('Transaction not prepared')
-	}
-	userOp.value = await signUserOp(userOp.value, bundler.value, opGetter.value)
-}
-
-async function handleSend() {
-	if (!userOp.value) {
-		throw new Error('Transaction not signed')
-	}
-	const op = await sendUserOp(bundler.value, userOp.value)
-	const receipt = await op.wait()
-
-	if (receipt.success) {
-		status.value = TransactionStatus.Success
-	} else {
-		status.value = TransactionStatus.Failed
-		throw new Error('Transaction failed on chain')
-	}
-}
 
 async function onClickEstimate() {
 	try {
 		error.value = null
 		status.value = TransactionStatus.Estimating
-		await handleEstimate()
+		await handleEstimate(props.executions)
 		status.value = TransactionStatus.Reviewing
 	} catch (e: unknown) {
 		console.error(e)
@@ -177,10 +79,6 @@ async function onClickSend() {
 		error.value = null
 		status.value = TransactionStatus.Sending
 		await handleSend()
-		// Auto-close on success
-		setTimeout(() => {
-			emit('close')
-		}, 2000)
 	} catch (e: unknown) {
 		console.error(e)
 		error.value = e instanceof Error ? e.message : 'Failed to send transaction'
@@ -339,27 +237,29 @@ async function onClickSend() {
 						>
 							<SelectValue placeholder="Select Paymaster">
 								<div class="flex items-center justify-between w-full">
-									<span class="font-medium">{{
-										paymasters.find(p => p.id === selectedPaymaster)?.name
-									}}</span>
+									<span class="font-medium">
+										{{ paymasters.find(p => p.id === selectedPaymaster)?.name }}
+									</span>
 								</div>
 							</SelectValue>
 						</SelectTrigger>
 
-						<SelectContent>
+						<!-- z-index: 1100 to make it above the modal(z-index: 1000) -->
+						<!-- hover:bg-muted to make it look like a button -->
+						<SelectContent class="z-[1100]">
 							<SelectItem
+								class="cursor-pointer hover:bg-muted"
 								v-for="paymaster in paymasters"
 								:key="paymaster.id"
 								:value="paymaster.id"
-								class="cursor-pointer"
 							>
 								<div class="flex flex-col py-1">
 									<div class="flex items-center justify-between w-full">
 										<span class="font-medium">{{ paymaster.name }}</span>
 									</div>
-									<span class="text-xs text-muted-foreground mt-0.5">{{
-										paymaster.description
-									}}</span>
+									<span class="text-xs text-muted-foreground mt-0.5">
+										{{ paymaster.description }}
+									</span>
 								</div>
 							</SelectItem>
 						</SelectContent>
@@ -368,12 +268,7 @@ async function onClickSend() {
 			</div>
 
 			<!-- Footer -->
-			<div class="mt-6 space-y-3">
-				<!-- Error message display -->
-				<div v-if="error" class="p-3 bg-destructive/20 text-destructive text-sm rounded-lg">
-					{{ error }}
-				</div>
-
+			<div class="mt-2 space-y-3">
 				<!-- Status display -->
 				<div v-if="status !== TransactionStatus.Reviewing" class="text-sm text-center mb-2">
 					<span v-if="status === TransactionStatus.Estimating">Estimating gas fees...</span>
@@ -439,12 +334,17 @@ async function onClickSend() {
 						{{ status === TransactionStatus.Sending ? 'Sending...' : 'Send Transaction' }}
 					</Button>
 				</div>
+
+				<!-- Error message display -->
+				<div v-if="error" class="p-3 bg-destructive/20 text-destructive text-sm rounded-lg">
+					{{ error }}
+				</div>
 			</div>
 		</div>
 	</VueFinalModal>
 </template>
 
-<style>
+<style lang="css">
 .transaction-modal {
 	display: flex;
 	justify-content: center;

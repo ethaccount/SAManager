@@ -77,6 +77,7 @@ declare module 'vue' {
     PasskeyAccountChoice: typeof import('./components/connect-modal/PasskeyAccountChoice.vue')['default']
     PasskeyAuth: typeof import('./components/connect-modal/PasskeyAuth.vue')['default']
     PasskeyLogin: typeof import('./components/connect-modal/PasskeyLogin.vue')['default']
+    PaymasterSelector: typeof import('./components/TransactionModal/PaymasterSelector.vue')['default']
     Popover: typeof import('./components/ui/popover/Popover.vue')['default']
     PopoverContent: typeof import('./components/ui/popover/PopoverContent.vue')['default']
     PopoverTrigger: typeof import('./components/ui/popover/PopoverTrigger.vue')['default']
@@ -113,7 +114,7 @@ declare module 'vue' {
     TabsTrigger: typeof import('./components/ui/tabs/TabsTrigger.vue')['default']
     Textarea: typeof import('./components/ui/textarea/Textarea.vue')['default']
     ThemeToggle: typeof import('./components/utils/ThemeToggle.vue')['default']
-    TransactionModal: typeof import('./components/TransactionModal.vue')['default']
+    TransactionModal: typeof import('./components/TransactionModal/TransactionModal.vue')['default']
     ValidateSmartEOA: typeof import('./components/ImportAccountModal/ValidateSmartEOA.vue')['default']
   }
 }
