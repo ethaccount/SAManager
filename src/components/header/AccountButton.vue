@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import ConnectModal from '@/components/connect-modal/ConnectModal.vue'
 import { Button } from '@/components/ui/button'
-import { useAccountDrawer } from '@/lib/useAccountDrawer'
+import { useAccountDrawer } from '@/components/AccountDrawer/useAccountDrawer'
 import { useConnectModal } from '@/stores/useConnectModal'
 import { useAccounts } from '@/stores/useAccounts'
 import { useModal } from 'vue-final-modal'

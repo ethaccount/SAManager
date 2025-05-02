@@ -7,7 +7,7 @@ import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
 import { useAccounts } from '@/stores/useAccounts'
 import { useRouter } from 'vue-router'
 import { shortenAddress } from '@vue-dapp/core'
-import { Power, X, CircleDot } from 'lucide-vue-next'
+import { Power, X, CircleDot, Plus } from 'lucide-vue-next'
 import { VueFinalModal } from 'vue-final-modal'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 
@@ -38,6 +38,11 @@ function onClickAccountSettings() {
 	router.push(toRoute('account-settings', { address: selectedAccount.value.address }))
 	emit('close')
 }
+
+function onClickCreateAccount() {
+	router.push(toRoute('create'))
+	emit('close')
+}
 </script>
 
 <template>
@@ -55,24 +60,32 @@ function onClickAccountSettings() {
 			<!-- Header Section -->
 			<div class="flex justify-between items-start mb-6">
 				<div class="w-full flex justify-between items-start gap-2">
-					<div v-if="selectedAccount" class="p-1.5">
-						<div class="flex justify-between items-center mb-1">
-							<div class="flex items-center gap-2">
-								<CircleDot class="w-3 h-3" :class="isConnected ? 'text-green-500' : 'text-red-500'" />
-								<span class="font-medium truncate">{{ shortenAddress(selectedAccount.address) }}</span>
+					<div>
+						<div v-if="selectedAccount" class="p-1.5">
+							<div class="flex justify-between items-center mb-1">
+								<div class="flex items-center gap-2">
+									<CircleDot
+										class="w-3 h-3"
+										:class="isConnected ? 'text-green-500' : 'text-red-500'"
+									/>
+									<span class="font-medium truncate">{{
+										shortenAddress(selectedAccount.address)
+									}}</span>
+								</div>
 							</div>
-						</div>
-						<div class="flex flex-col text-xs text-muted-foreground">
-							<div class="flex gap-2">
-								<span>{{ displayAccountName(selectedAccount.accountId) }}</span>
-								<span>{{ displayChainName(selectedAccount.chainId) }}</span>
-							</div>
+							<div class="flex flex-col text-xs text-muted-foreground">
+								<div class="flex gap-2">
+									<span>{{ displayAccountName(selectedAccount.accountId) }}</span>
+									<span>{{ displayChainName(selectedAccount.chainId) }}</span>
+								</div>
 
-							<div v-for="vOption in selectedAccount.vOptions" :key="vOption.type" class="mt-1">
-								<span>{{ vOption.type }}: {{ shortenAddress(vOption.publicKey) }}</span>
+								<div v-for="vOption in selectedAccount.vOptions" :key="vOption.type" class="mt-1">
+									<span>{{ vOption.type }}: {{ shortenAddress(vOption.publicKey) }}</span>
+								</div>
 							</div>
 						</div>
 					</div>
+
 					<Button variant="ghost" size="icon" @click="onClickCloseSidebar">
 						<X class="h-4 w-4" />
 					</Button>
@@ -121,7 +134,12 @@ function onClickAccountSettings() {
 
 			<!-- Account List -->
 			<div class="h-[calc(100%-200px)]">
-				<h3 class="text-sm font-semibold tracking-wider mb-3">Accounts</h3>
+				<div class="flex justify-between items-center mb-3">
+					<h3 class="text-sm font-semibold tracking-wider">Accounts</h3>
+					<Button variant="ghost" size="icon" class="h-6 w-6" @click="onClickCreateAccount">
+						<Plus class="h-4 w-4" />
+					</Button>
+				</div>
 				<div class="h-full overflow-y-auto space-y-2 pr-3 pt-2">
 					<div
 						v-for="account in accounts"

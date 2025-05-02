@@ -26,7 +26,7 @@ const breakpoints = useBreakpoints(breakpointsTailwind)
 
 			<div class="flex items-center gap-2 sm:gap-4" :class="{ 'gap-3': breakpoints.isSmaller('sm') }">
 				<NetworkSelector />
-				<AccountButton v-if="hasAccounts" />
+				<AccountButton />
 			</div>
 		</div>
 	</header>

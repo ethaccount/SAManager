@@ -1,4 +1,4 @@
-import AccountDrawer from '@/components/AccountDrawer.vue'
+import AccountDrawer from '@/components/AccountDrawer/AccountDrawer.vue'
 import { useModal } from 'vue-final-modal'
 
 export function useAccountDrawer() {

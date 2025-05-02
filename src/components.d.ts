@@ -12,7 +12,7 @@ declare module 'vue' {
     AccordionItem: typeof import('./components/ui/accordion/AccordionItem.vue')['default']
     AccordionTrigger: typeof import('./components/ui/accordion/AccordionTrigger.vue')['default']
     AccountButton: typeof import('./components/header/AccountButton.vue')['default']
-    AccountDrawer: typeof import('./components/AccountDrawer.vue')['default']
+    AccountDrawer: typeof import('./components/AccountDrawer/AccountDrawer.vue')['default']
     AccountOptions: typeof import('./components/ImportAccountModal/AccountOptions.vue')['default']
     Address: typeof import('./components/utils/Address.vue')['default']
     AutoForm: typeof import('./components/ui/auto-form/AutoForm.vue')['default']
