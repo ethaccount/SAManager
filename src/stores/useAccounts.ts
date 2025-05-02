@@ -1,7 +1,10 @@
-import { checkAccountIsConnected, ImportedAccount } from '@/lib/account'
+import { AccountId, checkAccountIsConnected, ImportedAccount } from '@/lib/account'
 import { CHAIN_ID } from '@/lib/network'
 import { defineStore, storeToRefs } from 'pinia'
+import { ADDRESS, EOAValidatorModule, ERC7579Validator, KernelV3Account, NexusAccount, Safe7579Account } from 'sendop'
 import { toast } from 'vue-sonner'
+import { useEOAWallet } from './useEOAWallet'
+import { useNetwork } from './useNetwork'
 
 export const useAccountsStore = defineStore(
 	'useAccountsStore',
@@ -13,6 +16,62 @@ export const useAccountsStore = defineStore(
 		const isConnected = computed(() => {
 			if (!selectedAccount.value) return false
 			return checkAccountIsConnected(selectedAccount.value)
+		})
+
+		const validator = computed<ERC7579Validator | null>(() => {
+			if (!selectedAccount.value || !isConnected.value) return null
+			switch (selectedAccount.value.vOptions[0].type) {
+				case 'EOA-Owned':
+					const { signer } = useEOAWallet()
+					if (!signer.value) {
+						return null
+					}
+					return new EOAValidatorModule({
+						address: ADDRESS.ECDSAValidator,
+						signer: signer.value,
+					})
+				default:
+					return null
+			}
+		})
+
+		const opGetter = computed(() => {
+			if (!selectedAccount.value || !isConnected.value || !validator.value) return null
+
+			const { client, bundler } = useNetwork()
+
+			switch (selectedAccount.value.accountId) {
+				case AccountId['kernel.advanced.v0.3.1']:
+					return new KernelV3Account({
+						address: selectedAccount.value.address,
+						client: client.value,
+						bundler: bundler.value,
+						validator: validator.value,
+					})
+				case AccountId['biconomy.nexus.1.0.2']:
+					return new NexusAccount({
+						address: selectedAccount.value.address,
+						client: client.value,
+						bundler: bundler.value,
+						validator: validator.value,
+					})
+				case AccountId['rhinestone.safe7579.v1.0.0']:
+					return new Safe7579Account({
+						address: selectedAccount.value.address,
+						client: client.value,
+						bundler: bundler.value,
+						validator: validator.value,
+					})
+				// case AccountId['infinitism.Simple7702Account.0.8.0']:
+				// 	return new Simple7702Account({
+				// 		address: selectedAccount.value.address,
+				// 		client: client.value,
+				// 		bundler: bundler.value,
+				// 		validator: validator.value,
+				// 	})
+				default:
+					throw new Error(`opGetter: Unsupported accountId: ${selectedAccount.value.accountId}`)
+			}
 		})
 
 		function importAccount(account: ImportedAccount | Omit<ImportedAccount, 'initCode'>) {
@@ -59,6 +118,8 @@ export const useAccountsStore = defineStore(
 			accounts,
 			hasAccounts,
 			isConnected,
+			opGetter,
+			validator,
 			importAccount,
 			removeAccount,
 			selectAccount,

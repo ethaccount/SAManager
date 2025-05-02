@@ -4,39 +4,29 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useTransactionModal } from '@/lib/useTransactionModal'
-import { ZeroAddress } from 'ethers'
+import { useAccounts } from '@/stores/useAccounts'
+import { parseEther } from 'ethers'
 import { Plus, X } from 'lucide-vue-next'
+import { INTERFACES } from 'sendop'
 import { computed, ref } from 'vue'
 
-interface Token {
+type Token = {
 	id: string
 	symbol: string
 	name: string
 	icon: string
+	address: string
 }
 
-interface Paymaster {
-	id: string
-	name: string
-}
-
-// Token transfer execution type
-interface TokenTransfer {
+type TokenTransfer = {
 	recipient: string
 	amount: string
 	tokenId: string
 }
 
-// Mock data
 const tokens: Token[] = [
-	{ id: 'eth', symbol: 'ETH', name: 'Ethereum', icon: 'Ξ' },
-	{ id: 'weth', symbol: 'WETH', name: 'Wrapped Ethereum', icon: 'Ξ' },
-	{ id: 'usdc', symbol: 'USDC', name: 'USD Coin', icon: '$' },
-]
-
-const paymasters: Paymaster[] = [
-	{ id: 'open', name: 'OpenPaymaster' },
-	{ id: 'circle', name: 'Circle USDC Paymaster' },
+	{ id: 'eth', symbol: 'ETH', name: 'Ethereum', icon: 'Ξ', address: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE' },
+	{ id: 'usdc', symbol: 'USDC', name: 'USD Coin', icon: '$', address: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238' },
 ]
 
 function getDefaultTransfer(): TokenTransfer {
@@ -48,11 +38,6 @@ function getDefaultTransfer(): TokenTransfer {
 }
 
 const transfers = ref<TokenTransfer[]>([getDefaultTransfer()])
-const isAtomic = ref(true)
-const isBundle = ref(false)
-const selectedPaymaster = ref<Paymaster>(paymasters[0])
-const simulationDone = ref(false)
-const showUserOp = ref(false)
 
 const isValidTransfers = computed(() => {
 	return transfers.value.every(
@@ -71,18 +56,34 @@ const removeTransfer = (index: number) => {
 }
 
 const onClickReview = () => {
-	useTransactionModal().openModal()
+	useTransactionModal().openModal(
+		transfers.value.map(t => {
+			if (t.tokenId === 'eth') {
+				return {
+					to: t.recipient,
+					value: BigInt(parseEther(t.amount)),
+					data: '0x',
+				}
+			} else {
+				return {
+					to: t.recipient,
+					value: 0n,
+					data: INTERFACES.IERC20.encodeFunctionData('transfer', [t.recipient, parseEther(t.amount)]),
+				}
+			}
+		}),
+	)
 }
 
-const handleAtomicChange = (checked: boolean) => {
-	isAtomic.value = checked
-	if (checked) isBundle.value = false
-}
+const { isConnected } = useAccounts()
 
-const handleBundleChange = (checked: boolean) => {
-	isBundle.value = checked
-	if (checked) isAtomic.value = false
-}
+const reviewDisabled = computed(() => {
+	return !isConnected.value || !isValidTransfers.value || transfers.value.length === 0
+})
+
+const reviewButtonText = computed(() => {
+	return isConnected.value ? 'Review Transfers' : 'Your account must be connected to review transfers'
+})
 </script>
 
 <template>
@@ -93,9 +94,9 @@ const handleBundleChange = (checked: boolean) => {
 					class="w-full bg-primary/90 hover:bg-primary disabled:opacity-50"
 					size="lg"
 					@click="onClickReview"
-					:disabled="!isValidTransfers"
+					:disabled="reviewDisabled"
 				>
-					Review Transfers
+					{{ reviewButtonText }}
 				</Button>
 			</div>
 
@@ -170,14 +171,4 @@ const handleBundleChange = (checked: boolean) => {
 	</Card>
 </template>
 
-<style lang="css" scoped>
-:deep(.select-trigger) {
-	height: 2.75rem;
-}
-
-input[type='number']::-webkit-inner-spin-button,
-input[type='number']::-webkit-outer-spin-button {
-	-webkit-appearance: none;
-	margin: 0;
-}
-</style>
+<style lang="css" scoped></style>
