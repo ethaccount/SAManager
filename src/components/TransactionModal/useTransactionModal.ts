@@ -7,11 +7,13 @@ import {
 	estimateUserOp,
 	Execution,
 	getPaymasterData,
+	JsonRpcError,
 	PublicPaymaster,
 	sendUserOp,
 	signUserOp,
 	UserOp,
 } from 'sendop'
+
 import { useModal } from 'vue-final-modal'
 
 export enum TransactionStatus {
@@ -110,10 +112,19 @@ export function useTransactionModal() {
 			throw new Error('Failed to create user operation', { cause: e })
 		}
 
-		const estimation = await estimateUserOp(_userOp, bundler.value, opGetter.value, pmGetter.value)
-		_userOp = estimation.userOp
-		if (!estimation.pmIsFinal && pmGetter.value) {
-			_userOp = await getPaymasterData(_userOp, pmGetter.value)
+		try {
+			const estimation = await estimateUserOp(_userOp, bundler.value, opGetter.value, pmGetter.value)
+			_userOp = estimation.userOp
+			if (!estimation.pmIsFinal && pmGetter.value) {
+				_userOp = await getPaymasterData(_userOp, pmGetter.value)
+			}
+		} catch (e: unknown) {
+			if (e instanceof Error) {
+				if (e.cause instanceof JsonRpcError) {
+					throw new Error(e.cause.message)
+				}
+			}
+			throw new Error('Failed to estimate gas fees', { cause: e })
 		}
 
 		userOp.value = _userOp

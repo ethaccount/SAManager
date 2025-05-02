@@ -269,17 +269,21 @@ async function onClickSend() {
 
 			<!-- Footer -->
 			<div class="mt-2 space-y-3">
-				<!-- Status display -->
+				<!-- Error message display -->
+				<div v-if="error" class="p-3 bg-destructive/20 text-destructive text-sm rounded-lg">
+					{{ error }}
+				</div>
+
+				<!-- Status display
 				<div v-if="status !== TransactionStatus.Reviewing" class="text-sm text-center mb-2">
-					<span v-if="status === TransactionStatus.Estimating">Estimating gas fees...</span>
 					<span v-if="status === TransactionStatus.Signing">Please sign the transaction...</span>
 					<span v-if="status === TransactionStatus.Sending">Sending transaction...</span>
 					<span v-if="status === TransactionStatus.Pending">Transaction pending...</span>
-					<span v-if="status === TransactionStatus.Success" class="text-green-500"
-						>Transaction successful!</span
-					>
+					<span v-if="status === TransactionStatus.Success" class="text-green-500">
+						Transaction successful!
+					</span>
 					<span v-if="status === TransactionStatus.Failed" class="text-destructive">Transaction failed</span>
-				</div>
+				</div> -->
 
 				<!-- Action buttons for each stage -->
 				<div class="space-y-2">
@@ -333,11 +337,6 @@ async function onClickSend() {
 					>
 						{{ status === TransactionStatus.Sending ? 'Sending...' : 'Send Transaction' }}
 					</Button>
-				</div>
-
-				<!-- Error message display -->
-				<div v-if="error" class="p-3 bg-destructive/20 text-destructive text-sm rounded-lg">
-					{{ error }}
 				</div>
 			</div>
 		</div>
