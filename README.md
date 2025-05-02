@@ -22,12 +22,11 @@ pnpm dlx shadcn-vue@2.1.0 add button
 
 ### Reference
 
-token lists: https://github.com/Uniswap/token-lists
-USDC address: https://developers.circle.com/stablecoins/usdc-on-test-networks
-
-Icons: https://lucide.dev/icons/
-Toast: https://vue-sonner.robertshaw.id/
-Modal: https://vue-final-modal.org/use-cases/playground
+- token lists: https://github.com/Uniswap/token-lists
+- USDC address: https://developers.circle.com/stablecoins/usdc-on-test-networks
+- Icons: https://lucide.dev/icons/
+- Toast: https://vue-sonner.robertshaw.id/
+- Modal: https://vue-final-modal.org/use-cases/playground
 
 ## Credits
 
