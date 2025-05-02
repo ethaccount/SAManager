@@ -9,9 +9,10 @@ import { useAccounts } from '@/stores/useAccounts'
 import { shortenAddress } from '@vue-dapp/core'
 import { watchImmediate } from '@vueuse/core'
 import { ArrowLeft, Copy, ExternalLink } from 'lucide-vue-next'
+import ASModules from './ASModules.vue'
 
 const router = useRouter()
-const { selectedAccount } = useAccounts()
+const { selectedAccount, isDeployed } = useAccounts()
 
 watchImmediate(selectedAccount, () => {
 	if (selectedAccount.value) {
@@ -23,27 +24,6 @@ const copyToClipboard = (text: string) => {
 	navigator.clipboard.writeText(text)
 	// In a real app, you would show a toast notification
 	console.log('Copied to clipboard:', text)
-}
-
-// Mock data for modules
-const modules = ref([
-	{ id: 'ecdsa', name: 'ECDSA Validator', installed: true },
-	{ id: 'webauthn', name: 'WebAuthn Validator', installed: false },
-	{ id: 'ownable', name: 'Ownable Validator', installed: false },
-	{ id: 'smartsession', name: 'Smart Session Validator', installed: true },
-])
-
-const installedModules = ref(modules.value.filter(m => m.installed))
-
-const handleInstall = (moduleId: string) => {
-	const module = modules.value.find(m => m.id === moduleId)
-	if (module && !installedModules.value.some(m => m.id === moduleId)) {
-		installedModules.value.push(module)
-	}
-}
-
-const handleRemove = (moduleId: string) => {
-	installedModules.value = installedModules.value.filter(m => m.id !== moduleId)
 }
 
 // Mock data for sessions
@@ -127,12 +107,11 @@ const crossChainAccounts = [
 						</div>
 						<div class="flex items-center gap-1">
 							<div
-								class="size-2 rounded-full"
-								:class="selectedAccount.initCode ? 'bg-yellow-500' : 'bg-green-500'"
-							></div>
-							<span class="text-xs">
-								{{ selectedAccount.initCode ? 'Not Deployed' : 'Deployed' }}
-							</span>
+								class="text-xs rounded-full px-2.5 py-0.5"
+								:class="isDeployed ? 'bg-green-500' : 'bg-yellow-500/10 text-yellow-500'"
+							>
+								{{ isDeployed ? 'Deployed' : 'Not Deployed' }}
+							</div>
 						</div>
 					</div>
 				</div>
@@ -165,52 +144,7 @@ const crossChainAccounts = [
 				</TabsList>
 
 				<TabsContent value="modules" class="mt-6">
-					<Card>
-						<CardHeader>
-							<CardTitle>Modules</CardTitle>
-							<CardDescription>Manage modules for your account</CardDescription>
-						</CardHeader>
-						<CardContent>
-							<div class="space-y-6">
-								<div class="space-y-4">
-									<h3 class="text-sm font-medium">Installed Modules</h3>
-									<div v-if="installedModules.length === 0" class="text-sm text-muted-foreground">
-										No modules installed
-									</div>
-									<div v-else class="grid gap-2">
-										<div
-											v-for="module in installedModules"
-											:key="module.id"
-											class="flex items-center justify-between p-3 border rounded-md"
-										>
-											<div class="font-medium">{{ module.name }}</div>
-											<Button variant="outline" size="sm" @click="handleRemove(module.id)">
-												Remove
-											</Button>
-										</div>
-									</div>
-								</div>
-
-								<div class="space-y-4">
-									<h3 class="text-sm font-medium">Available Modules</h3>
-									<div class="grid gap-2">
-										<div
-											v-for="module in modules.filter(
-												m => !installedModules.some(im => im.id === m.id),
-											)"
-											:key="module.id"
-											class="flex items-center justify-between p-3 border rounded-md"
-										>
-											<div class="font-medium">{{ module.name }}</div>
-											<Button variant="outline" size="sm" @click="handleInstall(module.id)">
-												Install
-											</Button>
-										</div>
-									</div>
-								</div>
-							</div>
-						</CardContent>
-					</Card>
+					<ASModules />
 				</TabsContent>
 
 				<TabsContent value="sessions" class="mt-6">

@@ -30,7 +30,7 @@ function onClickClose() {
 }
 
 const { selectedChainId } = useNetwork()
-const { selectedAccount } = useAccounts()
+const { selectedAccount, isDeployed } = useAccounts()
 const {
 	userOp,
 	status,
@@ -134,7 +134,7 @@ async function onClickSend() {
 						</div>
 
 						<!-- Deployment Status -->
-						<div v-if="selectedAccount?.initCode" class="flex items-center justify-between text-sm">
+						<div v-if="!isDeployed" class="flex items-center justify-between text-sm">
 							<span class="text-muted-foreground">Status</span>
 							<div class="flex items-center gap-2 text-yellow-500">
 								<span class="size-2 rounded-full bg-yellow-500"></span>

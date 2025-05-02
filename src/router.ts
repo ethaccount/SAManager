@@ -40,7 +40,7 @@ const router = createRouter({
 						{
 							path: '/:chainId/:address',
 							name: 'account-settings',
-							component: () => import('@/views/AccountSettings.vue'),
+							component: () => import('@/views/AccountSettings/AccountSettings.vue'),
 						},
 						// Send
 						{

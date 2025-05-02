@@ -10,6 +10,12 @@ export const useAccountsStore = defineStore(
 	'useAccountsStore',
 	() => {
 		const selectedAccount = ref<ImportedAccount | null>(null)
+
+		const isDeployed = computed(() => {
+			if (!selectedAccount.value) return false
+			return selectedAccount.value.initCode === null
+		})
+
 		const accounts = ref<ImportedAccount[]>([])
 		const hasAccounts = computed(() => accounts.value.length > 0)
 
@@ -115,6 +121,7 @@ export const useAccountsStore = defineStore(
 
 		return {
 			selectedAccount,
+			isDeployed,
 			accounts,
 			hasAccounts,
 			isConnected,
