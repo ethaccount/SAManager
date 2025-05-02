@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { parseError } from '@/lib/error'
 import { useConnectModal } from '@/stores/useConnectModal'
-import { RdnsEnum, shortenAddress, useVueDapp, type RDNS } from '@vue-dapp/core'
+import { useEOAWallet } from '@/stores/useEOAWallet'
+import { RdnsEnum, shortenAddress, type RDNS } from '@vue-dapp/core'
 import { useVueDappModal } from '@vue-dapp/modal'
 
 const emit = defineEmits(['next'])
 
-const { providerDetails, wallet, address, status, connectTo, isConnected, watchWalletChanged } = useVueDapp()
+const { providerDetails, wallet, address, status, connectTo, isEOAWalletConnected, watchWalletChanged } = useEOAWallet()
 
 const providerList = computed(() => {
 	return providerDetails.value.slice().sort((a, b) => {
@@ -81,7 +82,7 @@ function onClickNext() {
 		>
 			<div class="flex flex-col gap-1">
 				<div v-if="status === 'connecting'">Connecting...</div>
-				<div v-if="isConnected" class="flex flex-col gap-1">
+				<div v-if="isEOAWalletConnected" class="flex flex-col gap-1">
 					<div>{{ shortenAddress(address || '') }}</div>
 					<Button class="w-full" @click="onClickNext">Next</Button>
 				</div>

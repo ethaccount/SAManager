@@ -11,7 +11,7 @@ import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
 import { useAccounts } from '@/stores/useAccounts'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useNetwork } from '@/stores/useNetwork'
-import { shortenAddress, useVueDapp } from '@vue-dapp/core'
+import { shortenAddress } from '@vue-dapp/core'
 import { watchImmediate } from '@vueuse/core'
 import { isAddress } from 'ethers'
 import { Power } from 'lucide-vue-next'
@@ -54,7 +54,7 @@ const VALIDATORS: {
 
 const router = useRouter()
 const { client, selectedChainId } = useNetwork()
-const { wallet, address, disconnect } = useVueDapp()
+const { wallet, address, disconnect } = useEOAWallet()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 
 const supportedAccounts = Object.entries(SUPPORTED_ACCOUNTS)

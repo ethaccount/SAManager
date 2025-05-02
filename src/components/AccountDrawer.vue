@@ -6,9 +6,10 @@ import { toRoute } from '@/lib/router'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
 import { useAccounts } from '@/stores/useAccounts'
 import { useRouter } from 'vue-router'
-import { shortenAddress, useVueDapp } from '@vue-dapp/core'
+import { shortenAddress } from '@vue-dapp/core'
 import { Power, X, CircleDot } from 'lucide-vue-next'
 import { VueFinalModal } from 'vue-final-modal'
+import { useEOAWallet } from '@/stores/useEOAWallet'
 
 const emit = defineEmits<{
 	(e: 'close'): void
@@ -19,7 +20,7 @@ function onClickCloseSidebar() {
 }
 
 const { accounts, selectedAccount, isConnected } = useAccounts()
-const { wallet, address, isConnected: isEOAWalletConnected, disconnect } = useVueDapp()
+const { wallet, address, isEOAWalletConnected, disconnect } = useEOAWallet()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 
 function onClickSelectAccount(account: ImportedAccount) {

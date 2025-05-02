@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { parseError } from '@/lib/error'
-import { RdnsEnum, shortenAddress, useVueDapp, type RDNS } from '@vue-dapp/core'
+import { useEOAWallet } from '@/stores/useEOAWallet'
+import { RdnsEnum, shortenAddress, type RDNS } from '@vue-dapp/core'
 import { useVueDappModal } from '@vue-dapp/modal'
 import { computed, ref } from 'vue'
 
 const emit = defineEmits<{ (e: 'confirm', address: string): void }>()
 
-const { providerDetails, wallet, address, status, connectTo, isConnected } = useVueDapp()
+const { providerDetails, wallet, address, status, connectTo, isEOAWalletConnected } = useEOAWallet()
 
 const providerList = computed(() => {
 	return providerDetails.value.slice().sort((a, b) => {
@@ -76,7 +77,7 @@ const onClickConfirm = () => {
 				<span>Connecting to wallet...</span>
 			</div>
 
-			<div v-if="isConnected" class="flex flex-col gap-3 p-4 bg-secondary rounded-[--radius] border">
+			<div v-if="isEOAWalletConnected" class="flex flex-col gap-3 p-4 bg-secondary rounded-[--radius] border">
 				<div class="flex items-center gap-2 text-foreground">
 					<span>✓</span>
 					<span>{{ wallet.providerInfo?.name }} Connected</span>

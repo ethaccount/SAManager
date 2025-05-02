@@ -1,4 +1,4 @@
-import type { EIP1193Provider } from '@vue-dapp/core'
+import { useVueDapp, type EIP1193Provider } from '@vue-dapp/core'
 import { ethers } from 'ethers'
 import { defineStore } from 'pinia'
 
@@ -31,8 +31,10 @@ export const useEOAWalletStore = defineStore('useEOAWalletStore', () => {
 
 export function useEOAWallet() {
 	const store = useEOAWalletStore()
+	const vueDapp = useVueDapp()
 
 	return {
+		...vueDapp,
 		...store,
 		...storeToRefs(store),
 	}
