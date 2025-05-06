@@ -7,10 +7,14 @@ import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
 import { useAccounts } from '@/stores/useAccounts'
 import { useRouter } from 'vue-router'
 import { shortenAddress } from '@vue-dapp/core'
-import { Power, X, CircleDot, Plus } from 'lucide-vue-next'
+import { Power, X, CircleDot, Plus, Download } from 'lucide-vue-next'
 import { VueFinalModal } from 'vue-final-modal'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { usePasskey } from '@/stores/usePasskey'
+import { Tooltip } from '@/components/ui/tooltip'
+import { TooltipContent } from '@/components/ui/tooltip'
+import { TooltipTrigger } from '@/components/ui/tooltip'
+import { useImportAccountModal } from '@/stores/useImportAccountModal'
 
 const emit = defineEmits<{
 	(e: 'close'): void
@@ -43,7 +47,11 @@ function onClickAccountSettings() {
 
 function onClickCreateAccount() {
 	router.push(toRoute('create'))
-	emit('close')
+}
+
+function onClickImportAccount() {
+	const { openModal } = useImportAccountModal()
+	openModal()
 }
 </script>
 
@@ -172,9 +180,29 @@ function onClickCreateAccount() {
 			<div class="h-[calc(100%-200px)]">
 				<div class="flex justify-between items-center mb-3">
 					<h3 class="text-sm font-medium tracking-wider">Accounts</h3>
-					<Button variant="ghost" size="icon" class="h-6 w-6" @click="onClickCreateAccount">
-						<Plus class="h-4 w-4" />
-					</Button>
+					<div class="flex gap-1">
+						<TooltipProvider>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button variant="ghost" size="icon" class="h-6 w-6" @click="onClickImportAccount">
+										<Download class="h-4 w-4" />
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent class="z-[1100]">Import</TooltipContent>
+							</Tooltip>
+						</TooltipProvider>
+
+						<TooltipProvider>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button variant="ghost" size="icon" class="h-6 w-6" @click="onClickCreateAccount">
+										<Plus class="h-4 w-4" />
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent class="z-[1100]">Create</TooltipContent>
+							</Tooltip>
+						</TooltipProvider>
+					</div>
 				</div>
 				<div class="h-full overflow-y-auto space-y-2 pr-3 pt-2">
 					<div

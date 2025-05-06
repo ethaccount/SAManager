@@ -113,6 +113,10 @@ declare module 'vue' {
     TabsTrigger: typeof import('./components/ui/tabs/TabsTrigger.vue')['default']
     Textarea: typeof import('./components/ui/textarea/Textarea.vue')['default']
     ThemeToggle: typeof import('./components/utils/ThemeToggle.vue')['default']
+    Tooltip: typeof import('./components/ui/tooltip/Tooltip.vue')['default']
+    TooltipContent: typeof import('./components/ui/tooltip/TooltipContent.vue')['default']
+    TooltipProvider: typeof import('./components/ui/tooltip/TooltipProvider.vue')['default']
+    TooltipTrigger: typeof import('./components/ui/tooltip/TooltipTrigger.vue')['default']
     TransactionModal: typeof import('./components/TransactionModal/TransactionModal.vue')['default']
     ValidateSmartEOA: typeof import('./components/ImportAccountModal/ValidateSmartEOA.vue')['default']
   }
