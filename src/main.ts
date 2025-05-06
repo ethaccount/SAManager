@@ -18,14 +18,9 @@ app.use(pinia)
 import router from './router'
 app.use(router)
 
-// vue-notification
-import Notifications from '@kyvg/vue3-notification'
-app.use(Notifications)
-
 // vue-final-modal
 import { createVfm } from 'vue-final-modal'
 import 'vue-final-modal/style.css'
-
 const vfm = createVfm()
 app.use(vfm)
 

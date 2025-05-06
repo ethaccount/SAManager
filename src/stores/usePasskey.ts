@@ -1,3 +1,4 @@
+import { PASSKEY_RP_URL } from '@/config'
 import { login, PasskeyCredential, register } from '@/lib/passkey'
 import { defineStore, storeToRefs } from 'pinia'
 
@@ -6,6 +7,8 @@ export const usePasskeyStore = defineStore(
 	() => {
 		const username = ref('')
 		const credential = ref<PasskeyCredential | null>(null)
+
+		const isLogin = computed(() => !!credential.value && !!username.value)
 
 		async function passkeyRegister(_username: string) {
 			const res = await register(_username)
@@ -24,9 +27,37 @@ export const usePasskeyStore = defineStore(
 			credential.value = null
 		}
 
-		const isLogin = computed(() => !!credential.value && !!username.value)
+		const isPasskeyRPHealthy = ref(false)
 
-		return { username, credential, passkeyRegister, passkeyLogin, isLogin, passkeyLogout }
+		onMounted(async () => {
+			await checkPasskeyRPHealth()
+		})
+
+		async function checkPasskeyRPHealth(): Promise<boolean> {
+			try {
+				const baseUrl = new URL(PASSKEY_RP_URL).origin
+				const healthUrl = baseUrl + '/health'
+				console.log('checking passkey rp health on', healthUrl)
+				const response = await fetch(healthUrl)
+				const data = await response.json()
+				isPasskeyRPHealthy.value = data.status === 'ok'
+				return isPasskeyRPHealthy.value
+			} catch (error: unknown) {
+				isPasskeyRPHealthy.value = false
+				return false
+			}
+		}
+
+		return {
+			username,
+			credential,
+			passkeyRegister,
+			passkeyLogin,
+			isLogin,
+			passkeyLogout,
+			isPasskeyRPHealthy,
+			checkPasskeyRPHealth,
+		}
 	},
 	{
 		persist: {

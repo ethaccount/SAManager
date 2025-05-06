@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card'
 import { IAMStageKey, useImportAccountModal } from '@/stores/useImportAccountModal'
 import { AccountCategory } from '@/lib/account'
 import { Code, Key, LinkIcon, Wallet, ChevronRight } from 'lucide-vue-next'
+import { usePasskey } from '@/stores/usePasskey'
 
 type AccountOption = {
 	title: string
@@ -12,36 +13,39 @@ type AccountOption = {
 	type: AccountCategory
 }
 
-const accountOptions: AccountOption[] = [
-	{
-		title: 'Passkey',
-		description: 'Import an account using your passkey for this site',
-		icon: Key,
-		nextStageKey: IAMStageKey.CONNECT_PASSKEY,
-		type: 'Smart Account',
-	},
-	{
-		title: 'EOA-Owned',
-		description: 'Import an account controlled by an EOA in a wallet',
-		icon: Wallet,
-		nextStageKey: IAMStageKey.CONNECT_EOA_WALLET,
-		type: 'Smart Account',
-	},
-	{
-		title: 'Smart EOA',
-		description: 'Import an EIP-7702 upgraded EOA that has smart account capabilities',
-		icon: Code,
-		nextStageKey: IAMStageKey.CONNECT_SMART_EOA,
-		type: 'Smart EOA',
-	},
-	{
-		title: 'Address',
-		description: 'Import an account by entering your account address',
-		icon: LinkIcon,
-		nextStageKey: null,
-		type: 'Smart Account',
-	},
-]
+const accountOptions = computed<AccountOption[]>(() => {
+	const { isPasskeyRPHealthy } = usePasskey()
+	return [
+		{
+			title: 'Passkey',
+			description: 'Import an account using your passkey for this site',
+			icon: Key,
+			nextStageKey: isPasskeyRPHealthy.value ? IAMStageKey.CONNECT_PASSKEY : null,
+			type: 'Smart Account',
+		},
+		{
+			title: 'EOA-Owned',
+			description: 'Import an account controlled by an EOA in a wallet',
+			icon: Wallet,
+			nextStageKey: IAMStageKey.CONNECT_EOA_WALLET,
+			type: 'Smart Account',
+		},
+		{
+			title: 'Smart EOA',
+			description: 'Import an EIP-7702 upgraded EOA that has smart account capabilities',
+			icon: Code,
+			nextStageKey: IAMStageKey.CONNECT_SMART_EOA,
+			type: 'Smart EOA',
+		},
+		{
+			title: 'Address',
+			description: 'Import an account by entering your account address',
+			icon: LinkIcon,
+			nextStageKey: null,
+			type: 'Smart Account',
+		},
+	]
+})
 
 const onClickAccountOption = (option: AccountOption) => {
 	const { goNextStage } = useImportAccountModal()

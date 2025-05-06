@@ -12,4 +12,8 @@ const route = useRoute()
 	</main>
 </template>
 
-<style lang="css" scoped></style>
+<style lang="css" scoped>
+.container {
+	@apply mx-auto w-full max-w-[1200px] px-4;
+}
+</style>
