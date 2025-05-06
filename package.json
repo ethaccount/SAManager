@@ -38,20 +38,27 @@
 		"zod": "^3.24.1"
 	},
 	"devDependencies": {
+		"@babel/helpers": "^7.27.1",
 		"@simplewebauthn/typescript-types": "^8.3.4",
 		"@types/node": "^22.10.6",
 		"@vitejs/plugin-vue": "^5.2.1",
 		"autoprefixer": "10.4.14",
-		"postcss": "8.4.27",
+		"postcss": "8.5.3",
 		"tailwindcss": "3.3.3",
 		"tailwindcss-animate": "^1.0.7",
 		"typescript": "^5.7.2",
 		"unplugin-auto-import": "0.16.6",
 		"unplugin-vue-components": "0.25.1",
-		"vite": "^6.3.2",
+		"vite": "^6.3.5",
 		"vite-bundle-analyzer": "^0.18.1",
 		"vite-plugin-node-polyfills": "^0.23.0",
 		"vue-tsc": "^2.2.8"
+	},
+	"pnpm": {
+		"overrides": {
+			"@babel/helpers": "7.27.1",
+			"postcss": "8.5.3"
+		}
 	},
 	"packageManager": "pnpm@9.14.4+sha512.c8180b3fbe4e4bca02c94234717896b5529740a6cbadf19fa78254270403ea2f27d4e1d46a08a0f56c89b63dc8ebfd3ee53326da720273794e6200fcf0d184ab"
 }
