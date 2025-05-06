@@ -17,7 +17,7 @@ const accountOptions: AccountOption[] = [
 		title: 'Passkey',
 		description: 'Import an account using your passkey for this site',
 		icon: Key,
-		nextStageKey: null,
+		nextStageKey: IAMStageKey.CONNECT_PASSKEY,
 		type: 'Smart Account',
 	},
 	{

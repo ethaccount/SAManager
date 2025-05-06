@@ -12,6 +12,7 @@ import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
 import { useAccounts } from '@/stores/useAccounts'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useNetwork } from '@/stores/useNetwork'
+import { usePasskey } from '@/stores/usePasskey'
 import { shortenAddress } from '@vue-dapp/core'
 import { watchImmediate } from '@vueuse/core'
 import { getBytes, hexlify, isAddress, toBeHex } from 'ethers'
@@ -58,6 +59,8 @@ const router = useRouter()
 const { client, selectedChainId } = useNetwork()
 const { wallet, address, disconnect } = useEOAWallet()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
+const { isEOAWalletConnected } = useEOAWallet()
+const { username, isLogin, passkeyLogout } = usePasskey()
 
 const supportedAccounts = Object.entries(SUPPORTED_ACCOUNTS)
 	.filter(([_, data]) => data.isModular)
@@ -82,7 +85,7 @@ const computedSalt = computed(() => {
 	return toBytes32(BigInt(customSalt.value))
 })
 
-const { signer, isEOAWalletConnected } = useEOAWallet()
+const { signer } = useEOAWallet()
 
 const isSignerConnected = computed(() => {
 	if (!selectedValidator.value) return false
@@ -365,9 +368,22 @@ watchImmediate([isSignerConnected, selectedValidator, selectedAccountType, compu
 				</div>
 
 				<div v-if="selectedValidator === 'WebAuthn'">
-					<div class="flex justify-between items-center p-3 border rounded-lg">
-						<span>Passkey</span>
-						<Button variant="outline" size="sm" @click="openConnectPasskeyBoth">Connect</Button>
+					<div class="flex flex-col p-3 border rounded-lg" :class="{ 'bg-secondary': isLogin }">
+						<div v-if="!isLogin" class="flex justify-between items-center">
+							<span>Passkey</span>
+							<Button variant="outline" size="sm" @click="openConnectPasskeyBoth">Connect</Button>
+						</div>
+						<div v-if="isLogin" class="">
+							<div class="flex justify-between items-center gap-2 text-sm text-muted-foreground">
+								<div>Passkey Connected</div>
+								<Button variant="ghost" size="icon" @click="passkeyLogout">
+									<Power class="w-4 h-4" />
+								</Button>
+							</div>
+							<div class="text-xs">
+								{{ username }}
+							</div>
+						</div>
 					</div>
 				</div>
 

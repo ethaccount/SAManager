@@ -10,6 +10,7 @@ import { shortenAddress } from '@vue-dapp/core'
 import { Power, X, CircleDot, Plus } from 'lucide-vue-next'
 import { VueFinalModal } from 'vue-final-modal'
 import { useEOAWallet } from '@/stores/useEOAWallet'
+import { usePasskey } from '@/stores/usePasskey'
 
 const emit = defineEmits<{
 	(e: 'close'): void
@@ -21,6 +22,7 @@ function onClickCloseSidebar() {
 
 const { accounts, selectedAccount, isConnected } = useAccounts()
 const { wallet, address, isEOAWalletConnected, disconnect } = useEOAWallet()
+const { username, isLogin, passkeyLogout } = usePasskey()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 
 function onClickSelectAccount(account: ImportedAccount) {
@@ -125,9 +127,22 @@ function onClickCreateAccount() {
 							</div>
 						</div>
 					</div>
-					<div class="flex justify-between items-center p-3 border rounded-lg">
-						<span>Passkey</span>
-						<Button variant="outline" size="sm" @click="openConnectPasskeyBoth">Connect</Button>
+					<div class="flex flex-col p-3 border rounded-lg" :class="{ 'bg-secondary': isLogin }">
+						<div v-if="!isLogin" class="flex justify-between items-center">
+							<span>Passkey</span>
+							<Button variant="outline" size="sm" @click="openConnectPasskeyBoth">Connect</Button>
+						</div>
+						<div v-if="isLogin" class="">
+							<div class="flex justify-between items-center gap-2 text-sm text-muted-foreground">
+								<div>Passkey Connected</div>
+								<Button variant="ghost" size="icon" @click="passkeyLogout">
+									<Power class="w-4 h-4" />
+								</Button>
+							</div>
+							<div class="text-xs">
+								{{ username }}
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>

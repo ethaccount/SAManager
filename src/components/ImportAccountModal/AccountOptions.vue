@@ -14,6 +14,7 @@ import { toast } from 'vue-sonner'
 interface Props {
 	mode: 'eoa' | 'passkey'
 	eoaAddress?: () => string
+	authenticatorIdHash?: () => string
 }
 
 const props = defineProps<Props>()
@@ -56,8 +57,8 @@ onMounted(async () => {
 			if (!props.eoaAddress?.()) throw new Error('EOA mode requires eoaAddress')
 			addresses = await getAccountsByECDSAValidator(props.eoaAddress())
 		} else {
-			if (!credential.value) throw new Error('No passkey credential found')
-			addresses = await getAccountsByWebAuthnValidator(credential.value.authenticatorIdHash)
+			if (!props.authenticatorIdHash?.()) throw new Error('Passkey mode requires authenticatorIdHash')
+			addresses = await getAccountsByWebAuthnValidator(props.authenticatorIdHash())
 		}
 
 		accounts.value = addresses.map(address => ({

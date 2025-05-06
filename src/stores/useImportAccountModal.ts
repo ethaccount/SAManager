@@ -4,6 +4,7 @@ import ImportAccountModal from '@/components/ImportAccountModal/ImportAccountMod
 import ImportOptions from '@/components/ImportAccountModal/ImportOptions.vue'
 import ValidateSmartEOA from '@/components/ImportAccountModal/ValidateSmartEOA.vue'
 import ConnectEOAWallet from '@/components/signer/ConnectEOAWallet.vue'
+import ConnectPasskey from '@/components/signer/ConnectPasskey.vue'
 import { AccountCategory, AccountId, ValidationOption } from '@/lib/account'
 import { defineStore, storeToRefs } from 'pinia'
 import { useModal } from 'vue-final-modal'
@@ -13,9 +14,9 @@ import { useModal } from 'vue-final-modal'
 export enum IAMStageKey {
 	INITIAL = 'INITIAL',
 
-	// CONNECT_PASSKEY,
-	// PASSKEY_ACCOUNT_OPTIONS,
-	// CONFIRM_IMPORT_BY_PASSKEY,
+	CONNECT_PASSKEY = 'CONNECT_PASSKEY',
+	PASSKEY_ACCOUNT_OPTIONS = 'PASSKEY_ACCOUNT_OPTIONS',
+	CONFIRM_IMPORT_BY_PASSKEY = 'CONFIRM_IMPORT_BY_PASSKEY',
 
 	CONNECT_EOA_WALLET = 'CONNECT_EOA_WALLET',
 	EOA_ACCOUNT_OPTIONS = 'EOA_ACCOUNT_OPTIONS',
@@ -59,8 +60,59 @@ export type IAMStage<T extends Component = Component> = {
 const IAM_CONFIG: Record<IAMStageKey, IAMStage<any>> = {
 	[IAMStageKey.INITIAL]: {
 		component: ImportOptions,
-		next: [IAMStageKey.CONNECT_EOA_WALLET, IAMStageKey.CONNECT_SMART_EOA],
+		next: [IAMStageKey.CONNECT_PASSKEY, IAMStageKey.CONNECT_EOA_WALLET, IAMStageKey.CONNECT_SMART_EOA],
 		title: 'Import Account',
+	},
+
+	// ========================================== Passkey ==========================================
+
+	[IAMStageKey.CONNECT_PASSKEY]: {
+		component: ConnectPasskey,
+		next: [IAMStageKey.PASSKEY_ACCOUNT_OPTIONS],
+		title: 'Connect Passkey',
+		attrs: {
+			onConfirm: (authenticatorIdHash: string) => {
+				useImportAccountModal().updateFormData({
+					vOptions: [{ type: 'Passkey', publicKey: authenticatorIdHash }],
+				})
+				useImportAccountModal().goNextStage(IAMStageKey.PASSKEY_ACCOUNT_OPTIONS)
+			},
+		},
+		requiredFields: ['type'],
+	},
+	[IAMStageKey.PASSKEY_ACCOUNT_OPTIONS]: {
+		component: AccountOptions,
+		next: [IAMStageKey.CONFIRM_IMPORT_BY_PASSKEY],
+		title: 'Select an Account',
+		attrs: {
+			mode: 'passkey',
+			authenticatorIdHash: () => {
+				const vOption = useImportAccountModalStore().formData.vOptions?.find(v => v.type === 'Passkey')
+				if (!vOption) throw new Error('PASSKEY_ACCOUNT_OPTIONS: No passkey authenticatorIdHash found')
+				return vOption.publicKey
+			},
+			onAccountSelected: (account: { address: string; accountId: AccountId }) => {
+				useImportAccountModal().updateFormData({
+					address: account.address,
+					accountId: account.accountId,
+				})
+				console.log(useImportAccountModalStore().formData)
+				useImportAccountModal().goNextStage(IAMStageKey.CONFIRM_IMPORT_BY_PASSKEY)
+			},
+		},
+		requiredFields: ['vOptions'],
+	},
+	[IAMStageKey.CONFIRM_IMPORT_BY_PASSKEY]: {
+		component: ConfirmImport,
+		next: [],
+		title: 'Confirm Import',
+		attrs: {
+			address: () => useImportAccountModalStore().formData.address,
+			accountId: () => useImportAccountModalStore().formData.accountId,
+			type: () => useImportAccountModalStore().formData.type,
+			vOptions: () => useImportAccountModalStore().formData.vOptions,
+		},
+		requiredFields: ['accountId', 'address'],
 	},
 
 	// ========================================== EOA-Owned ==========================================

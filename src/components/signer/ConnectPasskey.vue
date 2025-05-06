@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { usePasskey } from '@/stores/usePasskey'
+import { Loader2 } from 'lucide-vue-next'
 
 type PasskeyMode = 'register' | 'login' | 'both'
 
@@ -11,7 +12,7 @@ const emit = defineEmits(['confirm'])
 
 const username = ref('test-user')
 
-const { passkeyRegister, passkeyLogin, isLogin } = usePasskey()
+const { passkeyRegister, passkeyLogin, isLogin, credential } = usePasskey()
 
 const loadingRegister = ref(false)
 const loadingLogin = ref(false)
@@ -72,7 +73,8 @@ async function onClickLogin() {
 }
 
 function onClickConfirm() {
-	emit('confirm')
+	if (!credential.value) throw new Error('No passkey credential found')
+	emit('confirm', credential.value.authenticatorIdHash)
 }
 
 function onClickLogout() {
@@ -102,7 +104,7 @@ function onClickLogout() {
 					:class="{ 'opacity-50 cursor-not-allowed': loadingRegister }"
 					@click="onClickRegister"
 				>
-					<span v-if="loadingRegister" class="animate-spin mr-2">⟳</span>
+					<Loader2 v-if="loadingRegister" class="mr-2 h-4 w-4 animate-spin" />
 					{{ effectiveMode === 'both' ? 'Register with Passkey' : 'Continue with Passkey' }}
 				</Button>
 
@@ -124,7 +126,7 @@ function onClickLogout() {
 					:class="{ 'opacity-50 cursor-not-allowed': loadingLogin }"
 					@click="onClickLogin"
 				>
-					<span v-if="loadingLogin" class="animate-spin mr-2">⟳</span>
+					<Loader2 v-if="loadingLogin" class="mr-2 h-4 w-4 animate-spin" />
 					{{ effectiveMode === 'both' ? 'Login with Passkey' : 'Continue with Passkey' }}
 				</Button>
 			</div>
