@@ -1,13 +1,17 @@
 <script setup lang="ts">
-import { VueFinalModal } from 'vue-final-modal'
-import { useErrorModalStore } from '@/stores/useErrorModal'
 import { X } from 'lucide-vue-next'
+import { VueFinalModal } from 'vue-final-modal'
 
-const errorModalStore = useErrorModalStore()
-const latestError = computed(() => errorModalStore.errorLogs[errorModalStore.errorLogs.length - 1])
+const props = defineProps<{
+	message: string
+}>()
+
+const emit = defineEmits<{
+	close: []
+}>()
 
 function onClickClose() {
-	errorModalStore.modal.close()
+	emit('close')
 }
 </script>
 
@@ -35,7 +39,7 @@ function onClickClose() {
 		</div>
 
 		<div>
-			<div>{{ latestError.message }}</div>
+			<div>{{ message }}</div>
 		</div>
 	</VueFinalModal>
 </template>

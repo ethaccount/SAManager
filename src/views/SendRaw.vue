@@ -7,8 +7,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { X, Plus } from 'lucide-vue-next'
 import { useSA } from '@/stores/useSA'
 import { parseEther } from 'ethers'
-import { notify } from '@kyvg/vue3-notification'
 import { Textarea } from '@/components/ui/textarea'
+import { useTransactionModal } from '@/components/TransactionModal/useTransactionModal'
+import { useAccounts } from '@/stores/useAccounts'
 
 type Execution = {
 	to: string
@@ -33,72 +34,33 @@ const addExecution = () => {
 }
 
 const removeExecution = (index: number) => {
-	executions.value.splice(index, 1)
+	if (executions.value.length > 1) {
+		executions.value.splice(index, 1)
+	}
 }
 
 const isValidExecutions = computed(() => {
 	return executions.value.every(exec => exec.to.trim() !== '' && exec.value.trim() !== '' && exec.data.trim() !== '')
 })
 
+const { isConnected } = useAccounts()
+
+const reviewDisabled = computed(() => {
+	return !isConnected.value || !isValidExecutions.value || executions.value.length === 0
+})
+
+const reviewButtonText = computed(() => {
+	return isConnected.value ? 'Review Executions' : 'Your account must be connected to review executions'
+})
+
 async function onClickSend() {
-	const { smartAccount } = useSA()
-	if (!smartAccount.value) {
-		console.warn('No smart account')
-		return
-	}
-
-	const execs: Execution[] = executions.value.map(e => ({
-		to: e.to,
-		value: parseEther(e.value).toString(),
-		data: e.data,
-	}))
-
-	try {
-		loading.value = true
-		const op = await smartAccount.value.send(
-			execs.map(e => ({
-				to: e.to,
-				value: BigInt(e.value),
-				data: e.data,
-			})),
-		)
-		console.info(`opHash: ${op.hash}`)
-
-		const waitingToast = Date.now()
-		notify({
-			id: waitingToast,
-			title: 'Waiting for User Operation',
-			text: `op hash: ${op.hash}`,
-			type: 'info',
-			duration: -1,
-		})
-
-		const receipt = await op.wait()
-
-		if (!receipt.success) {
-			throw new Error(`UserOp is unsuccessful: ${JSON.stringify(receipt)}`)
-		}
-
-		notify.close(waitingToast)
-
-		notify({
-			title: 'User Operation Successful',
-			text: `op hash: ${op.hash}`,
-			type: 'success',
-		})
-	} catch (e: any) {
-		console.error(e)
-		error.value = e.message
-
-		notify({
-			title: 'User Operation Failed',
-			text: e.message,
-			type: 'error',
-			duration: 5000,
-		})
-	} finally {
-		loading.value = false
-	}
+	useTransactionModal().openModal(
+		executions.value.map(exec => ({
+			to: exec.to,
+			value: BigInt(parseEther(exec.value)),
+			data: exec.data,
+		})),
+	)
 }
 </script>
 
@@ -111,9 +73,9 @@ async function onClickSend() {
 					size="lg"
 					:loading="loading"
 					@click="onClickSend"
-					:disabled="!isValidExecutions"
+					:disabled="reviewDisabled"
 				>
-					Send
+					{{ reviewButtonText }}
 				</Button>
 			</div>
 
