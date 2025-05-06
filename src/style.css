@@ -75,3 +75,10 @@
 		@apply !ring-1 !ring-primary/50;
 	}
 }
+
+/* ==================================== Common styles ==================================== */
+
+/* ConnectEOAWallet, TransactionModal */
+.error-section {
+	@apply mt-2 p-3 bg-destructive/10 text-destructive rounded-[--radius] text-sm;
+}

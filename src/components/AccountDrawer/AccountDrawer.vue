@@ -106,40 +106,61 @@ function onClickCreateAccount() {
 				</Button>
 			</div>
 
-			<!-- Sign-in Options Section -->
-			<div class="mb-6">
-				<h3 class="text-sm font-semibold tracking-wider mb-3">Signers</h3>
+			<!-- Signers -->
+			<div class="mb-4">
+				<h3 class="text-sm font-medium tracking-wider mb-2">Signers</h3>
 				<div class="space-y-2">
-					<div class="flex flex-col p-3 border rounded-lg" :class="{ 'bg-secondary': isEOAWalletConnected }">
+					<div
+						class="flex flex-col p-2.5 border rounded-lg transition-all"
+						:class="{ 'bg-secondary/50 border-primary/20': isEOAWalletConnected }"
+					>
 						<div v-if="!isEOAWalletConnected" class="flex justify-between items-center">
-							<span>EOA Wallet</span>
-							<Button variant="outline" size="sm" @click="openConnectEOAWallet"> Connect </Button>
+							<span class="text-sm">EOA Wallet</span>
+							<Button variant="outline" size="sm" class="h-7 text-xs px-2.5" @click="openConnectEOAWallet"
+								>Connect</Button
+							>
 						</div>
-						<div v-if="isEOAWalletConnected" class="">
-							<div class="flex justify-between items-center gap-2 text-sm text-muted-foreground">
-								<div>{{ wallet.providerInfo?.name }} Connected</div>
-								<Button variant="ghost" size="icon" @click="disconnect">
-									<Power class="w-4 h-4" />
+						<div v-if="isEOAWalletConnected" class="space-y-1">
+							<div class="flex justify-between items-center">
+								<div class="flex items-center gap-1.5 text-xs">
+									<CircleDot class="w-2.5 h-2.5 text-green-500" />
+									<span>{{ wallet.providerInfo?.name }} Connected</span>
+								</div>
+								<Button variant="ghost" size="icon" class="h-6 w-6" @click="disconnect">
+									<Power class="w-3.5 h-3.5" />
 								</Button>
 							</div>
-							<div class="text-xs">
+							<div class="text-[11px] text-muted-foreground font-mono">
 								{{ shortenAddress(address || '') }}
 							</div>
 						</div>
 					</div>
-					<div class="flex flex-col p-3 border rounded-lg" :class="{ 'bg-secondary': isLogin }">
+
+					<div
+						class="flex flex-col p-2.5 border rounded-lg transition-all"
+						:class="{ 'bg-secondary/50 border-primary/20': isLogin }"
+					>
 						<div v-if="!isLogin" class="flex justify-between items-center">
-							<span>Passkey</span>
-							<Button variant="outline" size="sm" @click="openConnectPasskeyBoth">Connect</Button>
+							<span class="text-sm">Passkey</span>
+							<Button
+								variant="outline"
+								size="sm"
+								class="h-7 text-xs px-2.5"
+								@click="openConnectPasskeyBoth"
+								>Connect</Button
+							>
 						</div>
-						<div v-if="isLogin" class="">
-							<div class="flex justify-between items-center gap-2 text-sm text-muted-foreground">
-								<div>Passkey Connected</div>
-								<Button variant="ghost" size="icon" @click="passkeyLogout">
-									<Power class="w-4 h-4" />
+						<div v-if="isLogin" class="space-y-1">
+							<div class="flex justify-between items-center">
+								<div class="flex items-center gap-1.5 text-xs">
+									<CircleDot class="w-2.5 h-2.5 text-green-500" />
+									<span>Passkey Connected</span>
+								</div>
+								<Button variant="ghost" size="icon" class="h-6 w-6" @click="passkeyLogout">
+									<Power class="w-3.5 h-3.5" />
 								</Button>
 							</div>
-							<div class="text-xs">
+							<div class="text-[11px] text-muted-foreground">
 								{{ username }}
 							</div>
 						</div>
@@ -150,7 +171,7 @@ function onClickCreateAccount() {
 			<!-- Account List -->
 			<div class="h-[calc(100%-200px)]">
 				<div class="flex justify-between items-center mb-3">
-					<h3 class="text-sm font-semibold tracking-wider">Accounts</h3>
+					<h3 class="text-sm font-medium tracking-wider">Accounts</h3>
 					<Button variant="ghost" size="icon" class="h-6 w-6" @click="onClickCreateAccount">
 						<Plus class="h-4 w-4" />
 					</Button>

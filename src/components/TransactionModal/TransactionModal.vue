@@ -271,7 +271,7 @@ async function onClickSend() {
 			<!-- Footer -->
 			<div class="mt-5 space-y-3">
 				<!-- Error message display -->
-				<div v-if="error" class="p-3 bg-destructive/20 text-destructive text-sm rounded-lg">
+				<div v-if="error" class="error-section">
 					{{ error }}
 				</div>
 

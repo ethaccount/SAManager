@@ -29,7 +29,7 @@ const mode = useColorMode()
 
 	<ThemeToggle class="fixed bottom-4 left-4" />
 
-	<VueDappModal :dark="mode === 'dark'" />
+	<VueDappModal :dark="mode === 'dark'" autoConnect />
 	<ModalsContainer />
 	<Toaster :theme="mode === 'dark' ? 'light' : 'dark'" position="top-center" closeButton />
 </template>

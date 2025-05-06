@@ -58,6 +58,7 @@ declare module 'vue' {
     CreateSignerChoice: typeof import('./components/connect-modal/CreateSignerChoice.vue')['default']
     EOAAccountChoice: typeof import('./components/connect-modal/EOAAccountChoice.vue')['default']
     EOAConnect: typeof import('./components/connect-modal/EOAConnect.vue')['default']
+    ErrorMessage: typeof import('./components/ErrorMessage.vue')['default']
     ErrorModal: typeof import('./components/ErrorModal.vue')['default']
     FooterMeta: typeof import('./components/FooterMeta.vue')['default']
     FormControl: typeof import('./components/ui/form/FormControl.vue')['default']

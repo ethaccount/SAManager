@@ -3,7 +3,7 @@ import { parseError } from '@/lib/error'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { RdnsEnum, shortenAddress, type RDNS } from '@vue-dapp/core'
 import { useVueDappModal } from '@vue-dapp/modal'
-import { computed, ref } from 'vue'
+import { Loader2 } from 'lucide-vue-next'
 
 const emit = defineEmits<{ (e: 'confirm', address: string): void }>()
 
@@ -51,6 +51,7 @@ const onClickConfirm = () => {
 
 <template>
 	<div class="flex flex-col gap-4 p-4 w-full mx-auto">
+		<!-- Wallet Provider Buttons -->
 		<div class="flex flex-col gap-3">
 			<div class="grid gap-2">
 				<Button
@@ -73,7 +74,7 @@ const onClickConfirm = () => {
 		<!-- Status Section -->
 		<div class="min-h-[60px]">
 			<div v-if="status === 'connecting'" class="flex items-center justify-center gap-2 text-muted-foreground">
-				<span class="animate-spin">⟳</span>
+				<Loader2 class="w-4 h-4 animate-spin" />
 				<span>Connecting to wallet...</span>
 			</div>
 
@@ -92,8 +93,8 @@ const onClickConfirm = () => {
 				</div>
 			</div>
 
-			<p v-if="connectError" class="mt-2 p-3 bg-destructive/10 text-destructive rounded-[--radius] text-sm">
-				⚠️ {{ connectError }}
+			<p v-if="connectError" class="error-section">
+				{{ connectError }}
 			</p>
 		</div>
 	</div>
