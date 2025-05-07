@@ -1,12 +1,24 @@
 import { PASSKEY_RP_URL } from '@/config'
-import { login, PasskeyCredential, register } from '@/lib/passkey'
-import { defineStore, storeToRefs } from 'pinia'
+import {
+	deserializePasskeyCredential,
+	login,
+	PasskeyCredential,
+	register,
+	serializePasskeyCredential,
+} from '@/lib/passkey'
+import { defineStore, StateTree, storeToRefs } from 'pinia'
 
 export const usePasskeyStore = defineStore(
 	'usePasskeyStore',
 	() => {
 		const username = ref('')
 		const credential = ref<PasskeyCredential | null>(null)
+		const serializedCredential = computed(() => {
+			if (!credential.value) {
+				return null
+			}
+			return serializePasskeyCredential(credential.value)
+		})
 
 		const isLogin = computed(() => !!credential.value && !!username.value)
 
@@ -51,6 +63,7 @@ export const usePasskeyStore = defineStore(
 		return {
 			username,
 			credential,
+			serializedCredential,
 			passkeyRegister,
 			passkeyLogin,
 			isLogin,
@@ -63,18 +76,11 @@ export const usePasskeyStore = defineStore(
 		persist: {
 			pick: ['username', 'credential'],
 			serializer: {
-				serialize: value => {
-					// Convert BigInt to string during serialization
-					return JSON.stringify(value, (_, v) => (typeof v === 'bigint' ? v.toString() + 'n' : v))
+				serialize: (data: StateTree) => {
+					return serializePasskeyCredential(data as PasskeyCredential)
 				},
-				deserialize: value => {
-					// Convert string back to BigInt during deserialization
-					return JSON.parse(value, (_, v) => {
-						if (typeof v === 'string' && /^\d+n$/.test(v)) {
-							return BigInt(v.slice(0, -1))
-						}
-						return v
-					})
+				deserialize: (data: string) => {
+					return deserializePasskeyCredential(data)
 				},
 			},
 		},

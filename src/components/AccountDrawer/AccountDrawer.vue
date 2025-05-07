@@ -118,7 +118,7 @@ function onClickImportAccount() {
 			</div>
 
 			<!-- Account Settings Section -->
-			<div class="mb-6">
+			<div class="mb-6" v-if="selectedAccount">
 				<Button
 					:disabled="!selectedAccount"
 					variant="outline"

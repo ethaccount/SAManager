@@ -6,9 +6,12 @@ import ValidateSmartEOA from '@/components/ImportAccountModal/ValidateSmartEOA.v
 import ConnectEOAWallet from '@/components/signer/ConnectEOAWallet.vue'
 import ConnectPasskey from '@/components/signer/ConnectPasskey.vue'
 import { AccountCategory, AccountId } from '@/lib/account'
-import { ValidationIdentifier } from '@/stores/validation/validation'
+import { createEOAOwnedValidation, createPasskeyValidation, ValidationIdentifier } from '@/stores/validation/validation'
+import { usePageLeave } from '@vueuse/core'
 import { defineStore, storeToRefs } from 'pinia'
 import { useModal } from 'vue-final-modal'
+import { usePasskey } from './usePasskey'
+import { deserializePasskeyCredential } from '@/lib/passkey'
 
 // IAM: Import Account Modal
 
@@ -72,9 +75,11 @@ const IAM_CONFIG: Record<IAMStageKey, IAMStage<any>> = {
 		next: [IAMStageKey.PASSKEY_ACCOUNT_OPTIONS],
 		title: 'Connect Passkey',
 		attrs: {
-			onConfirm: (authenticatorIdHash: string) => {
+			onConfirm: () => {
+				const { credential } = usePasskey()
+				if (!credential.value) throw new Error('IAMStageKey.CONNECT_PASSKEY: No passkey credential found')
 				useImportAccountModal().updateFormData({
-					vOptions: [{ type: 'Passkey', identifier: authenticatorIdHash }],
+					vOptions: [createPasskeyValidation(credential.value)],
 				})
 				useImportAccountModal().goNextStage(IAMStageKey.PASSKEY_ACCOUNT_OPTIONS)
 			},
@@ -89,8 +94,10 @@ const IAM_CONFIG: Record<IAMStageKey, IAMStage<any>> = {
 			mode: 'passkey',
 			authenticatorIdHash: () => {
 				const vOption = useImportAccountModalStore().formData.vOptions?.find(v => v.type === 'Passkey')
-				if (!vOption) throw new Error('PASSKEY_ACCOUNT_OPTIONS: No passkey authenticatorIdHash found')
-				return vOption.identifier
+				if (!vOption)
+					throw new Error('IAMStageKey.PASSKEY_ACCOUNT_OPTIONS: No passkey authenticatorIdHash found')
+				const credential = deserializePasskeyCredential(vOption.identifier)
+				return credential.authenticatorIdHash
 			},
 			onAccountSelected: (account: { address: string; accountId: AccountId }) => {
 				useImportAccountModal().updateFormData({
@@ -124,7 +131,7 @@ const IAM_CONFIG: Record<IAMStageKey, IAMStage<any>> = {
 		title: 'Connect EOA Wallet',
 		attrs: {
 			onConfirm: (address: string) => {
-				useImportAccountModal().updateFormData({ vOptions: [{ type: 'EOA-Owned', identifier: address }] })
+				useImportAccountModal().updateFormData({ vOptions: [createEOAOwnedValidation(address)] })
 				useImportAccountModal().goNextStage(IAMStageKey.EOA_ACCOUNT_OPTIONS)
 			},
 		},

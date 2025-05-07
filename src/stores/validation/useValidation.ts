@@ -1,52 +1,18 @@
 import { signMessage } from '@/lib/passkey'
 import { defineStore, storeToRefs } from 'pinia'
-import { EOAValidatorModule, ERC7579Validator, isSameAddress, WebAuthnValidatorModule } from 'sendop'
+import { EOAValidatorModule, ERC7579Validator, WebAuthnValidatorModule } from 'sendop'
 import { useAccounts } from '../useAccounts'
 import { useEOAWallet } from '../useEOAWallet'
 import { usePasskey } from '../usePasskey'
 import { useSigner } from './useSigner'
-import { SUPPORTED_VALIDATION_OPTIONS } from './validation'
+import { checkValidationAvailability, SUPPORTED_VALIDATION_OPTIONS } from './validation'
 
 export const useValidationStore = defineStore('useValidationStore', () => {
 	const { selectedAccount } = useAccounts()
-	const { selectedSigner } = useSigner()
 
 	const isAccountConnected = computed(() => {
 		if (!selectedAccount.value) return false
-		if (!selectedSigner.value) return false
-
-		// if Smart EOA, check if the signer is EOA-Owned
-		if (selectedAccount.value.category === 'Smart EOA') {
-			if (selectedSigner.value.type === 'EOA-Owned') {
-				if (selectedSigner.value.identifier) {
-					if (isSameAddress(selectedSigner.value.identifier, selectedAccount.value.address)) {
-						return true
-					}
-				}
-			}
-		}
-
-		const vOptions = selectedAccount.value.vOptions
-		for (const vOption of vOptions) {
-			switch (vOption.type) {
-				case 'EOA-Owned':
-					if (selectedSigner.value.type === 'EOA-Owned') {
-						if (isSameAddress(selectedSigner.value.identifier, vOption.identifier)) {
-							return true
-						}
-					}
-					break
-				case 'Passkey':
-					if (selectedSigner.value.type === 'Passkey') {
-						if (selectedSigner.value.identifier === vOption.identifier) {
-							return true
-						}
-					}
-					break
-			}
-		}
-
-		return false
+		return checkValidationAvailability(selectedAccount.value.vOptions)
 	})
 
 	const erc7579Validator = computed<ERC7579Validator | null>(() => {

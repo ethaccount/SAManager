@@ -16,6 +16,8 @@ const { passkeyRegister, passkeyLogin, isLogin, credential, isPasskeyRPHealthy }
 
 const loadingRegister = ref(false)
 const loadingLogin = ref(false)
+const loadingRegisterOrLogin = computed(() => loadingRegister.value || loadingLogin.value)
+
 const error = ref('')
 
 // Compute effective mode, fallback to legacy prop
@@ -73,8 +75,8 @@ async function onClickLogin() {
 }
 
 function onClickConfirm() {
-	if (!credential.value) throw new Error('No passkey credential found')
-	emit('confirm', credential.value.authenticatorIdHash)
+	if (!credential.value) throw new Error('onClickConfirm: No passkey credential found')
+	emit('confirm')
 }
 
 function onClickLogout() {
@@ -105,8 +107,8 @@ function onClickLogout() {
 				<Button
 					v-if="showRegister"
 					class="auth-button"
-					:disabled="loadingRegister || !isPasskeyRPHealthy"
-					:class="{ 'opacity-50 cursor-not-allowed': loadingRegister || !isPasskeyRPHealthy }"
+					:disabled="loadingRegisterOrLogin || !isPasskeyRPHealthy"
+					:class="{ 'opacity-50 cursor-not-allowed': loadingRegisterOrLogin || !isPasskeyRPHealthy }"
 					@click="onClickRegister"
 				>
 					<Loader2 v-if="loadingRegister" class="mr-2 h-4 w-4 animate-spin" />
@@ -116,8 +118,8 @@ function onClickLogout() {
 				<Button
 					v-if="showLogin"
 					class="auth-button"
-					:disabled="loadingLogin || !isPasskeyRPHealthy"
-					:class="{ 'opacity-50 cursor-not-allowed': loadingLogin || !isPasskeyRPHealthy }"
+					:disabled="loadingRegisterOrLogin || !isPasskeyRPHealthy"
+					:class="{ 'opacity-50 cursor-not-allowed': loadingRegisterOrLogin || !isPasskeyRPHealthy }"
 					@click="onClickLogin"
 				>
 					<Loader2 v-if="loadingLogin" class="mr-2 h-4 w-4 animate-spin" />

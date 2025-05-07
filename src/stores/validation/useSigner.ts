@@ -1,5 +1,5 @@
 import { defineStore, storeToRefs } from 'pinia'
-import { ValidationIdentifier } from './validation'
+import { createEOAOwnedValidation, createPasskeyValidation, ValidationIdentifier } from './validation'
 import { useEOAWallet } from '../useEOAWallet'
 import { usePasskey } from '../usePasskey'
 
@@ -14,10 +14,7 @@ export const useSignerStore = defineStore('useSignerStore', () => {
 
 		if (isEOAWalletConnected.value) {
 			if (!wallet.address) throw new Error('useSignerStore: EOA wallet is connected but no address is available')
-			signers.push({
-				type: 'EOA-Owned',
-				identifier: wallet.address,
-			})
+			signers.push(createEOAOwnedValidation(wallet.address))
 		} else {
 			if (signers.find(s => s.type === 'EOA-Owned')) {
 				// remove EOA-Owned signer if it exists
@@ -28,10 +25,7 @@ export const useSignerStore = defineStore('useSignerStore', () => {
 		if (isLogin.value) {
 			if (!credential.value)
 				throw new Error('useSignerStore: Passkey is logged in but no credential is available')
-			signers.push({
-				type: 'Passkey',
-				identifier: credential.value.authenticatorIdHash,
-			})
+			signers.push(createPasskeyValidation(credential.value))
 		} else {
 			if (signers.find(s => s.type === 'Passkey')) {
 				// remove Passkey signer if it exists

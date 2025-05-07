@@ -10,6 +10,7 @@ import { shortenAddress } from '@vue-dapp/core'
 import { watchImmediate } from '@vueuse/core'
 import { ArrowLeft, Copy, ExternalLink } from 'lucide-vue-next'
 import ASModules from './ASModules.vue'
+import { displayValidationIdentifier } from '@/stores/validation/validation'
 
 const router = useRouter()
 const { selectedAccount, isDeployed } = useAccounts()
@@ -120,14 +121,14 @@ const crossChainAccounts = [
 				<div class="space-y-4 pt-1">
 					<div class="grid gap-1">
 						<div
-							v-for="(option, index) in selectedAccount.vOptions"
+							v-for="(vOption, index) in selectedAccount.vOptions"
 							:key="index"
 							class="group flex items-center justify-between py-2.5 px-3 bg-card border border-border/40 rounded-lg"
 						>
 							<div class="w-full flex items-center justify-between gap-3">
-								<div class="text-sm font-medium min-w-20">{{ option.type }}</div>
+								<div class="text-sm font-medium min-w-20">{{ vOption.type }}</div>
 								<div class="font-mono text-sm text-muted-foreground">
-									{{ shortenAddress(option.identifier) }}
+									{{ displayValidationIdentifier(vOption) }}
 								</div>
 							</div>
 						</div>
