@@ -11,6 +11,9 @@ import { CircleDot, X } from 'lucide-vue-next'
 import { Execution } from 'sendop'
 import { VueFinalModal } from 'vue-final-modal'
 import { TransactionStatus, useTransactionModal } from './useTransactionModal'
+import { useValidation } from '@/stores/validation/useValidation'
+import { useEOAWallet } from '@/stores/useEOAWallet'
+import { displayValidationIdentifier } from '@/stores/validation/validation'
 
 const props = withDefaults(
 	defineProps<{
@@ -29,8 +32,10 @@ function onClickClose() {
 	emit('close')
 }
 
+const { wallet } = useEOAWallet()
 const { selectedChainId } = useNetwork()
 const { selectedAccount, isDeployed } = useAccount()
+const { selectSigner, selectedSigner } = useValidation()
 const {
 	userOp,
 	status,
@@ -39,8 +44,6 @@ const {
 	canSend,
 	selectedPaymaster,
 	paymasters,
-	availableValidationMethods,
-	selectedValidationMethod,
 	handleEstimate,
 	handleSign,
 	handleSend,
@@ -108,6 +111,104 @@ async function onClickSend() {
 
 			<!-- Content -->
 			<div class="flex-1 mt-2 space-y-6 overflow-y-auto max-h-[420px] py-2">
+				<!-- Paymaster Selection -->
+				<div class="space-y-3">
+					<div class="text-sm font-medium">Select Paymaster</div>
+					<Select v-model="selectedPaymaster" :disabled="status !== TransactionStatus.Estimation">
+						<SelectTrigger
+							class="w-full bg-muted/30 border-border/50 hover:border-primary transition-colors"
+							:class="{ 'opacity-50 cursor-not-allowed': status !== TransactionStatus.Estimation }"
+						>
+							<SelectValue placeholder="Select Paymaster">
+								<div class="flex items-center justify-between w-full">
+									<span class="font-medium">
+										{{ paymasters.find(p => p.id === selectedPaymaster)?.name }}
+									</span>
+								</div>
+							</SelectValue>
+						</SelectTrigger>
+
+						<!-- z-index: 1100 to make it above the modal(z-index: 1000) -->
+						<!-- hover:bg-muted to make it look like a button -->
+						<SelectContent class="z-[1100]">
+							<SelectItem
+								class="cursor-pointer hover:bg-muted"
+								v-for="paymaster in paymasters"
+								:key="paymaster.id"
+								:value="paymaster.id"
+							>
+								<div class="flex flex-col py-1">
+									<div class="flex items-center justify-between w-full">
+										<span class="font-medium">{{ paymaster.name }}</span>
+									</div>
+									<span class="text-xs text-muted-foreground mt-0.5">
+										{{ paymaster.description }}
+									</span>
+								</div>
+							</SelectItem>
+						</SelectContent>
+					</Select>
+				</div>
+
+				<!-- Validation Method -->
+				<div class="space-y-3">
+					<div class="text-sm font-medium">Validation Method</div>
+					<div class="space-y-2">
+						<!-- EOA-Owned -->
+						<div
+							v-if="selectedAccount?.vOptions.find(v => v.type === 'EOA-Owned')"
+							class="flex flex-col p-2.5 border rounded-lg transition-all cursor-pointer"
+							@click="selectSigner('EOA-Owned')"
+						>
+							<div class="space-y-1">
+								<div class="flex justify-between items-center">
+									<div class="flex items-center gap-1.5 text-xs">
+										<CircleDot
+											class="w-2.5 h-2.5"
+											:class="
+												selectedSigner?.type === 'EOA-Owned'
+													? 'text-green-500'
+													: 'text-muted-foreground'
+											"
+										/>
+										<span>{{ wallet.providerInfo?.name }} Connected</span>
+									</div>
+								</div>
+								<div class="text-[11px] text-muted-foreground font-mono">
+									{{ selectedSigner ? displayValidationIdentifier(selectedSigner) : '-' }}
+								</div>
+							</div>
+						</div>
+
+						<!-- Passkey -->
+						<div
+							v-if="selectedAccount?.vOptions.find(v => v.type === 'Passkey')"
+							class="flex flex-col p-2.5 border rounded-lg transition-all"
+							:class="{ 'cursor-pointer': selectedSigner?.type !== 'Passkey' }"
+							@click="selectSigner('Passkey')"
+						>
+							<div class="space-y-1">
+								<div class="flex justify-between items-center">
+									<div class="flex items-center gap-1.5 text-xs">
+										<CircleDot
+											class="w-2.5 h-2.5"
+											:class="
+												selectedSigner?.type === 'Passkey'
+													? 'text-green-500'
+													: 'text-muted-foreground'
+											"
+										/>
+										<span>Passkey Connected</span>
+									</div>
+								</div>
+								<div class="text-[11px] text-muted-foreground">
+									{{ selectedSigner ? displayValidationIdentifier(selectedSigner) : '-' }}
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
 				<!-- Account Info -->
 				<div class="space-y-4">
 					<div class="p-4 bg-muted/30 border border-border/50 rounded-lg space-y-3">
@@ -157,7 +258,7 @@ async function onClickSend() {
 				<!-- Transaction Data -->
 				<div class="space-y-3">
 					<div class="text-sm font-medium">Transaction Data</div>
-					<div class="max-h-[200px] overflow-y-auto pr-2 space-y-3">
+					<div class="space-y-3">
 						<div
 							v-for="(execution, index) in executions"
 							:key="index"
@@ -177,94 +278,6 @@ async function onClickSend() {
 							</div>
 						</div>
 					</div>
-				</div>
-
-				<!-- Validation Method -->
-				<div class="space-y-3">
-					<div class="text-sm font-medium">Validation Method</div>
-					<div v-if="availableValidationMethods.length > 1" class="grid gap-3">
-						<div
-							v-for="method in availableValidationMethods"
-							:key="method.type"
-							class="border rounded-md p-4 cursor-pointer transition-colors"
-							:class="[
-								selectedValidationMethod === method.type
-									? 'border-primary bg-primary/5'
-									: 'hover:bg-accent',
-							]"
-							@click="selectedValidationMethod = method.type"
-						>
-							<div class="flex items-center justify-between">
-								<div>
-									<div class="font-medium">{{ method.type }}</div>
-									<div class="text-xs text-muted-foreground mt-1">
-										{{ shortenAddress(method.identifier) }}
-									</div>
-								</div>
-								<div
-									class="w-4 h-4 rounded-full border-2"
-									:class="[
-										selectedValidationMethod === method.type
-											? 'border-primary bg-primary'
-											: 'border-muted',
-									]"
-								/>
-							</div>
-						</div>
-					</div>
-					<div
-						v-else-if="availableValidationMethods.length === 1"
-						class="p-4 bg-muted/30 border border-border/50 rounded-lg"
-					>
-						<div class="flex items-center justify-between">
-							<div>
-								<div class="font-medium">{{ availableValidationMethods[0].type }}</div>
-								<div class="text-xs text-muted-foreground mt-1">
-									{{ shortenAddress(availableValidationMethods[0].identifier) }}
-								</div>
-							</div>
-							<CircleDot class="w-4 h-4 text-primary" />
-						</div>
-					</div>
-				</div>
-
-				<!-- Paymaster Selection -->
-				<div class="space-y-3">
-					<div class="text-sm font-medium">Gas Payment</div>
-					<Select v-model="selectedPaymaster" :disabled="status !== TransactionStatus.Estimation">
-						<SelectTrigger
-							class="w-full bg-muted/30 border-border/50 hover:border-primary transition-colors"
-							:class="{ 'opacity-50 cursor-not-allowed': status !== TransactionStatus.Estimation }"
-						>
-							<SelectValue placeholder="Select Paymaster">
-								<div class="flex items-center justify-between w-full">
-									<span class="font-medium">
-										{{ paymasters.find(p => p.id === selectedPaymaster)?.name }}
-									</span>
-								</div>
-							</SelectValue>
-						</SelectTrigger>
-
-						<!-- z-index: 1100 to make it above the modal(z-index: 1000) -->
-						<!-- hover:bg-muted to make it look like a button -->
-						<SelectContent class="z-[1100]">
-							<SelectItem
-								class="cursor-pointer hover:bg-muted"
-								v-for="paymaster in paymasters"
-								:key="paymaster.id"
-								:value="paymaster.id"
-							>
-								<div class="flex flex-col py-1">
-									<div class="flex items-center justify-between w-full">
-										<span class="font-medium">{{ paymaster.name }}</span>
-									</div>
-									<span class="text-xs text-muted-foreground mt-0.5">
-										{{ paymaster.description }}
-									</span>
-								</div>
-							</SelectItem>
-						</SelectContent>
-					</Select>
 				</div>
 			</div>
 

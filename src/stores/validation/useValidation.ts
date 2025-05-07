@@ -40,6 +40,9 @@ export const useValidationStore = defineStore('useValidationStore', () => {
 	function selectSigner(type: ValidationIdentifier['type']) {
 		const signer = connectedSigners.value.find(s => s.type === type)
 		if (!signer) throw new Error(`useValidationStore: No signer of type ${type} is connected`)
+		if (signer.type === selectedSigner.value?.type) {
+			return
+		}
 		selectedSigner.value = signer
 	}
 

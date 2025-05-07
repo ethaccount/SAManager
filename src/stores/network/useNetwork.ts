@@ -109,7 +109,7 @@ export const useNetworkStore = defineStore(
 	},
 	{
 		persist: {
-			pick: ['selectedChainId'],
+			pick: ['selectedChainId', 'selectedBundler', 'selectedNode'],
 		},
 	},
 )

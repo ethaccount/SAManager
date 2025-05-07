@@ -21,12 +21,6 @@ watchImmediate(selectedAccount, () => {
 	}
 })
 
-const copyToClipboard = (text: string) => {
-	navigator.clipboard.writeText(text)
-	// In a real app, you would show a toast notification
-	console.log('Copied to clipboard:', text)
-}
-
 // Mock data for sessions
 const sessions = ref([
 	{
@@ -74,14 +68,7 @@ const crossChainAccounts = [
 					<div class="flex items-center gap-2">
 						<h1 class="text-xl font-medium">{{ shortenAddress(selectedAccount.address) }}</h1>
 						<div class="flex items-center gap-1">
-							<Button
-								variant="ghost"
-								size="icon"
-								class="h-7 w-7"
-								@click="copyToClipboard(selectedAccount.address)"
-							>
-								<Copy class="h-3.5 w-3.5" />
-							</Button>
+							<CopyButton :address="selectedAccount.address" />
 							<Button variant="ghost" size="icon" class="h-7 w-7" as-child>
 								<a
 									:href="`https://sepolia.etherscan.io/address/${selectedAccount.address}`"

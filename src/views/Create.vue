@@ -33,7 +33,6 @@ import { watchImmediate } from '@vueuse/core'
 import { isAddress } from 'ethers'
 import { ChevronRight, Power } from 'lucide-vue-next'
 import { toBytes32 } from 'sendop'
-import { toast } from 'vue-sonner'
 
 const router = useRouter()
 const { client, selectedChainId } = useNetwork()
@@ -42,6 +41,7 @@ const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 const { isEOAWalletConnected } = useEOAWallet()
 const { username, isLogin, passkeyLogout } = usePasskey()
 const { importAccount, selectAccount } = useAccount()
+const { selectSigner, selectedSigner } = useValidation()
 
 const supportedAccounts = Object.entries(SUPPORTED_ACCOUNTS)
 	.filter(([_, data]) => data.isModular)
@@ -60,7 +60,6 @@ const supportedValidationOptions = Object.entries(SUPPORTED_VALIDATION_OPTIONS)
 	}))
 
 const selectedAccountType = ref<AccountId>(supportedAccounts[0].id)
-const shouldDeploy = ref(false)
 const isComputingAddress = ref(false)
 const showMoreOptions = ref(false)
 
@@ -108,6 +107,9 @@ const computedAddress = ref<string>('')
 const initCode = ref<string>('')
 
 watchImmediate([isValidationAvailable, selectedValidation, selectedAccountType, computedSalt], async () => {
+	computedAddress.value = ''
+	initCode.value = ''
+
 	if (isValidationAvailable.value && selectedValidation.value && selectedAccountType.value && computedSalt.value) {
 		isComputingAddress.value = true
 		try {

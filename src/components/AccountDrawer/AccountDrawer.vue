@@ -83,6 +83,18 @@ function onClickImportAccount() {
 									<span class="font-medium truncate">{{
 										shortenAddress(selectedAccount.address)
 									}}</span>
+									<div class="flex items-center gap-1">
+										<CopyButton :address="selectedAccount.address" />
+										<Button variant="ghost" size="icon" class="h-7 w-7" as-child>
+											<a
+												:href="`https://sepolia.etherscan.io/address/${selectedAccount.address}`"
+												target="_blank"
+												rel="noopener noreferrer"
+											>
+												<ExternalLink class="h-3.5 w-3.5" />
+											</a>
+										</Button>
+									</div>
 								</div>
 							</div>
 							<div class="flex flex-col text-xs text-muted-foreground">

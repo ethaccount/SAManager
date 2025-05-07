@@ -48,16 +48,6 @@ export function useTransactionModal() {
 	const { bundler } = useNetwork()
 	const { selectedAccount, opGetter } = useAccount()
 
-	const availableValidationMethods = computed(() => {
-		if (!selectedAccount.value?.vOptions) return []
-		return selectedAccount.value.vOptions.map(opt => ({
-			type: opt.type,
-			identifier: opt.identifier,
-		}))
-	})
-
-	const selectedValidationMethod = ref(availableValidationMethods.value[0]?.type || null)
-
 	const paymasters = [
 		{ id: 'none', name: 'No Paymaster', description: 'Pay gas fees with native tokens' },
 		{ id: 'public', name: 'Public Paymaster', description: 'Use public paymaster for gas sponsorship' },
@@ -69,7 +59,6 @@ export function useTransactionModal() {
 
 	const canEstimate = computed(() => {
 		if (status.value !== TransactionStatus.Estimation) return false
-		if (!selectedValidationMethod.value) return false
 		if (!selectedPaymaster.value) return false
 		return true
 	})
@@ -177,8 +166,6 @@ export function useTransactionModal() {
 		handleSign,
 		handleSend,
 		userOp,
-		selectedValidationMethod,
-		availableValidationMethods,
 		selectedPaymaster,
 		paymasters,
 		canEstimate,

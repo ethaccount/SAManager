@@ -114,6 +114,7 @@ export const useAccountStore = defineStore(
 				toast.info('Account already exists')
 				return
 			}
+
 			accounts.value.push({
 				initCode: null,
 				...account,
