@@ -17,7 +17,7 @@ import { TooltipTrigger } from '@/components/ui/tooltip'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
 import { useSigner } from '@/stores/validation/useSigner'
 import { watchImmediate } from '@vueuse/core'
-
+import { useValidation } from '@/stores/validation/useValidation'
 const emit = defineEmits<{
 	(e: 'close'): void
 }>()
@@ -26,7 +26,8 @@ function onClickCloseSidebar() {
 	emit('close')
 }
 
-const { accounts, selectedAccount, isConnected } = useAccounts()
+const { isAccountConnected } = useValidation()
+const { accounts, selectedAccount } = useAccounts()
 const { wallet, address, isEOAWalletConnected, disconnect } = useEOAWallet()
 const { username, isLogin, passkeyLogout } = usePasskey()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
@@ -90,7 +91,7 @@ function onClickImportAccount() {
 								<div class="flex items-center gap-2">
 									<CircleDot
 										class="w-3 h-3"
-										:class="isConnected ? 'text-green-500' : 'text-red-500'"
+										:class="isAccountConnected ? 'text-green-500' : 'text-red-500'"
 									/>
 									<span class="font-medium truncate">{{
 										shortenAddress(selectedAccount.address)
@@ -104,7 +105,7 @@ function onClickImportAccount() {
 								</div>
 
 								<div v-for="vOption in selectedAccount.vOptions" :key="vOption.type" class="mt-1">
-									<span>{{ vOption.type }}: {{ shortenAddress(vOption.publicKey) }}</span>
+									<span>{{ vOption.type }}: {{ shortenAddress(vOption.identifier) }}</span>
 								</div>
 							</div>
 						</div>

@@ -5,7 +5,8 @@ import ImportOptions from '@/components/ImportAccountModal/ImportOptions.vue'
 import ValidateSmartEOA from '@/components/ImportAccountModal/ValidateSmartEOA.vue'
 import ConnectEOAWallet from '@/components/signer/ConnectEOAWallet.vue'
 import ConnectPasskey from '@/components/signer/ConnectPasskey.vue'
-import { AccountCategory, AccountId, ValidationOption } from '@/lib/account'
+import { AccountCategory, AccountId } from '@/lib/account'
+import { ValidationIdentifier } from '@/stores/validation/validation'
 import { defineStore, storeToRefs } from 'pinia'
 import { useModal } from 'vue-final-modal'
 
@@ -43,7 +44,7 @@ address -> input address -> address validation -> connect eoa or passkey -> conf
 type IAMFormData = {
 	address?: string
 	accountId?: AccountId
-	vOptions?: ValidationOption[]
+	vOptions?: ValidationIdentifier[]
 	type?: AccountCategory
 }
 
@@ -73,7 +74,7 @@ const IAM_CONFIG: Record<IAMStageKey, IAMStage<any>> = {
 		attrs: {
 			onConfirm: (authenticatorIdHash: string) => {
 				useImportAccountModal().updateFormData({
-					vOptions: [{ type: 'Passkey', publicKey: authenticatorIdHash }],
+					vOptions: [{ type: 'Passkey', identifier: authenticatorIdHash }],
 				})
 				useImportAccountModal().goNextStage(IAMStageKey.PASSKEY_ACCOUNT_OPTIONS)
 			},
@@ -89,7 +90,7 @@ const IAM_CONFIG: Record<IAMStageKey, IAMStage<any>> = {
 			authenticatorIdHash: () => {
 				const vOption = useImportAccountModalStore().formData.vOptions?.find(v => v.type === 'Passkey')
 				if (!vOption) throw new Error('PASSKEY_ACCOUNT_OPTIONS: No passkey authenticatorIdHash found')
-				return vOption.publicKey
+				return vOption.identifier
 			},
 			onAccountSelected: (account: { address: string; accountId: AccountId }) => {
 				useImportAccountModal().updateFormData({
@@ -123,7 +124,7 @@ const IAM_CONFIG: Record<IAMStageKey, IAMStage<any>> = {
 		title: 'Connect EOA Wallet',
 		attrs: {
 			onConfirm: (address: string) => {
-				useImportAccountModal().updateFormData({ vOptions: [{ type: 'EOA-Owned', publicKey: address }] })
+				useImportAccountModal().updateFormData({ vOptions: [{ type: 'EOA-Owned', identifier: address }] })
 				useImportAccountModal().goNextStage(IAMStageKey.EOA_ACCOUNT_OPTIONS)
 			},
 		},
@@ -138,7 +139,7 @@ const IAM_CONFIG: Record<IAMStageKey, IAMStage<any>> = {
 			eoaAddress: () => {
 				const vOption = useImportAccountModalStore().formData.vOptions?.find(v => v.type === 'EOA-Owned')
 				if (!vOption) throw new Error('EOA_ACCOUNT_OPTIONS: No EOA address found')
-				return vOption.publicKey
+				return vOption.identifier
 			},
 			onAccountSelected: (account: { address: string; accountId: AccountId }) => {
 				useImportAccountModal().updateFormData({

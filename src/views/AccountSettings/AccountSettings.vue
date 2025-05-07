@@ -127,7 +127,7 @@ const crossChainAccounts = [
 							<div class="w-full flex items-center justify-between gap-3">
 								<div class="text-sm font-medium min-w-20">{{ option.type }}</div>
 								<div class="font-mono text-sm text-muted-foreground">
-									{{ shortenAddress(option.publicKey) }}
+									{{ shortenAddress(option.identifier) }}
 								</div>
 							</div>
 						</div>

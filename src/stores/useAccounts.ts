@@ -1,4 +1,4 @@
-import { AccountId, checkAccountIsConnected, ImportedAccount } from '@/lib/account'
+import { AccountId, ImportedAccount } from '@/lib/account'
 import { CHAIN_ID } from '@/lib/network'
 import { defineStore, storeToRefs } from 'pinia'
 import {
@@ -13,10 +13,13 @@ import {
 import { toast } from 'vue-sonner'
 import { useEOAWallet } from './useEOAWallet'
 import { useNetwork } from './useNetwork'
+import { useValidation } from './validation/useValidation'
 
 export const useAccountsStore = defineStore(
 	'useAccountsStore',
 	() => {
+		const { isAccountConnected, erc7579Validator } = useValidation()
+
 		const selectedAccount = ref<ImportedAccount | null>(null)
 
 		const isDeployed = computed(() => {
@@ -27,30 +30,8 @@ export const useAccountsStore = defineStore(
 		const accounts = ref<ImportedAccount[]>([])
 		const hasAccounts = computed(() => accounts.value.length > 0)
 
-		const isConnected = computed(() => {
-			if (!selectedAccount.value) return false
-			return checkAccountIsConnected(selectedAccount.value)
-		})
-
-		const validator = computed<ERC7579Validator | null>(() => {
-			if (!selectedAccount.value || !isConnected.value) return null
-			switch (selectedAccount.value.vOptions[0].type) {
-				case 'EOA-Owned':
-					const { signer } = useEOAWallet()
-					if (!signer.value) {
-						return null
-					}
-					return new EOAValidatorModule({
-						address: ADDRESS.ECDSAValidator,
-						signer: signer.value,
-					})
-				default:
-					return null
-			}
-		})
-
 		const opGetter = computed(() => {
-			if (!selectedAccount.value || !isConnected.value || !validator.value) return null
+			if (!selectedAccount.value || !isAccountConnected.value || !erc7579Validator.value) return null
 
 			const { client, bundler } = useNetwork()
 
@@ -60,21 +41,21 @@ export const useAccountsStore = defineStore(
 						address: selectedAccount.value.address,
 						client: client.value,
 						bundler: bundler.value,
-						validator: validator.value,
+						validator: erc7579Validator.value,
 					})
 				case AccountId['biconomy.nexus.1.0.2']:
 					return new NexusAccount({
 						address: selectedAccount.value.address,
 						client: client.value,
 						bundler: bundler.value,
-						validator: validator.value,
+						validator: erc7579Validator.value,
 					})
 				case AccountId['rhinestone.safe7579.v1.0.0']:
 					return new Safe7579Account({
 						address: selectedAccount.value.address,
 						client: client.value,
 						bundler: bundler.value,
-						validator: validator.value,
+						validator: erc7579Validator.value,
 					})
 				// case AccountId['infinitism.Simple7702Account.0.8.0']:
 				// 	return new Simple7702Account({
@@ -134,9 +115,7 @@ export const useAccountsStore = defineStore(
 			isDeployed,
 			accounts,
 			hasAccounts,
-			isConnected,
 			opGetter,
-			validator,
 			importAccount,
 			removeAccount,
 			selectAccount,

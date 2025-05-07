@@ -52,7 +52,7 @@ export function useTransactionModal() {
 		if (!selectedAccount.value?.vOptions) return []
 		return selectedAccount.value.vOptions.map(opt => ({
 			type: opt.type,
-			publicKey: opt.publicKey,
+			identifier: opt.identifier,
 		}))
 	})
 

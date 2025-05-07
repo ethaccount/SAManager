@@ -1,24 +1,18 @@
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { EntryPointVersion, isSameAddress } from 'sendop'
 import { CHAIN_ID } from './network'
+import { ValidationIdentifier } from '@/stores/validation/validation'
 
 export type ImportedAccount = {
 	accountId: AccountId
 	category: AccountCategory
 	address: string
 	chainId: CHAIN_ID
-	vOptions: ValidationOption[]
+	vOptions: ValidationIdentifier[]
 	initCode: string | null
 }
 
 export type AccountCategory = 'Smart Account' | 'Smart EOA'
-
-export type ValidationOption = {
-	type: ValidationType
-	publicKey: string
-}
-
-export type ValidationType = 'EOA-Owned' | 'Passkey'
 
 export enum AccountId {
 	'kernel.advanced.v0.3.1' = 'kernel.advanced.v0.3.1',
@@ -73,36 +67,4 @@ export const SUPPORTED_ACCOUNTS: Record<
 
 export function displayAccountName(accountId: AccountId) {
 	return ACCOUNT_ID_TO_NAME[accountId]
-}
-
-export function checkAccountIsConnected(account: ImportedAccount) {
-	if (!account) return false
-
-	if (account.category === 'Smart Account') {
-		const { signer } = useEOAWallet()
-		if (signer.value?.address) {
-			if (isSameAddress(signer.value.address, account.address)) {
-				return true
-			}
-		}
-	}
-
-	const vOptions = account.vOptions
-	for (const vOption of vOptions) {
-		switch (vOption.type) {
-			case 'EOA-Owned':
-				const { signer } = useEOAWallet()
-				if (signer.value?.address) {
-					if (isSameAddress(signer.value.address, vOption.publicKey)) {
-						return true
-					}
-				}
-				break
-			case 'Passkey':
-				// TODO: Implement passkey isConnected
-				return false
-		}
-	}
-
-	return false
 }

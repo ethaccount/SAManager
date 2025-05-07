@@ -198,7 +198,7 @@ async function onClickSend() {
 								<div>
 									<div class="font-medium">{{ method.type }}</div>
 									<div class="text-xs text-muted-foreground mt-1">
-										{{ shortenAddress(method.publicKey) }}
+										{{ shortenAddress(method.identifier) }}
 									</div>
 								</div>
 								<div
@@ -220,7 +220,7 @@ async function onClickSend() {
 							<div>
 								<div class="font-medium">{{ availableValidationMethods[0].type }}</div>
 								<div class="text-xs text-muted-foreground mt-1">
-									{{ shortenAddress(availableValidationMethods[0].publicKey) }}
+									{{ shortenAddress(availableValidationMethods[0].identifier) }}
 								</div>
 							</div>
 							<CircleDot class="w-4 h-4 text-primary" />

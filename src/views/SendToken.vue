@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAccounts } from '@/stores/useAccounts'
+import { useValidation } from '@/stores/validation/useValidation'
 import { parseEther } from 'ethers'
 import { Plus, X } from 'lucide-vue-next'
 import { INTERFACES } from 'sendop'
@@ -74,14 +75,14 @@ const onClickReview = () => {
 	)
 }
 
-const { isConnected } = useAccounts()
+const { isAccountConnected } = useValidation()
 
 const reviewDisabled = computed(() => {
-	return !isConnected.value || !isValidTransfers.value || transfers.value.length === 0
+	return !isAccountConnected.value || !isValidTransfers.value || transfers.value.length === 0
 })
 
 const reviewButtonText = computed(() => {
-	return isConnected.value ? 'Review Transfers' : 'Your account must be connected to review transfers'
+	return isAccountConnected.value ? 'Review Transfers' : 'Your account must be connected to review transfers'
 })
 </script>
 

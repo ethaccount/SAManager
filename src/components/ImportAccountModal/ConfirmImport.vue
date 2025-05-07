@@ -6,12 +6,12 @@ import { useImportAccountModal } from '@/stores/useImportAccountModal'
 import { useAccounts } from '@/stores/useAccounts'
 import { useNetwork } from '@/stores/useNetwork'
 import { CHAIN_NAME } from '@/lib/network'
-import { AccountId, displayAccountName, ValidationOption, AccountCategory } from '@/lib/account'
-
+import { AccountId, displayAccountName, AccountCategory } from '@/lib/account'
+import { ValidationIdentifier } from '@/stores/validation/validation'
 const props = defineProps<{
 	address: () => string
 	accountId: () => AccountId
-	vOptions: () => ValidationOption[]
+	vOptions: () => ValidationIdentifier[]
 	category: () => AccountCategory
 }>()
 

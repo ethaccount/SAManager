@@ -6,13 +6,14 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { SALT } from '@/config'
-import { ACCOUNT_ID_TO_NAME, AccountId, displayAccountName, SUPPORTED_ACCOUNTS, ValidationType } from '@/lib/account'
+import { ACCOUNT_ID_TO_NAME, AccountId, displayAccountName, SUPPORTED_ACCOUNTS } from '@/lib/account'
 import { toRoute } from '@/lib/router'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
 import { useAccounts } from '@/stores/useAccounts'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useNetwork } from '@/stores/useNetwork'
 import { usePasskey } from '@/stores/usePasskey'
+import { ValidationIdentifier } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
 import { watchImmediate } from '@vueuse/core'
 import { getBytes, hexlify, isAddress, toBeHex } from 'ethers'
@@ -35,7 +36,7 @@ const VALIDATORS: {
 	[key: string]: {
 		name: string
 		description: string
-		type: ValidationType
+		type: ValidationIdentifier['type']
 	}
 } = {
 	ECDSA: {
@@ -136,7 +137,7 @@ function onClickReview() {
 		vOptions: [
 			{
 				type: selectedValidationType.value,
-				publicKey: vOptionPublicKey.value,
+				identifier: vOptionPublicKey.value,
 			},
 		],
 		initCode: initCode.value,
@@ -170,7 +171,7 @@ function onClickImport() {
 		vOptions: [
 			{
 				type: selectedValidationType.value,
-				publicKey: vOptionPublicKey.value,
+				identifier: vOptionPublicKey.value,
 			},
 		],
 		initCode: initCode.value,

@@ -21,7 +21,7 @@ export const useSignerStore = defineStore('useSignerStore', () => {
 			if (!wallet.address) throw new Error('useSignerStore: EOA wallet is connected but no address is available')
 			signers.push({
 				type: 'EOA-Owned',
-				value: wallet.address,
+				identifier: wallet.address,
 			})
 		} else {
 			if (signers.find(s => s.type === 'EOA-Owned')) {
@@ -35,7 +35,7 @@ export const useSignerStore = defineStore('useSignerStore', () => {
 				throw new Error('useSignerStore: Passkey is logged in but no credential is available')
 			signers.push({
 				type: 'Passkey',
-				value: credential.value.authenticatorIdHash,
+				identifier: credential.value.authenticatorIdHash,
 			})
 		} else {
 			if (signers.find(s => s.type === 'Passkey')) {

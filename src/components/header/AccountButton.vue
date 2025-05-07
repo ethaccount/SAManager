@@ -1,11 +1,11 @@
 <script lang="ts" setup>
+import { useAccountDrawer } from '@/components/AccountDrawer/useAccountDrawer'
 import ConnectModal from '@/components/connect-modal/ConnectModal.vue'
 import { Button } from '@/components/ui/button'
-import { useAccountDrawer } from '@/components/AccountDrawer/useAccountDrawer'
 import { useConnectModal } from '@/stores/useConnectModal'
-import { useAccounts } from '@/stores/useAccounts'
-import { useModal } from 'vue-final-modal'
+import { useValidation } from '@/stores/validation/useValidation'
 import { Wallet } from 'lucide-vue-next'
+import { useModal } from 'vue-final-modal'
 
 // ============================== Connect Modal ==============================
 const connectModalStore = useConnectModal()
@@ -22,7 +22,7 @@ connectModalStore.updateStore({
 	closeModal: closeConnectModal,
 })
 
-const { isConnected } = useAccounts()
+const { isAccountConnected } = useValidation()
 
 function onClickAccountButton() {
 	const { openAccountDrawer } = useAccountDrawer()
@@ -35,7 +35,7 @@ function onClickAccountButton() {
 		<Button variant="outline" class="w-9 h-9 rounded-full relative" @click="onClickAccountButton">
 			<div
 				class="absolute inset-0 rounded-full"
-				:class="['ring-1', isConnected ? 'ring-green-500' : 'ring-red-500']"
+				:class="['ring-1', isAccountConnected ? 'ring-green-500' : 'ring-red-500']"
 			></div>
 			<Wallet class="relative w-5 h-5" />
 		</Button>

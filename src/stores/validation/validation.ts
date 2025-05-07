@@ -1,36 +1,28 @@
-import { BytesLike } from 'ethers'
-import { ADDRESS, EOAValidatorModule, WebAuthnValidatorModule } from 'sendop'
+import { ADDRESS } from 'sendop'
 
-export type ValidationType = 'EOA-Owned' | 'Passkey' | 'Multisig'
+export type ValidationType = 'EOA-Owned' | 'Passkey'
 
 export interface ValidationIdentifier {
 	type: ValidationType
-	value: string // address for EOA/Multisig, authenticatorIdHash for Passkey
+	identifier: string // address for EOA/Multisig, authenticatorIdHash for Passkey
 }
 
-export const SUPPORTED_VALIDATION_OPTIONS = {
-	EOA: {
-		type: 'EOA-Owned' as const,
+export const SUPPORTED_VALIDATION_OPTIONS: Record<
+	ValidationIdentifier['type'],
+	{
+		name: string
+		description: string
+		validatorAddress: string
+	}
+> = {
+	'EOA-Owned': {
 		name: 'EOA Wallet',
 		description: 'Standard EOA wallet signature',
 		validatorAddress: ADDRESS.OwnableValidator,
-		getInitData: (address: string) => EOAValidatorModule.getInitData(address),
 	},
-	WebAuthn: {
-		type: 'Passkey' as const,
+	Passkey: {
 		name: 'Passkey',
 		description: 'Passkey validation',
 		validatorAddress: ADDRESS.WebAuthnValidator,
-		getInitData: (options: { pubKeyX: bigint; pubKeyY: bigint; authenticatorIdHash: BytesLike }) =>
-			WebAuthnValidatorModule.getInitData(options),
-	},
-	Multisig: {
-		type: 'Multisig' as const,
-		name: 'Multisig Wallet',
-		description: 'Multisig wallet validation',
-		validatorAddress: ADDRESS.OwnableValidator,
-		getInitData: (address: string) => EOAValidatorModule.getInitData(address),
 	},
 } as const
-
-export type SupportedValidationType = keyof typeof SUPPORTED_VALIDATION_OPTIONS
