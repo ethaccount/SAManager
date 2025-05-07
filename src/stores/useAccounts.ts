@@ -1,17 +1,8 @@
 import { AccountId, ImportedAccount } from '@/lib/account'
 import { CHAIN_ID } from '@/lib/network'
 import { defineStore, storeToRefs } from 'pinia'
-import {
-	ADDRESS,
-	EOAValidatorModule,
-	ERC7579Validator,
-	isSameAddress,
-	KernelV3Account,
-	NexusAccount,
-	Safe7579Account,
-} from 'sendop'
+import { isSameAddress, KernelV3Account, NexusAccount, Safe7579Account } from 'sendop'
 import { toast } from 'vue-sonner'
-import { useEOAWallet } from './useEOAWallet'
 import { useNetwork } from './useNetwork'
 import { useValidation } from './validation/useValidation'
 

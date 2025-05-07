@@ -1,10 +1,8 @@
 <script lang="ts" setup>
 import { toRoute } from '@/lib/router'
-import { useAccounts } from '@/stores/useAccounts'
 import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
 import { RouterLink } from 'vue-router'
 
-const { hasAccounts } = useAccounts()
 const breakpoints = useBreakpoints(breakpointsTailwind)
 </script>
 

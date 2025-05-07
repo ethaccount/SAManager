@@ -1,17 +1,17 @@
+import { signMessage } from '@/lib/passkey'
 import { defineStore, storeToRefs } from 'pinia'
-import { ADDRESS, EOAValidatorModule, ERC7579Validator, isSameAddress, WebAuthnValidatorModule } from 'sendop'
+import { EOAValidatorModule, ERC7579Validator, isSameAddress, WebAuthnValidatorModule } from 'sendop'
 import { useAccounts } from '../useAccounts'
-import { useSigner } from './useSigner'
 import { useEOAWallet } from '../useEOAWallet'
 import { usePasskey } from '../usePasskey'
-import { signMessage } from '@/lib/passkey'
+import { useSigner } from './useSigner'
 import { SUPPORTED_VALIDATION_OPTIONS } from './validation'
 
 export const useValidationStore = defineStore('useValidationStore', () => {
-	const isAccountConnected = computed(() => {
-		const { selectedAccount } = useAccounts()
-		const { selectedSigner } = useSigner()
+	const { selectedAccount } = useAccounts()
+	const { selectedSigner } = useSigner()
 
+	const isAccountConnected = computed(() => {
 		if (!selectedAccount.value) return false
 		if (!selectedSigner.value) return false
 

@@ -3,11 +3,6 @@ import { ValidationIdentifier } from './validation'
 import { useEOAWallet } from '../useEOAWallet'
 import { usePasskey } from '../usePasskey'
 
-export type SignerState = {
-	connectedSigners: ValidationIdentifier[]
-	selectedSigner: ValidationIdentifier | null
-}
-
 export const useSignerStore = defineStore('useSignerStore', () => {
 	const selectedSigner = ref<ValidationIdentifier | null>(null)
 
