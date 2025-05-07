@@ -15,6 +15,8 @@ import { Tooltip } from '@/components/ui/tooltip'
 import { TooltipContent } from '@/components/ui/tooltip'
 import { TooltipTrigger } from '@/components/ui/tooltip'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
+import { useSigner } from '@/stores/validation/useSigner'
+import { watchImmediate } from '@vueuse/core'
 
 const emit = defineEmits<{
 	(e: 'close'): void
@@ -28,6 +30,18 @@ const { accounts, selectedAccount, isConnected } = useAccounts()
 const { wallet, address, isEOAWalletConnected, disconnect } = useEOAWallet()
 const { username, isLogin, passkeyLogout } = usePasskey()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
+const { selectSigner, selectedSigner } = useSigner()
+
+// Auto-select single signer when connected
+watchImmediate([isEOAWalletConnected, isLogin], ([eoaConnected, passkeyConnected]) => {
+	if (eoaConnected && !passkeyConnected) {
+		selectSigner('EOA-Owned')
+	} else if (!eoaConnected && passkeyConnected) {
+		selectSigner('Passkey')
+	} else if (eoaConnected && passkeyConnected) {
+		selectSigner('Passkey')
+	}
+})
 
 function onClickSelectAccount(account: ImportedAccount) {
 	selectedAccount.value = account
@@ -119,8 +133,9 @@ function onClickImportAccount() {
 				<h3 class="text-sm font-medium tracking-wider mb-2">Signers</h3>
 				<div class="space-y-2">
 					<div
-						class="flex flex-col p-2.5 border rounded-lg transition-all"
+						class="flex flex-col p-2.5 border rounded-lg transition-all cursor-pointer"
 						:class="{ 'bg-secondary/50 border-primary/20': isEOAWalletConnected }"
+						@click="isEOAWalletConnected && selectSigner('EOA-Owned')"
 					>
 						<div v-if="!isEOAWalletConnected" class="flex justify-between items-center">
 							<span class="text-sm">EOA Wallet</span>
@@ -131,7 +146,14 @@ function onClickImportAccount() {
 						<div v-if="isEOAWalletConnected" class="space-y-1">
 							<div class="flex justify-between items-center">
 								<div class="flex items-center gap-1.5 text-xs">
-									<CircleDot class="w-2.5 h-2.5 text-green-500" />
+									<CircleDot
+										class="w-2.5 h-2.5"
+										:class="
+											selectedSigner?.type === 'EOA-Owned'
+												? 'text-green-500'
+												: 'text-muted-foreground'
+										"
+									/>
 									<span>{{ wallet.providerInfo?.name }} Connected</span>
 								</div>
 								<Button variant="ghost" size="icon" class="h-6 w-6" @click="disconnect">
@@ -145,8 +167,9 @@ function onClickImportAccount() {
 					</div>
 
 					<div
-						class="flex flex-col p-2.5 border rounded-lg transition-all"
+						class="flex flex-col p-2.5 border rounded-lg transition-all cursor-pointer"
 						:class="{ 'bg-secondary/50 border-primary/20': isLogin }"
+						@click="isLogin && selectSigner('Passkey')"
 					>
 						<div v-if="!isLogin" class="flex justify-between items-center">
 							<span class="text-sm">Passkey</span>
@@ -161,7 +184,14 @@ function onClickImportAccount() {
 						<div v-if="isLogin" class="space-y-1">
 							<div class="flex justify-between items-center">
 								<div class="flex items-center gap-1.5 text-xs">
-									<CircleDot class="w-2.5 h-2.5 text-green-500" />
+									<CircleDot
+										class="w-2.5 h-2.5"
+										:class="
+											selectedSigner?.type === 'Passkey'
+												? 'text-green-500'
+												: 'text-muted-foreground'
+										"
+									/>
 									<span>Passkey Connected</span>
 								</div>
 								<Button variant="ghost" size="icon" class="h-6 w-6" @click="passkeyLogout">
