@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
-import { CHAIN_ID, displayChainName, SUPPORTED_BUNDLER, SUPPORTED_ENTRY_POINT, SUPPORTED_NODE } from '@/lib/network'
-import { useNetwork } from '@/stores/useNetwork'
+import {
+	CHAIN_ID,
+	displayChainName,
+	SUPPORTED_BUNDLER,
+	SUPPORTED_ENTRY_POINT,
+	SUPPORTED_NODE,
+} from '@/stores/network/network'
+import { useNetwork } from '@/stores/network/useNetwork'
 import { Check } from 'lucide-vue-next'
 
 // Watch for popover state changes to toggle body scroll lock

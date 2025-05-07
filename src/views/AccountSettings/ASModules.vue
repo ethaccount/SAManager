@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { fetchModules } from '@/lib/aa'
-import { useAccounts } from '@/stores/useAccounts'
-import { useNetwork } from '@/stores/useNetwork'
+import { useAccount } from '@/stores/account/useAccount'
+import { useNetwork } from '@/stores/network/useNetwork'
 import { watchImmediate } from '@vueuse/core'
 import { ADDRESS, ERC7579_MODULE_TYPE, isSameAddress } from 'sendop'
 import { toast } from 'vue-sonner'
 
-const { selectedAccount, isDeployed } = useAccounts()
+const { selectedAccount, isDeployed } = useAccount()
 const { client, clientNoBatch } = useNetwork()
 
 const loading = ref(false)

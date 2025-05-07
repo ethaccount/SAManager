@@ -9,8 +9,7 @@ import { useSA } from '@/stores/useSA'
 import { parseEther } from 'ethers'
 import { Textarea } from '@/components/ui/textarea'
 import { useTransactionModal } from '@/components/TransactionModal/useTransactionModal'
-import { useAccounts } from '@/stores/useAccounts'
-import { useValidation } from '@/stores/validation/useValidation'
+import { useAccount } from '@/stores/account/useAccount'
 
 type Execution = {
 	to: string
@@ -44,7 +43,7 @@ const isValidExecutions = computed(() => {
 	return executions.value.every(exec => exec.to.trim() !== '' && exec.value.trim() !== '' && exec.data.trim() !== '')
 })
 
-const { isAccountConnected } = useValidation()
+const { isAccountConnected } = useAccount()
 
 const reviewDisabled = computed(() => {
 	return !isAccountConnected.value || !isValidExecutions.value || executions.value.length === 0

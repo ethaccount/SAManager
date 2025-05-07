@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { shortenAddress } from '@vue-dapp/core'
 import { ExternalLink } from 'lucide-vue-next'
-import { useNetworkStore } from '@/stores/useNetwork'
+import { useNetworkStore } from '@/stores/network/useNetwork'
 
 const props = defineProps<{
 	address?: string

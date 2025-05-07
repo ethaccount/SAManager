@@ -1,5 +1,11 @@
 import { ALCHEMY_API_KEY, IS_DEV, PIMLICO_API_KEY } from '@/config'
-import { CHAIN_ID, EXPLORER_URL, SUPPORTED_BUNDLER, SUPPORTED_ENTRY_POINT, SUPPORTED_NODE } from '@/lib/network'
+import {
+	CHAIN_ID,
+	EXPLORER_URL,
+	SUPPORTED_BUNDLER,
+	SUPPORTED_ENTRY_POINT,
+	SUPPORTED_NODE,
+} from '@/stores/network/network'
 import { JsonRpcProvider } from 'ethers'
 import { alchemy, publicNode } from 'evm-providers'
 import { defineStore } from 'pinia'

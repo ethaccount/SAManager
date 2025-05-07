@@ -1,6 +1,6 @@
 import TransactionModal from '@/components/TransactionModal/TransactionModal.vue'
-import { useAccounts } from '@/stores/useAccounts'
-import { useNetwork } from '@/stores/useNetwork'
+import { useAccount } from '@/stores/account/useAccount'
+import { useNetwork } from '@/stores/network/useNetwork'
 import {
 	ADDRESS,
 	createUserOp,
@@ -46,7 +46,7 @@ export function useTransactionModal() {
 	}
 
 	const { bundler } = useNetwork()
-	const { selectedAccount, opGetter } = useAccounts()
+	const { selectedAccount, opGetter } = useAccount()
 
 	const availableValidationMethods = computed(() => {
 		if (!selectedAccount.value?.vOptions) return []

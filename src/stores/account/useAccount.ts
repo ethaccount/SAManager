@@ -1,16 +1,26 @@
-import { AccountId, ImportedAccount } from '@/lib/account'
-import { CHAIN_ID } from '@/lib/network'
+import { AccountId, ImportedAccount } from '@/stores/account/account'
+import { CHAIN_ID } from '@/stores/network/network'
+import { signMessage } from '@/stores/passkey/passkey'
+import { useEOAWallet } from '@/stores/useEOAWallet'
+import { usePasskey } from '@/stores/passkey/usePasskey'
+import { useValidation } from '@/stores/validation/useValidation'
+import { checkValidationAvailability, SUPPORTED_VALIDATION_OPTIONS } from '@/stores/validation/validation'
 import { defineStore, storeToRefs } from 'pinia'
-import { isSameAddress, KernelV3Account, NexusAccount, Safe7579Account } from 'sendop'
+import {
+	EOAValidatorModule,
+	ERC7579Validator,
+	isSameAddress,
+	KernelV3Account,
+	NexusAccount,
+	Safe7579Account,
+	WebAuthnValidatorModule,
+} from 'sendop'
 import { toast } from 'vue-sonner'
-import { useNetwork } from './useNetwork'
-import { useValidation } from './validation/useValidation'
+import { useNetwork } from '../network/useNetwork'
 
-export const useAccountsStore = defineStore(
-	'useAccountsStore',
+export const useAccountStore = defineStore(
+	'useAccountStore',
 	() => {
-		const { isAccountConnected, erc7579Validator } = useValidation()
-
 		const selectedAccount = ref<ImportedAccount | null>(null)
 
 		const isDeployed = computed(() => {
@@ -20,6 +30,40 @@ export const useAccountsStore = defineStore(
 
 		const accounts = ref<ImportedAccount[]>([])
 		const hasAccounts = computed(() => accounts.value.length > 0)
+
+		const isAccountConnected = computed(() => {
+			if (!selectedAccount.value) return false
+			return checkValidationAvailability(selectedAccount.value.vOptions)
+		})
+
+		const erc7579Validator = computed<ERC7579Validator | null>(() => {
+			const { selectedSigner } = useValidation()
+			if (!isAccountConnected.value) return null
+			if (!selectedSigner.value) return null
+
+			switch (selectedSigner.value.type) {
+				case 'EOA-Owned':
+					const { signer } = useEOAWallet()
+					if (!signer.value) {
+						return null
+					}
+					return new EOAValidatorModule({
+						address: SUPPORTED_VALIDATION_OPTIONS['EOA-Owned'].validatorAddress,
+						signer: signer.value,
+					})
+				case 'Passkey':
+					const { credential } = usePasskey()
+					if (!credential.value) {
+						return null
+					}
+					return new WebAuthnValidatorModule({
+						address: SUPPORTED_VALIDATION_OPTIONS['Passkey'].validatorAddress,
+						signMessage: signMessage,
+					})
+				default:
+					return null
+			}
+		})
 
 		const opGetter = computed(() => {
 			if (!selectedAccount.value || !isAccountConnected.value || !erc7579Validator.value) return null
@@ -107,6 +151,8 @@ export const useAccountsStore = defineStore(
 			accounts,
 			hasAccounts,
 			opGetter,
+			isAccountConnected,
+			erc7579Validator,
 			importAccount,
 			removeAccount,
 			selectAccount,
@@ -119,8 +165,8 @@ export const useAccountsStore = defineStore(
 	},
 )
 
-export function useAccounts() {
-	const store = useAccountsStore()
+export function useAccount() {
+	const store = useAccountStore()
 	return {
 		...store,
 		...storeToRefs(store),

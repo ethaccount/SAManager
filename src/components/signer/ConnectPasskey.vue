@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { usePasskey } from '@/stores/usePasskey'
+import { usePasskey } from '@/stores/passkey/usePasskey'
 import { Loader2 } from 'lucide-vue-next'
 
 type PasskeyMode = 'register' | 'login' | 'both'
@@ -106,7 +106,7 @@ function onClickLogout() {
 			<div class="grid grid-cols-2 gap-2">
 				<Button
 					v-if="showRegister"
-					class="auth-button"
+					variant="secondary"
 					:disabled="loadingRegisterOrLogin || !isPasskeyRPHealthy"
 					:class="{ 'opacity-50 cursor-not-allowed': loadingRegisterOrLogin || !isPasskeyRPHealthy }"
 					@click="onClickRegister"
@@ -117,7 +117,7 @@ function onClickLogout() {
 
 				<Button
 					v-if="showLogin"
-					class="auth-button"
+					variant="default"
 					:disabled="loadingRegisterOrLogin || !isPasskeyRPHealthy"
 					:class="{ 'opacity-50 cursor-not-allowed': loadingRegisterOrLogin || !isPasskeyRPHealthy }"
 					@click="onClickLogin"
@@ -164,9 +164,4 @@ function onClickLogout() {
 	</div>
 </template>
 
-<style lang="css" scoped>
-.auth-button {
-	@apply flex items-center justify-center p-4 bg-card text-card-foreground rounded-[--radius] border;
-	@apply hover:bg-accent hover:text-accent-foreground transition-colors;
-}
-</style>
+<style lang="css" scoped></style>

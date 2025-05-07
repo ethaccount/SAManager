@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { usePasskey } from '@/stores/usePasskey'
+import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useConnectModal } from '@/stores/useConnectModal'
 const username = ref('ethaccount-demo')
 

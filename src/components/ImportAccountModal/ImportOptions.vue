@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Card } from '@/components/ui/card'
 import { IAMStageKey, useImportAccountModal } from '@/stores/useImportAccountModal'
-import { AccountCategory } from '@/lib/account'
+import { AccountCategory } from '@/stores/account/account'
 import { Code, Key, LinkIcon, Wallet, ChevronRight } from 'lucide-vue-next'
-import { usePasskey } from '@/stores/usePasskey'
+import { usePasskey } from '@/stores/passkey/usePasskey'
 
 type AccountOption = {
 	title: string

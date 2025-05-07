@@ -10,9 +10,9 @@ import {
 	SmartAccount,
 	WebAuthnValidatorModule,
 } from 'sendop'
-import { useNetwork, useNetworkStore } from './useNetwork'
+import { useNetwork, useNetworkStore } from './network/useNetwork'
 import { useEOAWallet } from './useEOAWallet'
-import { signMessage } from '@/lib/passkey'
+import { signMessage } from '@/stores/passkey/passkey'
 
 export type ConnectedAccount = {
 	address: string

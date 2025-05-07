@@ -5,7 +5,7 @@ import {
 	PasskeyCredential,
 	register,
 	serializePasskeyCredential,
-} from '@/lib/passkey'
+} from '@/stores/passkey/passkey'
 import { defineStore, StateTree, storeToRefs } from 'pinia'
 
 export const usePasskeyStore = defineStore(

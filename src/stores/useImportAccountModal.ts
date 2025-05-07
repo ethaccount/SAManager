@@ -5,13 +5,12 @@ import ImportOptions from '@/components/ImportAccountModal/ImportOptions.vue'
 import ValidateSmartEOA from '@/components/ImportAccountModal/ValidateSmartEOA.vue'
 import ConnectEOAWallet from '@/components/signer/ConnectEOAWallet.vue'
 import ConnectPasskey from '@/components/signer/ConnectPasskey.vue'
-import { AccountCategory, AccountId } from '@/lib/account'
+import { deserializePasskeyCredential } from '@/stores/passkey/passkey'
+import { AccountCategory, AccountId } from '@/stores/account/account'
 import { createEOAOwnedValidation, createPasskeyValidation, ValidationIdentifier } from '@/stores/validation/validation'
-import { usePageLeave } from '@vueuse/core'
 import { defineStore, storeToRefs } from 'pinia'
 import { useModal } from 'vue-final-modal'
-import { usePasskey } from './usePasskey'
-import { deserializePasskeyCredential } from '@/lib/passkey'
+import { usePasskey } from './passkey/usePasskey'
 
 // IAM: Import Account Modal
 

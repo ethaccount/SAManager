@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { displayAccountName } from '@/lib/account'
-import { displayChainName } from '@/lib/network'
-import { useAccounts } from '@/stores/useAccounts'
-import { useNetwork } from '@/stores/useNetwork'
+import { displayAccountName } from '@/stores/account/account'
+import { displayChainName } from '@/stores/network/network'
+import { useAccount } from '@/stores/account/useAccount'
+import { useNetwork } from '@/stores/network/useNetwork'
 import { shortenAddress } from '@vue-dapp/core'
 import { formatEther } from 'ethers'
 import { CircleDot, X } from 'lucide-vue-next'
@@ -30,7 +30,7 @@ function onClickClose() {
 }
 
 const { selectedChainId } = useNetwork()
-const { selectedAccount, isDeployed } = useAccounts()
+const { selectedAccount, isDeployed } = useAccount()
 const {
 	userOp,
 	status,

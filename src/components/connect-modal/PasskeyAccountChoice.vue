@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { fetchAccountId } from '@/lib/aa'
-import { useNetwork } from '@/stores/useNetwork'
+import { useNetwork } from '@/stores/network/useNetwork'
 import { ConnectModalStageKey, useConnectModal } from '@/stores/useConnectModal'
-import { usePasskey } from '@/stores/usePasskey'
+import { usePasskey } from '@/stores/passkey/usePasskey'
 import { AccountId } from '@/types'
 import { shortenAddress } from '@vue-dapp/core'
 import { Contract, EventLog } from 'ethers'

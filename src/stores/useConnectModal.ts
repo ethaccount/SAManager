@@ -7,7 +7,7 @@ import InitialStep from '@/components/connect-modal/Initial.vue'
 import PasskeyAuth from '@/components/connect-modal/PasskeyAuth.vue'
 import PasskeyLogin from '@/components/connect-modal/PasskeyLogin.vue'
 import { AccountId, ValidatorKey } from '@/types'
-import { useNetwork } from './useNetwork'
+import { useNetwork } from './network/useNetwork'
 import { useSA } from './useSA'
 import PasskeyAccountChoice from '@/components/connect-modal/PasskeyAccountChoice.vue'
 

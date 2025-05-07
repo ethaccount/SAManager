@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { SALT } from '@/config'
-import { signMessage } from '@/lib/passkey'
-import { useNetwork } from '@/stores/useNetwork'
+import { signMessage } from '@/stores/passkey/passkey'
+import { useNetwork } from '@/stores/network/useNetwork'
 import { ConnectModalStageKey, useConnectModal } from '@/stores/useConnectModal'
 import { useEOAWallet } from '@/stores/useEOAWallet'
-import { usePasskey } from '@/stores/usePasskey'
+import { usePasskey } from '@/stores/passkey/usePasskey'
 import { AccountId } from '@/types'
 import { shortenAddress } from '@vue-dapp/core'
 import { hexlify } from 'ethers'

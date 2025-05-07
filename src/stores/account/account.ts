@@ -13,8 +13,8 @@ import {
 	Safe7579CreationOptions,
 	WebAuthnValidatorModule,
 } from 'sendop'
-import { CHAIN_ID } from './network'
-import { deserializePasskeyCredential } from './passkey'
+import { CHAIN_ID } from '@/stores/network/network'
+import { deserializePasskeyCredential } from '@/stores/passkey/passkey'
 
 export type ImportedAccount = {
 	accountId: AccountId

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { fetchAccountId } from '@/lib/aa'
-import { useNetwork } from '@/stores/useNetwork'
+import { useNetwork } from '@/stores/network/useNetwork'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
-import { AccountId } from '@/lib/account'
-import { usePasskey } from '@/stores/usePasskey'
+import { AccountId } from '@/stores/account/account'
+import { usePasskey } from '@/stores/passkey/usePasskey'
 import { shortenAddress } from '@vue-dapp/core'
 import { Contract, EventLog } from 'ethers'
 import { ChevronRight, Loader2 } from 'lucide-vue-next'

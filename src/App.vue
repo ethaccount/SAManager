@@ -1,12 +1,19 @@
 <script lang="ts" setup>
 import { useChainIdRoute } from '@/app/useChainIdRoute'
 import { VueDappModal } from '@vue-dapp/modal'
-import { useColorMode } from '@vueuse/core'
+import { useColorMode, watchImmediate } from '@vueuse/core'
 import { onMounted } from 'vue'
 import { ModalsContainer } from 'vue-final-modal'
 import { toast, Toaster } from 'vue-sonner'
 import { useSetupVueDapp } from './app/useSetupVueDapp'
 import { IS_DEV } from './config'
+import { useValidation } from '@/stores/validation/useValidation'
+import { useEOAWallet } from './stores/useEOAWallet'
+import { usePasskey } from './stores/passkey/usePasskey'
+
+const { isEOAWalletConnected } = useEOAWallet()
+const { isLogin } = usePasskey()
+const { selectSigner } = useValidation()
 
 useChainIdRoute()
 useSetupVueDapp()
@@ -17,6 +24,17 @@ onMounted(async () => {
 			description: 'This website is actively developed',
 			duration: 5000,
 		})
+	}
+})
+
+// Auto-select single signer when connected
+watchImmediate([isEOAWalletConnected, isLogin], ([eoaConnected, passkeyConnected]) => {
+	if (eoaConnected && !passkeyConnected) {
+		selectSigner('EOA-Owned')
+	} else if (!eoaConnected && passkeyConnected) {
+		selectSigner('Passkey')
+	} else if (eoaConnected && passkeyConnected) {
+		selectSigner('Passkey')
 	}
 })
 

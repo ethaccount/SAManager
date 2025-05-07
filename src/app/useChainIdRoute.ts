@@ -1,5 +1,5 @@
-import { CHAIN_ID, isSupportedChainId } from '@/lib/network'
-import { DEFAULT_CHAIN_ID, useNetwork } from '@/stores/useNetwork'
+import { CHAIN_ID, isSupportedChainId } from '@/stores/network/network'
+import { DEFAULT_CHAIN_ID, useNetwork } from '@/stores/network/useNetwork'
 import { useRouter } from 'vue-router'
 
 export function useChainIdRoute() {

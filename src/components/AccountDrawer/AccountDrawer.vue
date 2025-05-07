@@ -1,23 +1,22 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
-import { displayAccountName, ImportedAccount } from '@/lib/account'
-import { displayChainName } from '@/lib/network'
+import { displayAccountName, ImportedAccount } from '@/stores/account/account'
+import { displayChainName } from '@/stores/network/network'
 import { toRoute } from '@/lib/router'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
-import { useAccounts } from '@/stores/useAccounts'
+import { useAccount } from '@/stores/account/useAccount'
 import { useRouter } from 'vue-router'
 import { shortenAddress } from '@vue-dapp/core'
 import { Power, X, CircleDot, Plus, Download } from 'lucide-vue-next'
 import { VueFinalModal } from 'vue-final-modal'
 import { useEOAWallet } from '@/stores/useEOAWallet'
-import { usePasskey } from '@/stores/usePasskey'
+import { usePasskey } from '@/stores/passkey/usePasskey'
 import { Tooltip } from '@/components/ui/tooltip'
 import { TooltipContent } from '@/components/ui/tooltip'
 import { TooltipTrigger } from '@/components/ui/tooltip'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
-import { useSigner } from '@/stores/validation/useSigner'
-import { watchImmediate } from '@vueuse/core'
 import { useValidation } from '@/stores/validation/useValidation'
+
 const emit = defineEmits<{
 	(e: 'close'): void
 }>()
@@ -26,30 +25,18 @@ function onClickCloseSidebar() {
 	emit('close')
 }
 
-const { isAccountConnected } = useValidation()
-const { accounts, selectedAccount } = useAccounts()
+const { accounts, selectedAccount, isAccountConnected } = useAccount()
 const { wallet, address, isEOAWalletConnected, disconnect } = useEOAWallet()
 const { username, isLogin, passkeyLogout } = usePasskey()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
-const { selectSigner, selectedSigner } = useSigner()
-
-// Auto-select single signer when connected
-watchImmediate([isEOAWalletConnected, isLogin], ([eoaConnected, passkeyConnected]) => {
-	if (eoaConnected && !passkeyConnected) {
-		selectSigner('EOA-Owned')
-	} else if (!eoaConnected && passkeyConnected) {
-		selectSigner('Passkey')
-	} else if (eoaConnected && passkeyConnected) {
-		selectSigner('Passkey')
-	}
-})
+const { selectSigner, selectedSigner } = useValidation()
 
 function onClickSelectAccount(account: ImportedAccount) {
 	selectedAccount.value = account
 }
 
 function onClickRemoveAccount(account: ImportedAccount) {
-	useAccounts().removeAccount(account)
+	useAccount().removeAccount(account)
 }
 
 const router = useRouter()
@@ -105,7 +92,7 @@ function onClickImportAccount() {
 								</div>
 
 								<div v-for="vOption in selectedAccount.vOptions" :key="vOption.type" class="mt-1">
-									<span>{{ vOption.type }}: {{ shortenAddress(vOption.identifier) }}</span>
+									<span>{{ vOption.type }}</span>
 								</div>
 							</div>
 						</div>
@@ -235,7 +222,7 @@ function onClickImportAccount() {
 						</TooltipProvider>
 					</div>
 				</div>
-				<div class="h-full overflow-y-auto space-y-2 pr-3 pt-2">
+				<div class="h-full overflow-y-auto space-y-2 pt-2">
 					<div
 						v-for="account in accounts"
 						:key="account.address"

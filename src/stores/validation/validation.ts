@@ -1,7 +1,7 @@
-import { deserializePasskeyCredential, PasskeyCredential, serializePasskeyCredential } from '@/lib/passkey'
+import { deserializePasskeyCredential, PasskeyCredential, serializePasskeyCredential } from '@/stores/passkey/passkey'
 import { isAddress } from 'ethers'
 import { ADDRESS, isSameAddress } from 'sendop'
-import { useSigner } from './useSigner'
+import { useValidation } from '@/stores/validation/useValidation'
 import { shortenAddress } from '@vue-dapp/core'
 
 export const SUPPORTED_VALIDATION_OPTIONS = {
@@ -77,8 +77,9 @@ export function createPasskeyValidation(credential: PasskeyCredential): Validati
 		identifier: serializePasskeyCredential(credential),
 	}
 }
+
 export function checkValidationAvailability(vOptions: ValidationIdentifier[]): boolean {
-	const { selectedSigner } = useSigner()
+	const { selectedSigner } = useValidation()
 	if (!selectedSigner.value) return false
 
 	for (const vOption of vOptions) {

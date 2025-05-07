@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useSA } from '@/stores/useSA'
 import { useConnectModal } from '@/stores/useConnectModal'
-import { useNetwork } from '@/stores/useNetwork'
+import { useNetwork } from '@/stores/network/useNetwork'
 import { shortenAddress } from '@vue-dapp/core'
 
 const { store } = useConnectModal()

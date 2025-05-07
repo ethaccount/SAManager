@@ -2,8 +2,8 @@
 import { useAccountDrawer } from '@/components/AccountDrawer/useAccountDrawer'
 import ConnectModal from '@/components/connect-modal/ConnectModal.vue'
 import { Button } from '@/components/ui/button'
+import { useAccount } from '@/stores/account/useAccount'
 import { useConnectModal } from '@/stores/useConnectModal'
-import { useValidation } from '@/stores/validation/useValidation'
 import { Wallet } from 'lucide-vue-next'
 import { useModal } from 'vue-final-modal'
 
@@ -22,7 +22,7 @@ connectModalStore.updateStore({
 	closeModal: closeConnectModal,
 })
 
-const { isAccountConnected } = useValidation()
+const { isAccountConnected } = useAccount()
 
 function onClickAccountButton() {
 	const { openAccountDrawer } = useAccountDrawer()

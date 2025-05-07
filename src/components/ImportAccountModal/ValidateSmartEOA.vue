@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { useNetwork } from '@/stores/useNetwork'
+import { useNetwork } from '@/stores/network/useNetwork'
 import { ADDRESS, getSmartEOADelegateAddress, isSameAddress } from 'sendop'
 import { ref, onMounted } from 'vue'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
-import { AccountId } from '@/lib/account'
+import { AccountId } from '@/stores/account/account'
 import { Button } from '@/components/ui/button'
 import { Loader2, CheckCircle2, XCircle, ArrowLeft } from 'lucide-vue-next'
 

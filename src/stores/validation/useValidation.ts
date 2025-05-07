@@ -1,53 +1,52 @@
-import { signMessage } from '@/lib/passkey'
 import { defineStore, storeToRefs } from 'pinia'
-import { EOAValidatorModule, ERC7579Validator, WebAuthnValidatorModule } from 'sendop'
-import { useAccounts } from '../useAccounts'
+import { createEOAOwnedValidation, createPasskeyValidation, ValidationIdentifier } from './validation'
 import { useEOAWallet } from '../useEOAWallet'
-import { usePasskey } from '../usePasskey'
-import { useSigner } from './useSigner'
-import { checkValidationAvailability, SUPPORTED_VALIDATION_OPTIONS } from './validation'
+import { usePasskey } from '../passkey/usePasskey'
 
 export const useValidationStore = defineStore('useValidationStore', () => {
-	const { selectedAccount } = useAccounts()
+	const selectedSigner = ref<ValidationIdentifier | null>(null)
 
-	const isAccountConnected = computed(() => {
-		if (!selectedAccount.value) return false
-		return checkValidationAvailability(selectedAccount.value.vOptions)
-	})
+	const connectedSigners = computed<ValidationIdentifier[]>(() => {
+		const { isEOAWalletConnected, wallet } = useEOAWallet()
+		const { isLogin, credential } = usePasskey()
 
-	const erc7579Validator = computed<ERC7579Validator | null>(() => {
-		const { isAccountConnected } = useValidation()
-		const { selectedSigner } = useSigner()
-		if (!isAccountConnected.value) return null
-		if (!selectedSigner.value) return null
+		let signers: ValidationIdentifier[] = []
 
-		switch (selectedSigner.value.type) {
-			case 'EOA-Owned':
-				const { signer } = useEOAWallet()
-				if (!signer.value) {
-					return null
-				}
-				return new EOAValidatorModule({
-					address: SUPPORTED_VALIDATION_OPTIONS['EOA-Owned'].validatorAddress,
-					signer: signer.value,
-				})
-			case 'Passkey':
-				const { credential } = usePasskey()
-				if (!credential.value) {
-					return null
-				}
-				return new WebAuthnValidatorModule({
-					address: SUPPORTED_VALIDATION_OPTIONS['Passkey'].validatorAddress,
-					signMessage: signMessage,
-				})
-			default:
-				return null
+		if (isEOAWalletConnected.value) {
+			if (!wallet.address)
+				throw new Error('useValidationStore: EOA wallet is connected but no address is available')
+			signers.push(createEOAOwnedValidation(wallet.address))
+		} else {
+			if (signers.find(s => s.type === 'EOA-Owned')) {
+				// remove EOA-Owned signer if it exists
+				signers = signers.filter(s => s.type !== 'EOA-Owned')
+			}
 		}
+
+		if (isLogin.value) {
+			if (!credential.value)
+				throw new Error('useValidationStore: Passkey is logged in but no credential is available')
+			signers.push(createPasskeyValidation(credential.value))
+		} else {
+			if (signers.find(s => s.type === 'Passkey')) {
+				// remove Passkey signer if it exists
+				signers = signers.filter(s => s.type !== 'Passkey')
+			}
+		}
+
+		return signers
 	})
+
+	function selectSigner(type: ValidationIdentifier['type']) {
+		const signer = connectedSigners.value.find(s => s.type === type)
+		if (!signer) throw new Error(`useValidationStore: No signer of type ${type} is connected`)
+		selectedSigner.value = signer
+	}
 
 	return {
-		isAccountConnected,
-		erc7579Validator,
+		connectedSigners,
+		selectedSigner,
+		selectSigner,
 	}
 })
 

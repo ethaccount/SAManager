@@ -2,18 +2,18 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { displayAccountName } from '@/lib/account'
-import { displayChainName } from '@/lib/network'
+import { displayAccountName } from '@/stores/account/account'
+import { displayChainName } from '@/stores/network/network'
 import { toRoute } from '@/lib/router'
-import { useAccounts } from '@/stores/useAccounts'
+import { useAccount } from '@/stores/account/useAccount'
+import { displayValidationIdentifier } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
 import { watchImmediate } from '@vueuse/core'
 import { ArrowLeft, Copy, ExternalLink } from 'lucide-vue-next'
 import ASModules from './ASModules.vue'
-import { displayValidationIdentifier } from '@/stores/validation/validation'
 
 const router = useRouter()
-const { selectedAccount, isDeployed } = useAccounts()
+const { selectedAccount, isDeployed } = useAccount()
 
 watchImmediate(selectedAccount, () => {
 	if (selectedAccount.value) {

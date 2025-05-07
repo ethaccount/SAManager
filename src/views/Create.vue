@@ -4,23 +4,21 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
 import { SALT } from '@/config'
+import { toRoute } from '@/lib/router'
+import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
 import {
 	ACCOUNT_ID_TO_NAME,
 	AccountId,
 	displayAccountName,
 	getComputedAddressAndInitCode,
 	SUPPORTED_ACCOUNTS,
-} from '@/lib/account'
-import { serializePasskeyCredential } from '@/lib/passkey'
-import { toRoute } from '@/lib/router'
-import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
-import { useAccounts } from '@/stores/useAccounts'
+} from '@/stores/account/account'
+import { useAccount } from '@/stores/account/useAccount'
 import { useEOAWallet } from '@/stores/useEOAWallet'
-import { useNetwork } from '@/stores/useNetwork'
-import { usePasskey } from '@/stores/usePasskey'
-import { useSigner } from '@/stores/validation/useSigner'
+import { useNetwork } from '@/stores/network/useNetwork'
+import { usePasskey } from '@/stores/passkey/usePasskey'
+import { useValidation } from '@/stores/validation/useValidation'
 import {
 	checkValidationAvailability,
 	createEOAOwnedValidation,
@@ -33,7 +31,7 @@ import {
 import { shortenAddress } from '@vue-dapp/core'
 import { watchImmediate } from '@vueuse/core'
 import { isAddress } from 'ethers'
-import { Power } from 'lucide-vue-next'
+import { ChevronRight, Power } from 'lucide-vue-next'
 import { toBytes32 } from 'sendop'
 import { toast } from 'vue-sonner'
 
@@ -43,7 +41,7 @@ const { wallet, address, disconnect } = useEOAWallet()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 const { isEOAWalletConnected } = useEOAWallet()
 const { username, isLogin, passkeyLogout } = usePasskey()
-const { importAccount, selectAccount } = useAccounts()
+const { importAccount, selectAccount } = useAccount()
 
 const supportedAccounts = Object.entries(SUPPORTED_ACCOUNTS)
 	.filter(([_, data]) => data.isModular)
@@ -64,6 +62,7 @@ const supportedValidationOptions = Object.entries(SUPPORTED_VALIDATION_OPTIONS)
 const selectedAccountType = ref<AccountId>(supportedAccounts[0].id)
 const shouldDeploy = ref(false)
 const isComputingAddress = ref(false)
+const showMoreOptions = ref(false)
 
 const selectedValidationType = ref<ValidationType | undefined>(undefined)
 const selectedValidation = computed<ValidationIdentifier | null>(() => {
@@ -86,7 +85,7 @@ const selectedValidation = computed<ValidationIdentifier | null>(() => {
 // Auto select the signer when the selectedValidation is updated
 watchImmediate(selectedValidationType, () => {
 	if (selectedValidation.value) {
-		const { selectSigner } = useSigner()
+		const { selectSigner } = useValidation()
 		selectSigner(selectedValidation.value.type)
 	}
 })
@@ -105,7 +104,57 @@ const isValidationAvailable = computed(() => {
 	return checkValidationAvailability([selectedValidation.value])
 })
 
-function onClickReview() {
+const computedAddress = ref<string>('')
+const initCode = ref<string>('')
+
+watchImmediate([isValidationAvailable, selectedValidation, selectedAccountType, computedSalt], async () => {
+	if (isValidationAvailable.value && selectedValidation.value && selectedAccountType.value && computedSalt.value) {
+		isComputingAddress.value = true
+		try {
+			const res = await getComputedAddressAndInitCode(
+				client.value,
+				selectedAccountType.value,
+				selectedValidation.value,
+				computedSalt.value,
+			)
+			computedAddress.value = res.computedAddress
+			initCode.value = res.initCode
+		} catch (error) {
+			throw error
+		} finally {
+			isComputingAddress.value = false
+		}
+	}
+})
+
+function onClickImport() {
+	if (!computedAddress.value) {
+		throw new Error('onClickImport: Invalid computed address')
+	}
+
+	if (!initCode.value) {
+		throw new Error('onClickImport: Invalid init code')
+	}
+
+	if (!selectedValidation.value) {
+		throw new Error('onClickImport: Invalid validation')
+	}
+
+	importAccount({
+		accountId: selectedAccountType.value,
+		category: 'Smart Account',
+		address: computedAddress.value,
+		chainId: selectedChainId.value,
+		vOptions: [selectedValidation.value],
+		initCode: initCode.value,
+	})
+
+	selectAccount(computedAddress.value, selectedChainId.value)
+
+	router.push(toRoute('account-settings', { address: computedAddress.value }))
+}
+
+function onClickDeploy() {
 	if (!computedAddress.value) {
 		throw new Error('onClickImport: Invalid computed address')
 	}
@@ -131,58 +180,6 @@ function onClickReview() {
 
 	useTransactionModal().openModal([])
 }
-
-function onClickImport() {
-	if (!computedAddress.value) {
-		throw new Error('onClickImport: Invalid computed address')
-	}
-
-	if (!initCode.value) {
-		throw new Error('onClickImport: Invalid init code')
-	}
-
-	if (!selectedValidation.value) {
-		throw new Error('onClickImport: Invalid validation')
-	}
-
-	importAccount({
-		accountId: selectedAccountType.value,
-		category: 'Smart Account',
-		address: computedAddress.value,
-		chainId: selectedChainId.value,
-		vOptions: [selectedValidation.value],
-		initCode: initCode.value,
-	})
-
-	toast.success('Account imported successfully')
-
-	selectAccount(computedAddress.value, selectedChainId.value)
-
-	router.push(toRoute('account-settings', { address: computedAddress.value }))
-}
-
-const computedAddress = ref<string>('')
-const initCode = ref<string>('')
-
-watchImmediate([isValidationAvailable, selectedValidation, selectedAccountType, computedSalt], async () => {
-	if (isValidationAvailable.value && selectedValidation.value && selectedAccountType.value && computedSalt.value) {
-		isComputingAddress.value = true
-		try {
-			const res = await getComputedAddressAndInitCode(
-				client.value,
-				selectedAccountType.value,
-				selectedValidation.value,
-				computedSalt.value,
-			)
-			computedAddress.value = res.computedAddress
-			initCode.value = res.initCode
-		} catch (error) {
-			throw error
-		} finally {
-			isComputingAddress.value = false
-		}
-	}
-})
 </script>
 
 <template>
@@ -305,22 +302,26 @@ watchImmediate([isValidationAvailable, selectedValidation, selectedAccountType, 
 				</div>
 
 				<div v-if="isValidationAvailable" class="space-y-3">
-					<!-- Add custom salt input -->
-					<div class="flex flex-col gap-1.5">
+					<!-- More Options toggle -->
+					<Button
+						variant="ghost"
+						class="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+						@click="showMoreOptions = !showMoreOptions"
+					>
+						<ChevronRight class="w-4 h-4 transition-transform" :class="{ 'rotate-90': showMoreOptions }" />
+						More Options
+					</Button>
+
+					<!-- salt input -->
+					<div v-if="showMoreOptions" class="flex flex-col gap-1.5">
 						<Label for="custom-salt">Custom Salt (Optional)</Label>
 						<input
 							id="custom-salt"
 							v-model="saltInput"
 							type="number"
-							placeholder="Enter a number for custom salt"
+							placeholder="Enter a number for custom salt. Leave empty for default."
 							class="w-full px-3 py-2 bg-muted/30 border border-border/50 rounded-lg focus:border-primary transition-colors"
 						/>
-						<span class="text-xs text-muted-foreground">Leave empty to use default salt</span>
-					</div>
-
-					<div class="flex items-center space-x-2">
-						<Switch id="deploy-switch" v-model="shouldDeploy" />
-						<Label for="deploy-switch">Deploy Contract</Label>
 					</div>
 				</div>
 
@@ -342,24 +343,12 @@ watchImmediate([isValidationAvailable, selectedValidation, selectedAccountType, 
 					</div>
 				</div>
 
-				<div class="mt-6">
-					<Button
-						v-if="!shouldDeploy"
-						class="w-full bg-primary/90 hover:bg-primary disabled:opacity-50"
-						size="lg"
-						:disabled="!computedAddress"
-						@click="onClickImport"
-					>
-						Import Account
+				<div class="grid grid-cols-2 gap-2">
+					<Button variant="default" size="lg" :disabled="!computedAddress" @click="onClickImport">
+						Import
 					</Button>
-					<Button
-						v-else
-						class="w-full bg-primary/90 hover:bg-primary disabled:opacity-50"
-						size="lg"
-						:disabled="!computedAddress"
-						@click="onClickReview"
-					>
-						Review
+					<Button variant="secondary" size="lg" :disabled="!computedAddress" @click="onClickDeploy">
+						Deploy
 					</Button>
 				</div>
 			</CardContent>
