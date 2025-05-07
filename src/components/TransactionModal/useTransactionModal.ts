@@ -7,6 +7,7 @@ import {
 	estimateUserOp,
 	Execution,
 	getPaymasterData,
+	isSameAddress,
 	JsonRpcError,
 	PublicPaymaster,
 	sendUserOp,
@@ -74,6 +75,7 @@ export function useTransactionModal() {
 	})
 
 	const userOp = ref<UserOp | null>(null)
+	const txHash = ref<string | null>(null)
 
 	const pmGetter = computed(() => {
 		switch (selectedPaymaster.value) {
@@ -132,11 +134,18 @@ export function useTransactionModal() {
 			throw new Error('Transaction not signed')
 		}
 		try {
+			// Send the user operation
 			const op = await sendUserOp(bundler.value, userOp.value)
 
+			// Wait for the transaction to be mined
 			status.value = TransactionStatus.Pending
 			const receipt = await op.wait()
 
+			// Store the transaction hash
+			const sender = userOp.value.sender
+			txHash.value = receipt.logs.filter(log => isSameAddress(log.address, sender))[0]?.transactionHash
+
+			// Check if the transaction was successful
 			if (receipt.success) {
 				status.value = TransactionStatus.Success
 
@@ -172,5 +181,6 @@ export function useTransactionModal() {
 		canSign,
 		canSend,
 		status,
+		txHash,
 	}
 }

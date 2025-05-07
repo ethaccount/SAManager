@@ -80,5 +80,5 @@
 
 /* ConnectEOAWallet, TransactionModal */
 .error-section {
-	@apply mt-2 p-3 bg-destructive/10 text-destructive rounded-[--radius] text-sm;
+	@apply mt-2 p-3 bg-destructive/10 text-destructive rounded-[--radius] text-sm break-words;
 }

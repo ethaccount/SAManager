@@ -7,7 +7,7 @@ import { useAccount } from '@/stores/account/useAccount'
 import { useNetwork } from '@/stores/network/useNetwork'
 import { shortenAddress } from '@vue-dapp/core'
 import { formatEther } from 'ethers'
-import { CircleDot, X } from 'lucide-vue-next'
+import { CircleDot, X, ExternalLink } from 'lucide-vue-next'
 import { Execution } from 'sendop'
 import { VueFinalModal } from 'vue-final-modal'
 import { TransactionStatus, useTransactionModal } from './useTransactionModal'
@@ -33,7 +33,7 @@ function onClickClose() {
 }
 
 const { wallet } = useEOAWallet()
-const { selectedChainId } = useNetwork()
+const { selectedChainId, explorerUrl } = useNetwork()
 const { selectedAccount, isDeployed } = useAccount()
 const { selectSigner, selectedSigner } = useValidation()
 const {
@@ -47,6 +47,7 @@ const {
 	handleEstimate,
 	handleSign,
 	handleSend,
+	txHash,
 } = useTransactionModal()
 
 const error = ref<string | null>(null)
@@ -319,6 +320,16 @@ async function onClickSend() {
 							<p class="text-sm text-muted-foreground">
 								Your transaction has been confirmed on the blockchain
 							</p>
+							<a
+								v-if="txHash"
+								:href="`${explorerUrl}/tx/${txHash}`"
+								target="_blank"
+								rel="noopener noreferrer"
+								class="inline-flex items-center gap-1.5 mt-2 text-sm text-primary hover:underline"
+							>
+								View on Explorer
+								<ExternalLink class="w-4 h-4" />
+							</a>
 						</div>
 					</template>
 

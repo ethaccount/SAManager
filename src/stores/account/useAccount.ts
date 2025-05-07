@@ -111,7 +111,7 @@ export const useAccountStore = defineStore(
 			}
 
 			if (accounts.value.find(a => isSameAddress(a.address, account.address) && a.chainId === account.chainId)) {
-				toast.info('Account already exists')
+				toast.info('Account already imported')
 				return
 			}
 
