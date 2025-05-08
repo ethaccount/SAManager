@@ -13,6 +13,7 @@ import { displayChainName } from '@/stores/network/network'
 import { useNetwork } from '@/stores/network/useNetwork'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
+import { TransactionStatus, useTxModal } from '@/stores/useTxModal'
 import { useValidation } from '@/stores/validation/useValidation'
 import {
 	checkValidationAvailability,
@@ -28,7 +29,6 @@ import { watchImmediate } from '@vueuse/core'
 import { isAddress } from 'ethers'
 import { ChevronRight, Power } from 'lucide-vue-next'
 import { toBytes32 } from 'sendop'
-import { TransactionStatus, useTxModal } from '@/stores/useTxModal'
 
 const router = useRouter()
 const { client, selectedChainId } = useNetwork()
@@ -47,19 +47,46 @@ const supportedAccounts = Object.entries(SUPPORTED_ACCOUNTS)
 		description: `Supports EntryPoint ${SUPPORTED_ACCOUNTS[id as AccountId].entryPointVersion}`,
 	}))
 
-const supportedValidationOptions = Object.entries(SUPPORTED_VALIDATION_OPTIONS)
-	.filter(([key, _]) => key !== 'SmartEOA')
-	.map(([key, data]) => ({
-		type: key as ValidationType,
-		name: data.name,
-		description: data.description,
-	}))
+const CREATE_ACCOUNT_VALIDATION_RULES: Record<AccountId, ValidationType[]> = {
+	[AccountId['kernel.advanced.v0.3.1']]: ['EOA-Owned', 'Passkey'],
+	[AccountId['biconomy.nexus.1.0.2']]: ['EOA-Owned', 'Passkey'],
+	[AccountId['rhinestone.safe7579.v1.0.0']]: ['EOA-Owned'],
+	[AccountId['infinitism.SimpleAccount.0.8.0']]: [],
+	[AccountId['infinitism.Simple7702Account.0.8.0']]: [],
+} as const
+
+const supportedValidationOptions = computed(() => {
+	if (!selectedAccountType.value) return []
+
+	const allowedValidations = CREATE_ACCOUNT_VALIDATION_RULES[selectedAccountType.value]
+	return Object.entries(SUPPORTED_VALIDATION_OPTIONS)
+		.filter(([key]) => allowedValidations.includes(key as ValidationType))
+		.map(([key, data]) => ({
+			type: key as ValidationType,
+			name: data.name,
+			description: data.description,
+		}))
+})
 
 const selectedAccountType = ref<AccountId | undefined>(undefined)
+
+// Reset validation type if not supported by new account type
+watch(selectedAccountType, newAccountType => {
+	if (!newAccountType) {
+		selectedValidationType.value = undefined
+		return
+	}
+
+	const allowedValidations = CREATE_ACCOUNT_VALIDATION_RULES[newAccountType]
+	if (selectedValidationType.value && !allowedValidations.includes(selectedValidationType.value)) {
+		selectedValidationType.value = undefined
+	}
+})
+
+const selectedValidationType = ref<ValidationType | undefined>(undefined)
 const isComputingAddress = ref(false)
 const showMoreOptions = ref(false)
 
-const selectedValidationType = ref<ValidationType | undefined>(undefined)
 const selectedValidation = computed<ValidationIdentifier | null>(() => {
 	if (!selectedValidationType.value) return null
 
