@@ -78,6 +78,17 @@ export function createPasskeyValidation(credential: PasskeyCredential): Validati
 	}
 }
 
+export function createSmartEOAValidation(address: string): ValidationIdentifier {
+	if (!isAddress(address)) {
+		throw new Error('createSmartEOAValidation: Invalid address')
+	}
+
+	return {
+		type: 'SmartEOA',
+		identifier: address,
+	}
+}
+
 export function checkValidationAvailability(vOptions: ValidationIdentifier[]): boolean {
 	const { selectedSigner } = useValidation()
 	if (!selectedSigner.value) return false

@@ -17,9 +17,9 @@ export const useValidationStore = defineStore('useValidationStore', () => {
 				throw new Error('useValidationStore: EOA wallet is connected but no address is available')
 			signers.push(createEOAOwnedValidation(wallet.address))
 		} else {
-			if (signers.find(s => s.type === 'EOA-Owned')) {
+			if (signers.find(s => s.type === 'EOA-Owned' || s.type === 'SmartEOA')) {
 				// remove EOA-Owned signer if it exists
-				signers = signers.filter(s => s.type !== 'EOA-Owned')
+				signers = signers.filter(s => s.type !== 'EOA-Owned' && s.type !== 'SmartEOA')
 			}
 		}
 
@@ -35,6 +35,13 @@ export const useValidationStore = defineStore('useValidationStore', () => {
 		}
 
 		return signers
+	})
+
+	watch(connectedSigners, () => {
+		if (!selectedSigner.value) return
+		if (!connectedSigners.value.find(s => s.type === selectedSigner.value?.type)) {
+			selectedSigner.value = null
+		}
 	})
 
 	function selectSigner(type: ValidationIdentifier['type']) {

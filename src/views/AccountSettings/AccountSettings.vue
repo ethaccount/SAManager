@@ -73,10 +73,14 @@ watchImmediate(selectedAccount, async () => {
 						>
 							{{ displayChainName(selectedAccount.chainId) }}
 						</div>
+
+						<!-- Category -->
 						<div class="text-xs rounded-full bg-muted px-2.5 py-0.5">
 							{{ selectedAccount.category }}
 						</div>
-						<div class="flex items-center gap-1">
+
+						<!-- Deployed -->
+						<div v-if="selectedAccount.category === 'Smart Account'" class="flex items-center gap-1">
 							<div
 								class="text-xs rounded-full px-2.5 py-0.5"
 								:class="isDeployed ? 'bg-green-800' : 'bg-yellow-500/10 text-yellow-500'"

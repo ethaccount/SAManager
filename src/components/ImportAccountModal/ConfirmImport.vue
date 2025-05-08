@@ -1,35 +1,34 @@
 <script setup lang="ts">
+import { displayAccountName, ImportedAccount } from '@/stores/account/account'
+import { useAccount } from '@/stores/account/useAccount'
+import { CHAIN_NAME } from '@/stores/network/network'
+import { useNetwork } from '@/stores/network/useNetwork'
+import { useImportAccountModal } from '@/stores/useImportAccountModal'
+import { ValidationIdentifier } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
 import { CheckCircle2 } from 'lucide-vue-next'
-import { ref } from 'vue'
-import { useImportAccountModal } from '@/stores/useImportAccountModal'
-import { useAccount } from '@/stores/account/useAccount'
-import { useNetwork } from '@/stores/network/useNetwork'
-import { CHAIN_NAME } from '@/stores/network/network'
-import { AccountId, displayAccountName, AccountCategory } from '@/stores/account/account'
-import { ValidationIdentifier } from '@/stores/validation/validation'
+
 const props = defineProps<{
-	address: () => string
-	accountId: () => AccountId
-	vOptions: () => ValidationIdentifier[]
-	category: () => AccountCategory
+	accountData: () => Omit<ImportedAccount, 'chainId'>
 }>()
 
 const { selectedChainId } = useNetwork()
+
 const isSuccess = ref(false)
 
 const onClickConfirm = () => {
 	useAccount().importAccount({
-		address: props.address(),
-		accountId: props.accountId(),
-		vOptions: props.vOptions(),
-		category: props.category(),
+		address: props.accountData().address,
+		accountId: props.accountData().accountId,
+		vOptions: props.accountData().vOptions,
+		category: props.accountData().category,
 		chainId: selectedChainId.value,
 	})
 	isSuccess.value = true
-	// setTimeout(() => {
-	// 	useImportAccountModal().closeModal()
-	// }, 3000)
+}
+
+function displayValidationOptions(vOptions: ValidationIdentifier[]) {
+	return vOptions.map(v => v.type).join(', ')
 }
 </script>
 
@@ -43,38 +42,32 @@ const onClickConfirm = () => {
 		</div>
 
 		<!-- Success Icon -->
-		<div v-if="isSuccess" class="text-emerald-500">
+		<div v-if="isSuccess" class="text-green-500">
 			<CheckCircle2 class="w-16 h-16" />
 		</div>
 
 		<!-- Account Details -->
 		<div v-if="!isSuccess" class="w-full max-w-sm space-y-3 bg-muted/30 rounded-lg p-4">
 			<div class="flex justify-between items-center">
-				<span class="text-sm text-muted-foreground">Chain ID</span>
+				<span class="text-sm text-muted-foreground">Chain</span>
 				<span class="font-medium text-foreground">{{ CHAIN_NAME[selectedChainId] }}</span>
 			</div>
 			<div class="flex justify-between items-center">
-				<span class="text-sm text-muted-foreground">Account</span>
-				<span class="font-medium text-foreground">{{ displayAccountName(accountId()) }}</span>
+				<span class="text-sm text-muted-foreground">Account Type</span>
+				<span class="font-medium text-foreground">{{ displayAccountName(accountData().accountId) }}</span>
 			</div>
 			<div class="flex justify-between items-center">
 				<span class="text-sm text-muted-foreground">Address</span>
-				<span class="font-medium text-foreground font-mono">{{ shortenAddress(address()) }}</span>
+				<span class="font-medium text-foreground font-mono">{{ shortenAddress(accountData().address) }}</span>
 			</div>
 			<div class="flex justify-between items-center">
-				<span class="text-sm text-muted-foreground">Type</span>
-				<span class="font-medium text-foreground">{{ category() }}</span>
+				<span class="text-sm text-muted-foreground">Category</span>
+				<span class="font-medium text-foreground">{{ accountData().category }}</span>
 			</div>
 			<div class="flex justify-between items-center">
 				<span class="text-sm text-muted-foreground">Validation Options</span>
 				<span class="font-medium text-foreground">
-					{{
-						vOptions()?.length
-							? vOptions()
-									.map(v => v.type)
-									.join(', ')
-							: 'None'
-					}}
+					{{ displayValidationOptions(accountData().vOptions) }}
 				</span>
 			</div>
 		</div>
@@ -85,8 +78,4 @@ const onClickConfirm = () => {
 	</div>
 </template>
 
-<style lang="css" scoped>
-.text-emerald-500 {
-	color: #10b981;
-}
-</style>
+<style lang="css" scoped></style>

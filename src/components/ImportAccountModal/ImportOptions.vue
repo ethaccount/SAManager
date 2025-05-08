@@ -10,7 +10,7 @@ type AccountOption = {
 	description: string
 	icon: Component
 	nextStageKey: IAMStageKey | null
-	type: AccountCategory
+	category: AccountCategory
 }
 
 const accountOptions = computed<AccountOption[]>(() => {
@@ -21,28 +21,28 @@ const accountOptions = computed<AccountOption[]>(() => {
 			description: 'Import an account using your passkey for this site',
 			icon: Key,
 			nextStageKey: isPasskeyRPHealthy.value ? IAMStageKey.CONNECT_PASSKEY : null,
-			type: 'Smart Account',
+			category: 'Smart Account',
 		},
 		{
 			title: 'EOA-Owned',
 			description: 'Import an account controlled by an EOA in a wallet',
 			icon: Wallet,
 			nextStageKey: IAMStageKey.CONNECT_EOA_WALLET,
-			type: 'Smart Account',
+			category: 'Smart Account',
 		},
 		{
 			title: 'Smart EOA',
 			description: 'Import an EIP-7702 upgraded EOA that has smart account capabilities',
 			icon: Code,
 			nextStageKey: IAMStageKey.CONNECT_SMART_EOA,
-			type: 'Smart EOA',
+			category: 'Smart EOA',
 		},
 		{
 			title: 'Address',
 			description: 'Import an account by entering your account address',
 			icon: LinkIcon,
 			nextStageKey: null,
-			type: 'Smart Account',
+			category: 'Smart Account',
 		},
 	]
 })
@@ -51,7 +51,7 @@ const onClickAccountOption = (option: AccountOption) => {
 	const { goNextStage } = useImportAccountModal()
 
 	if (option.nextStageKey) {
-		useImportAccountModal().updateFormData({ type: option.type })
+		useImportAccountModal().updateFormData({ category: option.category })
 		goNextStage(option.nextStageKey)
 	}
 }

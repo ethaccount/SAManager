@@ -13,6 +13,7 @@ import {
 	NexusAccount,
 	OwnableValidator,
 	Safe7579Account,
+	Simple7702Account,
 	WebAuthnValidator,
 } from 'sendop'
 import { toast } from 'vue-sonner'
@@ -65,18 +66,23 @@ export const useAccountStore = defineStore(
 						address: SUPPORTED_VALIDATION_OPTIONS['Passkey'].validatorAddress,
 						signMessage: signMessage,
 					})
+				case 'SmartEOA':
+					return null
 				default:
 					return null
 			}
 		})
 
 		const opGetter = computed(() => {
-			if (!selectedAccount.value || !isAccountConnected.value || !erc7579Validator.value) return null
+			if (!selectedAccount.value || !isAccountConnected.value) return null
 
 			const { client, bundler } = useNetwork()
 
 			switch (selectedAccount.value.accountId) {
 				case AccountId['kernel.advanced.v0.3.1']:
+					if (!erc7579Validator.value) {
+						return null
+					}
 					return new KernelV3Account({
 						address: selectedAccount.value.address,
 						client: client.value,
@@ -84,6 +90,9 @@ export const useAccountStore = defineStore(
 						validator: erc7579Validator.value,
 					})
 				case AccountId['biconomy.nexus.1.0.2']:
+					if (!erc7579Validator.value) {
+						return null
+					}
 					return new NexusAccount({
 						address: selectedAccount.value.address,
 						client: client.value,
@@ -91,19 +100,26 @@ export const useAccountStore = defineStore(
 						validator: erc7579Validator.value,
 					})
 				case AccountId['rhinestone.safe7579.v1.0.0']:
+					if (!erc7579Validator.value) {
+						return null
+					}
 					return new Safe7579Account({
 						address: selectedAccount.value.address,
 						client: client.value,
 						bundler: bundler.value,
 						validator: erc7579Validator.value,
 					})
-				// case AccountId['infinitism.Simple7702Account.0.8.0']:
-				// 	return new Simple7702Account({
-				// 		address: selectedAccount.value.address,
-				// 		client: client.value,
-				// 		bundler: bundler.value,
-				// 		validator: validator.value,
-				// 	})
+				case AccountId['infinitism.Simple7702Account.0.8.0']:
+					const { signer } = useEOAWallet()
+					if (!signer.value) {
+						return null
+					}
+					return new Simple7702Account({
+						address: selectedAccount.value.address,
+						client: client.value,
+						bundler: bundler.value,
+						signer: signer.value,
+					})
 				default:
 					throw new Error(`opGetter: Unsupported accountId: ${selectedAccount.value.accountId}`)
 			}
