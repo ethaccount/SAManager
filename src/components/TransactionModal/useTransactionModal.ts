@@ -48,7 +48,7 @@ export function useTransactionModal() {
 	}
 
 	const { bundler } = useNetwork()
-	const { selectedAccount, opGetter } = useAccount()
+	const { selectedAccount, opGetter, selectedAccountInitCode } = useAccount()
 
 	const paymasters = [
 		{ id: 'none', name: 'No Paymaster', description: 'Pay gas fees with native tokens' },
@@ -87,20 +87,19 @@ export function useTransactionModal() {
 		}
 	})
 
-	async function handleEstimate(executions: Execution[]) {
+	async function handleEstimate(executions: Execution[], initCode?: string) {
 		if (!opGetter.value || !selectedAccount.value) {
 			throw new Error('Account not selected')
+		}
+
+		if (executions.length === 0 && !initCode) {
+			throw new Error('No executions and no init code provided')
 		}
 
 		let _userOp: UserOp | null = null
 
 		try {
-			_userOp = await createUserOp(
-				bundler.value,
-				executions,
-				opGetter.value,
-				selectedAccount.value.initCode || undefined,
-			)
+			_userOp = await createUserOp(bundler.value, executions, opGetter.value, initCode)
 		} catch (e: unknown) {
 			throw new Error('Failed to create user operation', { cause: e })
 		}
@@ -156,16 +155,8 @@ export function useTransactionModal() {
 				txHash.value = foundLog.transactionHash
 			}
 
-			// Check if the transaction was successful
 			if (receipt.success) {
 				status.value = TransactionStatus.Success
-
-				// remove initCode from selected account
-				if (selectedAccount.value) {
-					selectedAccount.value.initCode = null
-				} else {
-					throw new Error('handleSend: Account not found for initCode removal')
-				}
 			} else {
 				status.value = TransactionStatus.Failed
 			}

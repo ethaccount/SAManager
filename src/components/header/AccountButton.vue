@@ -22,7 +22,7 @@ connectModalStore.updateStore({
 	closeModal: closeConnectModal,
 })
 
-const { isAccountConnected } = useAccount()
+const { isAccountConnected, accounts } = useAccount()
 
 function onClickAccountButton() {
 	const { openAccountDrawer } = useAccountDrawer()
@@ -32,12 +32,16 @@ function onClickAccountButton() {
 
 <template>
 	<div class="">
-		<Button variant="outline" class="w-9 h-9 rounded-full relative" @click="onClickAccountButton">
-			<div
-				class="absolute inset-0 rounded-full"
-				:class="['ring-1', isAccountConnected ? 'ring-green-500' : 'ring-red-500']"
-			></div>
-			<Wallet class="relative w-5 h-5" />
+		<Button
+			variant="outline"
+			class="w-9 h-9 rounded-full"
+			:class="{
+				'ring-1 ring-green-500': isAccountConnected,
+				'ring-1 ring-red-500': !isAccountConnected && accounts.length !== 0,
+			}"
+			@click="onClickAccountButton"
+		>
+			<Wallet class="w-4 h-4" />
 		</Button>
 	</div>
 </template>

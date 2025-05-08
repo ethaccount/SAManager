@@ -2,18 +2,28 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { displayAccountName } from '@/stores/account/account'
-import { displayChainName } from '@/stores/network/network'
 import { toRoute } from '@/lib/router'
+import { displayAccountName } from '@/stores/account/account'
+import { checkIfAccountIsDeployed } from '@/stores/account/create'
 import { useAccount } from '@/stores/account/useAccount'
+import { displayChainName } from '@/stores/network/network'
+import { useNetwork } from '@/stores/network/useNetwork'
 import { displayValidationIdentifier } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
 import { watchImmediate } from '@vueuse/core'
-import { ArrowLeft, Copy, ExternalLink } from 'lucide-vue-next'
+import { ArrowLeft, ExternalLink } from 'lucide-vue-next'
 import ASModules from './ASModules.vue'
 
 const router = useRouter()
-const { selectedAccount, isDeployed } = useAccount()
+const { client } = useNetwork()
+const { selectedAccount } = useAccount()
+
+const isDeployed = ref(false)
+onMounted(async () => {
+	if (selectedAccount.value?.address) {
+		isDeployed.value = await checkIfAccountIsDeployed(client.value, selectedAccount.value.address)
+	}
+})
 
 watchImmediate(selectedAccount, () => {
 	if (selectedAccount.value) {
@@ -132,7 +142,7 @@ const crossChainAccounts = [
 				</TabsList>
 
 				<TabsContent value="modules" class="mt-6">
-					<ASModules />
+					<ASModules :is-deployed="isDeployed" />
 				</TabsContent>
 
 				<TabsContent value="sessions" class="mt-6">

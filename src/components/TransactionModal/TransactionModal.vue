@@ -14,6 +14,8 @@ import { TransactionStatus, useTransactionModal } from './useTransactionModal'
 import { useValidation } from '@/stores/validation/useValidation'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { displayValidationIdentifier } from '@/stores/validation/validation'
+import { checkIfAccountIsDeployed } from '@/stores/account/create'
+import { toast } from 'vue-sonner'
 
 const props = withDefaults(
 	defineProps<{
@@ -33,8 +35,8 @@ function onClickClose() {
 }
 
 const { wallet } = useEOAWallet()
-const { selectedChainId, explorerUrl } = useNetwork()
-const { selectedAccount, isDeployed } = useAccount()
+const { client, selectedChainId, explorerUrl } = useNetwork()
+const { selectedAccount, selectedAccountInitCode, isAccountConnected } = useAccount()
 const { selectSigner, selectedSigner } = useValidation()
 const {
 	userOp,
@@ -50,13 +52,40 @@ const {
 	txHash,
 } = useTransactionModal()
 
+const isDeployed = ref(false)
+
+onMounted(async () => {
+	if (!isAccountConnected.value) {
+		emit('close')
+		throw new Error('Account not connected')
+	}
+	if (selectedAccount.value?.address) {
+		isDeployed.value = await checkIfAccountIsDeployed(client.value, selectedAccount.value.address)
+		if (!isDeployed.value && !selectedAccountInitCode.value) {
+			emit('close')
+			throw new Error('Account not deployed and no init code provided')
+		}
+	} else {
+		emit('close')
+		throw new Error('No account selected')
+	}
+})
+
 const error = ref<string | null>(null)
 
 async function onClickEstimate() {
 	try {
 		error.value = null
 		status.value = TransactionStatus.Estimating
-		await handleEstimate(props.executions)
+		if (isDeployed.value) {
+			await handleEstimate(props.executions)
+		} else {
+			if (!selectedAccountInitCode.value) {
+				emit('close')
+				throw new Error('Account not deployed and no init code provided')
+			}
+			await handleEstimate(props.executions, selectedAccountInitCode.value)
+		}
 		status.value = TransactionStatus.Sign
 	} catch (e: unknown) {
 		console.error(e)
@@ -253,13 +282,11 @@ watch(status, (newStatus, oldStatus) => {
 					</div>
 
 					<!-- Account Deployment Notice -->
-					<div v-if="selectedAccount?.initCode" class="warning-section">
-						This transaction will also deploy your account contract
-					</div>
+					<div v-if="!isDeployed" class="warning-section">This transaction will deploy your account</div>
 				</div>
 
 				<!-- Transaction Data -->
-				<div class="space-y-3">
+				<div v-if="executions.length > 0" class="space-y-3">
 					<div class="text-sm font-medium">Transaction Data</div>
 					<div class="space-y-3">
 						<div
@@ -294,34 +321,11 @@ watch(status, (newStatus, oldStatus) => {
 				<!-- Transaction Status Display -->
 				<div
 					v-if="status === TransactionStatus.Success || status === TransactionStatus.Failed"
-					class="p-4 rounded-lg text-center space-y-2"
+					class="rounded-lg text-center space-y-2"
 				>
 					<template v-if="status === TransactionStatus.Success">
-						<div class="flex flex-col items-center justify-center py-4">
-							<!-- Larger success checkmark with animation -->
-							<div class="mb-4">
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									class="size-16 text-emerald-500 animate-[scale_0.3s_ease-in-out]"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="2"
-								>
-									<circle cx="12" cy="12" r="10" class="opacity-20" />
-									<path
-										class="animate-[dash_0.5s_ease-in-out_forwards]"
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										d="M7.5 12.5l3 3 6-6.5"
-										style="stroke-dasharray: 20; stroke-dashoffset: 20"
-									/>
-								</svg>
-							</div>
+						<div class="flex flex-col items-center justify-center">
 							<h3 class="text-xl font-semibold text-emerald-500 mb-2">Transaction Successful!</h3>
-							<p class="text-sm text-muted-foreground">
-								Your transaction has been confirmed on the blockchain
-							</p>
 							<a
 								v-if="txHash"
 								:href="`${explorerUrl}/tx/${txHash}`"
@@ -336,26 +340,7 @@ watch(status, (newStatus, oldStatus) => {
 					</template>
 
 					<template v-if="status === TransactionStatus.Failed">
-						<div class="flex flex-col items-center justify-center py-4">
-							<div class="mb-4">
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									class="size-16 text-destructive animate-[scale_0.3s_ease-in-out]"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="2"
-								>
-									<circle cx="12" cy="12" r="10" class="opacity-20" />
-									<path
-										class="animate-[dash_0.5s_ease-in-out_forwards]"
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										d="M8 8l8 8m0-8l-8 8"
-										style="stroke-dasharray: 20; stroke-dashoffset: 20"
-									/>
-								</svg>
-							</div>
+						<div class="flex flex-col items-center justify-center">
 							<h3 class="text-xl font-semibold text-destructive mb-2">Transaction Failed</h3>
 							<p class="text-sm text-muted-foreground">
 								{{ error || 'Transaction could not be processed' }}

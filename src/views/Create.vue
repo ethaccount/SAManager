@@ -143,14 +143,16 @@ function onClickImport() {
 		throw new Error('onClickImport: No validation')
 	}
 
-	importAccount({
-		accountId: selectedAccountType.value,
-		category: 'Smart Account',
-		address: computedAddress.value,
-		chainId: selectedChainId.value,
-		vOptions: [selectedValidation.value],
-		initCode: initCode.value,
-	})
+	importAccount(
+		{
+			accountId: selectedAccountType.value,
+			category: 'Smart Account',
+			address: computedAddress.value,
+			chainId: selectedChainId.value,
+			vOptions: [selectedValidation.value],
+		},
+		initCode.value,
+	)
 
 	selectAccount(computedAddress.value, selectedChainId.value)
 
@@ -174,14 +176,16 @@ function onClickDeploy() {
 		throw new Error('onClickDeploy: No validation')
 	}
 
-	importAccount({
-		accountId: selectedAccountType.value,
-		category: 'Smart Account',
-		address: computedAddress.value,
-		chainId: selectedChainId.value,
-		vOptions: [selectedValidation.value],
-		initCode: initCode.value,
-	})
+	importAccount(
+		{
+			accountId: selectedAccountType.value,
+			category: 'Smart Account',
+			address: computedAddress.value,
+			chainId: selectedChainId.value,
+			vOptions: [selectedValidation.value],
+		},
+		initCode.value,
+	)
 
 	selectAccount(computedAddress.value, selectedChainId.value)
 

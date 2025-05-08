@@ -21,11 +21,12 @@ import { useNetwork } from '../network/useNetwork'
 export const useAccountStore = defineStore(
 	'useAccountStore',
 	() => {
-		const selectedAccount = ref<ImportedAccount | null>(null)
+		const addressToInitCode = ref<Map<string, string>>(new Map())
 
-		const isDeployed = computed(() => {
-			if (!selectedAccount.value) return false
-			return selectedAccount.value.initCode === null
+		const selectedAccount = ref<ImportedAccount | null>(null)
+		const selectedAccountInitCode = computed<string | null>(() => {
+			if (!selectedAccount.value) return null
+			return addressToInitCode.value.get(selectedAccount.value.address) || null
 		})
 
 		const accounts = ref<ImportedAccount[]>([])
@@ -103,10 +104,14 @@ export const useAccountStore = defineStore(
 			}
 		})
 
-		function importAccount(account: ImportedAccount | Omit<ImportedAccount, 'initCode'>) {
-			// TODO: check all fields are valid
+		function importAccount(account: ImportedAccount, initCode?: string) {
 			if (!account.address || !account.chainId || !account.accountId || !account.category) {
 				throw new Error(`importAccount: Invalid values: ${JSON.stringify(account)}`)
+			}
+
+			// should have at least one vOption
+			if (!account.vOptions || account.vOptions.length === 0) {
+				throw new Error(`importAccount: No validation options`)
 			}
 
 			if (accounts.value.find(a => isSameAddress(a.address, account.address) && a.chainId === account.chainId)) {
@@ -115,14 +120,33 @@ export const useAccountStore = defineStore(
 			}
 
 			accounts.value.push({
-				initCode: null,
 				...account,
 			})
+
+			if (initCode) {
+				addressToInitCode.value.set(account.address, initCode)
+			}
 
 			toast.success('Account imported successfully')
 
 			if (accounts.value.length === 1) {
 				selectedAccount.value = accounts.value[0]
+			}
+		}
+
+		function removeAccount(account: ImportedAccount) {
+			accounts.value = accounts.value.filter(a => a.address !== account.address)
+
+			// remove the init code for the account
+			addressToInitCode.value.delete(account.address)
+
+			// if the selected account is the one being removed, select the first account in the list
+			if (selectedAccount.value?.address === account.address) {
+				if (accounts.value.length > 0) {
+					selectedAccount.value = accounts.value[0]
+				} else {
+					selectedAccount.value = null
+				}
 			}
 		}
 
@@ -134,20 +158,9 @@ export const useAccountStore = defineStore(
 			selectedAccount.value = account
 		}
 
-		function removeAccount(account: ImportedAccount) {
-			accounts.value = accounts.value.filter(a => a.address !== account.address)
-			if (selectedAccount.value?.address === account.address) {
-				if (accounts.value.length > 0) {
-					selectedAccount.value = accounts.value[0]
-				} else {
-					selectedAccount.value = null
-				}
-			}
-		}
-
 		return {
 			selectedAccount,
-			isDeployed,
+			selectedAccountInitCode,
 			accounts,
 			hasAccounts,
 			opGetter,
@@ -160,7 +173,7 @@ export const useAccountStore = defineStore(
 	},
 	{
 		persist: {
-			pick: ['accounts', 'selectedAccount'],
+			pick: ['accounts', 'selectedAccount', 'addressToInitCode'],
 		},
 	},
 )

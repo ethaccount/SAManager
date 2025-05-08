@@ -8,7 +8,6 @@ export type ImportedAccount = {
 	address: string
 	chainId: CHAIN_ID
 	vOptions: ValidationIdentifier[]
-	initCode: string | null
 }
 
 export type AccountCategory = 'Smart Account' | 'Smart EOA'

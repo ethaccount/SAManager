@@ -6,7 +6,11 @@ import { watchImmediate } from '@vueuse/core'
 import { ADDRESS, ERC7579_MODULE_TYPE, isSameAddress } from 'sendop'
 import { toast } from 'vue-sonner'
 
-const { selectedAccount, isDeployed } = useAccount()
+const props = defineProps<{
+	isDeployed: boolean
+}>()
+
+const { selectedAccount } = useAccount()
 const { client, clientNoBatch } = useNetwork()
 
 const loading = ref(false)
@@ -37,7 +41,7 @@ const getModuleName = (address: string) => {
 
 // Watch for account changes and fetch modules
 watchImmediate(selectedAccount, async () => {
-	if (!isDeployed.value || !selectedAccount.value?.address || !client.value) return
+	if (!props.isDeployed || !selectedAccount.value?.address || !client.value) return
 
 	loading.value = true
 	try {
