@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { useTransactionModal } from '@/components/TransactionModal/useTransactionModal'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAccount } from '@/stores/account/useAccount'
+import { useTxModal } from '@/stores/useTxModal'
 import { parseEther } from 'ethers'
 import { Plus, X } from 'lucide-vue-next'
 import { INTERFACES } from 'sendop'
@@ -55,7 +55,7 @@ const removeTransfer = (index: number) => {
 }
 
 const onClickReview = () => {
-	useTransactionModal().openModal(
+	useTxModal().openModal(
 		transfers.value.map(t => {
 			if (t.tokenId === 'eth') {
 				return {

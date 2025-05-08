@@ -1,15 +1,13 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { X, Plus } from 'lucide-vue-next'
-import { useSA } from '@/stores/useSA'
-import { parseEther } from 'ethers'
 import { Textarea } from '@/components/ui/textarea'
-import { useTransactionModal } from '@/components/TransactionModal/useTransactionModal'
 import { useAccount } from '@/stores/account/useAccount'
+import { useTxModal } from '@/stores/useTxModal'
+import { parseEther } from 'ethers'
+import { Plus, X } from 'lucide-vue-next'
+import { computed, ref } from 'vue'
 
 type Execution = {
 	to: string
@@ -54,7 +52,7 @@ const reviewButtonText = computed(() => {
 })
 
 async function onClickSend() {
-	useTransactionModal().openModal(
+	useTxModal().openModal(
 		executions.value.map(exec => ({
 			to: exec.to,
 			value: BigInt(parseEther(exec.value)),

@@ -1,6 +1,7 @@
 import TransactionModal from '@/components/TransactionModal/TransactionModal.vue'
 import { useAccount } from '@/stores/account/useAccount'
 import { useNetwork } from '@/stores/network/useNetwork'
+import { defineStore, storeToRefs } from 'pinia'
 import {
 	ADDRESS,
 	createUserOp,
@@ -29,7 +30,7 @@ export enum TransactionStatus {
 	Failed = 'Failed',
 }
 
-export function useTransactionModal() {
+export const useTxModalStore = defineStore('useTxModalStore', () => {
 	const { open, close, patchOptions } = useModal({
 		component: TransactionModal,
 		attrs: {
@@ -48,7 +49,7 @@ export function useTransactionModal() {
 	}
 
 	const { bundler } = useNetwork()
-	const { selectedAccount, opGetter, selectedAccountInitCode } = useAccount()
+	const { selectedAccount, opGetter } = useAccount()
 
 	const paymasters = [
 		{ id: 'none', name: 'No Paymaster', description: 'Pay gas fees with native tokens' },
@@ -184,5 +185,13 @@ export function useTransactionModal() {
 		canSend,
 		status,
 		txHash,
+	}
+})
+
+export function useTxModal() {
+	const store = useTxModalStore()
+	return {
+		...store,
+		...storeToRefs(store),
 	}
 }

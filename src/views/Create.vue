@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useTransactionModal } from '@/components/TransactionModal/useTransactionModal'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -29,6 +28,7 @@ import { watchImmediate } from '@vueuse/core'
 import { isAddress } from 'ethers'
 import { ChevronRight, Power } from 'lucide-vue-next'
 import { toBytes32 } from 'sendop'
+import { TransactionStatus, useTxModal } from '@/stores/useTxModal'
 
 const router = useRouter()
 const { client, selectedChainId } = useNetwork()
@@ -37,6 +37,7 @@ const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 const { isEOAWalletConnected } = useEOAWallet()
 const { username, isLogin, passkeyLogout } = usePasskey()
 const { importAccount, selectAccount } = useAccount()
+const { status } = useTxModal()
 
 const supportedAccounts = Object.entries(SUPPORTED_ACCOUNTS)
 	.filter(([_, data]) => data.isModular)
@@ -126,6 +127,14 @@ watchImmediate([isValidationAvailable, selectedValidation, selectedAccountType, 
 	}
 })
 
+// Update the deployed status when the transaction status changes
+// When users has deployed and closed the modal, they can't click the deploy button again
+watch(status, async () => {
+	if (status.value === TransactionStatus.Success || status.value === TransactionStatus.Failed) {
+		isDeployed.value = await checkIfAccountIsDeployed(client.value, computedAddress.value)
+	}
+})
+
 function onClickImport() {
 	if (!selectedAccountType.value) {
 		throw new Error('onClickImport: No account type')
@@ -189,7 +198,7 @@ function onClickDeploy() {
 
 	selectAccount(computedAddress.value, selectedChainId.value)
 
-	useTransactionModal().openModal([])
+	useTxModal().openModal([])
 }
 
 const disabledDeployButton = computed(() => {

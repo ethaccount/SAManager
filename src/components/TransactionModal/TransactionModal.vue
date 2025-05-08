@@ -2,20 +2,19 @@
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { displayAccountName } from '@/stores/account/account'
-import { displayChainName } from '@/stores/network/network'
+import { checkIfAccountIsDeployed } from '@/stores/account/create'
 import { useAccount } from '@/stores/account/useAccount'
+import { displayChainName } from '@/stores/network/network'
 import { useNetwork } from '@/stores/network/useNetwork'
+import { useEOAWallet } from '@/stores/useEOAWallet'
+import { TransactionStatus, useTxModal } from '@/stores/useTxModal'
+import { useValidation } from '@/stores/validation/useValidation'
+import { displayValidationIdentifier } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
 import { formatEther } from 'ethers'
-import { CircleDot, X, ExternalLink } from 'lucide-vue-next'
+import { CircleDot, ExternalLink, X } from 'lucide-vue-next'
 import { Execution } from 'sendop'
 import { VueFinalModal } from 'vue-final-modal'
-import { TransactionStatus, useTransactionModal } from './useTransactionModal'
-import { useValidation } from '@/stores/validation/useValidation'
-import { useEOAWallet } from '@/stores/useEOAWallet'
-import { displayValidationIdentifier } from '@/stores/validation/validation'
-import { checkIfAccountIsDeployed } from '@/stores/account/create'
-import { toast } from 'vue-sonner'
 
 const props = withDefaults(
 	defineProps<{
@@ -50,7 +49,7 @@ const {
 	handleSign,
 	handleSend,
 	txHash,
-} = useTransactionModal()
+} = useTxModal()
 
 const isDeployed = ref(false)
 
