@@ -136,7 +136,15 @@ const reviewButtonText = computed(() => {
 							<div>
 								<Select v-model="transfer.tokenId">
 									<SelectTrigger id="token" class="border-none bg-muted">
-										<SelectValue placeholder="Token" />
+										<SelectValue>
+											<template #placeholder>Token</template>
+											<div class="flex items-center">
+												<span class="mr-2 text-lg">{{
+													tokens.find(t => t.id === transfer.tokenId)?.icon
+												}}</span>
+												<span>{{ tokens.find(t => t.id === transfer.tokenId)?.symbol }}</span>
+											</div>
+										</SelectValue>
 									</SelectTrigger>
 									<SelectContent>
 										<SelectItem

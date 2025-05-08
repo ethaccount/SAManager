@@ -13,7 +13,7 @@ import { displayValidationIdentifier } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
 import { formatEther } from 'ethers'
 import { CircleDot, ExternalLink, X } from 'lucide-vue-next'
-import { Execution } from 'sendop'
+import { Execution, isSameAddress } from 'sendop'
 import { VueFinalModal } from 'vue-final-modal'
 
 const props = withDefaults(
@@ -39,6 +39,7 @@ const { selectedAccount, selectedAccountInitCode, isAccountConnected } = useAcco
 const { selectSigner, selectedSigner } = useValidation()
 const {
 	userOp,
+	opReceipt,
 	status,
 	canEstimate,
 	canSign,
@@ -48,7 +49,7 @@ const {
 	handleEstimate,
 	handleSign,
 	handleSend,
-	txHash,
+	opHash,
 } = useTxModal()
 
 const isDeployed = ref(false)
@@ -68,6 +69,10 @@ onMounted(async () => {
 		emit('close')
 		throw new Error('No account selected')
 	}
+})
+
+onUnmounted(() => {
+	useTxModal().reset()
 })
 
 const error = ref<string | null>(null)
@@ -123,6 +128,20 @@ watch(status, (newStatus, oldStatus) => {
 	if (oldStatus === TransactionStatus.Signing && newStatus === TransactionStatus.Send) {
 		onClickSend()
 	}
+})
+
+/**
+ * If the sender's tx hash is not found in the receipt logs, use the entire bundle's tx hash.
+ * Otherwise, use the sender related log's tx hash.
+ */
+const txLink = computed(() => {
+	if (!userOp.value || !opReceipt.value) return null
+	const sender = userOp.value.sender
+	const foundLog = opReceipt.value.logs.find(log => isSameAddress(log.address, sender))
+	if (!foundLog) {
+		return `${explorerUrl.value}/tx/${opReceipt.value.receipt.transactionHash}`
+	}
+	return `${explorerUrl.value}/tx/${foundLog.transactionHash}`
 })
 </script>
 
@@ -284,9 +303,9 @@ watch(status, (newStatus, oldStatus) => {
 					<div v-if="!isDeployed" class="warning-section">This transaction will deploy your account</div>
 				</div>
 
-				<!-- Transaction Data -->
+				<!-- Executions -->
 				<div v-if="executions.length > 0" class="space-y-3">
-					<div class="text-sm font-medium">Transaction Data</div>
+					<div class="text-sm font-medium">Executions</div>
 					<div class="space-y-3">
 						<div
 							v-for="(execution, index) in executions"
@@ -326,8 +345,8 @@ watch(status, (newStatus, oldStatus) => {
 						<div class="flex flex-col items-center justify-center">
 							<h3 class="text-xl font-semibold text-emerald-500 mb-2">Transaction Successful!</h3>
 							<a
-								v-if="txHash"
-								:href="`${explorerUrl}/tx/${txHash}`"
+								v-if="txLink"
+								:href="txLink"
 								target="_blank"
 								rel="noopener noreferrer"
 								class="inline-flex items-center gap-1.5 mt-2 text-sm text-primary hover:underline"

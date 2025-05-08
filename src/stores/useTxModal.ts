@@ -14,6 +14,7 @@ import {
 	sendUserOp,
 	signUserOp,
 	UserOp,
+	UserOpReceipt,
 } from 'sendop'
 import { useModal } from 'vue-final-modal'
 import { toast } from 'vue-sonner'
@@ -77,7 +78,8 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 	})
 
 	const userOp = ref<UserOp | null>(null)
-	const txHash = ref<string | null>(null)
+	const opHash = ref<string | null>(null)
+	const opReceipt = ref<UserOpReceipt | null>(null)
 
 	const pmGetter = computed(() => {
 		switch (selectedPaymaster.value) {
@@ -139,22 +141,13 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 			// Send the user operation
 			const op = await sendUserOp(bundler.value, userOp.value)
 
+			opHash.value = op.hash
+
 			// Wait for the transaction to be mined
 			status.value = TransactionStatus.Pending
 			const receipt = await op.wait()
 
-			// Store the transaction hash
-			const sender = userOp.value.sender
-			const foundLog = receipt.logs.find(log => isSameAddress(log.address, sender))
-			if (!foundLog) {
-				txHash.value = receipt.receipt.transactionHash
-
-				const warning = `Cannot find the sender's tx hash in logs, using the tx hash for the entire bundle`
-				toast.warning(warning)
-				console.log(warning, receipt)
-			} else {
-				txHash.value = foundLog.transactionHash
-			}
+			opReceipt.value = receipt
 
 			if (receipt.success) {
 				status.value = TransactionStatus.Success
@@ -171,9 +164,18 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 		}
 	}
 
+	function reset() {
+		status.value = TransactionStatus.Estimation
+		userOp.value = null
+		opHash.value = null
+		opReceipt.value = null
+		selectedPaymaster.value = 'public'
+	}
+
 	return {
 		openModal,
 		closeModal: close,
+		reset,
 		handleEstimate,
 		handleSign,
 		handleSend,
@@ -184,7 +186,8 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 		canSign,
 		canSend,
 		status,
-		txHash,
+		opHash,
+		opReceipt,
 	}
 })
 
