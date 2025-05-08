@@ -1,4 +1,4 @@
-import { AccountId, ImportedAccount } from '@/stores/account/account'
+import { AccountId, ImportedAccount, SUPPORTED_ACCOUNTS } from '@/stores/account/account'
 import { CHAIN_ID } from '@/stores/network/network'
 import { signMessage } from '@/stores/passkey/passkey'
 import { usePasskey } from '@/stores/passkey/usePasskey'
@@ -41,6 +41,12 @@ export const useAccountStore = defineStore(
 
 			// check if the validation options are available
 			return checkValidationAvailability(selectedAccount.value.vOptions)
+		})
+
+		watch(isAccountConnected, () => {
+			const { switchEntryPoint } = useNetwork()
+			if (!selectedAccount.value) return
+			switchEntryPoint(SUPPORTED_ACCOUNTS[selectedAccount.value.accountId].entryPointVersion)
 		})
 
 		const erc7579Validator = computed<ERC7579Validator | null>(() => {

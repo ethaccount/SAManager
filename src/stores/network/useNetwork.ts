@@ -51,6 +51,10 @@ export const useNetworkStore = defineStore(
 
 		const selectedEntryPoint = ref<EntryPointVersion>(DEFAULT_ENTRY_POINT_VERSION)
 
+		function switchEntryPoint(entryPoint: EntryPointVersion) {
+			selectedEntryPoint.value = entryPoint
+		}
+
 		const supportedBundlers = computed<SUPPORTED_BUNDLER[]>(() => {
 			return Object.values(SUPPORTED_BUNDLER)
 		})
@@ -76,6 +80,7 @@ export const useNetworkStore = defineStore(
 			const bundlerOptions = {
 				parseError: true,
 				debug: true,
+				entryPointVersion: selectedEntryPoint.value,
 			}
 
 			switch (selectedBundler.value) {
@@ -105,6 +110,7 @@ export const useNetworkStore = defineStore(
 			supportedNodes,
 			supportedEntryPoints,
 			chainIdBigInt,
+			switchEntryPoint,
 		}
 	},
 	{

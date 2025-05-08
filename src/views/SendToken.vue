@@ -81,7 +81,7 @@ const reviewDisabled = computed(() => {
 })
 
 const reviewButtonText = computed(() => {
-	return isAccountConnected.value ? 'Review Transfers' : 'Your account must be connected to review transfers'
+	return isAccountConnected.value ? 'Review Transfers' : 'Connect your account to review'
 })
 </script>
 

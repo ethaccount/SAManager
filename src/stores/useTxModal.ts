@@ -8,7 +8,6 @@ import {
 	estimateUserOp,
 	Execution,
 	getPaymasterData,
-	isSameAddress,
 	JsonRpcError,
 	PublicPaymaster,
 	sendUserOp,
@@ -17,7 +16,6 @@ import {
 	UserOpReceipt,
 } from 'sendop'
 import { useModal } from 'vue-final-modal'
-import { toast } from 'vue-sonner'
 
 export enum TransactionStatus {
 	Estimation = 'Estimation',

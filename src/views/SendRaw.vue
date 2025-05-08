@@ -5,8 +5,9 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { useAccount } from '@/stores/account/useAccount'
 import { useTxModal } from '@/stores/useTxModal'
-import { parseEther } from 'ethers'
+import { Interface, parseEther } from 'ethers'
 import { Plus, X } from 'lucide-vue-next'
+import { ADDRESS } from 'sendop'
 import { computed, ref } from 'vue'
 
 type Execution = {
@@ -17,9 +18,11 @@ type Execution = {
 
 function getDefaultExecution(): Execution {
 	return {
-		to: '',
+		to: ADDRESS.Counter,
 		value: '0',
-		data: '0x',
+		data: new Interface(['function setNumber(uint256)']).encodeFunctionData('setNumber', [
+			Math.floor(Math.random() * 10000),
+		]),
 	}
 }
 
@@ -48,7 +51,7 @@ const reviewDisabled = computed(() => {
 })
 
 const reviewButtonText = computed(() => {
-	return isAccountConnected.value ? 'Review Executions' : 'Your account must be connected to review executions'
+	return isAccountConnected.value ? 'Review Executions' : 'Connect your account to review'
 })
 
 async function onClickSend() {

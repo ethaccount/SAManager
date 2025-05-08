@@ -15,6 +15,7 @@ import { formatEther } from 'ethers'
 import { CircleDot, ExternalLink, X } from 'lucide-vue-next'
 import { Execution, isSameAddress } from 'sendop'
 import { VueFinalModal } from 'vue-final-modal'
+import { toast } from 'vue-sonner'
 
 const props = withDefaults(
 	defineProps<{
@@ -34,7 +35,7 @@ function onClickClose() {
 }
 
 const { wallet } = useEOAWallet()
-const { client, selectedChainId, explorerUrl } = useNetwork()
+const { client, selectedChainId, explorerUrl, selectedEntryPoint } = useNetwork()
 const { selectedAccount, selectedAccountInitCode, isAccountConnected } = useAccount()
 const { selectSigner, selectedSigner } = useValidation()
 const {
@@ -49,25 +50,26 @@ const {
 	handleEstimate,
 	handleSign,
 	handleSend,
-	opHash,
 } = useTxModal()
 
 const isDeployed = ref(false)
 
 onMounted(async () => {
+	// Check if account is connected
 	if (!isAccountConnected.value) {
 		emit('close')
-		throw new Error('Account not connected')
+		toast.error('Account not connected')
+		return
 	}
-	if (selectedAccount.value?.address) {
+
+	// Check if account is deployed
+	if (selectedAccount.value?.address && selectedAccount.value.category === 'Smart Account') {
 		isDeployed.value = await checkIfAccountIsDeployed(client.value, selectedAccount.value.address)
 		if (!isDeployed.value && !selectedAccountInitCode.value) {
 			emit('close')
-			throw new Error('Account not deployed and no init code provided')
+			toast.error('Account not deployed and no init code provided')
+			return
 		}
-	} else {
-		emit('close')
-		throw new Error('No account selected')
 	}
 })
 
@@ -81,12 +83,18 @@ async function onClickEstimate() {
 	try {
 		error.value = null
 		status.value = TransactionStatus.Estimating
-		if (isDeployed.value) {
+
+		if (!selectedAccount.value) {
+			throw new Error('No account selected')
+		}
+
+		if (isDeployed.value || selectedAccount.value.category === 'Smart EOA') {
 			await handleEstimate(props.executions)
 		} else {
 			if (!selectedAccountInitCode.value) {
 				emit('close')
-				throw new Error('Account not deployed and no init code provided')
+				toast.error('Account not deployed and no init code provided')
+				return
 			}
 			await handleEstimate(props.executions, selectedAccountInitCode.value)
 		}
@@ -209,9 +217,9 @@ const txLink = computed(() => {
 				<div class="space-y-3">
 					<div class="text-sm font-medium">Validation Method</div>
 					<div class="space-y-2">
-						<!-- EOA-Owned -->
+						<!-- EOA-Owned or SmartEOA -->
 						<div
-							v-if="selectedAccount?.vOptions.find(v => v.type === 'EOA-Owned')"
+							v-if="selectedAccount?.vOptions.find(v => v.type === 'EOA-Owned' || v.type === 'SmartEOA')"
 							class="flex flex-col p-2.5 border rounded-lg transition-all cursor-pointer"
 							@click="selectSigner('EOA-Owned')"
 						>
@@ -289,8 +297,17 @@ const txLink = computed(() => {
 							}}</span>
 						</div>
 
+						<!-- Entry Point Version -->
+						<div class="flex items-center justify-between text-sm">
+							<span class="text-muted-foreground">EntryPoint Version</span>
+							<span class="text-sm">{{ selectedEntryPoint }}</span>
+						</div>
+
 						<!-- Deployment Status -->
-						<div v-if="!isDeployed" class="flex items-center justify-between text-sm">
+						<div
+							v-if="!isDeployed && selectedAccount?.category === 'Smart Account'"
+							class="flex items-center justify-between text-sm"
+						>
 							<span class="text-muted-foreground">Status</span>
 							<div class="flex items-center gap-2 text-yellow-500">
 								<span class="size-2 rounded-full bg-yellow-500"></span>
@@ -300,7 +317,9 @@ const txLink = computed(() => {
 					</div>
 
 					<!-- Account Deployment Notice -->
-					<div v-if="!isDeployed" class="warning-section">This transaction will deploy your account</div>
+					<div v-if="!isDeployed && selectedAccount?.category === 'Smart Account'" class="warning-section">
+						This transaction will deploy your account
+					</div>
 				</div>
 
 				<!-- Executions -->
@@ -359,9 +378,19 @@ const txLink = computed(() => {
 
 					<template v-if="status === TransactionStatus.Failed">
 						<div class="flex flex-col items-center justify-center">
-							<h3 class="text-xl font-semibold text-destructive mb-2">Transaction Failed</h3>
-							<p class="text-sm text-muted-foreground">
-								{{ error || 'Transaction could not be processed' }}
+							<h3 class="text-xl font-semibold text-destructive">Transaction Failed</h3>
+							<a
+								v-if="txLink"
+								:href="txLink"
+								target="_blank"
+								rel="noopener noreferrer"
+								class="inline-flex items-center gap-1.5 mt-2 text-sm text-primary hover:underline"
+							>
+								View on Explorer
+								<ExternalLink class="w-4 h-4" />
+							</a>
+							<p v-if="error" class="mt-2 text-sm text-muted-foreground">
+								{{ error }}
 							</p>
 						</div>
 					</template>
