@@ -70,7 +70,7 @@ function onClickImportAccount() {
 	>
 		<div class="account-drawer-visual-container">
 			<!-- Header Section -->
-			<div class="flex justify-between items-start mb-6">
+			<div class="flex justify-between items-start">
 				<div class="w-full flex justify-between items-start gap-2">
 					<div>
 						<div v-if="selectedAccount" class="p-1.5">
@@ -117,7 +117,7 @@ function onClickImportAccount() {
 			</div>
 
 			<!-- Account Settings Section -->
-			<div class="mb-6" v-if="selectedAccount">
+			<div class="mt-4" v-if="selectedAccount">
 				<Button
 					:disabled="!selectedAccount"
 					variant="outline"
@@ -129,7 +129,7 @@ function onClickImportAccount() {
 			</div>
 
 			<!-- Signers -->
-			<div class="mb-4">
+			<div class="mt-4">
 				<h3 class="text-sm font-medium tracking-wider mb-2">Signers</h3>
 				<div class="space-y-2">
 					<div
@@ -207,7 +207,7 @@ function onClickImportAccount() {
 			</div>
 
 			<!-- Account List -->
-			<div class="h-[calc(100%-200px)]">
+			<div class="mt-4 flex-1 flex flex-col overflow-hidden">
 				<div class="flex justify-between items-center mb-3">
 					<h3 class="text-sm font-medium tracking-wider">Accounts</h3>
 					<div class="flex gap-1">
@@ -234,7 +234,8 @@ function onClickImportAccount() {
 						</TooltipProvider>
 					</div>
 				</div>
-				<div class="h-full overflow-y-auto space-y-2 pt-2">
+				<!-- Account List Scrollable Container -->
+				<div class="flex-1 overflow-y-auto overflow-x-hidden space-y-2 pt-2 pr-2">
 					<div
 						v-for="account in accounts"
 						:key="account.address"
@@ -248,7 +249,7 @@ function onClickImportAccount() {
 					>
 						<div>
 							<div class="flex justify-between items-center mb-1">
-								<span class="font-medium truncate">{{ shortenAddress(account.address) }}</span>
+								<span class="text-xs truncate">{{ shortenAddress(account.address) }}</span>
 								<span class="text-xs text-muted-foreground">
 									{{ displayChainName(account.chainId) }}
 								</span>
