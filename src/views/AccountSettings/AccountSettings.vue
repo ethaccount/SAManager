@@ -13,54 +13,29 @@ import { shortenAddress } from '@vue-dapp/core'
 import { watchImmediate } from '@vueuse/core'
 import { ArrowLeft, ExternalLink } from 'lucide-vue-next'
 import ASModules from './ASModules.vue'
-
+import ASSessions from './ASSessions.vue'
+import ASCrossChain from './ASCrossChain.vue'
+import ASPaymasters from './ASPaymasters.vue'
 const router = useRouter()
 const { client } = useNetwork()
 const { selectedAccount } = useAccount()
 
 const isDeployed = ref(false)
-onMounted(async () => {
-	if (selectedAccount.value?.address) {
-		isDeployed.value = await checkIfAccountIsDeployed(client.value, selectedAccount.value.address)
-	}
-})
 
-watchImmediate(selectedAccount, () => {
+// Use this instead of onMounted because users might change account with the drawer
+watchImmediate(selectedAccount, async () => {
+	isDeployed.value = false
+
+	if (!selectedAccount.value) {
+		throw new Error('No account selected')
+	}
+
 	if (selectedAccount.value) {
 		router.replace(toRoute('account-settings', { address: selectedAccount.value.address }))
 	}
+
+	isDeployed.value = await checkIfAccountIsDeployed(client.value, selectedAccount.value.address)
 })
-
-// Mock data for sessions
-const sessions = ref([
-	{
-		id: 'session-1',
-		name: 'Mobile App',
-		validUntil: new Date('2023-12-31'),
-		permissions: 'Transfer ETH, USDC',
-	},
-	{
-		id: 'session-2',
-		name: 'Web Dashboard',
-		validUntil: new Date('2023-10-15'),
-		permissions: 'Read-only',
-	},
-])
-
-// Mock data for paymasters
-const paymasters = [
-	{ id: 'open', name: 'Public Paymaster', description: 'General purpose paymaster for gas sponsorship' },
-	{ id: 'circle', name: 'Circle USDC Paymaster', description: 'Pay gas fees with USDC' },
-]
-
-const selectedPaymaster = ref(paymasters[0])
-
-// Mock data for cross-chain accounts
-const crossChainAccounts = [
-	{ chain: 'Sepolia', address: '0x1234...5678' },
-	{ chain: 'Base', address: '0xabcd...efgh' },
-	{ chain: 'Base Sepolia', address: '0x9876...5432' },
-]
 </script>
 
 <template>
@@ -136,9 +111,9 @@ const crossChainAccounts = [
 			<Tabs default-value="modules" class="mt-6">
 				<TabsList class="grid grid-cols-4 w-full">
 					<TabsTrigger value="modules">Modules</TabsTrigger>
-					<TabsTrigger value="sessions">Sessions</TabsTrigger>
+					<!-- <TabsTrigger value="sessions">Sessions</TabsTrigger>
 					<TabsTrigger value="paymasters">Paymasters</TabsTrigger>
-					<TabsTrigger value="cross-chain">Cross-chain</TabsTrigger>
+					<TabsTrigger value="cross-chain">Cross-chain</TabsTrigger> -->
 				</TabsList>
 
 				<TabsContent value="modules" class="mt-6">
@@ -146,133 +121,15 @@ const crossChainAccounts = [
 				</TabsContent>
 
 				<TabsContent value="sessions" class="mt-6">
-					<Card>
-						<CardHeader>
-							<CardTitle>Smart Sessions</CardTitle>
-							<CardDescription>Manage session keys for your account</CardDescription>
-						</CardHeader>
-						<CardContent>
-							<div class="space-y-6">
-								<div class="space-y-4">
-									<div class="flex items-center justify-between">
-										<h3 class="text-sm font-medium">Active Sessions</h3>
-										<Button size="sm">Create New Session</Button>
-									</div>
-
-									<div v-if="sessions.length === 0" class="text-sm text-muted-foreground">
-										No active sessions
-									</div>
-									<div v-else class="grid gap-3">
-										<div
-											v-for="session in sessions"
-											:key="session.id"
-											class="border rounded-md p-4"
-										>
-											<div class="flex items-start justify-between">
-												<div>
-													<div class="font-medium">{{ session.name }}</div>
-													<div class="text-sm text-muted-foreground mt-1">
-														Valid until: {{ session.validUntil.toLocaleDateString() }}
-													</div>
-													<div class="text-sm mt-2">
-														Permissions: {{ session.permissions }}
-													</div>
-												</div>
-												<Button
-													variant="outline"
-													size="sm"
-													@click="sessions = sessions.filter(s => s.id !== session.id)"
-												>
-													Revoke
-												</Button>
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
-						</CardContent>
-					</Card>
+					<ASSessions />
 				</TabsContent>
 
 				<TabsContent value="paymasters" class="mt-6">
-					<Card>
-						<CardHeader>
-							<CardTitle>Paymasters</CardTitle>
-							<CardDescription>Configure paymaster options for gas sponsorship</CardDescription>
-						</CardHeader>
-						<CardContent>
-							<div class="space-y-6">
-								<div class="space-y-4">
-									<h3 class="text-sm font-medium">Select Default Paymaster</h3>
-									<div class="grid gap-3">
-										<div
-											v-for="paymaster in paymasters"
-											:key="paymaster.id"
-											class="border rounded-md p-4 cursor-pointer transition-colors"
-											:class="[
-												selectedPaymaster.id === paymaster.id
-													? 'border-primary bg-primary/5'
-													: 'hover:bg-accent',
-											]"
-											@click="selectedPaymaster = paymaster"
-										>
-											<div class="flex items-start">
-												<div class="flex-1">
-													<div class="font-medium">{{ paymaster.name }}</div>
-													<div class="text-sm text-muted-foreground mt-1">
-														{{ paymaster.description }}
-													</div>
-												</div>
-												<div
-													class="w-4 h-4 rounded-full border-2"
-													:class="[
-														selectedPaymaster.id === paymaster.id
-															? 'border-primary bg-primary'
-															: 'border-muted',
-													]"
-												/>
-											</div>
-										</div>
-									</div>
-								</div>
-
-								<div class="pt-4">
-									<Button class="w-full">Save Paymaster Settings</Button>
-								</div>
-							</div>
-						</CardContent>
-					</Card>
+					<ASPaymasters />
 				</TabsContent>
 
 				<TabsContent value="cross-chain" class="mt-6">
-					<Card>
-						<CardHeader>
-							<CardTitle>Cross-chain Deployments</CardTitle>
-							<CardDescription>Your account deployments across different networks</CardDescription>
-						</CardHeader>
-						<CardContent>
-							<div class="space-y-6">
-								<div class="space-y-4">
-									<div class="grid gap-3">
-										<div
-											v-for="account in crossChainAccounts"
-											:key="account.chain"
-											class="flex items-center justify-between p-3 border rounded-md"
-										>
-											<div>
-												<div class="font-medium">{{ account.chain }}</div>
-												<div class="text-sm text-muted-foreground">{{ account.address }}</div>
-											</div>
-										</div>
-									</div>
-								</div>
-
-								<div class="pt-4">
-									<Button class="w-full">Deploy to Another Chain</Button>
-								</div>
-							</div>
-						</CardContent>
-					</Card>
+					<ASCrossChain />
 				</TabsContent>
 			</Tabs>
 		</div>

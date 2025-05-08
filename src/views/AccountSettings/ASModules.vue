@@ -40,7 +40,8 @@ const getModuleName = (address: string) => {
 }
 
 // Watch for account changes and fetch modules
-watchImmediate(selectedAccount, async () => {
+watchImmediate([() => props.isDeployed, selectedAccount], async () => {
+	console.log('isDeployed', props.isDeployed)
 	if (!props.isDeployed || !selectedAccount.value?.address || !client.value) return
 
 	loading.value = true

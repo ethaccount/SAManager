@@ -1,4 +1,4 @@
-import TransactionModal from '@/components/TransactionModal/TransactionModal.vue'
+import TransactionModal from '@/components/TxModal.vue'
 import { useAccount } from '@/stores/account/useAccount'
 import { useNetwork } from '@/stores/network/useNetwork'
 import { defineStore, storeToRefs } from 'pinia'
