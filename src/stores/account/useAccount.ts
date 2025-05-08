@@ -34,6 +34,11 @@ export const useAccountStore = defineStore(
 
 		const isAccountConnected = computed(() => {
 			if (!selectedAccount.value) return false
+			// check if the chainId of the selected account is the same as the selected chainId
+			const { selectedChainId } = useNetwork()
+			if (selectedAccount.value.chainId !== selectedChainId.value) return false
+
+			// check if the validation options are available
 			return checkValidationAvailability(selectedAccount.value.vOptions)
 		})
 

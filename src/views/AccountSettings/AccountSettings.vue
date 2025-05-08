@@ -15,8 +15,9 @@ import ASCrossChain from './ASCrossChain.vue'
 import ASModules from './ASModules.vue'
 import ASPaymasters from './ASPaymasters.vue'
 import ASSessions from './ASSessions.vue'
+
 const router = useRouter()
-const { client } = useNetwork()
+const { client, selectedChainId } = useNetwork()
 const { selectedAccount } = useAccount()
 
 const isDeployed = ref(false)
@@ -63,7 +64,13 @@ watchImmediate(selectedAccount, async () => {
 								{{ displayAccountName(selectedAccount.accountId) }}
 							</p>
 						</div>
-						<div class="text-xs rounded-full bg-muted px-2.5 py-0.5">
+						<div
+							class="text-xs rounded-full bg-muted px-2.5 py-0.5"
+							:class="{
+								'border border-red-500': selectedAccount.chainId !== selectedChainId,
+								'border border-green-500': selectedAccount.chainId === selectedChainId,
+							}"
+						>
 							{{ displayChainName(selectedAccount.chainId) }}
 						</div>
 						<div class="text-xs rounded-full bg-muted px-2.5 py-0.5">
