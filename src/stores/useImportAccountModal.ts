@@ -97,13 +97,10 @@ const IAM_CONFIG: Record<IAMStageKey, IAMStage<Component>> = {
 		next: [IAMStageKey.CONFIRM_IMPORT_BY_PASSKEY],
 		title: 'Select an Account',
 		attrs: {
-			mode: 'passkey',
-			authenticatorIdHash: () => {
+			vOption: () => {
 				const vOption = useImportAccountModalStore().formData.vOptions?.find(v => v.type === 'Passkey')
-				if (!vOption)
-					throw new Error('IAMStageKey.PASSKEY_ACCOUNT_OPTIONS: No passkey authenticatorIdHash found')
-				const credential = deserializePasskeyCredential(vOption.identifier)
-				return credential.authenticatorIdHash
+				if (!vOption) throw new Error('PASSKEY_ACCOUNT_OPTIONS: No passkey authenticatorIdHash found')
+				return vOption
 			},
 			onAccountSelected: (account: { address: string; accountId: AccountId }) => {
 				useImportAccountModal().updateFormData({
@@ -162,11 +159,10 @@ const IAM_CONFIG: Record<IAMStageKey, IAMStage<Component>> = {
 		next: [IAMStageKey.CONFIRM_IMPORT_BY_EOA],
 		title: 'Select an Account',
 		attrs: {
-			mode: 'eoa',
-			eoaAddress: () => {
+			vOption: () => {
 				const vOption = useImportAccountModalStore().formData.vOptions?.find(v => v.type === 'EOA-Owned')
 				if (!vOption) throw new Error('EOA_ACCOUNT_OPTIONS: No EOA address found')
-				return vOption.identifier
+				return vOption
 			},
 			onAccountSelected: (account: { address: string; accountId: AccountId }) => {
 				useImportAccountModal().updateFormData({

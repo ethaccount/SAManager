@@ -27,7 +27,7 @@ const accountOptions = computed<AccountOption[]>(() => {
 			title: 'EOA-Owned',
 			description: 'Import an account controlled by an EOA in a wallet',
 			icon: Wallet,
-			nextStageKey: IAMStageKey.CONNECT_EOA_WALLET,
+			nextStageKey: null, // IAMStageKey.CONNECT_EOA_WALLET,
 			category: 'Smart Account',
 		},
 		{

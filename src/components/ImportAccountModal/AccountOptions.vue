@@ -1,23 +1,16 @@
 <script setup lang="ts">
 import { fetchAccountId } from '@/lib/aa'
-import { useNetwork } from '@/stores/network/useNetwork'
-import { useImportAccountModal } from '@/stores/useImportAccountModal'
 import { AccountId } from '@/stores/account/account'
-import { usePasskey } from '@/stores/passkey/usePasskey'
+import { useNetwork } from '@/stores/network/useNetwork'
+import { deserializePasskeyCredential } from '@/stores/passkey/passkey'
+import { SUPPORTED_VALIDATION_OPTIONS, ValidationIdentifier } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
-import { Contract, EventLog } from 'ethers'
 import { ChevronRight, Loader2 } from 'lucide-vue-next'
-import { ADDRESS } from 'sendop'
 import { toast } from 'vue-sonner'
 
-// Props
-interface Props {
-	mode: 'eoa' | 'passkey'
-	eoaAddress?: () => string
-	authenticatorIdHash?: () => string
-}
-
-const props = defineProps<Props>()
+const props = defineProps<{
+	vOption: () => ValidationIdentifier
+}>()
 
 const emit = defineEmits<{
 	(
@@ -29,36 +22,45 @@ const emit = defineEmits<{
 	): void
 }>()
 
-// Types
-interface AccountInfo {
-	address: string
-	accountId: string | null
-	loading: boolean
-}
-
-// Stores
-const { goNextStage } = useImportAccountModal()
-const { credential } = usePasskey()
 const { clientNoBatch } = useNetwork()
 
-// State
-const accounts = ref<AccountInfo[]>([])
+const accounts = ref<
+	{
+		address: string
+		accountId: string | null
+		loading: boolean
+	}[]
+>([])
 const loading = ref(false)
 const loadingAddresses = ref(false)
 
-// Lifecycle
 onMounted(async () => {
 	try {
 		loading.value = true
 		loadingAddresses.value = true
 
 		let addresses: string[] = []
-		if (props.mode === 'eoa') {
-			if (!props.eoaAddress?.()) throw new Error('EOA mode requires eoaAddress')
-			addresses = await getAccountsByECDSAValidator(props.eoaAddress())
-		} else {
-			if (!props.authenticatorIdHash?.()) throw new Error('Passkey mode requires authenticatorIdHash')
-			addresses = await getAccountsByWebAuthnValidator(props.authenticatorIdHash())
+
+		const vType = props.vOption().type
+
+		if (vType !== 'EOA-Owned' && vType !== 'Passkey') {
+			throw new Error('Unsupported validation type')
+		}
+
+		switch (vType) {
+			case 'EOA-Owned':
+				addresses = await SUPPORTED_VALIDATION_OPTIONS['EOA-Owned'].getAccounts(
+					clientNoBatch.value,
+					props.vOption().identifier,
+				)
+				break
+			case 'Passkey':
+				const credential = deserializePasskeyCredential(props.vOption().identifier)
+				addresses = await SUPPORTED_VALIDATION_OPTIONS['Passkey'].getAccounts(
+					clientNoBatch.value,
+					credential.authenticatorIdHash,
+				)
+				break
 		}
 
 		accounts.value = addresses.map(address => ({
@@ -88,38 +90,6 @@ onMounted(async () => {
 		loadingAddresses.value = false
 	}
 })
-
-// Methods
-async function getAccountsByECDSAValidator(address: string): Promise<string[]> {
-	const ecdsaValidator = new Contract(
-		ADDRESS.ECDSAValidator,
-		['event OwnerRegistered(address indexed kernel, address indexed owner)'],
-		clientNoBatch.value,
-	)
-	const events = (await ecdsaValidator.queryFilter(
-		ecdsaValidator.filters.OwnerRegistered(null, address),
-	)) as EventLog[]
-
-	const sortedEvents = events.sort((a, b) => b.blockNumber - a.blockNumber)
-	return sortedEvents.slice(0, 5).map(event => event.args[0]) as string[]
-}
-
-async function getAccountsByWebAuthnValidator(authenticatorIdHash: string): Promise<string[]> {
-	const webAuthnValidator = new Contract(
-		ADDRESS.WebAuthnValidator,
-		[
-			'event WebAuthnPublicKeyRegistered(address indexed kernel, bytes32 indexed authenticatorIdHash, uint256 pubKeyX, uint256 pubKeyY)',
-		],
-		clientNoBatch.value,
-	)
-
-	const events = (await webAuthnValidator.queryFilter(
-		webAuthnValidator.filters.WebAuthnPublicKeyRegistered(null, authenticatorIdHash),
-	)) as EventLog[]
-
-	const sortedEvents = events.sort((a, b) => b.blockNumber - a.blockNumber)
-	return sortedEvents.slice(0, 5).map(event => event.args[0]) as string[]
-}
 
 function onClickAccount(account: { address: string; accountId: string | null }) {
 	if (loading.value) {
@@ -152,7 +122,7 @@ function onClickAccount(account: { address: string; accountId: string | null }) 
 		<div v-else-if="accounts.length === 0" class="text-center py-8 text-muted-foreground">No accounts found</div>
 
 		<!-- Account List -->
-		<div v-else class="space-y-2">
+		<div v-else class="space-y-2 overflow-y-auto max-h-[300px]">
 			<div
 				v-for="account in accounts"
 				:key="account.address"
@@ -162,7 +132,7 @@ function onClickAccount(account: { address: string; accountId: string | null }) 
 				:class="{ 'opacity-50 cursor-not-allowed': account.loading }"
 			>
 				<div class="space-y-1">
-					<div class="font-medium group-hover:text-accent-foreground">
+					<div class="text-sm font-medium group-hover:text-accent-foreground">
 						{{ shortenAddress(account.address) }}
 					</div>
 					<div class="text-sm text-muted-foreground">

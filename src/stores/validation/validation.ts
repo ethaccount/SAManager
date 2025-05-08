@@ -1,24 +1,54 @@
 import { deserializePasskeyCredential, PasskeyCredential, serializePasskeyCredential } from '@/stores/passkey/passkey'
-import { isAddress } from 'ethers'
+import { Contract, EventLog, isAddress, JsonRpcProvider } from 'ethers'
 import { ADDRESS, isSameAddress } from 'sendop'
 import { useValidation } from '@/stores/validation/useValidation'
 import { shortenAddress } from '@vue-dapp/core'
 
 export const SUPPORTED_VALIDATION_OPTIONS = {
-	SmartEOA: {
-		name: 'Smart EOA',
-		description: 'Smart EOA validation for Simple7702Account',
-		validatorAddress: null,
-	},
 	'EOA-Owned': {
 		name: 'EOA-Owned',
 		description: 'Use OwnableValidator from rhinestone',
 		validatorAddress: ADDRESS.OwnableValidator,
+		// TODO: Cannot get accounts from OwnableValidator, because it's event doens't have the owner address
+		async getAccounts(client: JsonRpcProvider, _ownerAddress: string): Promise<string[]> {
+			const ownableValidator = new Contract(
+				ADDRESS.OwnableValidator,
+				['event ModuleInitialized(address indexed account)'],
+				client,
+			)
+			const events = (await ownableValidator.queryFilter(
+				ownableValidator.filters.ModuleInitialized(),
+			)) as EventLog[]
+
+			const sortedEvents = events.sort((a, b) => b.blockNumber - a.blockNumber)
+			return sortedEvents.slice(0, 5).map(event => event.args[0]) as string[]
+		},
 	},
 	Passkey: {
 		name: 'Passkey',
 		description: 'Use WebAuthnValidator from zerodev',
 		validatorAddress: ADDRESS.WebAuthnValidator,
+		async getAccounts(client: JsonRpcProvider, authenticatorIdHash: string): Promise<string[]> {
+			const webAuthnValidator = new Contract(
+				ADDRESS.WebAuthnValidator,
+				[
+					'event WebAuthnPublicKeyRegistered(address indexed kernel, bytes32 indexed authenticatorIdHash, uint256 pubKeyX, uint256 pubKeyY)',
+				],
+				client,
+			)
+
+			const events = (await webAuthnValidator.queryFilter(
+				webAuthnValidator.filters.WebAuthnPublicKeyRegistered(null, authenticatorIdHash),
+			)) as EventLog[]
+
+			const sortedEvents = events.sort((a, b) => b.blockNumber - a.blockNumber)
+			return sortedEvents.slice(0, 5).map(event => event.args[0]) as string[]
+		},
+	},
+	SmartEOA: {
+		name: 'Smart EOA',
+		description: 'Smart EOA validation for Simple7702Account',
+		validatorAddress: null,
 	},
 } as const
 
