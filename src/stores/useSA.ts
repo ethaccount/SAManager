@@ -2,13 +2,12 @@ import { AccountId, ValidatorKey } from '@/types'
 import { defineStore, storeToRefs } from 'pinia'
 import {
 	ADDRESS,
-	EOAValidatorModule,
 	ERC7579Validator,
 	KernelV3Account,
 	ModularSmartAccount,
 	NexusAccount,
-	SmartAccount,
-	WebAuthnValidatorModule,
+	OwnableValidator,
+	WebAuthnValidator,
 } from 'sendop'
 import { useNetwork, useNetworkStore } from './network/useNetwork'
 import { useEOAWallet } from './useEOAWallet'
@@ -64,12 +63,11 @@ export const useSAStore = defineStore(
 					if (!signer.value) {
 						return null
 					}
-					return new EOAValidatorModule({
-						address: ADDRESS.ECDSAValidator,
-						signer: signer.value,
+					return new OwnableValidator({
+						signers: [signer.value],
 					})
 				case 'passkey':
-					return new WebAuthnValidatorModule({
+					return new WebAuthnValidator({
 						address: ADDRESS.WebAuthnValidator,
 						signMessage,
 					})

@@ -1,19 +1,19 @@
 import { AccountId, ImportedAccount } from '@/stores/account/account'
 import { CHAIN_ID } from '@/stores/network/network'
 import { signMessage } from '@/stores/passkey/passkey'
-import { useEOAWallet } from '@/stores/useEOAWallet'
 import { usePasskey } from '@/stores/passkey/usePasskey'
+import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useValidation } from '@/stores/validation/useValidation'
 import { checkValidationAvailability, SUPPORTED_VALIDATION_OPTIONS } from '@/stores/validation/validation'
 import { defineStore, storeToRefs } from 'pinia'
 import {
-	EOAValidatorModule,
 	ERC7579Validator,
 	isSameAddress,
 	KernelV3Account,
 	NexusAccount,
+	OwnableValidator,
 	Safe7579Account,
-	WebAuthnValidatorModule,
+	WebAuthnValidator,
 } from 'sendop'
 import { toast } from 'vue-sonner'
 import { useNetwork } from '../network/useNetwork'
@@ -47,16 +47,15 @@ export const useAccountStore = defineStore(
 					if (!signer.value) {
 						return null
 					}
-					return new EOAValidatorModule({
-						address: SUPPORTED_VALIDATION_OPTIONS['EOA-Owned'].validatorAddress,
-						signer: signer.value,
+					return new OwnableValidator({
+						signers: [signer.value],
 					})
 				case 'Passkey':
 					const { credential } = usePasskey()
 					if (!credential.value) {
 						return null
 					}
-					return new WebAuthnValidatorModule({
+					return new WebAuthnValidator({
 						address: SUPPORTED_VALIDATION_OPTIONS['Passkey'].validatorAddress,
 						signMessage: signMessage,
 					})

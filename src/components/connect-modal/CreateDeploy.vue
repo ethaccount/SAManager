@@ -12,7 +12,7 @@ import { Loader2 } from 'lucide-vue-next'
 import {
 	ADDRESS,
 	BICONOMY_ATTESTER_ADDRESS,
-	EOAValidatorModule,
+	EOAValidator,
 	ERC7579Validator,
 	KernelCreationOptions,
 	KernelV3Account,
@@ -20,7 +20,7 @@ import {
 	NexusCreationOptions,
 	RHINESTONE_ATTESTER_ADDRESS,
 	SmartAccount,
-	WebAuthnValidatorModule,
+	WebAuthnValidator,
 	DEV_ATTESTER_ADDRESS,
 	ModularSmartAccount,
 } from 'sendop'
@@ -91,7 +91,7 @@ function getComputedAddress(accountId: AccountId) {
 			}
 
 			creationOptions.value.validatorAddress = ADDRESS.WebAuthnValidator
-			creationOptions.value.validatorInitData = WebAuthnValidatorModule.getInitData({
+			creationOptions.value.validatorInitData = WebAuthnValidator.getInitData({
 				pubKeyX: credential.value.pubX,
 				pubKeyY: credential.value.pubY,
 				authenticatorIdHash: credential.value.authenticatorIdHash,
@@ -132,13 +132,13 @@ async function onClickDeploy() {
 			if (!signer.value) {
 				throw new Error('No signer')
 			}
-			erc7579Validator = new EOAValidatorModule({
+			erc7579Validator = new EOAValidator({
 				address: ADDRESS.ECDSAValidator,
 				signer: signer.value,
 			})
 			break
 		case 'passkey':
-			erc7579Validator = new WebAuthnValidatorModule({
+			erc7579Validator = new WebAuthnValidator({
 				address: ADDRESS.WebAuthnValidator,
 				signMessage: signMessage,
 			})

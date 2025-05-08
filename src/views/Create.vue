@@ -7,17 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { SALT } from '@/config'
 import { toRoute } from '@/lib/router'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
-import {
-	ACCOUNT_ID_TO_NAME,
-	AccountId,
-	displayAccountName,
-	getComputedAddressAndInitCode,
-	SUPPORTED_ACCOUNTS,
-} from '@/stores/account/account'
+import { ACCOUNT_ID_TO_NAME, AccountId, displayAccountName, SUPPORTED_ACCOUNTS } from '@/stores/account/account'
+import { getComputedAddressAndInitCode } from '@/stores/account/create'
 import { useAccount } from '@/stores/account/useAccount'
-import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useNetwork } from '@/stores/network/useNetwork'
 import { usePasskey } from '@/stores/passkey/usePasskey'
+import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useValidation } from '@/stores/validation/useValidation'
 import {
 	checkValidationAvailability,
@@ -41,7 +36,6 @@ const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 const { isEOAWalletConnected } = useEOAWallet()
 const { username, isLogin, passkeyLogout } = usePasskey()
 const { importAccount, selectAccount } = useAccount()
-const { selectSigner, selectedSigner } = useValidation()
 
 const supportedAccounts = Object.entries(SUPPORTED_ACCOUNTS)
 	.filter(([_, data]) => data.isModular)
@@ -59,7 +53,7 @@ const supportedValidationOptions = Object.entries(SUPPORTED_VALIDATION_OPTIONS)
 		description: data.description,
 	}))
 
-const selectedAccountType = ref<AccountId>(supportedAccounts[0].id)
+const selectedAccountType = ref<AccountId | undefined>(undefined)
 const isComputingAddress = ref(false)
 const showMoreOptions = ref(false)
 
@@ -130,16 +124,20 @@ watchImmediate([isValidationAvailable, selectedValidation, selectedAccountType, 
 })
 
 function onClickImport() {
+	if (!selectedAccountType.value) {
+		throw new Error('onClickImport: No account type')
+	}
+
 	if (!computedAddress.value) {
-		throw new Error('onClickImport: Invalid computed address')
+		throw new Error('onClickImport: No computed address')
 	}
 
 	if (!initCode.value) {
-		throw new Error('onClickImport: Invalid init code')
+		throw new Error('onClickImport: No init code')
 	}
 
 	if (!selectedValidation.value) {
-		throw new Error('onClickImport: Invalid validation')
+		throw new Error('onClickImport: No validation')
 	}
 
 	importAccount({
@@ -157,16 +155,20 @@ function onClickImport() {
 }
 
 function onClickDeploy() {
+	if (!selectedAccountType.value) {
+		throw new Error('onClickDeploy: No account type')
+	}
+
 	if (!computedAddress.value) {
-		throw new Error('onClickImport: Invalid computed address')
+		throw new Error('onClickDeploy: No computed address')
 	}
 
 	if (!initCode.value) {
-		throw new Error('onClickImport: Invalid init code')
+		throw new Error('onClickDeploy: No init code')
 	}
 
 	if (!selectedValidation.value) {
-		throw new Error('onClickImport: Invalid validation')
+		throw new Error('onClickDeploy: No validation')
 	}
 
 	importAccount({
@@ -197,7 +199,11 @@ function onClickDeploy() {
 					<SelectTrigger class="w-full bg-muted/30 border-border/50 hover:border-primary transition-colors">
 						<SelectValue placeholder="Select Account Type">
 							<div class="flex items-center justify-between w-full">
-								<span class="font-medium">{{ displayAccountName(selectedAccountType) }}</span>
+								<span class="font-medium">{{
+									selectedAccountType
+										? displayAccountName(selectedAccountType)
+										: 'Select Account Type'
+								}}</span>
 							</div>
 						</SelectValue>
 					</SelectTrigger>
@@ -223,7 +229,7 @@ function onClickDeploy() {
 				</Select>
 
 				<!-- Validation selector -->
-				<Select v-model="selectedValidationType">
+				<Select v-if="selectedAccountType" v-model="selectedValidationType">
 					<SelectTrigger class="w-full bg-muted/30 border-border/50 hover:border-primary transition-colors">
 						<SelectValue placeholder="Select Validation Type">
 							<div class="flex items-center justify-between w-full gap-2">
@@ -345,7 +351,7 @@ function onClickDeploy() {
 					</div>
 				</div>
 
-				<div class="grid grid-cols-2 gap-2">
+				<div v-if="selectedAccountType && selectedValidationType" class="grid grid-cols-2 gap-2">
 					<Button variant="default" size="lg" :disabled="!computedAddress" @click="onClickImport">
 						Import
 					</Button>
