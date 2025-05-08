@@ -15,6 +15,11 @@ import {
 } from 'sendop'
 import { AccountId } from './account'
 
+export async function checkIfAccountIsDeployed(client: JsonRpcProvider, address: string): Promise<boolean> {
+	const code = await client.getCode(address)
+	return code !== '0x'
+}
+
 export async function getComputedAddressAndInitCode(
 	client: JsonRpcProvider,
 	accountId: AccountId,

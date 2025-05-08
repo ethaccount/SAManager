@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { useChainIdRoute } from '@/app/useChainIdRoute'
+import { useValidation } from '@/stores/validation/useValidation'
 import { VueDappModal } from '@vue-dapp/modal'
 import { useColorMode, watchImmediate } from '@vueuse/core'
 import { onMounted } from 'vue'
@@ -7,9 +8,8 @@ import { ModalsContainer } from 'vue-final-modal'
 import { toast, Toaster } from 'vue-sonner'
 import { useSetupVueDapp } from './app/useSetupVueDapp'
 import { IS_DEV } from './config'
-import { useValidation } from '@/stores/validation/useValidation'
-import { useEOAWallet } from './stores/useEOAWallet'
 import { usePasskey } from './stores/passkey/usePasskey'
+import { useEOAWallet } from './stores/useEOAWallet'
 
 const { isEOAWalletConnected } = useEOAWallet()
 const { isLogin } = usePasskey()

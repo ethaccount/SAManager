@@ -106,6 +106,7 @@ export function useTransactionModal() {
 		}
 
 		try {
+			console.log('estimation userOp', _userOp)
 			const estimation = await estimateUserOp(_userOp, bundler.value, opGetter.value, pmGetter.value)
 			_userOp = estimation.userOp
 			if (!estimation.pmIsFinal && pmGetter.value) {

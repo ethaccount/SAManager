@@ -8,8 +8,9 @@ import { SALT } from '@/config'
 import { toRoute } from '@/lib/router'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
 import { ACCOUNT_ID_TO_NAME, AccountId, displayAccountName, SUPPORTED_ACCOUNTS } from '@/stores/account/account'
-import { getComputedAddressAndInitCode } from '@/stores/account/create'
+import { checkIfAccountIsDeployed, getComputedAddressAndInitCode } from '@/stores/account/create'
 import { useAccount } from '@/stores/account/useAccount'
+import { displayChainName } from '@/stores/network/network'
 import { useNetwork } from '@/stores/network/useNetwork'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
@@ -99,11 +100,12 @@ const isValidationAvailable = computed(() => {
 
 const computedAddress = ref<string>('')
 const initCode = ref<string>('')
+const isDeployed = ref(false)
 
 watchImmediate([isValidationAvailable, selectedValidation, selectedAccountType, computedSalt], async () => {
 	computedAddress.value = ''
 	initCode.value = ''
-
+	isDeployed.value = false
 	if (isValidationAvailable.value && selectedValidation.value && selectedAccountType.value && computedSalt.value) {
 		isComputingAddress.value = true
 		try {
@@ -115,6 +117,7 @@ watchImmediate([isValidationAvailable, selectedValidation, selectedAccountType, 
 			)
 			computedAddress.value = res.computedAddress
 			initCode.value = res.initCode
+			isDeployed.value = await checkIfAccountIsDeployed(client.value, computedAddress.value)
 		} catch (error) {
 			throw error
 		} finally {
@@ -184,6 +187,14 @@ function onClickDeploy() {
 
 	useTransactionModal().openModal([])
 }
+
+const disabledDeployButton = computed(() => {
+	return !computedAddress.value || !initCode.value || !selectedValidation.value || isDeployed.value
+})
+
+const disabledImportButton = computed(() => {
+	return !computedAddress.value || !initCode.value || !selectedValidation.value
+})
 </script>
 
 <template>
@@ -351,11 +362,18 @@ function onClickDeploy() {
 					</div>
 				</div>
 
-				<div v-if="selectedAccountType && selectedValidationType" class="grid grid-cols-2 gap-2">
-					<Button variant="default" size="lg" :disabled="!computedAddress" @click="onClickImport">
+				<div v-if="isDeployed" class="info-section">
+					This account is already deployed on {{ displayChainName(selectedChainId) }}
+				</div>
+
+				<div
+					v-if="isValidationAvailable && computedAddress && !isComputingAddress"
+					class="grid grid-cols-2 gap-2"
+				>
+					<Button variant="default" size="lg" :disabled="disabledImportButton" @click="onClickImport">
 						Import
 					</Button>
-					<Button variant="secondary" size="lg" :disabled="!computedAddress" @click="onClickDeploy">
+					<Button variant="secondary" size="lg" :disabled="disabledDeployButton" @click="onClickDeploy">
 						Deploy
 					</Button>
 				</div>

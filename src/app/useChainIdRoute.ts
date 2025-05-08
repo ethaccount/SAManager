@@ -22,5 +22,8 @@ export function useChainIdRoute() {
 
 	watch(selectedChainId, () => {
 		router.replace({ params: { chainId: selectedChainId.value } })
+		setTimeout(() => {
+			location.reload()
+		}, 100)
 	})
 }

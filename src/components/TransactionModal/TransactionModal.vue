@@ -253,13 +253,8 @@ watch(status, (newStatus, oldStatus) => {
 					</div>
 
 					<!-- Account Deployment Notice -->
-					<div
-						v-if="selectedAccount?.initCode"
-						class="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg"
-					>
-						<div class="text-sm text-yellow-500">
-							This transaction will also deploy your account contract
-						</div>
+					<div v-if="selectedAccount?.initCode" class="warning-section">
+						This transaction will also deploy your account contract
 					</div>
 				</div>
 
