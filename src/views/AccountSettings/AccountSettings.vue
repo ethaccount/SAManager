@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toRoute } from '@/lib/router'
 import { displayAccountName } from '@/stores/account/account'
@@ -11,11 +10,11 @@ import { useNetwork } from '@/stores/network/useNetwork'
 import { displayValidationIdentifier } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
 import { watchImmediate } from '@vueuse/core'
-import { ArrowLeft, ExternalLink } from 'lucide-vue-next'
-import ASModules from './ASModules.vue'
-import ASSessions from './ASSessions.vue'
+import { ArrowLeft } from 'lucide-vue-next'
 import ASCrossChain from './ASCrossChain.vue'
+import ASModules from './ASModules.vue'
 import ASPaymasters from './ASPaymasters.vue'
+import ASSessions from './ASSessions.vue'
 const router = useRouter()
 const { client } = useNetwork()
 const { selectedAccount } = useAccount()
@@ -54,15 +53,7 @@ watchImmediate(selectedAccount, async () => {
 						<h1 class="text-xl font-medium">{{ shortenAddress(selectedAccount.address) }}</h1>
 						<div class="flex items-center gap-1">
 							<CopyButton :address="selectedAccount.address" />
-							<Button variant="ghost" size="icon" class="h-7 w-7" as-child>
-								<a
-									:href="`https://sepolia.etherscan.io/address/${selectedAccount.address}`"
-									target="_blank"
-									rel="noopener noreferrer"
-								>
-									<ExternalLink class="h-3.5 w-3.5" />
-								</a>
-							</Button>
+							<AddressLinkButton :address="selectedAccount.address" />
 						</div>
 					</div>
 

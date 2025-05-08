@@ -85,15 +85,7 @@ function onClickImportAccount() {
 									}}</span>
 									<div class="flex items-center gap-1">
 										<CopyButton :address="selectedAccount.address" />
-										<Button variant="ghost" size="icon" class="h-7 w-7" as-child>
-											<a
-												:href="`https://sepolia.etherscan.io/address/${selectedAccount.address}`"
-												target="_blank"
-												rel="noopener noreferrer"
-											>
-												<ExternalLink class="h-3.5 w-3.5" />
-											</a>
-										</Button>
+										<AddressLinkButton :address="selectedAccount.address" />
 									</div>
 								</div>
 							</div>

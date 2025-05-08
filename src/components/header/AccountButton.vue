@@ -34,10 +34,10 @@ function onClickAccountButton() {
 	<div class="">
 		<Button
 			variant="outline"
-			class="w-9 h-9 rounded-full"
+			class="w-9 h-9 rounded-full ring-1"
 			:class="{
-				'ring-1 ring-green-500': isAccountConnected,
-				'ring-1 ring-red-500': !isAccountConnected && accounts.length !== 0,
+				'ring-green-500': isAccountConnected,
+				'ring-red-500': !isAccountConnected && accounts.length !== 0,
 			}"
 			@click="onClickAccountButton"
 		>
