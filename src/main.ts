@@ -30,8 +30,7 @@ app.config.errorHandler = (error: unknown, _vm, _info) => {
 	const err = parseError(error)
 	console.error(err)
 
-	toast.error(err.name, {
-		description: err.message,
+	toast.error(err.message, {
 		duration: ERROR_NOTIFICATION_DURATION,
 	})
 }

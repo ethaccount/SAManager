@@ -89,6 +89,13 @@ async function onClickSend() {
 		status.value = TransactionStatus.Estimation
 	}
 }
+
+// Auto send when signing is done
+watch(status, (newStatus, oldStatus) => {
+	if (oldStatus === TransactionStatus.Signing && newStatus === TransactionStatus.Send) {
+		onClickSend()
+	}
+})
 </script>
 
 <template>

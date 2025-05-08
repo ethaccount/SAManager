@@ -210,7 +210,6 @@ export async function signMessage(
 	if (!isHexString(message)) {
 		hash = keccak256(getBytes(toUtf8Bytes(message)))
 	}
-	console.log(hash)
 
 	const challenge = encodeBase64(getBytes(hash))
 

@@ -15,6 +15,7 @@ import {
 	UserOp,
 } from 'sendop'
 import { useModal } from 'vue-final-modal'
+import { toast } from 'vue-sonner'
 
 export enum TransactionStatus {
 	Estimation = 'Estimation',
@@ -143,7 +144,16 @@ export function useTransactionModal() {
 
 			// Store the transaction hash
 			const sender = userOp.value.sender
-			txHash.value = receipt.logs.filter(log => isSameAddress(log.address, sender))[0]?.transactionHash
+			const foundLog = receipt.logs.find(log => isSameAddress(log.address, sender))
+			if (!foundLog) {
+				txHash.value = receipt.receipt.transactionHash
+
+				const warning = `Cannot find the sender's tx hash in logs, using the tx hash for the entire bundle`
+				toast.warning(warning)
+				console.log(warning, receipt)
+			} else {
+				txHash.value = foundLog.transactionHash
+			}
 
 			// Check if the transaction was successful
 			if (receipt.success) {
