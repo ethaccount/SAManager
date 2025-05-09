@@ -11,10 +11,10 @@ import { displayValidationIdentifier } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
 import { watchImmediate } from '@vueuse/core'
 import { ArrowLeft } from 'lucide-vue-next'
-import ASCrossChain from './ASCrossChain.vue'
-import ASModules from './ASModules.vue'
-import ASPaymasters from './ASPaymasters.vue'
-import ASSessions from './ASSessions.vue'
+import AMCrossChain from './AMCrossChain.vue'
+import AMModules from './AMModules.vue'
+import AMPaymasters from './AMPaymasters.vue'
+import AMSessions from './AMSessions.vue'
 
 const router = useRouter()
 const { client, selectedChainId } = useNetwork()
@@ -31,7 +31,7 @@ watchImmediate(selectedAccount, async () => {
 	}
 
 	if (selectedAccount.value) {
-		router.replace(toRoute('account-settings', { address: selectedAccount.value.address }))
+		router.replace(toRoute('account-management', { address: selectedAccount.value.address }))
 	}
 
 	isDeployed.value = await checkIfAccountIsDeployed(client.value, selectedAccount.value.address)
@@ -119,19 +119,19 @@ watchImmediate(selectedAccount, async () => {
 				</TabsList>
 
 				<TabsContent value="modules" class="mt-6">
-					<ASModules :is-deployed="isDeployed" />
+					<AMModules :is-deployed="isDeployed" />
 				</TabsContent>
 
 				<TabsContent value="sessions" class="mt-6">
-					<ASSessions />
+					<AMSessions />
 				</TabsContent>
 
 				<TabsContent value="paymasters" class="mt-6">
-					<ASPaymasters />
+					<AMPaymasters />
 				</TabsContent>
 
 				<TabsContent value="cross-chain" class="mt-6">
-					<ASCrossChain />
+					<AMCrossChain />
 				</TabsContent>
 			</Tabs>
 		</div>

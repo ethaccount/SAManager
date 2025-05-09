@@ -49,8 +49,8 @@ const router = createRouter({
 						// Account Management
 						{
 							path: '/:chainId/:address',
-							name: 'account-settings',
-							component: () => import('@/views/AccountSettings/AccountSettings.vue'),
+							name: 'account-management',
+							component: () => import('@/views/AccountManagement/AccountManagement.vue'),
 						},
 						// Send
 						{

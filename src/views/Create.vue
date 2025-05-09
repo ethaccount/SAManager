@@ -192,7 +192,7 @@ function onClickImport() {
 
 	selectAccount(computedAddress.value, selectedChainId.value)
 
-	router.push(toRoute('account-settings', { address: computedAddress.value }))
+	router.push(toRoute('account-management', { address: computedAddress.value }))
 }
 
 function onClickDeploy() {

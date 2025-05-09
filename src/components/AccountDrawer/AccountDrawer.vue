@@ -41,9 +41,9 @@ function onClickRemoveAccount(account: ImportedAccount) {
 
 const router = useRouter()
 
-function onClickAccountSettings() {
+function onClickAccountManagement() {
 	if (!selectedAccount.value) return
-	router.push(toRoute('account-settings', { address: selectedAccount.value.address }))
+	router.push(toRoute('account-management', { address: selectedAccount.value.address }))
 	emit('close')
 }
 
@@ -69,7 +69,7 @@ function onClickImportAccount() {
 		:lock-scroll="false"
 	>
 		<div class="account-drawer-visual-container">
-			<!-- Header Section -->
+			<!-- Selected Account -->
 			<div class="flex justify-between items-start">
 				<div class="w-full flex justify-between items-start gap-2">
 					<div>
@@ -108,15 +108,15 @@ function onClickImportAccount() {
 				</div>
 			</div>
 
-			<!-- Account Settings Section -->
+			<!-- Buttons -->
 			<div class="mt-4" v-if="selectedAccount">
 				<Button
 					:disabled="!selectedAccount"
 					variant="outline"
 					class="w-full justify-start"
-					@click="onClickAccountSettings"
+					@click="onClickAccountManagement"
 				>
-					Account Settings
+					Account Management
 				</Button>
 			</div>
 
