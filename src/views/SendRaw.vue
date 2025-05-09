@@ -55,13 +55,13 @@ const reviewButtonText = computed(() => {
 })
 
 async function onClickSend() {
-	useTxModal().openModal(
-		executions.value.map(exec => ({
+	useTxModal().openModal({
+		executions: executions.value.map(exec => ({
 			to: exec.to,
 			value: BigInt(parseEther(exec.value)),
 			data: exec.data,
 		})),
-	)
+	})
 }
 </script>
 

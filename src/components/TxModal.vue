@@ -28,6 +28,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
 	(e: 'close'): void
+	(e: 'success'): void
 }>()
 
 function onClickClose() {
@@ -123,7 +124,14 @@ async function onClickSend() {
 	try {
 		error.value = null
 		status.value = TransactionStatus.Sending
+
 		await handleSend()
+
+		nextTick(() => {
+			if (status.value === TransactionStatus.Success) {
+				emit('success')
+			}
+		})
 	} catch (e: unknown) {
 		console.error(e)
 		error.value = e instanceof Error ? e.message : 'Failed to send transaction'

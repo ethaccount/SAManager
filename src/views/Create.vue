@@ -225,7 +225,7 @@ function onClickDeploy() {
 
 	selectAccount(computedAddress.value, selectedChainId.value)
 
-	useTxModal().openModal([])
+	useTxModal().openModal()
 }
 
 const disabledDeployButton = computed(() => {

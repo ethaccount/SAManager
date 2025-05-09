@@ -1,4 +1,4 @@
-import TransactionModal from '@/components/TxModal.vue'
+import TxModal from '@/components/TxModal.vue'
 import { useAccount } from '@/stores/account/useAccount'
 import { useNetwork } from '@/stores/network/useNetwork'
 import { defineStore, storeToRefs } from 'pinia'
@@ -31,17 +31,17 @@ export enum TransactionStatus {
 
 export const useTxModalStore = defineStore('useTxModalStore', () => {
 	const { open, close, patchOptions } = useModal({
-		component: TransactionModal,
+		component: TxModal,
 		attrs: {
 			onClose: () => close(),
 		},
 		slots: {},
 	})
 
-	function openModal(execs: Execution[]) {
+	function openModal(props?: InstanceType<typeof TxModal>['$props']) {
 		patchOptions({
 			attrs: {
-				executions: execs,
+				...props,
 			},
 		})
 		open()

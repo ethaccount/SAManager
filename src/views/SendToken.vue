@@ -55,8 +55,8 @@ const removeTransfer = (index: number) => {
 }
 
 const onClickReview = () => {
-	useTxModal().openModal(
-		transfers.value.map(t => {
+	useTxModal().openModal({
+		executions: transfers.value.map(t => {
 			if (t.tokenId === 'eth') {
 				return {
 					to: t.recipient,
@@ -71,7 +71,7 @@ const onClickReview = () => {
 				}
 			}
 		}),
-	)
+	})
 }
 
 const { isAccountConnected } = useAccount()

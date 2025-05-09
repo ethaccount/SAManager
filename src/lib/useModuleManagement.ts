@@ -23,6 +23,8 @@ import {
 } from 'sendop'
 import { toast } from 'vue-sonner'
 import { useConnectSignerModal } from './useConnectSignerModal'
+import { createEOAOwnedValidation, createPasskeyValidation } from '@/stores/validation/validation'
+import { useAccountModule } from './useAccountModule'
 
 export const MODULE_TYPE_LABELS = {
 	[ERC7579_MODULE_TYPE.VALIDATOR]: 'Validator Modules',
@@ -79,9 +81,10 @@ export function useModuleManagement() {
 
 		let execution: Execution
 
+		const { wallet } = useEOAWallet()
+
 		switch (moduleType) {
 			case 'OwnableValidator':
-				const { wallet } = useEOAWallet()
 				if (!wallet.address) {
 					toast.info('Connect EOA wallet to install validator')
 					openConnectEOAWallet()
@@ -96,6 +99,21 @@ export function useModuleManagement() {
 					}),
 					value: 0n,
 				}
+
+				useTxModal().openModal({
+					executions: [execution],
+					onSuccess: async () => {
+						// add vOption to the selected account
+						if (!wallet.address) {
+							throw new Error('No wallet address found')
+						}
+						if (!selectedAccount.value) {
+							throw new Error('No account selected')
+						}
+						selectedAccount.value.vOptions.push(createEOAOwnedValidation(wallet.address))
+						await useAccountModule().updateAccountModuleRecord()
+					},
+				})
 
 				break
 			case 'WebAuthnValidator':
@@ -122,12 +140,25 @@ export function useModuleManagement() {
 					}),
 					value: 0n,
 				}
+
+				useTxModal().openModal({
+					executions: [execution],
+					onSuccess: async () => {
+						// add vOption to the selected account
+						if (!credential.value) {
+							throw new Error('No credential found')
+						}
+						if (!selectedAccount.value) {
+							throw new Error('No account selected')
+						}
+						selectedAccount.value.vOptions.push(createPasskeyValidation(credential.value))
+						await useAccountModule().updateAccountModuleRecord()
+					},
+				})
 				break
 			default:
 				throw new Error('installValidator: Unsupported module type: ' + moduleType)
 		}
-
-		useTxModal().openModal([execution])
 	}
 
 	return {
