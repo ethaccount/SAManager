@@ -9,6 +9,7 @@ import {
 } from '@/stores/network/network'
 import { useNetwork } from '@/stores/network/useNetwork'
 import { Check } from 'lucide-vue-next'
+import ChainIcon from '@/components/ChainIcon.vue'
 
 // Watch for popover state changes to toggle body scroll lock
 const isOpen = ref(false)
@@ -90,7 +91,10 @@ function onClickNode(node: SUPPORTED_NODE) {
 						:class="['justify-between', selectedChainId === id ? 'bg-accent font-medium' : '']"
 						@click="onClickChain(id)"
 					>
-						{{ displayChainName(id) }}
+						<div class="flex items-center gap-2">
+							<ChainIcon :chain-id="id" :size="24" :show-tooltip="false" />
+							{{ displayChainName(id) }}
+						</div>
 						<Check v-if="selectedChainId === id" class="h-4 w-4" />
 					</Button>
 				</div>

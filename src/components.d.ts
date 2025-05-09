@@ -48,6 +48,7 @@ declare module 'vue' {
     CardHeader: typeof import('./components/ui/card/CardHeader.vue')['default']
     CardTitle: typeof import('./components/ui/card/CardTitle.vue')['default']
     CenterStageLayout: typeof import('./components/layout/CenterStageLayout.vue')['default']
+    ChainIcon: typeof import('./components/ChainIcon.vue')['default']
     Checkbox: typeof import('./components/ui/checkbox/Checkbox.vue')['default']
     ConfirmImport: typeof import('./components/ImportAccountModal/ConfirmImport.vue')['default']
     ConfirmModal: typeof import('./components/ConfirmModal/ConfirmModal.vue')['default']

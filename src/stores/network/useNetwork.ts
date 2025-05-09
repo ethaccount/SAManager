@@ -5,13 +5,14 @@ import {
 	SUPPORTED_BUNDLER,
 	SUPPORTED_ENTRY_POINT,
 	SUPPORTED_NODE,
+	TESTNET_CHAIN_ID,
 } from '@/stores/network/network'
 import { JsonRpcProvider } from 'ethers'
 import { alchemy, publicNode } from 'evm-providers'
 import { defineStore } from 'pinia'
 import { ADDRESS, AlchemyBundler, Bundler, EntryPointVersion, PimlicoBundler, PublicPaymaster } from 'sendop'
 
-export const DEFAULT_CHAIN_ID = IS_DEV ? CHAIN_ID.LOCAL : CHAIN_ID.SEPOLIA
+export const DEFAULT_CHAIN_ID = IS_DEV ? TESTNET_CHAIN_ID.LOCAL : TESTNET_CHAIN_ID.SEPOLIA
 export const DEFAULT_ENTRY_POINT_VERSION: EntryPointVersion = 'v0.7'
 export const DEFAULT_NODE = SUPPORTED_NODE.ALCHEMY
 export const DEFAULT_BUNDLER = SUPPORTED_BUNDLER.PIMLICO
@@ -24,9 +25,9 @@ export const useNetworkStore = defineStore(
 
 		const supportedChainIds = computed(() => {
 			if (IS_DEV) {
-				return Object.values(CHAIN_ID)
+				return Object.values(TESTNET_CHAIN_ID)
 			}
-			return Object.values(CHAIN_ID).filter(id => id !== CHAIN_ID.LOCAL)
+			return Object.values(TESTNET_CHAIN_ID).filter(id => id !== TESTNET_CHAIN_ID.LOCAL)
 		})
 
 		const supportedNodes = computed(() => {
@@ -62,7 +63,7 @@ export const useNetworkStore = defineStore(
 		const selectedBundler = ref<SUPPORTED_BUNDLER>(DEFAULT_BUNDLER)
 
 		const bundlerUrl = computed(() => {
-			if (selectedChainId.value === CHAIN_ID.LOCAL) {
+			if (selectedChainId.value === TESTNET_CHAIN_ID.LOCAL) {
 				return `http://localhost:4337`
 			}
 			switch (selectedBundler.value) {
