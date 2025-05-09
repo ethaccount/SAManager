@@ -1,28 +1,10 @@
 <script setup lang="ts">
-import ConnectModal from '@/components/connect-modal/ConnectModal.vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { toRoute } from '@/lib/router'
-import { useConnectModal } from '@/stores/useConnectModal'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
 import { Clock, Plus, Send, Shield, Wallet } from 'lucide-vue-next'
-import { useModal } from 'vue-final-modal'
 import { RouterLink } from 'vue-router'
-
-// ============================== Connect Modal ==============================
-const connectModalStore = useConnectModal()
-const { open: openConnectModal, close: closeConnectModal } = useModal({
-	component: ConnectModal,
-	attrs: {
-		onClose: () => closeConnectModal(),
-	},
-	slots: {},
-})
-
-connectModalStore.updateStore({
-	openModal: openConnectModal,
-	closeModal: closeConnectModal,
-})
 
 async function onClickImportAccount() {
 	await useImportAccountModal().openModal()

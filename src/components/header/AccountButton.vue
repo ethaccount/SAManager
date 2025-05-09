@@ -1,26 +1,8 @@
 <script lang="ts" setup>
 import { useAccountDrawer } from '@/components/AccountDrawer/useAccountDrawer'
-import ConnectModal from '@/components/connect-modal/ConnectModal.vue'
 import { Button } from '@/components/ui/button'
 import { useAccount } from '@/stores/account/useAccount'
-import { useConnectModal } from '@/stores/useConnectModal'
 import { Wallet } from 'lucide-vue-next'
-import { useModal } from 'vue-final-modal'
-
-// ============================== Connect Modal ==============================
-const connectModalStore = useConnectModal()
-const { open: openConnectModal, close: closeConnectModal } = useModal({
-	component: ConnectModal,
-	attrs: {
-		onClose: () => closeConnectModal(),
-	},
-	slots: {},
-})
-
-connectModalStore.updateStore({
-	openModal: openConnectModal,
-	closeModal: closeConnectModal,
-})
 
 const { isAccountConnected, accounts } = useAccount()
 
