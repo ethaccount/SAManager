@@ -28,7 +28,9 @@ const props = withDefaults(
 
 const emit = defineEmits<{
 	(e: 'close'): void
+	(e: 'executed'): void // when status is success or failed
 	(e: 'success'): void
+	(e: 'failed'): void
 }>()
 
 function onClickClose() {
@@ -127,9 +129,13 @@ async function onClickSend() {
 
 		await handleSend()
 
+		emit('executed')
+
 		nextTick(() => {
 			if (status.value === TransactionStatus.Success) {
 				emit('success')
+			} else if (status.value === TransactionStatus.Failed) {
+				emit('failed')
 			}
 		})
 	} catch (e: unknown) {

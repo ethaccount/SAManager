@@ -154,14 +154,6 @@ watchImmediate([isValidationAvailable, selectedValidation, selectedAccountType, 
 	}
 })
 
-// Update the deployed status when the transaction status changes
-// When users has deployed and closed the modal, they can't click the deploy button again
-watch(status, async () => {
-	if (status.value === TransactionStatus.Success || status.value === TransactionStatus.Failed) {
-		isDeployed.value = await checkIfAccountIsDeployed(client.value, computedAddress.value)
-	}
-})
-
 function onClickImport() {
 	if (!selectedAccountType.value) {
 		throw new Error('onClickImport: No account type')
@@ -225,7 +217,13 @@ function onClickDeploy() {
 
 	selectAccount(computedAddress.value, selectedChainId.value)
 
-	useTxModal().openModal()
+	useTxModal().openModal({
+		// Update the deployed status when the transaction status changes
+		// When users has deployed and closed the modal, they can't click the deploy button again
+		onSuccess: async () => {
+			isDeployed.value = await checkIfAccountIsDeployed(client.value, computedAddress.value)
+		},
+	})
 }
 
 const disabledDeployButton = computed(() => {
