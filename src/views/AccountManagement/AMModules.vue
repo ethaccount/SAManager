@@ -1,23 +1,26 @@
 <script setup lang="ts">
 import { fetchModules } from '@/lib/aa'
+import { MODULE_TYPE_LABELS, SUPPORTED_MODULES } from '@/lib/useModuleManagement'
 import { useAccount } from '@/stores/account/useAccount'
 import { useNetwork } from '@/stores/network/useNetwork'
 import { watchImmediate } from '@vueuse/core'
-import { ADDRESS, ERC7579_MODULE_TYPE, INTERFACES, isSameAddress, TIERC7579Account__factory } from 'sendop'
+import { ERC7579_MODULE_TYPE, isSameAddress, TIERC7579Account__factory } from 'sendop'
 import { toast } from 'vue-sonner'
 
 const props = defineProps<{
 	isDeployed: boolean
 }>()
 
+type ModuleRecord = Record<ERC7579_MODULE_TYPE, { id: string; address: string }[]>
+
 const { selectedAccount } = useAccount()
 const { client, clientNoBatch } = useNetwork()
 
 const loading = ref(false)
 const modules = ref<Record<string, string[]>>({})
-const modulesByType = ref<Record<ERC7579_MODULE_TYPE, { id: string; address: string }[]>>(getDefaultModules())
+const modulesByType = ref<ModuleRecord>(getDefaultModules())
 
-function getDefaultModules(): Record<ERC7579_MODULE_TYPE, { id: string; address: string }[]> {
+function getDefaultModules(): ModuleRecord {
 	return {
 		[ERC7579_MODULE_TYPE.VALIDATOR]: [],
 		[ERC7579_MODULE_TYPE.EXECUTOR]: [],
@@ -28,26 +31,9 @@ function getDefaultModules(): Record<ERC7579_MODULE_TYPE, { id: string; address:
 		[ERC7579_MODULE_TYPE.STATELESS_VALIDATOR]: [],
 	}
 }
-// Module type labels mapping
-const MODULE_TYPE_LABELS = {
-	[ERC7579_MODULE_TYPE.VALIDATOR]: 'Validator Modules',
-	[ERC7579_MODULE_TYPE.EXECUTOR]: 'Executor Modules',
-	[ERC7579_MODULE_TYPE.HOOK]: 'Hook Modules',
-	[ERC7579_MODULE_TYPE.FALLBACK]: 'Fallback Modules',
-} as const
 
-const SUPPORTED_MODULE_NAMES = {
-	[ADDRESS.ECDSAValidator]: 'ECDSA Validator',
-	[ADDRESS.WebAuthnValidator]: 'WebAuthn Validator',
-	[ADDRESS.SmartSession]: 'Smart Session',
-	[ADDRESS.OwnableValidator]: 'Ownable Validator',
-}
-
-// Helper function to get module name
-const getModuleName = (address: string) => {
-	return (
-		Object.entries(SUPPORTED_MODULE_NAMES).find(([addr]) => isSameAddress(addr, address))?.[1] || 'Unknown Module'
-	)
+function getModuleName(address: string) {
+	return SUPPORTED_MODULES.find(module => isSameAddress(module.address, address))?.name || 'Unknown Module'
 }
 
 // Watch for account changes and fetch modules
@@ -109,31 +95,18 @@ const hasModules = computed(() => {
 	return Object.values(modulesByType.value).some(modules => modules.length > 0)
 })
 
-// Helper to get available module types
-const availableTypes = computed(() => {
+const installedModuleTypes = computed<ERC7579_MODULE_TYPE[]>(() => {
 	return Object.keys(modulesByType.value)
 		.map(Number)
 		.filter(type => modulesByType.value[type]?.length > 0)
 })
 
-const SUPPORTED_MODULES = [
-	{
-		name: 'Ownable Validator',
-		description: 'EOA-owned validation module for your account',
-		type: ERC7579_MODULE_TYPE.VALIDATOR,
-		address: ADDRESS.OwnableValidator,
-	},
-	{
-		name: 'WebAuthn Validator',
-		description: 'Domain-bound authentication using Passkeys',
-		type: ERC7579_MODULE_TYPE.VALIDATOR,
-		address: ADDRESS.WebAuthnValidator,
-	},
-]
-
 // available modules for installation
 const availableModules = computed(() => {
-	return SUPPORTED_MODULES.filter(module => !modulesByType.value[module.type].find(m => m.address === module.address))
+	return SUPPORTED_MODULES.filter(module => {
+		if (module.disabled) return false
+		return !modulesByType.value[module.type].find(m => m.address === module.address)
+	})
 })
 
 const onClickInstall = (module: (typeof SUPPORTED_MODULES)[number]) => {
@@ -150,7 +123,7 @@ const onClickInstall = (module: (typeof SUPPORTED_MODULES)[number]) => {
 				<div v-if="!isDeployed" class="text-sm text-muted-foreground">Account is not deployed</div>
 				<div v-else-if="!hasModules" class="text-sm text-muted-foreground">No modules installed</div>
 				<template v-else>
-					<div v-for="type in availableTypes" :key="type" class="space-y-3">
+					<div v-for="type in installedModuleTypes" :key="type" class="space-y-3">
 						<h3 class="text-sm font-medium">{{ MODULE_TYPE_LABELS[type] }}</h3>
 						<div class="grid gap-2">
 							<div
