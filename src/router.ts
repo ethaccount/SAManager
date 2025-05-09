@@ -24,6 +24,12 @@ const router = createRouter({
 								},
 							],
 						},
+						// Settings
+						{
+							path: '/:chainId/settings',
+							name: 'settings',
+							component: () => import('@/views/AppSettings.vue'),
+						},
 						// Home
 						{
 							path: '/:chainId',

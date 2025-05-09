@@ -45,7 +45,7 @@ const mode = useColorMode()
 	<Header />
 	<MainLayout />
 
-	<ThemeToggle class="fixed bottom-4 left-4" />
+	<AppHelp class="fixed bottom-4 left-4" />
 
 	<VueDappModal :dark="mode === 'dark'" autoConnect />
 	<ModalsContainer />
