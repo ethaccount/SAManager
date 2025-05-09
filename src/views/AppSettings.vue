@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 import { TrashIcon } from 'lucide-vue-next'
+import { useConfirmModal } from '@/components/ConfirmModal/useConfirmModal'
 
 interface StorageItem {
 	key: string
@@ -9,6 +10,7 @@ interface StorageItem {
 }
 
 const items = ref<StorageItem[]>([])
+const confirmModal = useConfirmModal()
 
 function refreshItems() {
 	const newItems: StorageItem[] = []
@@ -43,6 +45,20 @@ function formatValue(value: string): string {
 	} catch {
 		return value
 	}
+}
+
+async function onClickDelete(key: string) {
+	confirmModal.openModal({
+		title: 'Delete Item',
+		message: 'Are you sure you want to delete this item? This action cannot be undone.',
+		confirmText: 'Delete',
+		cancelText: 'Cancel',
+		onResult: confirmed => {
+			if (confirmed) {
+				removeItem(key)
+			}
+		},
+	})
 }
 
 // Initial load
@@ -84,7 +100,7 @@ refreshItems()
 										variant="ghost"
 										size="icon"
 										class="flex-shrink-0 h-6 w-6 text-muted-foreground hover:text-destructive"
-										@click="removeItem(item.key)"
+										@click="onClickDelete(item.key)"
 									>
 										<TrashIcon class="h-3.5 w-3.5" />
 									</Button>

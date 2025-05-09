@@ -5,7 +5,6 @@ import ImportOptions from '@/components/ImportAccountModal/ImportOptions.vue'
 import ValidateSmartEOA from '@/components/ImportAccountModal/ValidateSmartEOA.vue'
 import ConnectEOAWallet from '@/components/signer/ConnectEOAWallet.vue'
 import ConnectPasskey from '@/components/signer/ConnectPasskey.vue'
-import { deserializePasskeyCredential } from '@/stores/passkey/passkey'
 import { AccountCategory, AccountId } from '@/stores/account/account'
 import {
 	createEOAOwnedValidation,

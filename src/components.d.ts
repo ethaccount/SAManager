@@ -51,6 +51,7 @@ declare module 'vue' {
     CenterStageLayout: typeof import('./components/layout/CenterStageLayout.vue')['default']
     Checkbox: typeof import('./components/ui/checkbox/Checkbox.vue')['default']
     ConfirmImport: typeof import('./components/ImportAccountModal/ConfirmImport.vue')['default']
+    ConfirmModal: typeof import('./components/ConfirmModal/ConfirmModal.vue')['default']
     Connected: typeof import('./components/connect-modal/Connected.vue')['default']
     ConnectEOAWallet: typeof import('./components/signer/ConnectEOAWallet.vue')['default']
     ConnectModal: typeof import('./components/connect-modal/ConnectModal.vue')['default']
