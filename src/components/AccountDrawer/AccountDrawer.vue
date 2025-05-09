@@ -120,7 +120,7 @@ function onClickImportAccount() {
 				</Button>
 			</div>
 
-			<!-- Signers -->
+			<!-- Signers Connection -->
 			<div class="mt-4">
 				<h3 class="text-sm font-medium tracking-wider mb-2">Signers</h3>
 				<div class="space-y-2">
@@ -131,9 +131,14 @@ function onClickImportAccount() {
 					>
 						<div v-if="!isEOAWalletConnected" class="flex justify-between items-center">
 							<span class="text-sm">EOA Wallet</span>
-							<Button variant="outline" size="sm" class="h-7 text-xs px-2.5" @click="openConnectEOAWallet"
-								>Connect</Button
+							<Button
+								variant="outline"
+								size="sm"
+								class="h-7 text-xs px-2.5"
+								@click="openConnectEOAWallet"
 							>
+								Connect
+							</Button>
 						</div>
 						<div v-if="isEOAWalletConnected" class="space-y-1">
 							<div class="flex justify-between items-center">

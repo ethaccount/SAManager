@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { fetchModules } from '@/lib/aa'
-import { MODULE_TYPE_LABELS, SUPPORTED_MODULES } from '@/lib/useModuleManagement'
+import { MODULE_TYPE_LABELS, ModuleType, SUPPORTED_MODULES, useModuleManagement } from '@/lib/useModuleManagement'
 import { useAccount } from '@/stores/account/useAccount'
 import { useNetwork } from '@/stores/network/useNetwork'
 import { watchImmediate } from '@vueuse/core'
@@ -33,7 +33,10 @@ function getDefaultModules(): ModuleRecord {
 }
 
 function getModuleName(address: string) {
-	return SUPPORTED_MODULES.find(module => isSameAddress(module.address, address))?.name || 'Unknown Module'
+	return (
+		Object.values(SUPPORTED_MODULES).find(module => isSameAddress(module.address, address))?.name ||
+		'Unknown Module'
+	)
 }
 
 // Watch for account changes and fetch modules
@@ -59,7 +62,7 @@ watchImmediate([() => props.isDeployed, selectedAccount], async () => {
 		modulesByType.value = grouped
 
 		// check if available modules are installed
-		for (const module of SUPPORTED_MODULES) {
+		for (const module of Object.values(SUPPORTED_MODULES)) {
 			const account = TIERC7579Account__factory.connect(accountAddress, client.value)
 			const isInstalled = await account.isModuleInstalled(module.type, module.address, '0x')
 
@@ -103,14 +106,16 @@ const installedModuleTypes = computed<ERC7579_MODULE_TYPE[]>(() => {
 
 // available modules for installation
 const availableModules = computed(() => {
-	return SUPPORTED_MODULES.filter(module => {
-		if (module.disabled) return false
-		return !modulesByType.value[module.type].find(m => m.address === module.address)
-	})
+	return Object.entries(SUPPORTED_MODULES)
+		.filter(
+			([_, module]) =>
+				!module.disabled && !modulesByType.value[module.type].find(m => m.address === module.address),
+		)
+		.map(([key]) => key as ModuleType)
 })
 
-const onClickInstall = (module: (typeof SUPPORTED_MODULES)[number]) => {
-	console.log('install', module)
+const onClickInstall = (module: ModuleType) => {
+	useModuleManagement().installValidator(module)
 }
 </script>
 
@@ -155,12 +160,12 @@ const onClickInstall = (module: (typeof SUPPORTED_MODULES)[number]) => {
 				<div class="grid gap-3">
 					<div
 						v-for="module in availableModules"
-						:key="module.name"
+						:key="module"
 						class="flex items-center justify-between p-4 border rounded-lg bg-card/50 hover:bg-card/80 transition-colors"
 					>
 						<div class="space-y-1">
-							<div class="text-sm font-medium">{{ module.name }}</div>
-							<div class="text-xs text-muted-foreground">{{ module.description }}</div>
+							<div class="text-sm font-medium">{{ SUPPORTED_MODULES[module].name }}</div>
+							<div class="text-xs text-muted-foreground">{{ SUPPORTED_MODULES[module].description }}</div>
 						</div>
 						<Button variant="outline" size="sm" @click="onClickInstall(module)"> Install </Button>
 					</div>
