@@ -1,7 +1,7 @@
 import { createApp } from 'vue'
 import { toast } from 'vue-sonner'
 import App from './App.vue'
-import { ERROR_NOTIFICATION_DURATION } from './config'
+import { ERROR_NOTIFICATION_DURATION, LOCAL_STORAGE_KEY_PREFIX } from './config'
 import { parseError } from './lib/error'
 import './style.css'
 
@@ -15,7 +15,7 @@ const pinia = createPinia()
 // @docs https://prazdevs.github.io/pinia-plugin-persistedstate/guide/advanced.html#global-key-option
 pinia.use(
 	createPersistedState({
-		key: id => `samanager-${id}`,
+		key: id => `${LOCAL_STORAGE_KEY_PREFIX}${id}`,
 	}),
 )
 

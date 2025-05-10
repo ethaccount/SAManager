@@ -1,3 +1,4 @@
+import { LOCAL_STORAGE_KEY_PREFIX } from '@/config'
 import { AccountId, ImportedAccount, SUPPORTED_ACCOUNTS } from '@/stores/account/account'
 import { CHAIN_ID } from '@/stores/network/network'
 import { useNetwork } from '@/stores/network/useNetwork'
@@ -5,7 +6,11 @@ import { signMessage } from '@/stores/passkey/passkey'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useValidation } from '@/stores/validation/useValidation'
-import { checkValidationAvailability, SUPPORTED_VALIDATION_OPTIONS } from '@/stores/validation/validation'
+import {
+	checkValidationAvailability,
+	SUPPORTED_VALIDATION_OPTIONS,
+	ValidationIdentifier,
+} from '@/stores/validation/validation'
 import {
 	ERC7579Validator,
 	isSameAddress,
@@ -21,12 +26,37 @@ import { toast } from 'vue-sonner'
 export const useAccountStore = defineStore(
 	'useAccountStore',
 	() => {
-		const addressToInitCode = ref<Map<string, string>>(new Map())
+		// ===================== addressToInitCode =====================
+		const addressToInitCode = ref<
+			Map<
+				string,
+				{
+					vOptions: ValidationIdentifier[]
+					initCode: string
+				}
+			>
+		>(new Map())
+
+		const savedData = localStorage.getItem(`${LOCAL_STORAGE_KEY_PREFIX}addressToInitCode`)
+		if (savedData) {
+			try {
+				const parsed = JSON.parse(savedData)
+				addressToInitCode.value = new Map(Object.entries(parsed))
+			} catch (e) {
+				throw new Error(`Failed to parse addressToInitCode from localStorage: ${e}`)
+			}
+		}
+
+		watchDeep(addressToInitCode, () => {
+			const storageObj = Object.fromEntries(addressToInitCode.value)
+			localStorage.setItem(`${LOCAL_STORAGE_KEY_PREFIX}addressToInitCode`, JSON.stringify(storageObj))
+		})
+		// ===================== addressToInitCode =====================
 
 		const selectedAccount = ref<ImportedAccount | null>(null)
 		const selectedAccountInitCode = computed<string | null>(() => {
 			if (!selectedAccount.value) return null
-			return addressToInitCode.value.get(selectedAccount.value.address) || null
+			return addressToInitCode.value.get(selectedAccount.value.address)?.initCode || null
 		})
 
 		const accounts = ref<ImportedAccount[]>([])
@@ -150,7 +180,10 @@ export const useAccountStore = defineStore(
 			})
 
 			if (initCode) {
-				addressToInitCode.value.set(account.address, initCode)
+				addressToInitCode.value.set(account.address, {
+					vOptions: account.vOptions,
+					initCode,
+				})
 			}
 
 			toast.success('Account imported successfully')
