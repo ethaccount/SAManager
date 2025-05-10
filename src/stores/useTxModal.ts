@@ -29,10 +29,15 @@ export enum TransactionStatus {
 }
 
 export const useTxModalStore = defineStore('useTxModalStore', () => {
+	const defaultProps: InstanceType<typeof TxModal>['$props'] = {
+		executions: [],
+		onClose: () => close(),
+	}
+
 	const { open, close, patchOptions } = useModal({
 		component: TxModal,
 		attrs: {
-			onClose: () => close(),
+			...defaultProps,
 		},
 		slots: {},
 	})
@@ -40,6 +45,7 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 	function openModal(props?: InstanceType<typeof TxModal>['$props']) {
 		patchOptions({
 			attrs: {
+				...defaultProps, // must set default props to clear the props
 				...props,
 			},
 		})
