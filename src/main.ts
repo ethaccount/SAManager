@@ -9,9 +9,16 @@ const app = createApp(App)
 
 // pinia
 import { createPinia } from 'pinia'
-import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
+import { createPersistedState } from 'pinia-plugin-persistedstate'
 const pinia = createPinia()
-pinia.use(piniaPluginPersistedstate)
+
+// @docs https://prazdevs.github.io/pinia-plugin-persistedstate/guide/advanced.html#global-key-option
+pinia.use(
+	createPersistedState({
+		key: id => `samanager-${id}`,
+	}),
+)
+
 app.use(pinia)
 
 // vue-router
