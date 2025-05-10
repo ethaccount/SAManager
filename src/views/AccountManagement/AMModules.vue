@@ -40,13 +40,43 @@ const availableModules = computed(() => {
 		.map(([key]) => key as ModuleType)
 })
 
-async function onClickUninstall(_recordModule: ModuleRecordModule) {
-	// TODO
-	// useModuleManagement().uninstallValidator(module.address)
+const { operateValidator } = useModuleManagement()
+
+const operatingModule = ref<string | null>(null)
+
+async function onClickUninstall(recordModule: ModuleRecordModule) {
+	try {
+		operatingModule.value = recordModule.address
+		// Find the module type from SUPPORTED_MODULES
+		const moduleType = Object.entries(SUPPORTED_MODULES).find(
+			([_, module]) => module.address === recordModule.address,
+		)?.[0] as ModuleType
+
+		if (!moduleType) {
+			throw new Error(`Unknown module type for address: ${recordModule.address}`)
+		}
+
+		await operateValidator('uninstall', moduleType, {
+			onSuccess: async () => {
+				await updateAccountModuleRecord()
+			},
+		})
+	} finally {
+		operatingModule.value = null
+	}
 }
 
 async function onClickInstall(module: ModuleType) {
-	await useModuleManagement().installValidator(module)
+	try {
+		operatingModule.value = SUPPORTED_MODULES[module].address
+		await operateValidator('install', module, {
+			onSuccess: async () => {
+				await updateAccountModuleRecord()
+			},
+		})
+	} finally {
+		operatingModule.value = null
+	}
 }
 </script>
 
@@ -72,12 +102,13 @@ async function onClickInstall(module: ModuleType) {
 									<div class="text-xs text-muted-foreground break-all">{{ module.address }}</div>
 								</div>
 								<Button
-									:disabled="onlyOneValidator"
+									:disabled="onlyOneValidator || operatingModule !== null"
+									:loading="operatingModule === module.address"
 									variant="outline"
 									size="sm"
 									@click="onClickUninstall(module)"
 								>
-									Remove
+									Uninstall
 								</Button>
 							</div>
 						</div>
@@ -98,7 +129,15 @@ async function onClickInstall(module: ModuleType) {
 							<div class="text-sm font-medium">{{ SUPPORTED_MODULES[module].name }}</div>
 							<div class="text-xs text-muted-foreground">{{ SUPPORTED_MODULES[module].description }}</div>
 						</div>
-						<Button variant="outline" size="sm" @click="onClickInstall(module)"> Install </Button>
+						<Button
+							variant="outline"
+							size="sm"
+							:disabled="operatingModule !== null"
+							:loading="operatingModule === SUPPORTED_MODULES[module].address"
+							@click="onClickInstall(module)"
+						>
+							Install
+						</Button>
 					</div>
 				</div>
 			</div>

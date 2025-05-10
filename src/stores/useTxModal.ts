@@ -8,7 +8,6 @@ import {
 	estimateUserOp,
 	Execution,
 	getPaymasterData,
-	JsonRpcError,
 	PublicPaymaster,
 	sendUserOp,
 	signUserOp,
@@ -90,11 +89,11 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 
 	async function handleEstimate(executions: Execution[], initCode?: string) {
 		if (!opGetter.value || !selectedAccount.value) {
-			throw new Error('Account not selected')
+			throw new Error('handleEstimate: Account not selected')
 		}
 
 		if (executions.length === 0 && !initCode) {
-			throw new Error('No executions and no init code provided')
+			throw new Error('handleEstimate: No executions and no init code provided')
 		}
 
 		let _userOp: UserOp | null = null
@@ -102,23 +101,14 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 		try {
 			_userOp = await createUserOp(bundler.value, executions, opGetter.value, initCode)
 		} catch (e: unknown) {
-			throw new Error('Failed to create user operation', { cause: e })
+			throw new Error('handleEstimate: Failed to create user operation', { cause: e })
 		}
 
-		try {
-			console.log('estimation userOp', _userOp)
-			const estimation = await estimateUserOp(_userOp, bundler.value, opGetter.value, pmGetter.value)
-			_userOp = estimation.userOp
-			if (!estimation.pmIsFinal && pmGetter.value) {
-				_userOp = await getPaymasterData(_userOp, pmGetter.value)
-			}
-		} catch (e: unknown) {
-			if (e instanceof Error) {
-				if (e.cause instanceof JsonRpcError) {
-					throw new Error(e.cause.message)
-				}
-			}
-			throw new Error('Failed to estimate gas fees', { cause: e })
+		const estimation = await estimateUserOp(_userOp, bundler.value, opGetter.value, pmGetter.value)
+
+		_userOp = estimation.userOp
+		if (!estimation.pmIsFinal && pmGetter.value) {
+			_userOp = await getPaymasterData(_userOp, pmGetter.value)
 		}
 
 		userOp.value = _userOp
@@ -126,39 +116,31 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 
 	async function handleSign() {
 		if (!userOp.value || !opGetter.value || !selectedAccount.value) {
-			throw new Error('Transaction not prepared')
+			throw new Error('handleSign: Transaction not prepared')
 		}
 		userOp.value = await signUserOp(userOp.value, bundler.value, opGetter.value)
 	}
 
 	async function handleSend() {
 		if (!userOp.value) {
-			throw new Error('Transaction not signed')
+			throw new Error('handleSend: Transaction not signed')
 		}
-		try {
-			// Send the user operation
-			const op = await sendUserOp(bundler.value, userOp.value)
 
-			opHash.value = op.hash
+		// Send the user operation
+		const op = await sendUserOp(bundler.value, userOp.value)
 
-			// Wait for the transaction to be mined
-			status.value = TransactionStatus.Pending
-			const receipt = await op.wait()
+		opHash.value = op.hash
 
-			opReceipt.value = receipt
+		// Wait for the transaction to be mined
+		status.value = TransactionStatus.Pending
+		const receipt = await op.wait()
 
-			if (receipt.success) {
-				status.value = TransactionStatus.Success
-			} else {
-				status.value = TransactionStatus.Failed
-			}
-		} catch (e: unknown) {
-			if (e instanceof Error) {
-				if (e.cause instanceof JsonRpcError) {
-					throw new Error(e.cause.message)
-				}
-			}
-			throw new Error('Failed to send transaction', { cause: e })
+		opReceipt.value = receipt
+
+		if (receipt.success) {
+			status.value = TransactionStatus.Success
+		} else {
+			status.value = TransactionStatus.Failed
 		}
 	}
 

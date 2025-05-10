@@ -1,5 +1,5 @@
-import { isError, ErrorCode } from 'ethers'
 import type { ethers } from 'ethers'
+import { ErrorCode, isError } from 'ethers'
 
 export function parseError(unknownError: unknown): Error {
 	let err: Error
@@ -13,7 +13,14 @@ export function parseError(unknownError: unknown): Error {
 	return err
 }
 
-function getDetailedErrorMessage(err: Error): string {
+export function getErrMsg(err: unknown, defaultMsg: string): string {
+	if (err instanceof Error) {
+		return getErrorChainMessage(err)
+	}
+	return defaultMsg
+}
+
+export function getErrorChainMessage(err: Error): string {
 	let messages: string[] = []
 
 	while (err instanceof Error) {

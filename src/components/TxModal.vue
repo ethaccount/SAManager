@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { getErrMsg } from '@/lib/error'
 import { displayAccountName } from '@/stores/account/account'
 import { checkIfAccountIsDeployed } from '@/stores/account/create'
 import { useAccount } from '@/stores/account/useAccount'
@@ -9,7 +10,6 @@ import { useNetwork } from '@/stores/network/useNetwork'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { TransactionStatus, useTxModal } from '@/stores/useTxModal'
 import { useValidation } from '@/stores/validation/useValidation'
-import { displayValidationIdentifier } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
 import { formatEther } from 'ethers'
 import { CircleDot, ExternalLink, X } from 'lucide-vue-next'
@@ -104,7 +104,7 @@ async function onClickEstimate() {
 		status.value = TransactionStatus.Sign
 	} catch (e: unknown) {
 		console.error(e)
-		error.value = e instanceof Error ? e.message : 'Failed to estimate gas'
+		error.value = getErrMsg(e, 'Failed to estimate gas')
 		status.value = TransactionStatus.Estimation
 	}
 }
@@ -117,7 +117,7 @@ async function onClickSign() {
 		status.value = TransactionStatus.Send
 	} catch (e: unknown) {
 		console.error(e)
-		error.value = e instanceof Error ? e.message : 'Failed to sign transaction'
+		error.value = getErrMsg(e, 'Failed to sign transaction')
 		status.value = TransactionStatus.Sign
 	}
 }
@@ -140,7 +140,7 @@ async function onClickSend() {
 		})
 	} catch (e: unknown) {
 		console.error(e)
-		error.value = e instanceof Error ? e.message : 'Failed to send transaction'
+		error.value = getErrMsg(e, 'Failed to send transaction')
 		status.value = TransactionStatus.Estimation
 	}
 }
@@ -251,8 +251,8 @@ const txLink = computed(() => {
 										<span>{{ wallet.providerInfo?.name }} Connected</span>
 									</div>
 								</div>
-								<div class="text-[11px] text-muted-foreground font-mono">
-									{{ selectedSigner ? displayValidationIdentifier(selectedSigner) : '-' }}
+								<div class="text-xs text-muted-foreground font-mono">
+									{{ wallet.address ? shortenAddress(wallet.address) : '-' }}
 								</div>
 							</div>
 						</div>
@@ -278,9 +278,9 @@ const txLink = computed(() => {
 										<span>Passkey Connected</span>
 									</div>
 								</div>
-								<div class="text-[11px] text-muted-foreground">
-									{{ selectedSigner ? displayValidationIdentifier(selectedSigner) : '-' }}
-								</div>
+								<!-- <div class="text-xs text-muted-foreground">
+									{{  credential.username }} TODO: display username
+								</div> -->
 							</div>
 						</div>
 					</div>
@@ -365,7 +365,7 @@ const txLink = computed(() => {
 			<!-- Footer -->
 			<div class="mt-5 space-y-3">
 				<!-- Error message display -->
-				<div v-if="error" class="error-section">
+				<div v-if="error" class="error-section max-h-[100px] overflow-y-auto">
 					{{ error }}
 				</div>
 

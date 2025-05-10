@@ -25,6 +25,7 @@ import { toast } from 'vue-sonner'
 import { useConnectSignerModal } from './useConnectSignerModal'
 import { createEOAOwnedValidation, createPasskeyValidation } from '@/stores/validation/validation'
 import { useAccountModule } from './useAccountModule'
+import { useNetwork } from '@/stores/network/useNetwork'
 
 export const MODULE_TYPE_LABELS = {
 	[ERC7579_MODULE_TYPE.VALIDATOR]: 'Validator Modules',
@@ -69,100 +70,178 @@ export type ModuleType = keyof typeof SUPPORTED_MODULES
 export function useModuleManagement() {
 	const { selectedAccount, isAccountConnected } = useAccount()
 	const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
+	const { client } = useNetwork()
 
-	async function installValidator(moduleType: ModuleType) {
+	const isLoading = ref(false)
+
+	async function operateValidator(
+		operation: 'install' | 'uninstall',
+		moduleType: ModuleType,
+		options?: {
+			onSuccess?: () => Promise<void>
+		},
+	) {
+		const { onSuccess } = options || {}
+
 		if (!isAccountConnected.value) {
-			toast.info('Connect your account to install modules')
+			toast.info('Connect your account to operate modules')
 			return
 		}
 		if (!selectedAccount.value) {
 			throw new Error('No account selected')
 		}
 
-		let execution: Execution
+		isLoading.value = true
 
-		const { wallet } = useEOAWallet()
+		try {
+			let execution: Execution
+			const { wallet } = useEOAWallet()
 
-		switch (moduleType) {
-			case 'OwnableValidator':
-				if (!wallet.address) {
-					toast.info('Connect EOA wallet to install validator')
-					openConnectEOAWallet()
-					return
-				}
-
-				execution = {
-					to: selectedAccount.value.address,
-					data: await getModuleOperationCallData('install', selectedAccount.value.accountId, {
-						moduleType,
-						ownerAddresses: [wallet.address],
-					}),
-					value: 0n,
-				}
-
-				useTxModal().openModal({
-					executions: [execution],
-					onSuccess: async () => {
-						// add vOption to the selected account
+			switch (moduleType) {
+				case 'OwnableValidator':
+					if (operation === 'install') {
 						if (!wallet.address) {
-							throw new Error('No wallet address found')
+							toast.info('Connect EOA wallet to install validator')
+							openConnectEOAWallet()
+							return
 						}
-						if (!selectedAccount.value) {
-							throw new Error('No account selected')
+
+						execution = {
+							to: selectedAccount.value.address,
+							data: await getModuleOperationCallData('install', selectedAccount.value.accountId, {
+								moduleType,
+								ownerAddresses: [wallet.address],
+							}),
+							value: 0n,
 						}
-						selectedAccount.value.vOptions.push(createEOAOwnedValidation(wallet.address))
-						await useAccountModule().updateAccountModuleRecord()
-					},
-				})
 
-				break
-			case 'WebAuthnValidator':
-				const { isLogin, credential } = usePasskey()
-				if (!isLogin.value) {
-					toast.info('Login with Passkey to install validator')
-					openConnectPasskeyBoth()
-					return
-				}
+						useTxModal().openModal({
+							executions: [execution],
+							onSuccess: async () => {
+								if (!wallet.address) {
+									throw new Error('No wallet address found')
+								}
+								if (!selectedAccount.value) {
+									throw new Error('No account selected')
+								}
+								selectedAccount.value.vOptions.push(createEOAOwnedValidation(wallet.address))
+								await onSuccess?.()
+							},
+						})
+					} else {
+						execution = {
+							to: selectedAccount.value.address,
+							data: await getModuleOperationCallData('uninstall', selectedAccount.value.accountId, {
+								moduleType,
+								ownerAddresses: [wallet.address || ''],
+								accountAddress: selectedAccount.value.address,
+								client: client.value,
+							}),
+							value: 0n,
+						}
 
-				if (!credential.value) {
-					throw new Error('installValidator: No credential found')
-				}
+						useTxModal().openModal({
+							executions: [execution],
+							onSuccess: async () => {
+								if (!selectedAccount.value) {
+									throw new Error('No account selected')
+								}
+								selectedAccount.value.vOptions = selectedAccount.value.vOptions.filter(
+									v => v.type !== 'EOA-Owned',
+								)
+								await onSuccess?.()
+							},
+						})
+					}
+					break
 
-				execution = {
-					to: selectedAccount.value.address,
-					data: await getModuleOperationCallData('install', selectedAccount.value.accountId, {
-						moduleType,
-						webauthnData: {
-							pubKeyX: credential.value.pubX,
-							pubKeyY: credential.value.pubY,
-							authenticatorIdHash: credential.value.authenticatorIdHash,
-						},
-					}),
-					value: 0n,
-				}
+				case 'WebAuthnValidator':
+					const { isLogin, credential } = usePasskey()
+					if (operation === 'install') {
+						if (!isLogin.value) {
+							toast.info('Login with Passkey to install validator')
+							openConnectPasskeyBoth()
+							return
+						}
 
-				useTxModal().openModal({
-					executions: [execution],
-					onSuccess: async () => {
-						// add vOption to the selected account
 						if (!credential.value) {
-							throw new Error('No credential found')
+							throw new Error('operateValidator: No credential found')
 						}
-						if (!selectedAccount.value) {
-							throw new Error('No account selected')
+
+						execution = {
+							to: selectedAccount.value.address,
+							data: await getModuleOperationCallData('install', selectedAccount.value.accountId, {
+								moduleType,
+								webauthnData: {
+									pubKeyX: credential.value.pubX,
+									pubKeyY: credential.value.pubY,
+									authenticatorIdHash: credential.value.authenticatorIdHash,
+								},
+							}),
+							value: 0n,
 						}
-						selectedAccount.value.vOptions.push(createPasskeyValidation(credential.value))
-						await useAccountModule().updateAccountModuleRecord()
-					},
-				})
-				break
-			default:
-				throw new Error('installValidator: Unsupported module type: ' + moduleType)
+
+						useTxModal().openModal({
+							executions: [execution],
+							onSuccess: async () => {
+								if (!credential.value) {
+									throw new Error('No credential found')
+								}
+								if (!selectedAccount.value) {
+									throw new Error('No account selected')
+								}
+								selectedAccount.value.vOptions.push(createPasskeyValidation(credential.value))
+								await onSuccess?.()
+							},
+						})
+					} else {
+						if (!credential.value) {
+							throw new Error('operateValidator: No credential found for uninstall')
+						}
+
+						execution = {
+							to: selectedAccount.value.address,
+							data: await getModuleOperationCallData('uninstall', selectedAccount.value.accountId, {
+								moduleType,
+								webauthnData: {
+									pubKeyX: credential.value.pubX,
+									pubKeyY: credential.value.pubY,
+									authenticatorIdHash: credential.value.authenticatorIdHash,
+								},
+								accountAddress: selectedAccount.value.address,
+								client: client.value,
+							}),
+							value: 0n,
+						}
+
+						useTxModal().openModal({
+							executions: [execution],
+							onSuccess: async () => {
+								if (!selectedAccount.value) {
+									throw new Error('No account selected')
+								}
+								selectedAccount.value.vOptions = selectedAccount.value.vOptions.filter(
+									v => v.type !== 'Passkey',
+								)
+								await onSuccess?.()
+							},
+						})
+					}
+					break
+
+				default:
+					throw new Error('operateValidator: Unsupported module type: ' + moduleType)
+			}
+		} catch (e: unknown) {
+			throw e
+		} finally {
+			isLoading.value = false
 		}
 	}
 
 	return {
-		installValidator,
+		operateValidator,
+		isLoading,
 	}
 }
 
@@ -233,8 +312,8 @@ export async function getModuleOperationCallData(
 			}
 
 			const nexus = TNexus__factory.connect(config.accountAddress, config.client)
-			const validators = await nexus.getExecutorsPaginated(zeroPadLeft('0x01', 20), 10)
-			const prev = findPrevious(validators.array, ADDRESS.ScheduledTransfers)
+			const validators = await nexus.getValidatorsPaginated(zeroPadLeft('0x01', 20), 10)
+			const prev = findPrevious(validators.array, getModuleAddress(config.moduleType))
 			return NexusAccount.encodeUninstallModule({
 				...uninstallConfig,
 				prev,
@@ -249,7 +328,7 @@ export async function getModuleOperationCallData(
 
 			const safe = TISafe7579__factory.connect(config.accountAddress, config.client)
 			const validators = await safe.getValidatorsPaginated(zeroPadLeft('0x01', 20), 10)
-			const prev = findPrevious(validators.array, getModuleToFind(config.moduleType))
+			const prev = findPrevious(validators.array, getModuleAddress(config.moduleType))
 			return Safe7579Account.encodeUninstallModule({
 				...uninstallConfig,
 				prev,
@@ -261,18 +340,7 @@ export async function getModuleOperationCallData(
 }
 
 function getModuleAddress(moduleType: ModuleType): string {
-	switch (moduleType) {
-		case 'OwnableValidator':
-			return ADDRESS.OwnableValidator
-		case 'WebAuthnValidator':
-			return ADDRESS.WebAuthnValidator
-		case 'ECDSAValidator':
-			return ADDRESS.ECDSAValidator
-		case 'SmartSession':
-			return ADDRESS.SmartSession
-		default:
-			throw new Error(`Unsupported module type: ${moduleType}`)
-	}
+	return SUPPORTED_MODULES[moduleType].address
 }
 
 function getModuleInitData(config: ValidatorConfig) {
@@ -287,11 +355,4 @@ function getModuleDeInitData(moduleType: 'OwnableValidator' | 'WebAuthnValidator
 		return OwnableValidator.getDeInitData()
 	}
 	return WebAuthnValidator.getDeInitData()
-}
-
-function getModuleToFind(moduleType: 'OwnableValidator' | 'WebAuthnValidator'): string {
-	if (moduleType === 'OwnableValidator') {
-		return ADDRESS.WebAuthnValidator
-	}
-	return ADDRESS.OwnableValidator
 }
