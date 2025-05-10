@@ -2,7 +2,6 @@
 import { ModuleRecordModule, useAccountModule } from '@/lib/useAccountModule'
 import { MODULE_TYPE_LABELS, ModuleType, SUPPORTED_MODULES, useModuleManagement } from '@/lib/useModuleManagement'
 import { useAccount } from '@/stores/account/useAccount'
-import { watchImmediate } from '@vueuse/core'
 import { ERC7579_MODULE_TYPE, isSameAddress } from 'sendop'
 
 const props = defineProps<{

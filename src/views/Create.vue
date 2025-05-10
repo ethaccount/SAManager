@@ -13,7 +13,7 @@ import { displayChainName } from '@/stores/network/network'
 import { useNetwork } from '@/stores/network/useNetwork'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
-import { TransactionStatus, useTxModal } from '@/stores/useTxModal'
+import { useTxModal } from '@/stores/useTxModal'
 import { useValidation } from '@/stores/validation/useValidation'
 import {
 	checkValidationAvailability,
@@ -25,7 +25,6 @@ import {
 	ValidationType,
 } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
-import { watchImmediate } from '@vueuse/core'
 import { isAddress } from 'ethers'
 import { ChevronRight, Power } from 'lucide-vue-next'
 import { toBytes32 } from 'sendop'

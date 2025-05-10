@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { toRoute } from '@/lib/router'
-import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
 import { RouterLink } from 'vue-router'
+import { breakpointsTailwind } from '@vueuse/core'
 
 const breakpoints = useBreakpoints(breakpointsTailwind)
 </script>

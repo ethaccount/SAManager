@@ -1,11 +1,11 @@
 import { AccountId, ImportedAccount, SUPPORTED_ACCOUNTS } from '@/stores/account/account'
 import { CHAIN_ID } from '@/stores/network/network'
+import { useNetwork } from '@/stores/network/useNetwork'
 import { signMessage } from '@/stores/passkey/passkey'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useValidation } from '@/stores/validation/useValidation'
 import { checkValidationAvailability, SUPPORTED_VALIDATION_OPTIONS } from '@/stores/validation/validation'
-import { defineStore, storeToRefs } from 'pinia'
 import {
 	ERC7579Validator,
 	isSameAddress,
@@ -17,7 +17,6 @@ import {
 	WebAuthnValidator,
 } from 'sendop'
 import { toast } from 'vue-sonner'
-import { useNetwork } from '../network/useNetwork'
 
 export const useAccountStore = defineStore(
 	'useAccountStore',

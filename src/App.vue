@@ -2,7 +2,6 @@
 import { useChainIdRoute } from '@/app/useChainIdRoute'
 import { useValidation } from '@/stores/validation/useValidation'
 import { VueDappModal } from '@vue-dapp/modal'
-import { useColorMode, watchImmediate } from '@vueuse/core'
 import { onMounted } from 'vue'
 import { ModalsContainer } from 'vue-final-modal'
 import { toast, Toaster } from 'vue-sonner'
