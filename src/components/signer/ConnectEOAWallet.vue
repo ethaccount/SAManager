@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { parseError } from '@/lib/error'
 import { useEOAWallet } from '@/stores/useEOAWallet'
-import { useValidation } from '@/stores/validation/useValidation'
+import { useSigner } from '@/stores/validation/useSigner'
 import { RdnsEnum, shortenAddress, type RDNS } from '@vue-dapp/core'
 import { useVueDappModal } from '@vue-dapp/modal'
 import { Loader2 } from 'lucide-vue-next'

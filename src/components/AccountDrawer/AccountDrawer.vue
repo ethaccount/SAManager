@@ -15,7 +15,7 @@ import { Tooltip } from '@/components/ui/tooltip'
 import { TooltipContent } from '@/components/ui/tooltip'
 import { TooltipTrigger } from '@/components/ui/tooltip'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
-import { useValidation } from '@/stores/validation/useValidation'
+import { useSigner } from '@/stores/validation/useSigner'
 
 const emit = defineEmits<{
 	(e: 'close'): void
@@ -29,7 +29,7 @@ const { accounts, selectedAccount, isAccountConnected } = useAccount()
 const { wallet, address, isEOAWalletConnected, disconnect } = useEOAWallet()
 const { username, isLogin, passkeyLogout } = usePasskey()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
-const { selectSigner, selectedSigner } = useValidation()
+const { selectSigner, selectedSigner } = useSigner()
 
 function onClickSelectAccount(account: ImportedAccount) {
 	selectedAccount.value = account
@@ -127,7 +127,7 @@ function onClickImportAccount() {
 					<div
 						class="flex flex-col p-2.5 border rounded-lg transition-all cursor-pointer"
 						:class="{ 'bg-secondary/50 border-primary/20': isEOAWalletConnected }"
-						@click="isEOAWalletConnected && selectSigner('EOA-Owned')"
+						@click="isEOAWalletConnected && selectSigner('EOAWallet')"
 					>
 						<div v-if="!isEOAWalletConnected" class="flex justify-between items-center">
 							<span class="text-sm">EOA Wallet</span>
@@ -146,7 +146,7 @@ function onClickImportAccount() {
 									<CircleDot
 										class="w-2.5 h-2.5"
 										:class="
-											selectedSigner?.type === 'EOA-Owned'
+											selectedSigner?.type === 'EOAWallet'
 												? 'text-green-500'
 												: 'text-muted-foreground'
 										"

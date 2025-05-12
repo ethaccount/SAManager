@@ -14,9 +14,8 @@ import { useNetwork } from '@/stores/network/useNetwork'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useTxModal } from '@/stores/useTxModal'
-import { useValidation } from '@/stores/validation/useValidation'
+import { useSigner } from '@/stores/validation/useSigner'
 import {
-	checkValidationAvailability,
 	createEOAOwnedValidation,
 	createPasskeyValidation,
 	displayValidationName,
@@ -105,8 +104,8 @@ const selectedValidation = computed<ValidationIdentifier | null>(() => {
 // Auto select the signer when the selectedValidation is updated
 watchImmediate(selectedValidationType, () => {
 	if (selectedValidation.value) {
-		const { selectSigner } = useValidation()
-		selectSigner(selectedValidation.value.type)
+		const { selectSigner } = useSigner()
+		selectSigner(SUPPORTED_VALIDATION_OPTIONS[selectedValidation.value.type].signerType)
 	}
 })
 
@@ -121,7 +120,7 @@ const computedSalt = computed(() => {
  */
 const isValidationAvailable = computed(() => {
 	if (!selectedValidation.value) return false
-	return checkValidationAvailability([selectedValidation.value])
+	return useSigner().isSignerEligibleForValidation([selectedValidation.value])
 })
 
 const computedAddress = ref<string>('')

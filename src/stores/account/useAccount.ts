@@ -5,12 +5,8 @@ import { useNetwork } from '@/stores/network/useNetwork'
 import { signMessage } from '@/stores/passkey/passkey'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
-import { useValidation } from '@/stores/validation/useValidation'
-import {
-	checkValidationAvailability,
-	SUPPORTED_VALIDATION_OPTIONS,
-	ValidationIdentifier,
-} from '@/stores/validation/validation'
+import { useSigner } from '@/stores/validation/useSigner'
+import { SUPPORTED_VALIDATION_OPTIONS, ValidationIdentifier } from '@/stores/validation/validation'
 import {
 	ERC7579Validator,
 	isSameAddress,
@@ -58,6 +54,10 @@ export const useAccountStore = defineStore(
 			if (!selectedAccount.value) return null
 			return addressToInitCode.value.get(selectedAccount.value.address)?.initCode || null
 		})
+		const isSelectedAccountModular = computed(() => {
+			if (!selectedAccount.value) return false
+			return SUPPORTED_ACCOUNTS[selectedAccount.value.accountId].isModular
+		})
 
 		const accounts = ref<ImportedAccount[]>([])
 		const hasAccounts = computed(() => accounts.value.length > 0)
@@ -68,8 +68,7 @@ export const useAccountStore = defineStore(
 			const { selectedChainId } = useNetwork()
 			if (selectedAccount.value.chainId !== selectedChainId.value) return false
 
-			// check if the validation options are available
-			return checkValidationAvailability(selectedAccount.value.vOptions)
+			return useSigner().isSignerEligibleForValidation(selectedAccount.value.vOptions)
 		})
 
 		watch(isAccountConnected, () => {
@@ -79,12 +78,14 @@ export const useAccountStore = defineStore(
 		})
 
 		const erc7579Validator = computed<ERC7579Validator | null>(() => {
-			const { selectedSigner } = useValidation()
+			const { selectedSigner } = useSigner()
 			if (!isAccountConnected.value) return null
 			if (!selectedSigner.value) return null
+			if (!isSelectedAccountModular.value) return null
+			if (!selectedAccount.value) return null
 
 			switch (selectedSigner.value.type) {
-				case 'EOA-Owned':
+				case 'EOAWallet':
 					const { signer } = useEOAWallet()
 					if (!signer.value) {
 						return null
@@ -101,10 +102,6 @@ export const useAccountStore = defineStore(
 						address: SUPPORTED_VALIDATION_OPTIONS['Passkey'].validatorAddress,
 						signMessage: signMessage,
 					})
-				case 'SmartEOA':
-					return null
-				default:
-					return null
 			}
 		})
 

@@ -9,7 +9,7 @@ import { displayChainName } from '@/stores/network/network'
 import { useNetwork } from '@/stores/network/useNetwork'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { TransactionStatus, useTxModal } from '@/stores/useTxModal'
-import { useValidation } from '@/stores/validation/useValidation'
+import { useSigner } from '@/stores/validation/useSigner'
 import { shortenAddress } from '@vue-dapp/core'
 import { formatEther } from 'ethers'
 import { CircleDot, ExternalLink, X } from 'lucide-vue-next'
@@ -40,7 +40,7 @@ function onClickClose() {
 const { wallet } = useEOAWallet()
 const { client, selectedChainId, explorerUrl, selectedEntryPoint } = useNetwork()
 const { selectedAccount, selectedAccountInitCode, isAccountConnected } = useAccount()
-const { selectSigner, selectedSigner } = useValidation()
+const { selectSigner, selectedSigner } = useSigner()
 const {
 	userOp,
 	opReceipt,
@@ -235,7 +235,7 @@ const txLink = computed(() => {
 						<div
 							v-if="selectedAccount?.vOptions.find(v => v.type === 'EOA-Owned' || v.type === 'SmartEOA')"
 							class="flex flex-col p-2.5 border rounded-lg transition-all cursor-pointer"
-							@click="selectSigner('EOA-Owned')"
+							@click="selectSigner('EOAWallet')"
 						>
 							<div class="space-y-1">
 								<div class="flex justify-between items-center">
@@ -243,7 +243,7 @@ const txLink = computed(() => {
 										<CircleDot
 											class="w-2.5 h-2.5"
 											:class="
-												selectedSigner?.type === 'EOA-Owned'
+												selectedSigner?.type === 'EOAWallet'
 													? 'text-green-500'
 													: 'text-muted-foreground'
 											"

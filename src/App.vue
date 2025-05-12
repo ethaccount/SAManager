@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useChainIdRoute } from '@/app/useChainIdRoute'
-import { useValidation } from '@/stores/validation/useValidation'
+import { useSigner } from '@/stores/validation/useSigner'
 import { VueDappModal } from '@vue-dapp/modal'
 import { onMounted } from 'vue'
 import { ModalsContainer } from 'vue-final-modal'
@@ -12,7 +12,7 @@ import { useEOAWallet } from './stores/useEOAWallet'
 
 const { isEOAWalletConnected } = useEOAWallet()
 const { isLogin } = usePasskey()
-const { selectSigner } = useValidation()
+const { selectSigner } = useSigner()
 
 useChainIdRoute()
 useSetupVueDapp()
@@ -26,13 +26,14 @@ onMounted(async () => {
 	}
 })
 
-// Auto-select single signer when connected
-watchImmediate([isEOAWalletConnected, isLogin], ([eoaConnected, passkeyConnected]) => {
-	if (eoaConnected && !passkeyConnected) {
-		selectSigner('EOA-Owned')
-	} else if (!eoaConnected && passkeyConnected) {
+// Auto-select signer when connected
+watchImmediate([isEOAWalletConnected, isLogin], ([eoaWalletConnected, passkeyConnected]) => {
+	if (eoaWalletConnected && !passkeyConnected) {
+		selectSigner('EOAWallet')
+	} else if (!eoaWalletConnected && passkeyConnected) {
 		selectSigner('Passkey')
-	} else if (eoaConnected && passkeyConnected) {
+	} else if (eoaWalletConnected && passkeyConnected) {
+		// if both are connected, select the passkey
 		selectSigner('Passkey')
 	}
 })

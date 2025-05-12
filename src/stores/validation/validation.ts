@@ -1,14 +1,15 @@
 import { deserializePasskeyCredential, PasskeyCredential, serializePasskeyCredential } from '@/stores/passkey/passkey'
-import { Contract, EventLog, isAddress, JsonRpcProvider } from 'ethers'
-import { ADDRESS, isSameAddress } from 'sendop'
-import { useValidation } from '@/stores/validation/useValidation'
+import { SUPPORTED_SIGNER_TYPE } from '@/stores/validation/useSigner'
 import { shortenAddress } from '@vue-dapp/core'
+import { Contract, EventLog, isAddress, JsonRpcProvider } from 'ethers'
+import { ADDRESS } from 'sendop'
 
 export const SUPPORTED_VALIDATION_OPTIONS = {
 	'EOA-Owned': {
 		name: 'EOA-Owned',
 		description: 'Use OwnableValidator from rhinestone',
 		validatorAddress: ADDRESS.OwnableValidator,
+		signerType: 'EOAWallet' as SUPPORTED_SIGNER_TYPE,
 		// TODO: Cannot get accounts from OwnableValidator, because it's event doens't have the owner address
 		async getAccounts(client: JsonRpcProvider, _ownerAddress: string): Promise<string[]> {
 			const ownableValidator = new Contract(
@@ -28,6 +29,7 @@ export const SUPPORTED_VALIDATION_OPTIONS = {
 		name: 'Passkey',
 		description: 'Use WebAuthnValidator from zerodev',
 		validatorAddress: ADDRESS.WebAuthnValidator,
+		signerType: 'Passkey' as SUPPORTED_SIGNER_TYPE,
 		async getAccounts(client: JsonRpcProvider, authenticatorIdHash: string): Promise<string[]> {
 			const webAuthnValidator = new Contract(
 				ADDRESS.WebAuthnValidator,
@@ -49,6 +51,7 @@ export const SUPPORTED_VALIDATION_OPTIONS = {
 		name: 'Smart EOA',
 		description: 'Smart EOA validation for Simple7702Account',
 		validatorAddress: null,
+		signerType: 'EOAWallet' as SUPPORTED_SIGNER_TYPE,
 	},
 } as const
 
@@ -60,7 +63,7 @@ export function displayValidationName(validationType: ValidationType): string {
 
 export interface ValidationIdentifier {
 	type: ValidationType
-	identifier: string // address for EOA, authenticatorIdHash for Passkey
+	identifier: string // address for EOA, serialized credential for Passkey
 }
 
 export function displayValidationIdentifier(validationIdentifier: ValidationIdentifier): string {
@@ -117,31 +120,4 @@ export function createSmartEOAValidation(address: string): ValidationIdentifier 
 		type: 'SmartEOA',
 		identifier: address,
 	}
-}
-
-export function checkValidationAvailability(vOptions: ValidationIdentifier[]): boolean {
-	const { selectedSigner } = useValidation()
-	if (!selectedSigner.value) return false
-
-	for (const vOption of vOptions) {
-		switch (vOption.type) {
-			case 'EOA-Owned':
-			case 'SmartEOA':
-				if (selectedSigner.value.type === 'EOA-Owned' || selectedSigner.value.type === 'SmartEOA') {
-					if (isSameAddress(selectedSigner.value.identifier, vOption.identifier)) {
-						return true
-					}
-				}
-				break
-			case 'Passkey':
-				if (selectedSigner.value.type === 'Passkey') {
-					if (selectedSigner.value.identifier === vOption.identifier) {
-						return true
-					}
-				}
-				break
-		}
-	}
-
-	return false
 }
