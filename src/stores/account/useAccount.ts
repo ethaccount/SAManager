@@ -8,11 +8,11 @@ import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useSigner } from '@/stores/validation/useSigner'
 import { SUPPORTED_VALIDATION_OPTIONS, ValidationIdentifier } from '@/stores/validation/validation'
 import {
+	EOAValidator,
 	ERC7579Validator,
 	isSameAddress,
 	KernelV3Account,
 	NexusAccount,
-	OwnableValidator,
 	Safe7579Account,
 	Simple7702Account,
 	WebAuthnValidator,
@@ -90,12 +90,13 @@ export const useAccountStore = defineStore(
 					if (!signer.value) {
 						return null
 					}
-					return new OwnableValidator({
-						signers: [signer.value],
+					return new EOAValidator({
+						address: SUPPORTED_VALIDATION_OPTIONS['EOA-Owned'].validatorAddress,
+						signer: signer.value,
 					})
 				case 'Passkey':
-					const { credential } = usePasskey()
-					if (!credential.value) {
+					const { isLogin } = usePasskey()
+					if (!isLogin.value) {
 						return null
 					}
 					return new WebAuthnValidator({

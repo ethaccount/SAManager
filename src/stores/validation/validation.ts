@@ -1,4 +1,4 @@
-import { deserializePasskeyCredential, PasskeyCredential, serializePasskeyCredential } from '@/stores/passkey/passkey'
+import { PasskeyCredential, serializePasskeyCredential } from '@/stores/passkey/passkey'
 import { SUPPORTED_SIGNER_TYPE } from '@/stores/validation/useSigner'
 import { shortenAddress } from '@vue-dapp/core'
 import { Contract, EventLog, isAddress, JsonRpcProvider } from 'ethers'
@@ -7,18 +7,18 @@ import { ADDRESS } from 'sendop'
 export const SUPPORTED_VALIDATION_OPTIONS = {
 	'EOA-Owned': {
 		name: 'EOA-Owned',
-		description: 'Use OwnableValidator from rhinestone',
-		validatorAddress: ADDRESS.OwnableValidator,
+		description: 'Use ECDSAValidator from zerodev',
+		validatorAddress: ADDRESS.ECDSAValidator,
 		signerType: 'EOAWallet' as SUPPORTED_SIGNER_TYPE,
-		// TODO: Cannot get accounts from OwnableValidator, because it's event doens't have the owner address
-		async getAccounts(client: JsonRpcProvider, _ownerAddress: string): Promise<string[]> {
+
+		async getAccounts(client: JsonRpcProvider, ownerAddress: string): Promise<string[]> {
 			const ownableValidator = new Contract(
-				ADDRESS.OwnableValidator,
-				['event ModuleInitialized(address indexed account)'],
+				ADDRESS.ECDSAValidator,
+				['event OwnerRegistered(address indexed kernel, address indexed owner)'],
 				client,
 			)
 			const events = (await ownableValidator.queryFilter(
-				ownableValidator.filters.ModuleInitialized(),
+				ownableValidator.filters.OwnerRegistered(null, ownerAddress),
 			)) as EventLog[]
 
 			const sortedEvents = events.sort((a, b) => b.blockNumber - a.blockNumber)
@@ -71,8 +71,7 @@ export function displayValidationIdentifier(validationIdentifier: ValidationIden
 		case 'EOA-Owned':
 			return shortenAddress(validationIdentifier.identifier)
 		case 'Passkey':
-			const credential = deserializePasskeyCredential(validationIdentifier.identifier)
-			return shortenAddress(credential.authenticatorIdHash)
+			return ''
 		case 'SmartEOA':
 			return shortenAddress(validationIdentifier.identifier)
 	}

@@ -33,8 +33,11 @@ watchImmediate([isEOAWalletConnected, isLogin], ([eoaWalletConnected, passkeyCon
 	} else if (!eoaWalletConnected && passkeyConnected) {
 		selectSigner('Passkey')
 	} else if (eoaWalletConnected && passkeyConnected) {
-		// if both are connected, select the passkey
-		selectSigner('Passkey')
+		const { selectedSigner } = useSigner()
+		if (!selectedSigner.value) {
+			// if both are connected and doesn't have a selected signer, select the passkey
+			selectSigner('Passkey')
+		}
 	}
 })
 

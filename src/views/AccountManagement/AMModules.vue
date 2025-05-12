@@ -34,7 +34,8 @@ const availableModules = computed(() => {
 	return Object.entries(SUPPORTED_MODULES)
 		.filter(
 			([_, module]) =>
-				!module.disabled && !moduleRecord.value[module.type].find(m => m.address === module.address),
+				!module.disabled &&
+				!moduleRecord.value[module.type].find(m => isSameAddress(m.address, module.address)),
 		)
 		.map(([key]) => key as ModuleType)
 })
@@ -47,8 +48,8 @@ async function onClickUninstall(recordModule: ModuleRecordModule) {
 	try {
 		operatingModule.value = recordModule.address
 		// Find the module type from SUPPORTED_MODULES
-		const moduleType = Object.entries(SUPPORTED_MODULES).find(
-			([_, module]) => module.address === recordModule.address,
+		const moduleType = Object.entries(SUPPORTED_MODULES).find(([_, module]) =>
+			isSameAddress(module.address, recordModule.address),
 		)?.[0] as ModuleType
 
 		if (!moduleType) {

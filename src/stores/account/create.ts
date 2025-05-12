@@ -4,10 +4,11 @@ import { JsonRpcProvider } from 'ethers'
 import {
 	ADDRESS,
 	BICONOMY_ATTESTER_ADDRESS,
+	DEV_ATTESTER_ADDRESS,
+	EOAValidator,
 	KernelV3Account,
 	NexusAccount,
 	NexusCreationOptions,
-	OwnableValidator,
 	RHINESTONE_ATTESTER_ADDRESS,
 	Safe7579Account,
 	Safe7579CreationOptions,
@@ -38,7 +39,7 @@ export async function getComputedAddressAndInitCode(
 	switch (validation.type) {
 		case 'EOA-Owned':
 			validatorAddress = SUPPORTED_VALIDATION_OPTIONS['EOA-Owned'].validatorAddress
-			validatorInitData = OwnableValidator.getInitData([validation.identifier], 1)
+			validatorInitData = EOAValidator.getInitData(validation.identifier)
 			break
 		case 'Passkey':
 			const credential = deserializePasskeyCredential(validation.identifier)
@@ -75,7 +76,7 @@ export async function getComputedAddressAndInitCode(
 						validatorInitData,
 						bootstrap: 'initNexusWithSingleValidator',
 						registryAddress: ADDRESS.Registry,
-						attesters: [RHINESTONE_ATTESTER_ADDRESS, BICONOMY_ATTESTER_ADDRESS],
+						attesters: [RHINESTONE_ATTESTER_ADDRESS, BICONOMY_ATTESTER_ADDRESS, DEV_ATTESTER_ADDRESS],
 						threshold: 1,
 					}
 					console.log('biconomy.nexus.1.0.2 creationOption', creationOption)
@@ -91,7 +92,7 @@ export async function getComputedAddressAndInitCode(
 						validatorInitData,
 						owners: [validation.identifier],
 						ownersThreshold: 1,
-						attesters: [RHINESTONE_ATTESTER_ADDRESS, BICONOMY_ATTESTER_ADDRESS],
+						attesters: [RHINESTONE_ATTESTER_ADDRESS, BICONOMY_ATTESTER_ADDRESS, DEV_ATTESTER_ADDRESS],
 						attestersThreshold: 1,
 					}
 					console.log('rhinestone.safe7579.v1.0.0 creationOption', creationOption)

@@ -2,7 +2,7 @@ import { fetchModules } from '@/lib/aa'
 import { SUPPORTED_MODULES } from '@/lib/useModuleManagement'
 import { useAccount } from '@/stores/account/useAccount'
 import { useNetwork } from '@/stores/network/useNetwork'
-import { ERC7579_MODULE_TYPE, TIERC7579Account__factory } from 'sendop'
+import { ERC7579_MODULE_TYPE, isSameAddress, TIERC7579Account__factory } from 'sendop'
 
 export type ModuleRecordModule = { id: string; address: string }
 export type ModuleRecord = Record<ERC7579_MODULE_TYPE, ModuleRecordModule[]>
@@ -15,6 +15,10 @@ export function useAccountModule() {
 	const { selectedAccount } = useAccount()
 	const { client, clientNoBatch } = useNetwork()
 
+	/**
+	 * fetch the modules for the selected account
+	 * @returns
+	 */
 	async function updateAccountModuleRecord() {
 		loading.value = true
 		try {
@@ -40,8 +44,11 @@ export function useAccountModule() {
 				const account = TIERC7579Account__factory.connect(accountAddress, client.value)
 				const isInstalled = await account.isModuleInstalled(module.type, module.address, '0x')
 
-				// if installed, and modulebytype doesn't have it, add it
-				if (isInstalled && !moduleRecord.value[module.type].find(m => m.address === module.address)) {
+				// if installed, and module by type doesn't have it, add it
+				if (
+					isInstalled &&
+					!moduleRecord.value[module.type].find(m => isSameAddress(m.address, module.address))
+				) {
 					moduleRecord.value[module.type].push({
 						id: module.address,
 						address: module.address,

@@ -92,6 +92,8 @@ watchImmediate(selectedAccount, async () => {
 
 				<!-- vOptions -->
 				<div class="space-y-4 pt-1">
+					<!-- title -->
+					<div class="text-sm font-medium">Validation Configuration</div>
 					<div class="grid gap-1">
 						<div
 							v-for="(vOption, index) in selectedAccount.vOptions"

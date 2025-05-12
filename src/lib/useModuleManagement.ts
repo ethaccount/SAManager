@@ -1,17 +1,19 @@
 import { AccountId } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
+import { useNetwork } from '@/stores/network/useNetwork'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useTxModal } from '@/stores/useTxModal'
+import { createEOAOwnedValidation, createPasskeyValidation } from '@/stores/validation/validation'
 import { BytesLike, JsonRpcProvider } from 'ethers'
 import {
 	ADDRESS,
+	EOAValidator,
 	ERC7579_MODULE_TYPE,
 	Execution,
 	findPrevious,
 	KernelV3Account,
 	NexusAccount,
-	OwnableValidator,
 	Safe7579Account,
 	SimpleInstallModuleConfig,
 	SimpleUninstallModuleConfig,
@@ -23,9 +25,6 @@ import {
 } from 'sendop'
 import { toast } from 'vue-sonner'
 import { useConnectSignerModal } from './useConnectSignerModal'
-import { createEOAOwnedValidation, createPasskeyValidation } from '@/stores/validation/validation'
-import { useAccountModule } from './useAccountModule'
-import { useNetwork } from '@/stores/network/useNetwork'
 
 export const MODULE_TYPE_LABELS = {
 	[ERC7579_MODULE_TYPE.VALIDATOR]: 'Validator Modules',
@@ -40,7 +39,7 @@ export const SUPPORTED_MODULES = {
 		description: 'EOA-owned validation module for your account',
 		type: ERC7579_MODULE_TYPE.VALIDATOR,
 		address: ADDRESS.OwnableValidator,
-		disabled: false,
+		disabled: true,
 	},
 	WebAuthnValidator: {
 		name: 'WebAuthn Validator',
@@ -51,10 +50,10 @@ export const SUPPORTED_MODULES = {
 	},
 	ECDSAValidator: {
 		name: 'ECDSA Validator',
-		description: 'ECDSA validation module for your account',
+		description: 'EOA-owned validation module for your account',
 		type: ERC7579_MODULE_TYPE.VALIDATOR,
 		address: ADDRESS.ECDSAValidator,
-		disabled: true,
+		disabled: false,
 	},
 	SmartSession: {
 		name: 'Smart Session',
@@ -98,7 +97,7 @@ export function useModuleManagement() {
 			const { wallet } = useEOAWallet()
 
 			switch (moduleType) {
-				case 'OwnableValidator':
+				case 'ECDSAValidator':
 					if (operation === 'install') {
 						if (!wallet.address) {
 							toast.info('Connect EOA wallet to install validator')
@@ -110,7 +109,7 @@ export function useModuleManagement() {
 							to: selectedAccount.value.address,
 							data: await getModuleOperationCallData('install', selectedAccount.value.accountId, {
 								moduleType,
-								ownerAddresses: [wallet.address],
+								ownerAddress: wallet.address,
 							}),
 							value: 0n,
 						}
@@ -133,7 +132,7 @@ export function useModuleManagement() {
 							to: selectedAccount.value.address,
 							data: await getModuleOperationCallData('uninstall', selectedAccount.value.accountId, {
 								moduleType,
-								ownerAddresses: [wallet.address || ''],
+								ownerAddress: wallet.address || '',
 								accountAddress: selectedAccount.value.address,
 								client: client.value,
 							}),
@@ -247,8 +246,8 @@ export function useModuleManagement() {
 
 type ValidatorConfig =
 	| {
-			moduleType: 'OwnableValidator'
-			ownerAddresses: string[]
+			moduleType: 'ECDSAValidator'
+			ownerAddress: string
 			accountAddress?: string
 			client?: JsonRpcProvider
 	  }
@@ -344,15 +343,15 @@ function getModuleAddress(moduleType: ModuleType): string {
 }
 
 function getModuleInitData(config: ValidatorConfig) {
-	if (config.moduleType === 'OwnableValidator') {
-		return OwnableValidator.getInitData(config.ownerAddresses, 1)
+	if (config.moduleType === 'ECDSAValidator') {
+		return EOAValidator.getInitData(config.ownerAddress)
 	}
 	return WebAuthnValidator.getInitData(config.webauthnData)
 }
 
-function getModuleDeInitData(moduleType: 'OwnableValidator' | 'WebAuthnValidator') {
-	if (moduleType === 'OwnableValidator') {
-		return OwnableValidator.getDeInitData()
+function getModuleDeInitData(moduleType: 'ECDSAValidator' | 'WebAuthnValidator') {
+	if (moduleType === 'ECDSAValidator') {
+		return EOAValidator.getDeInitData()
 	}
 	return WebAuthnValidator.getDeInitData()
 }
