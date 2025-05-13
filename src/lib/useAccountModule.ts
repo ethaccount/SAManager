@@ -13,7 +13,7 @@ export function useAccountModule() {
 	const moduleRecord = ref<ModuleRecord>(getDefaultModules())
 
 	const { selectedAccount } = useAccount()
-	const { client, clientNoBatch } = useNetwork()
+	const { client, tenderlyClient } = useNetwork()
 
 	/**
 	 * fetch the modules for the selected account
@@ -22,10 +22,10 @@ export function useAccountModule() {
 	async function updateAccountModuleRecord() {
 		loading.value = true
 		try {
-			if (!selectedAccount.value?.address || !clientNoBatch.value) return
+			if (!selectedAccount.value?.address || !tenderlyClient.value) return
 			const accountAddress = selectedAccount.value.address
 
-			const fetchedModules = await fetchModules(accountAddress, clientNoBatch.value)
+			const fetchedModules = await fetchModules(accountAddress, tenderlyClient.value)
 			modules.value = fetchedModules
 
 			// Group modules by type

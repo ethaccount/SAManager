@@ -5,10 +5,11 @@ import {
 	SUPPORTED_BUNDLER,
 	SUPPORTED_ENTRY_POINT,
 	SUPPORTED_NODE,
+	TENDERLY_API_KEYS,
 	TESTNET_CHAIN_ID,
 } from '@/stores/network/network'
 import { JsonRpcProvider } from 'ethers'
-import { alchemy, publicNode } from 'evm-providers'
+import { alchemy, publicNode, tenderly } from 'evm-providers'
 import { defineStore } from 'pinia'
 import { ADDRESS, AlchemyBundler, Bundler, EntryPointVersion, PimlicoBundler, PublicPaymaster } from 'sendop'
 
@@ -74,8 +75,21 @@ export const useNetworkStore = defineStore(
 			}
 		})
 
-		const client = computed(() => new JsonRpcProvider(rpcUrl.value))
-		const clientNoBatch = computed(() => new JsonRpcProvider(rpcUrl.value, undefined, { batchMaxCount: 1 }))
+		const client = computed(() => new JsonRpcProvider(rpcUrl.value, undefined, { staticNetwork: true }))
+		const clientNoBatch = computed(
+			() => new JsonRpcProvider(rpcUrl.value, undefined, { batchMaxCount: 1, staticNetwork: true }),
+		)
+
+		// only for fetching event logs
+		const tenderlyClient = computed<JsonRpcProvider | null>(() => {
+			const apiKey = TENDERLY_API_KEYS[selectedChainId.value]
+			if (!apiKey) {
+				return null
+			}
+			return new JsonRpcProvider(tenderly(Number(selectedChainId.value) as any, apiKey), undefined, {
+				staticNetwork: true,
+			})
+		})
 
 		const bundler = computed<Bundler>(() => {
 			const bundlerOptions = {
@@ -111,6 +125,7 @@ export const useNetworkStore = defineStore(
 			supportedNodes,
 			supportedEntryPoints,
 			chainIdBigInt,
+			tenderlyClient,
 			switchEntryPoint,
 		}
 	},

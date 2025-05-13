@@ -1,11 +1,18 @@
 <script setup lang="ts">
-import { fetchAccountId } from '@/lib/aa'
 import { AccountId } from '@/stores/account/account'
 import { useNetwork } from '@/stores/network/useNetwork'
 import { deserializePasskeyCredential } from '@/stores/passkey/passkey'
 import { SUPPORTED_VALIDATION_OPTIONS, ValidationIdentifier } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
+import { getAddress, JsonRpcProvider } from 'ethers'
 import { ChevronRight, Loader2 } from 'lucide-vue-next'
+import {
+	ERC7579_MODULE_TYPE,
+	INTERFACES,
+	isSameAddress,
+	TIERC7579Account__factory,
+	TIERC7579AccountEvents__factory,
+} from 'sendop'
 import { toast } from 'vue-sonner'
 
 const props = defineProps<{
@@ -21,8 +28,6 @@ const emit = defineEmits<{
 		},
 	): void
 }>()
-
-const { clientNoBatch } = useNetwork()
 
 const accounts = ref<
 	{
@@ -47,17 +52,40 @@ onMounted(async () => {
 			throw new Error('Unsupported validation type')
 		}
 
+		const { tenderlyClient, client } = useNetwork()
+
+		if (!tenderlyClient.value) {
+			throw new Error("Tenderly RPC Node isn't configured on current network")
+		}
+
 		switch (vType) {
 			case 'EOA-Owned':
 				addresses = await SUPPORTED_VALIDATION_OPTIONS['EOA-Owned'].getAccounts(
-					clientNoBatch.value,
+					tenderlyClient.value, // use tenderly client for event logs
 					props.vOption().identifier,
 				)
+
+				// Specially check if the module is installed because the ECDSAValidator doesn't emit event when uninstalled
+				let filteredAddresses: string[] = []
+				for (const address of addresses) {
+					const account = TIERC7579Account__factory.connect(address, client.value) // use client for batch RPC
+					const isInstalled = await account.isModuleInstalled(
+						ERC7579_MODULE_TYPE.VALIDATOR,
+						SUPPORTED_VALIDATION_OPTIONS['EOA-Owned'].validatorAddress,
+						'0x',
+					)
+
+					if (!isInstalled) {
+						filteredAddresses.push(getAddress(address))
+					}
+				}
+
+				addresses = addresses.filter(a => !filteredAddresses.includes(getAddress(a)))
 				break
 			case 'Passkey':
 				const credential = deserializePasskeyCredential(props.vOption().identifier)
 				addresses = await SUPPORTED_VALIDATION_OPTIONS['Passkey'].getAccounts(
-					clientNoBatch.value,
+					tenderlyClient.value, // use tenderly client for event logs
 					credential.authenticatorIdHash,
 				)
 				break
@@ -70,14 +98,23 @@ onMounted(async () => {
 		}))
 		loadingAddresses.value = false
 
+		async function fetchAccountId(client: JsonRpcProvider, address: string) {
+			const account = TIERC7579Account__factory.connect(address, client)
+			return await account.accountId()
+		}
+
 		const accountIdPromises = addresses.map((address, index) =>
-			fetchAccountId(address, clientNoBatch.value)
+			fetchAccountId(client.value, address)
 				.then(accountId => {
 					accounts.value[index].accountId = accountId
 					accounts.value[index].loading = false
 				})
-				.catch(error => {
-					console.error(`Error fetching account ID for ${address}:`, error)
+				.catch((e: unknown) => {
+					throw new Error(`Error fetching account ID for ${address}`, {
+						cause: e,
+					})
+				})
+				.finally(() => {
 					accounts.value[index].loading = false
 				}),
 		)

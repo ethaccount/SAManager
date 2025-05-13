@@ -12,13 +12,13 @@ export const SUPPORTED_VALIDATION_OPTIONS = {
 		signerType: 'EOAWallet' as SUPPORTED_SIGNER_TYPE,
 
 		async getAccounts(client: JsonRpcProvider, ownerAddress: string): Promise<string[]> {
-			const ownableValidator = new Contract(
+			const validator = new Contract(
 				ADDRESS.ECDSAValidator,
 				['event OwnerRegistered(address indexed kernel, address indexed owner)'],
 				client,
 			)
-			const events = (await ownableValidator.queryFilter(
-				ownableValidator.filters.OwnerRegistered(null, ownerAddress),
+			const events = (await validator.queryFilter(
+				validator.filters.OwnerRegistered(null, ownerAddress),
 			)) as EventLog[]
 
 			const sortedEvents = events.sort((a, b) => b.blockNumber - a.blockNumber)
