@@ -56,9 +56,10 @@ const title = computed(() => {
 		</div>
 
 		<ConnectEOAWallet v-if="props.type === 'eoa-wallet'" @confirm="emit('close')" />
-		<ConnectPasskey mode="both" v-if="props.type === 'passkey-both'" @confirm="emit('close')" />
+		<ConnectPasskeyNoRp v-if="props.type === 'passkey-both'" @confirm="emit('close')" />
+		<!-- <ConnectPasskey mode="both" v-if="props.type === 'passkey-both'" @confirm="emit('close')" />
 		<ConnectPasskey mode="register" v-if="props.type === 'passkey-only-register'" @confirm="emit('close')" />
-		<ConnectPasskey mode="login" v-if="props.type === 'passkey-only-login'" @confirm="emit('close')" />
+		<ConnectPasskey mode="login" v-if="props.type === 'passkey-only-login'" @confirm="emit('close')" /> -->
 	</VueFinalModal>
 </template>
 

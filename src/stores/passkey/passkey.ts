@@ -1,9 +1,8 @@
-import { decodeBase64, encodeBase64, getBytes, hexlify, isHexString, keccak256, toUtf8Bytes } from 'ethers'
 import { PASSKEY_RP_URL } from '@/config'
+import { p256 } from '@noble/curves/p256'
 import { startAuthentication, startRegistration } from '@simplewebauthn/browser'
 import type { PublicKeyCredentialRequestOptionsJSON } from '@simplewebauthn/typescript-types'
-import { AbiCoder } from 'ethers'
-import { p256 } from '@noble/curves/p256'
+import { AbiCoder, encodeBase64, getBytes, hexlify, isHexString, keccak256, toUtf8Bytes } from 'ethers'
 
 const credentials = 'include'
 
@@ -190,15 +189,13 @@ export async function login(): Promise<PasskeyCredential> {
 	}
 }
 
-function decodeBase64URL(base64UrlString: string) {
-	// Replace URL-specific characters and pad with '=' to match Base64 format
-	let base64 = base64UrlString.replace(/-/g, '+').replace(/_/g, '/')
-	while (base64.length % 4 !== 0) {
-		base64 += '='
-	}
-
-	// Decode using ethers' decodeBase64 method
-	return decodeBase64(base64)
+export function decodeBase64URL(base64UrlString: string) {
+	// Convert base64url to base64
+	base64UrlString = base64UrlString.replace(/-/g, '+').replace(/_/g, '/')
+	while (base64UrlString.length % 4) base64UrlString += '='
+	// Decode
+	const binary = atob(base64UrlString)
+	return Uint8Array.from(binary, c => c.charCodeAt(0))
 }
 
 // Modified from zerodev-sdk signMessageUsingWebAuthn

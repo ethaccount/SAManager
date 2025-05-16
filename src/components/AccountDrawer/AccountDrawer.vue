@@ -1,21 +1,20 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
-import { displayAccountName, ImportedAccount } from '@/stores/account/account'
-import { displayChainName } from '@/stores/network/network'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { toRoute } from '@/lib/router'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
+import { displayAccountName, ImportedAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
-import { useRouter } from 'vue-router'
-import { shortenAddress } from '@vue-dapp/core'
-import { Power, X, CircleDot, Plus, Download } from 'lucide-vue-next'
-import { VueFinalModal } from 'vue-final-modal'
+import { displayChainName } from '@/stores/network/network'
+import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
+import { usePasskeyNoRp } from '@/stores/passkey/usePasskeyNoRp'
 import { useEOAWallet } from '@/stores/useEOAWallet'
-import { usePasskey } from '@/stores/passkey/usePasskey'
-import { Tooltip } from '@/components/ui/tooltip'
-import { TooltipContent } from '@/components/ui/tooltip'
-import { TooltipTrigger } from '@/components/ui/tooltip'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
 import { useSigner } from '@/stores/validation/useSigner'
+import { shortenAddress } from '@vue-dapp/core'
+import { CircleDot, Download, Plus, Power, X } from 'lucide-vue-next'
+import { VueFinalModal } from 'vue-final-modal'
+import { useRouter } from 'vue-router'
 
 const emit = defineEmits<{
 	(e: 'close'): void
@@ -27,7 +26,7 @@ function onClickCloseSidebar() {
 
 const { accounts, selectedAccount, isAccountConnected } = useAccount()
 const { wallet, address, isEOAWalletConnected, disconnect } = useEOAWallet()
-const { username, isLogin, passkeyLogout } = usePasskey()
+const { isPasskeySelected, selectedCredentialId } = usePasskeyNoRp()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 const { selectSigner, selectedSigner } = useSigner()
 
@@ -165,20 +164,21 @@ function onClickImportAccount() {
 
 					<div
 						class="flex flex-col p-2.5 border rounded-lg transition-all cursor-pointer"
-						:class="{ 'bg-secondary/50 border-primary/20': isLogin }"
-						@click="isLogin && selectSigner('Passkey')"
+						:class="{ 'bg-secondary/50 border-primary/20': isPasskeySelected }"
+						@click="isPasskeySelected && selectSigner('Passkey')"
 					>
-						<div v-if="!isLogin" class="flex justify-between items-center">
+						<div v-if="!isPasskeySelected" class="flex justify-between items-center">
 							<span class="text-sm">Passkey</span>
 							<Button
 								variant="outline"
 								size="sm"
 								class="h-7 text-xs px-2.5"
 								@click="openConnectPasskeyBoth"
-								>Connect</Button
 							>
+								Select
+							</Button>
 						</div>
-						<div v-if="isLogin" class="space-y-1">
+						<div v-if="isPasskeySelected" class="space-y-1">
 							<div class="flex justify-between items-center">
 								<div class="flex items-center gap-1.5 text-xs">
 									<CircleDot
@@ -189,14 +189,14 @@ function onClickImportAccount() {
 												: 'text-muted-foreground'
 										"
 									/>
-									<span>Passkey Connected</span>
+									<span>Passkey Selected</span>
 								</div>
-								<Button variant="ghost" size="icon" class="h-6 w-6" @click="passkeyLogout">
+								<Button variant="ghost" size="icon" class="h-6 w-6" @click="openConnectPasskeyBoth">
 									<Power class="w-3.5 h-3.5" />
 								</Button>
 							</div>
-							<div class="text-[11px] text-muted-foreground">
-								{{ username }}
+							<div v-if="selectedCredentialId" class="text-[11px] text-muted-foreground">
+								{{ shortenAddress(getAuthenticatorIdHash(selectedCredentialId)) }}
 							</div>
 						</div>
 					</div>
