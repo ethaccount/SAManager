@@ -1,17 +1,17 @@
-import { decodeBase64, encodeBase64, getBytes, hexlify, isHexString, keccak256, toUtf8Bytes } from 'ethers'
 import { PASSKEY_RP_URL } from '@/config'
+import { decodeBase64URL } from '@/lib/helper'
+import { p256 } from '@noble/curves/p256'
 import { startAuthentication, startRegistration } from '@simplewebauthn/browser'
 import type { PublicKeyCredentialRequestOptionsJSON } from '@simplewebauthn/typescript-types'
-import { AbiCoder } from 'ethers'
-import { p256 } from '@noble/curves/p256'
+import { AbiCoder, encodeBase64, getBytes, hexlify, isHexString, keccak256, toUtf8Bytes } from 'ethers'
 
 const credentials = 'include'
 
 export type PasskeyCredential = {
-	pubX: bigint
-	pubY: bigint
-	authenticatorId: string
-	authenticatorIdHash: string
+	username: string
+	credentialId: string
+	pubKeyX: string
+	pubKeyY: string
 }
 
 export function serializePasskeyCredential(value: PasskeyCredential): string {
@@ -78,8 +78,6 @@ export async function register(username: string): Promise<PasskeyCredential> {
 		throw new Error('No authenticator id returned from registration credential')
 	}
 
-	const authenticatorIdHash = keccak256(decodeBase64URL(authenticatorId))
-
 	const spkiDer = Buffer.from(pubKey, 'base64')
 	const key = await crypto.subtle.importKey(
 		'spki',
@@ -101,17 +99,17 @@ export async function register(username: string): Promise<PasskeyCredential> {
 	const pubKeyY = rawKeyBuffer.subarray(33).toString('hex')
 
 	return {
-		pubX: BigInt(`0x${pubKeyX}`),
-		pubY: BigInt(`0x${pubKeyY}`),
-		authenticatorId,
-		authenticatorIdHash,
+		pubKeyX: `0x${pubKeyX}`,
+		pubKeyY: `0x${pubKeyY}`,
+		credentialId: authenticatorId,
+		username,
 	}
 }
 
 /**
  * Modified from zerodev sdk toWebAuthnKey()
  */
-export async function login(): Promise<PasskeyCredential> {
+export async function login(): Promise<Omit<PasskeyCredential, 'username'>> {
 	// Get login options
 	const loginOptionsResponse = await fetch(`${PASSKEY_RP_URL}/login/options`, {
 		method: 'POST',
@@ -183,22 +181,10 @@ export async function login(): Promise<PasskeyCredential> {
 	const pubKeyY = rawKeyBuffer.subarray(33).toString('hex')
 
 	return {
-		pubX: BigInt(`0x${pubKeyX}`),
-		pubY: BigInt(`0x${pubKeyY}`),
-		authenticatorId,
-		authenticatorIdHash,
+		pubKeyX: `0x${pubKeyX}`,
+		pubKeyY: `0x${pubKeyY}`,
+		credentialId: authenticatorId,
 	}
-}
-
-function decodeBase64URL(base64UrlString: string) {
-	// Replace URL-specific characters and pad with '=' to match Base64 format
-	let base64 = base64UrlString.replace(/-/g, '+').replace(/_/g, '/')
-	while (base64.length % 4 !== 0) {
-		base64 += '='
-	}
-
-	// Decode using ethers' decodeBase64 method
-	return decodeBase64(base64)
 }
 
 // Modified from zerodev-sdk signMessageUsingWebAuthn

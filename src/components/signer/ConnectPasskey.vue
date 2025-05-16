@@ -23,7 +23,7 @@ const username = ref(randomName)
 const displayUsername = computed(() => USERNAME_PREFIX + username.value)
 const isRegistrationMode = ref(false)
 
-const { passkeyRegister, passkeyLogin, isLogin, credential, isPasskeyRPHealthy } = usePasskey()
+const { passkeyRegister, passkeyLogin, isLogin, isPasskeyRPHealthy } = usePasskey()
 
 const loadingRegister = ref(false)
 const loadingLogin = ref(false)
@@ -75,7 +75,7 @@ async function onClickLogin() {
 	error.value = ''
 	loadingLogin.value = true
 	try {
-		await passkeyLogin(displayUsername.value)
+		await passkeyLogin()
 	} catch (err: unknown) {
 		if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
 			error.value = 'Failed to connect to passkey server'
@@ -95,13 +95,12 @@ async function onClickLogin() {
 }
 
 function onClickConfirm() {
-	if (!credential.value) throw new Error('onClickConfirm: No passkey credential found')
+	if (!isLogin.value) throw new Error('onClickConfirm: No passkey credential found')
 	emit('confirm')
 }
 
 function onClickLogout() {
-	const { passkeyLogout } = usePasskey()
-	passkeyLogout()
+	usePasskey().resetCredentialId()
 }
 </script>
 
@@ -201,8 +200,8 @@ function onClickLogout() {
 			</div>
 		</div>
 
-		<p v-if="error" class="mt-2 p-3 bg-destructive/10 text-destructive rounded-[--radius] text-sm">
-			⚠️ {{ error }}
+		<p v-if="error" class="error-section">
+			{{ error }}
 		</p>
 	</div>
 </template>

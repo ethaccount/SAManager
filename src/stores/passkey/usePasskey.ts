@@ -1,49 +1,45 @@
 import { PASSKEY_RP_URL } from '@/config'
-import {
-	deserializePasskeyCredential,
-	login,
-	PasskeyCredential,
-	register,
-	serializePasskeyCredential,
-} from '@/stores/passkey/passkey'
-import { defineStore, StateTree, storeToRefs } from 'pinia'
+import { PasskeyCredential } from '@/stores/passkey/passkey'
+import { createCredential, getCredential } from './passkeyNoRp'
 
 export const usePasskeyStore = defineStore(
 	'usePasskeyStore',
 	() => {
-		const username = ref('')
-		const credential = ref<PasskeyCredential | null>(null)
-		const serializedCredential = computed(() => {
-			if (!credential.value) {
-				return null
-			}
-			return serializePasskeyCredential(credential.value)
+		const storedCredentials = ref<PasskeyCredential[]>([])
+
+		const selectedCredentialId = ref<string | null>(null)
+
+		const selectedCredential = computed(() => {
+			return storedCredentials.value.find(cred => cred.credentialId === selectedCredentialId.value)
 		})
 
-		const isLogin = computed(() => !!credential.value && !!username.value)
+		const isLogin = computed(() => !!selectedCredentialId.value)
 
-		async function passkeyRegister(_username: string) {
-			const res = await register(_username)
-			username.value = _username
-			credential.value = res
+		async function passkeyRegister(username: string) {
+			const cred = await createCredential(username)
+			storedCredentials.value.push({
+				username,
+				...cred,
+			})
+			selectedCredentialId.value = cred.credentialId
 		}
 
-		async function passkeyLogin(_username: string) {
-			const res = await login()
-			username.value = _username
-			credential.value = res
+		async function passkeyLogin() {
+			const res = await getCredential({
+				userVerification: 'discouraged',
+			})
+			selectedCredentialId.value = res.credentialId
 		}
 
-		async function passkeyLogout() {
-			username.value = ''
-			credential.value = null
+		async function resetCredentialId() {
+			selectedCredentialId.value = null
 		}
 
 		const isPasskeyRPHealthy = ref(false)
 
-		onMounted(async () => {
-			await checkPasskeyRPHealth()
-		})
+		// onMounted(async () => {
+		// 	await checkPasskeyRPHealth()
+		// })
 
 		async function checkPasskeyRPHealth(): Promise<boolean> {
 			try {
@@ -61,28 +57,19 @@ export const usePasskeyStore = defineStore(
 		}
 
 		return {
-			username,
-			credential,
-			serializedCredential,
+			storedCredentials,
+			selectedCredential,
 			passkeyRegister,
 			passkeyLogin,
 			isLogin,
-			passkeyLogout,
 			isPasskeyRPHealthy,
 			checkPasskeyRPHealth,
+			resetCredentialId,
 		}
 	},
 	{
 		persist: {
-			pick: ['username', 'credential'],
-			serializer: {
-				serialize: (data: StateTree) => {
-					return serializePasskeyCredential(data as PasskeyCredential)
-				},
-				deserialize: (data: string) => {
-					return deserializePasskeyCredential(data)
-				},
-			},
+			pick: ['storedCredentials'],
 		},
 	},
 )
