@@ -31,6 +31,8 @@
 		"reka-ui": "^2.2.0",
 		"sendop": "0.4.2-beta.6",
 		"tailwind-merge": "^2.6.0",
+		"unique-names-generator": "^4.7.1",
+		"uuid": "^11.1.0",
 		"vee-validate": "^4.15.0",
 		"vue": "^3.5.13",
 		"vue-final-modal": "^4.5.5",

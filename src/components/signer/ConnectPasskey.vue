@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { Loader2 } from 'lucide-vue-next'
+import { uniqueNamesGenerator, adjectives, animals } from 'unique-names-generator'
 
 type PasskeyMode = 'register' | 'login' | 'both'
 
@@ -10,7 +11,17 @@ const props = defineProps<{
 
 const emit = defineEmits(['confirm'])
 
-const username = ref('test-user')
+// @docs https://github.com/andreasonny83/unique-names-generator
+const randomName = uniqueNamesGenerator({
+	dictionaries: [adjectives, animals],
+	length: 2,
+	separator: '-',
+})
+
+const USERNAME_PREFIX = 'SAManager-'
+const username = ref(randomName)
+const displayUsername = computed(() => USERNAME_PREFIX + username.value)
+const isRegistrationMode = ref(false)
 
 const { passkeyRegister, passkeyLogin, isLogin, credential, isPasskeyRPHealthy } = usePasskey()
 
@@ -28,11 +39,20 @@ const effectiveMode = computed(() => {
 const showRegister = computed(() => ['register', 'both'].includes(effectiveMode.value))
 const showLogin = computed(() => ['login', 'both'].includes(effectiveMode.value))
 
+function onClickStartRegister() {
+	isRegistrationMode.value = true
+}
+
+function onClickBack() {
+	isRegistrationMode.value = false
+	error.value = ''
+}
+
 async function onClickRegister() {
 	error.value = ''
 	loadingRegister.value = true
 	try {
-		await passkeyRegister(username.value)
+		await passkeyRegister(displayUsername.value)
 	} catch (err: unknown) {
 		if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
 			error.value = 'Failed to connect to passkey server'
@@ -55,7 +75,7 @@ async function onClickLogin() {
 	error.value = ''
 	loadingLogin.value = true
 	try {
-		await passkeyLogin(username.value)
+		await passkeyLogin(displayUsername.value)
 	} catch (err: unknown) {
 		if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
 			error.value = 'Failed to connect to passkey server'
@@ -87,44 +107,67 @@ function onClickLogout() {
 
 <template>
 	<div class="flex flex-col gap-4 p-4">
-		<p v-if="!isPasskeyRPHealthy" class="p-3 bg-destructive/10 text-destructive rounded-[--radius] text-sm">
+		<!-- <p v-if="!isPasskeyRPHealthy" class="p-3 bg-destructive/10 text-destructive rounded-[--radius] text-sm">
 			Passkey server is not responding. Please try again later.
-		</p>
+		</p> -->
 
 		<div v-if="!isLogin" class="flex flex-col gap-3">
-			<div class="space-y-2">
-				<label for="username" class="text-sm font-medium text-muted-foreground">Username</label>
-				<Input
-					id="username"
-					v-model="username"
-					placeholder="Enter username"
-					class="w-full bg-background border-input"
-					:disabled="!isPasskeyRPHealthy"
-				/>
-			</div>
-
-			<div class="grid grid-cols-2 gap-2">
+			<!-- Level 1: Initial Selection -->
+			<div v-if="!isRegistrationMode" class="grid grid-cols-2 gap-2">
 				<Button
 					v-if="showRegister"
 					variant="secondary"
-					:disabled="loadingRegisterOrLogin || !isPasskeyRPHealthy"
-					:class="{ 'opacity-50 cursor-not-allowed': loadingRegisterOrLogin || !isPasskeyRPHealthy }"
-					@click="onClickRegister"
+					:disabled="loadingRegisterOrLogin"
+					:class="{ 'opacity-50 cursor-not-allowed': loadingRegisterOrLogin }"
+					@click="onClickStartRegister"
 				>
-					<Loader2 v-if="loadingRegister" class="mr-2 h-4 w-4 animate-spin" />
-					{{ effectiveMode === 'both' ? 'Register' : 'Continue with Passkey' }}
+					Create Account
 				</Button>
 
 				<Button
 					v-if="showLogin"
 					variant="default"
-					:disabled="loadingRegisterOrLogin || !isPasskeyRPHealthy"
-					:class="{ 'opacity-50 cursor-not-allowed': loadingRegisterOrLogin || !isPasskeyRPHealthy }"
+					:disabled="loadingRegisterOrLogin"
+					:class="{ 'opacity-50 cursor-not-allowed': loadingRegisterOrLogin }"
 					@click="onClickLogin"
 				>
 					<Loader2 v-if="loadingLogin" class="mr-2 h-4 w-4 animate-spin" />
-					{{ effectiveMode === 'both' ? 'Login' : 'Continue with Passkey' }}
+					Login
 				</Button>
+			</div>
+
+			<!-- Level 2: Registration -->
+			<div v-else class="flex flex-col gap-3">
+				<div class="space-y-2">
+					<label for="username" class="text-sm font-medium text-muted-foreground">Username</label>
+					<div class="relative">
+						<div
+							class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-muted-foreground"
+						>
+							{{ USERNAME_PREFIX }}
+						</div>
+						<Input
+							id="username"
+							v-model="username"
+							placeholder="Enter username"
+							class="w-full bg-background border-input pl-[105px]"
+						/>
+					</div>
+				</div>
+
+				<div class="grid grid-cols-2 gap-2">
+					<Button variant="outline" @click="onClickBack" :disabled="loadingRegister"> Back </Button>
+
+					<Button
+						variant="default"
+						:disabled="loadingRegister"
+						:class="{ 'opacity-50 cursor-not-allowed': loadingRegister }"
+						@click="onClickRegister"
+					>
+						<Loader2 v-if="loadingRegister" class="mr-2 h-4 w-4 animate-spin" />
+						Register
+					</Button>
+				</div>
 			</div>
 		</div>
 
@@ -135,7 +178,7 @@ function onClickLogout() {
 					<span>Successfully authenticated</span>
 				</div>
 				<p class="text-sm text-muted-foreground">
-					Logged in as <span class="font-medium text-foreground">{{ username }}</span>
+					Logged in as <span class="font-medium text-foreground">{{ displayUsername }}</span>
 				</p>
 			</div>
 
