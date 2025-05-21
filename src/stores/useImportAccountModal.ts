@@ -79,11 +79,12 @@ const IAM_CONFIG: Record<IAMStageKey, IAMStage<Component>> = {
 		title: 'Connect Passkey',
 		attrs: {
 			onConfirm: () => {
-				const { credential } = usePasskey()
-				if (!credential.value) throw new Error('IAMStageKey.CONNECT_PASSKEY: No passkey credential found')
+				const { selectedCredential } = usePasskey()
+				if (!selectedCredential.value)
+					throw new Error('IAMStageKey.CONNECT_PASSKEY: No selectedCredential found')
 				useImportAccountModal().updateFormData({
 					category: 'Smart Account',
-					vOptions: [createPasskeyValidation(credential.value)],
+					vOptions: [createPasskeyValidation(selectedCredential.value.credentialId)],
 				})
 				useImportAccountModal().goNextStage(IAMStageKey.PASSKEY_ACCOUNT_OPTIONS)
 			},

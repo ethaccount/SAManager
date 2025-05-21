@@ -87,26 +87,14 @@ export function createEOAOwnedValidation(address: string): ValidationIdentifier 
 	}
 }
 
-export function createPasskeyValidation(credential: PasskeyCredential): ValidationIdentifier {
-	if (!credential) {
-		throw new Error(`createPasskeyValidation: No credential provided`)
-	}
-
-	if (!credential.pubX || !credential.pubY) {
-		throw new Error(`createPasskeyValidation: Invalid public key`)
-	}
-
-	if (!credential.authenticatorIdHash) {
-		throw new Error(`createPasskeyValidation: No authenticatorIdHash provided`)
-	}
-
-	if (!credential.authenticatorId) {
-		throw new Error(`createPasskeyValidation: No authenticatorId provided`)
+export function createPasskeyValidation(credentialId: string): ValidationIdentifier {
+	if (!credentialId) {
+		throw new Error(`createPasskeyValidation: credentialId is empty string`)
 	}
 
 	return {
 		type: 'Passkey',
-		identifier: serializePasskeyCredential(credential),
+		identifier: credentialId,
 	}
 }
 

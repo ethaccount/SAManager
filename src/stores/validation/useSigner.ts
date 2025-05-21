@@ -1,4 +1,3 @@
-import { deserializePasskeyCredential } from '@/stores/passkey/passkey'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { SUPPORTED_VALIDATION_OPTIONS, ValidationIdentifier } from '@/stores/validation/validation'
@@ -14,7 +13,7 @@ export const useSignerStore = defineStore('useSignerStore', () => {
 		}
 	}>(() => {
 		const { isEOAWalletConnected, wallet } = useEOAWallet()
-		const { isLogin, serializedCredential } = usePasskey()
+		const { isLogin, selectedCredentialId } = usePasskey()
 
 		// console.log('connectedSigners: wallet.address', wallet.address)
 
@@ -24,7 +23,7 @@ export const useSignerStore = defineStore('useSignerStore', () => {
 				isConnected: isEOAWalletConnected.value,
 			},
 			Passkey: {
-				identifier: isLogin.value ? serializedCredential.value : null,
+				identifier: isLogin.value ? selectedCredentialId.value : null,
 				isConnected: isLogin.value,
 			},
 		}
@@ -79,13 +78,7 @@ export const useSignerStore = defineStore('useSignerStore', () => {
 				}
 
 				if (vOptionSignerType === 'Passkey') {
-					const deserializedSignerIdentifier = deserializePasskeyCredential(selectedSigner.value.identifier)
-					const deserializedVOptionIdentifier = deserializePasskeyCredential(vOption.identifier)
-
-					if (
-						deserializedSignerIdentifier.authenticatorIdHash ===
-						deserializedVOptionIdentifier.authenticatorIdHash
-					) {
+					if (selectedSigner.value.identifier === vOption.identifier) {
 						return true
 					}
 				}

@@ -1,18 +1,12 @@
 <script setup lang="ts">
 import { AccountId } from '@/stores/account/account'
 import { useNetwork } from '@/stores/network/useNetwork'
-import { deserializePasskeyCredential } from '@/stores/passkey/passkey'
+import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
 import { SUPPORTED_VALIDATION_OPTIONS, ValidationIdentifier } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
 import { getAddress, JsonRpcProvider } from 'ethers'
 import { ChevronRight, Loader2 } from 'lucide-vue-next'
-import {
-	ERC7579_MODULE_TYPE,
-	INTERFACES,
-	isSameAddress,
-	TIERC7579Account__factory,
-	TIERC7579AccountEvents__factory,
-} from 'sendop'
+import { ERC7579_MODULE_TYPE, TIERC7579Account__factory } from 'sendop'
 import { toast } from 'vue-sonner'
 
 const props = defineProps<{
@@ -83,10 +77,13 @@ onMounted(async () => {
 				addresses = addresses.filter(a => !filteredAddresses.includes(getAddress(a)))
 				break
 			case 'Passkey':
-				const credential = deserializePasskeyCredential(props.vOption().identifier)
+				const credentialId = props.vOption().identifier
+				if (!credentialId) {
+					throw new Error('AccountOptions(onMounted): Passkey credential ID not found')
+				}
 				addresses = await SUPPORTED_VALIDATION_OPTIONS['Passkey'].getAccounts(
 					tenderlyClient.value, // use tenderly client for event logs
-					credential.authenticatorIdHash,
+					getAuthenticatorIdHash(credentialId),
 				)
 				break
 		}

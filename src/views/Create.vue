@@ -33,7 +33,7 @@ const { client, selectedChainId } = useNetwork()
 const { wallet, address, disconnect } = useEOAWallet()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 const { isEOAWalletConnected } = useEOAWallet()
-const { username, isLogin, passkeyLogout } = usePasskey()
+const { selectedCredentialDisplay, isLogin, resetCredentialId } = usePasskey()
 const { importAccount, selectAccount } = useAccount()
 
 const supportedAccounts = Object.entries(SUPPORTED_ACCOUNTS)
@@ -93,9 +93,9 @@ const selectedValidation = computed<ValidationIdentifier | null>(() => {
 			if (!signer.value) return null
 			return createEOAOwnedValidation(signer.value.address)
 		case 'Passkey':
-			const { credential } = usePasskey()
-			if (!credential.value) return null
-			return createPasskeyValidation(credential.value)
+			const { selectedCredential } = usePasskey()
+			if (!selectedCredential.value) return null
+			return createPasskeyValidation(selectedCredential.value.credentialId)
 		default:
 			return null
 	}
@@ -230,6 +230,10 @@ const disabledDeployButton = computed(() => {
 const disabledImportButton = computed(() => {
 	return !computedAddress.value || !initCode.value || !selectedValidation.value
 })
+
+function onClickPasskeyLogout() {
+	resetCredentialId()
+}
 </script>
 
 <template>
@@ -344,12 +348,12 @@ const disabledImportButton = computed(() => {
 						<div v-if="isLogin" class="">
 							<div class="flex justify-between items-center gap-2 text-sm text-muted-foreground">
 								<div>Passkey Connected</div>
-								<Button variant="ghost" size="icon" @click="passkeyLogout">
+								<Button variant="ghost" size="icon" @click="onClickPasskeyLogout">
 									<Power class="w-4 h-4" />
 								</Button>
 							</div>
 							<div class="text-xs">
-								{{ username }}
+								{{ selectedCredentialDisplay }}
 							</div>
 						</div>
 					</div>

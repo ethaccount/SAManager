@@ -23,7 +23,7 @@ const username = ref(randomName)
 const displayUsername = computed(() => USERNAME_PREFIX + username.value)
 const isRegistrationMode = ref(false)
 
-const { passkeyRegister, passkeyLogin, isLogin, isPasskeyRPHealthy } = usePasskey()
+const { passkeyRegister, passkeyLogin, isLogin, selectedCredentialDisplay } = usePasskey()
 
 const loadingRegister = ref(false)
 const loadingLogin = ref(false)
@@ -101,6 +101,7 @@ function onClickConfirm() {
 
 function onClickLogout() {
 	usePasskey().resetCredentialId()
+	isRegistrationMode.value = false
 }
 </script>
 
@@ -120,7 +121,7 @@ function onClickLogout() {
 					:class="{ 'opacity-50 cursor-not-allowed': loadingRegisterOrLogin }"
 					@click="onClickStartRegister"
 				>
-					Create Account
+					Create Credential
 				</Button>
 
 				<Button
@@ -131,7 +132,7 @@ function onClickLogout() {
 					@click="onClickLogin"
 				>
 					<Loader2 v-if="loadingLogin" class="mr-2 h-4 w-4 animate-spin" />
-					Login
+					Get Credential
 				</Button>
 			</div>
 
@@ -174,10 +175,10 @@ function onClickLogout() {
 			<div class="p-4 bg-secondary rounded-[--radius] border">
 				<div class="flex items-center gap-2 text-foreground mb-2">
 					<span>✓</span>
-					<span>Successfully authenticated</span>
+					<span>Successfully got credential</span>
 				</div>
 				<p class="text-sm text-muted-foreground">
-					Logged in as <span class="font-medium text-foreground">{{ displayUsername }}</span>
+					<span class="font-medium text-foreground">{{ selectedCredentialDisplay }}</span>
 				</p>
 			</div>
 
@@ -185,7 +186,7 @@ function onClickLogout() {
 				<Button
 					@click="onClickConfirm"
 					class="bg-primary text-primary-foreground hover:bg-primary/90"
-					:disabled="!isPasskeyRPHealthy"
+					:disabled="!isLogin"
 				>
 					Confirm
 				</Button>
@@ -193,7 +194,7 @@ function onClickLogout() {
 					@click="onClickLogout"
 					variant="outline"
 					class="border-input hover:bg-accent hover:text-accent-foreground"
-					:disabled="!isPasskeyRPHealthy"
+					:disabled="!isLogin"
 				>
 					Logout
 				</Button>

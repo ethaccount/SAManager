@@ -14,6 +14,14 @@ export const usePasskeyStore = defineStore(
 		})
 
 		const isLogin = computed(() => !!selectedCredentialId.value)
+		const hasStoredCredentialData = computed(() => !!selectedCredential.value)
+
+		const selectedCredentialDisplay = computed(() => {
+			if (!isLogin.value) return null
+			if (!hasStoredCredentialData.value) return selectedCredentialId.value
+			if (selectedCredential.value?.username) return selectedCredential.value.username
+			return selectedCredential.value?.credentialId
+		})
 
 		async function passkeyRegister(username: string) {
 			const cred = await createCredential(username)
@@ -58,6 +66,7 @@ export const usePasskeyStore = defineStore(
 
 		return {
 			storedCredentials,
+			selectedCredentialId,
 			selectedCredential,
 			passkeyRegister,
 			passkeyLogin,
@@ -65,6 +74,8 @@ export const usePasskeyStore = defineStore(
 			isPasskeyRPHealthy,
 			checkPasskeyRPHealth,
 			resetCredentialId,
+			hasStoredCredentialData,
+			selectedCredentialDisplay,
 		}
 	},
 	{

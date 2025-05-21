@@ -27,7 +27,7 @@ function onClickCloseSidebar() {
 
 const { accounts, selectedAccount, isAccountConnected } = useAccount()
 const { wallet, address, isEOAWalletConnected, disconnect } = useEOAWallet()
-const { username, isLogin, passkeyLogout } = usePasskey()
+const { selectedCredentialId, isLogin, resetCredentialId, selectedCredentialDisplay } = usePasskey()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 const { selectSigner, selectedSigner } = useSigner()
 
@@ -191,12 +191,12 @@ function onClickImportAccount() {
 									/>
 									<span>Passkey Connected</span>
 								</div>
-								<Button variant="ghost" size="icon" class="h-6 w-6" @click="passkeyLogout">
+								<Button variant="ghost" size="icon" class="h-6 w-6" @click="resetCredentialId">
 									<Power class="w-3.5 h-3.5" />
 								</Button>
 							</div>
 							<div class="text-[11px] text-muted-foreground">
-								{{ username }}
+								{{ selectedCredentialDisplay }}
 							</div>
 						</div>
 					</div>

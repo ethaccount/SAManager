@@ -5,7 +5,7 @@ import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useTxModal } from '@/stores/useTxModal'
 import { createEOAOwnedValidation, createPasskeyValidation } from '@/stores/validation/validation'
-import { BytesLike, JsonRpcProvider } from 'ethers'
+import { BytesLike, hexlify, JsonRpcProvider } from 'ethers'
 import {
 	ADDRESS,
 	EOAValidator,
@@ -25,6 +25,7 @@ import {
 } from 'sendop'
 import { toast } from 'vue-sonner'
 import { useConnectSignerModal } from './useConnectSignerModal'
+import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
 
 export const MODULE_TYPE_LABELS = {
 	[ERC7579_MODULE_TYPE.VALIDATOR]: 'Validator Modules',
@@ -155,7 +156,7 @@ export function useModuleManagement() {
 					break
 
 				case 'WebAuthnValidator':
-					const { isLogin, credential } = usePasskey()
+					const { isLogin, selectedCredential } = usePasskey()
 					if (operation === 'install') {
 						if (!isLogin.value) {
 							toast.info('Login with Passkey to install validator')
@@ -163,7 +164,7 @@ export function useModuleManagement() {
 							return
 						}
 
-						if (!credential.value) {
+						if (!selectedCredential.value) {
 							throw new Error('operateValidator: No credential found')
 						}
 
@@ -172,9 +173,9 @@ export function useModuleManagement() {
 							data: await getModuleOperationCallData('install', selectedAccount.value.accountId, {
 								moduleType,
 								webauthnData: {
-									pubKeyX: credential.value.pubX,
-									pubKeyY: credential.value.pubY,
-									authenticatorIdHash: credential.value.authenticatorIdHash,
+									pubKeyX: BigInt(hexlify(selectedCredential.value.pubKeyX)),
+									pubKeyY: BigInt(hexlify(selectedCredential.value.pubKeyY)),
+									authenticatorIdHash: getAuthenticatorIdHash(selectedCredential.value.credentialId),
 								},
 							}),
 							value: 0n,
@@ -183,18 +184,20 @@ export function useModuleManagement() {
 						useTxModal().openModal({
 							executions: [execution],
 							onSuccess: async () => {
-								if (!credential.value) {
+								if (!selectedCredential.value) {
 									throw new Error('No credential found')
 								}
 								if (!selectedAccount.value) {
 									throw new Error('No account selected')
 								}
-								selectedAccount.value.vOptions.push(createPasskeyValidation(credential.value))
+								selectedAccount.value.vOptions.push(
+									createPasskeyValidation(selectedCredential.value.credentialId),
+								)
 								await onSuccess?.()
 							},
 						})
 					} else {
-						if (!credential.value) {
+						if (!selectedCredential.value) {
 							throw new Error('operateValidator: No credential found for uninstall')
 						}
 
@@ -203,9 +206,9 @@ export function useModuleManagement() {
 							data: await getModuleOperationCallData('uninstall', selectedAccount.value.accountId, {
 								moduleType,
 								webauthnData: {
-									pubKeyX: credential.value.pubX,
-									pubKeyY: credential.value.pubY,
-									authenticatorIdHash: credential.value.authenticatorIdHash,
+									pubKeyX: BigInt(hexlify(selectedCredential.value.pubKeyX)),
+									pubKeyY: BigInt(hexlify(selectedCredential.value.pubKeyY)),
+									authenticatorIdHash: getAuthenticatorIdHash(selectedCredential.value.credentialId),
 								},
 								accountAddress: selectedAccount.value.address,
 								client: client.value,

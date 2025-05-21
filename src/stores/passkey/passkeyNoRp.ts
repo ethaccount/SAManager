@@ -33,7 +33,7 @@ export async function createCredential(username: string) {
 			requireResidentKey: true,
 		},
 		extensions: {
-			credProps: true,
+			credProps: true, // ?
 		},
 	}
 

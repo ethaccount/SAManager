@@ -1,6 +1,6 @@
 import { deserializePasskeyCredential } from '@/stores/passkey/passkey'
 import { SUPPORTED_VALIDATION_OPTIONS, ValidationIdentifier } from '@/stores/validation/validation'
-import { JsonRpcProvider } from 'ethers'
+import { hexlify, JsonRpcProvider } from 'ethers'
 import {
 	ADDRESS,
 	BICONOMY_ATTESTER_ADDRESS,
@@ -15,12 +15,17 @@ import {
 	WebAuthnValidator,
 } from 'sendop'
 import { AccountId } from './account'
+import { usePasskey } from '../passkey/usePasskey'
+import { getAuthenticatorIdHash } from '../passkey/passkeyNoRp'
 
 export async function checkIfAccountIsDeployed(client: JsonRpcProvider, address: string): Promise<boolean> {
 	const code = await client.getCode(address)
 	return code !== '0x'
 }
 
+/**
+ * Get the computed address and init code for the account in Create Account page
+ */
 export async function getComputedAddressAndInitCode(
 	client: JsonRpcProvider,
 	accountId: AccountId,
@@ -42,12 +47,15 @@ export async function getComputedAddressAndInitCode(
 			validatorInitData = EOAValidator.getInitData(validation.identifier)
 			break
 		case 'Passkey':
-			const credential = deserializePasskeyCredential(validation.identifier)
+			const { selectedCredential } = usePasskey()
+			if (!selectedCredential.value) {
+				throw new Error('getComputedAddressAndInitCode: selectedCredential is not found')
+			}
 			validatorAddress = SUPPORTED_VALIDATION_OPTIONS['Passkey'].validatorAddress
 			validatorInitData = WebAuthnValidator.getInitData({
-				pubKeyX: credential.pubX,
-				pubKeyY: credential.pubY,
-				authenticatorIdHash: credential.authenticatorIdHash,
+				pubKeyX: BigInt(hexlify(selectedCredential.value.pubKeyX)),
+				pubKeyY: BigInt(hexlify(selectedCredential.value.pubKeyY)),
+				authenticatorIdHash: getAuthenticatorIdHash(selectedCredential.value.credentialId),
 			})
 			break
 		default:
