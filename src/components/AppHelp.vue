@@ -1,30 +1,58 @@
 <script setup lang="ts">
-import { HelpCircle, Settings } from 'lucide-vue-next'
-import { useRouter } from 'vue-router'
+import { HelpCircle, Settings, MessageCircle, ExternalLink } from 'lucide-vue-next'
 import { toRoute } from '@/lib/router'
 import pkg from '../../package.json'
+// Incorporate PushFeedback styles
+import 'pushfeedback/dist/pushfeedback/pushfeedback.css'
+// Initialize the PushFeedback widget
+import 'pushfeedback/dist/pushfeedback/pushfeedback.esm.js'
 
 const router = useRouter()
 
+const isOpen = ref(false)
+
 const onClickAppSettings = () => {
 	router.push(toRoute('settings'))
+	isOpen.value = false
 }
 
 const onClickGithub = () => {
 	window.open(pkg.repository, '_blank')
+	isOpen.value = false
 }
+
+const toggleMenu = () => {
+	isOpen.value = !isOpen.value
+}
+
+// feat: click outside the menu to close it
+const menu = useTemplateRef<HTMLElement>('menu')
+onClickOutside(menu, () => {
+	isOpen.value = false
+})
 </script>
 
 <template>
 	<div class="group">
-		<button class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" aria-label="App menu">
+		<button
+			@click="toggleMenu"
+			class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+			aria-label="App menu"
+		>
 			<HelpCircle class="w-5 h-5" />
 		</button>
 
 		<!-- Dropdown Menu -->
 		<div
-			class="absolute bottom-full left-0 mb-2 w-48 bg-background border border-border rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200"
+			ref="menu"
+			v-show="isOpen"
+			class="absolute bottom-full left-0 mb-2 w-48 bg-background border border-border rounded-lg shadow-lg transition-all duration-200"
 		>
+			<!-- Version -->
+			<div class="w-full px-4 py-2 text-muted-foreground border-b border-border">
+				<span>Version: {{ pkg.version }}</span>
+			</div>
+
 			<!-- Theme Toggle -->
 			<div
 				class="w-full px-4 py-2 flex items-center justify-between gap-2 hover:bg-accent hover:text-accent-foreground rounded-t-lg"
@@ -36,7 +64,7 @@ const onClickGithub = () => {
 			<!-- GitHub Link -->
 			<button
 				@click="onClickGithub"
-				class="w-full px-4 py-2 flex items-center gap-2 hover:bg-accent hover:text-accent-foreground"
+				class="w-full px-4 py-2 flex items-center gap-2 hover:bg-accent hover:text-accent-foreground rounded-b-lg border-t border-border"
 			>
 				<svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
 					<path
@@ -46,12 +74,18 @@ const onClickGithub = () => {
 					/>
 				</svg>
 				<span>GitHub</span>
+				<ExternalLink class="w-4 h-4" />
 			</button>
 
-			<!-- Version -->
-			<div class="w-full px-4 py-2 flex items-center gap-2 text-muted-foreground">
-				<span>Version: v{{ pkg.version }}</span>
-			</div>
+			<!-- Feedback -->
+			<feedback-button project="oc9bd4ntqh" modal-position="center" button-style="default" id="feedback-button">
+				<button
+					class="w-full px-4 py-2 flex items-center gap-2 hover:bg-accent hover:text-accent-foreground rounded-b-lg border-t border-border"
+				>
+					<MessageCircle class="w-4 h-4" />
+					<span>Quick Feedback</span>
+				</button>
+			</feedback-button>
 
 			<!-- Settings -->
 			<button
