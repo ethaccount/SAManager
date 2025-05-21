@@ -94,8 +94,8 @@ async function onClickLogin() {
 	}
 }
 
-function onClickConfirm() {
-	if (!isLogin.value) throw new Error('onClickConfirm: No passkey credential found')
+function onClickComplete() {
+	if (!isLogin.value) throw new Error('onClickComplete: No passkey credential found')
 	emit('confirm')
 }
 
@@ -184,11 +184,11 @@ function onClickLogout() {
 
 			<div class="grid gap-2">
 				<Button
-					@click="onClickConfirm"
+					@click="onClickComplete"
 					class="bg-primary text-primary-foreground hover:bg-primary/90"
 					:disabled="!isLogin"
 				>
-					Confirm
+					Complete
 				</Button>
 				<Button
 					@click="onClickLogout"

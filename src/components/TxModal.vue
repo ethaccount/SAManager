@@ -7,6 +7,7 @@ import { checkIfAccountIsDeployed } from '@/stores/account/create'
 import { useAccount } from '@/stores/account/useAccount'
 import { displayChainName } from '@/stores/network/network'
 import { useNetwork } from '@/stores/network/useNetwork'
+import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { TransactionStatus, useTxModal } from '@/stores/useTxModal'
 import { useSigner } from '@/stores/validation/useSigner'
@@ -41,6 +42,8 @@ const { wallet } = useEOAWallet()
 const { client, selectedChainId, explorerUrl, selectedEntryPoint } = useNetwork()
 const { selectedAccount, selectedAccountInitCode, isAccountConnected } = useAccount()
 const { selectSigner, selectedSigner } = useSigner()
+const { selectedCredentialDisplay } = usePasskey()
+
 const {
 	userOp,
 	opReceipt,
@@ -278,9 +281,9 @@ const txLink = computed(() => {
 										<span>Passkey Connected</span>
 									</div>
 								</div>
-								<!-- <div class="text-xs text-muted-foreground">
-									{{  credential.username }} TODO: display username
-								</div> -->
+								<div class="text-xs text-muted-foreground">
+									{{ selectedCredentialDisplay }}
+								</div>
 							</div>
 						</div>
 					</div>

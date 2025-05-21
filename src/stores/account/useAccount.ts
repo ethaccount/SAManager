@@ -1,5 +1,5 @@
 import { LOCAL_STORAGE_KEY_PREFIX } from '@/config'
-import { AccountId, ImportedAccount, SUPPORTED_ACCOUNTS } from '@/stores/account/account'
+import { AccountId, ImportedAccount, isSameAccount, SUPPORTED_ACCOUNTS } from '@/stores/account/account'
 import { CHAIN_ID } from '@/stores/network/network'
 import { useNetwork } from '@/stores/network/useNetwork'
 import { signMessage } from '@/stores/passkey/passkey'
@@ -10,7 +10,6 @@ import { SUPPORTED_VALIDATION_OPTIONS, ValidationIdentifier } from '@/stores/val
 import {
 	EOAValidator,
 	ERC7579Validator,
-	isSameAddress,
 	KernelV3Account,
 	NexusAccount,
 	Safe7579Account,
@@ -168,7 +167,7 @@ export const useAccountStore = defineStore(
 				throw new Error(`importAccount: No validation options`)
 			}
 
-			if (accounts.value.find(a => isSameAddress(a.address, account.address) && a.chainId === account.chainId)) {
+			if (accounts.value.some(a => isSameAccount(a, account))) {
 				toast.info('Account already imported')
 				return
 			}

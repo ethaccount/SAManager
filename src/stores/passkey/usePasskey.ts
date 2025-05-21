@@ -1,6 +1,7 @@
 import { PASSKEY_RP_URL } from '@/config'
 import { PasskeyCredential } from '@/stores/passkey/passkey'
 import { createCredential, getCredential } from './passkeyNoRp'
+import { isBytes } from 'sendop'
 
 export const usePasskeyStore = defineStore(
 	'usePasskeyStore',
@@ -14,11 +15,17 @@ export const usePasskeyStore = defineStore(
 		})
 
 		const isLogin = computed(() => !!selectedCredentialId.value)
-		const hasStoredCredentialData = computed(() => !!selectedCredential.value)
+		const isValidSelectedCredential = computed(() => {
+			if (!selectedCredential.value) return false
+			if (!isBytes(selectedCredential.value.pubKeyX)) return false
+			if (!isBytes(selectedCredential.value.pubKeyY)) return false
+			if (!selectedCredential.value.credentialId) return false
+			return true
+		})
 
 		const selectedCredentialDisplay = computed(() => {
 			if (!isLogin.value) return null
-			if (!hasStoredCredentialData.value) return selectedCredentialId.value
+			if (!isValidSelectedCredential.value) return selectedCredentialId.value
 			if (selectedCredential.value?.username) return selectedCredential.value.username
 			return selectedCredential.value?.credentialId
 		})
@@ -45,10 +52,6 @@ export const usePasskeyStore = defineStore(
 
 		const isPasskeyRPHealthy = ref(false)
 
-		// onMounted(async () => {
-		// 	await checkPasskeyRPHealth()
-		// })
-
 		async function checkPasskeyRPHealth(): Promise<boolean> {
 			try {
 				const baseUrl = new URL(PASSKEY_RP_URL).origin
@@ -74,7 +77,7 @@ export const usePasskeyStore = defineStore(
 			isPasskeyRPHealthy,
 			checkPasskeyRPHealth,
 			resetCredentialId,
-			hasStoredCredentialData,
+			isValidSelectedCredential,
 			selectedCredentialDisplay,
 		}
 	},

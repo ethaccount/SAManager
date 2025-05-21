@@ -37,20 +37,40 @@ export async function createCredential(username: string) {
 		},
 	}
 
-	console.log('PublicKeyCredentialCreationOptions', options)
-
 	const credential = (await navigator.credentials.create({ publicKey: options })) as PublicKeyCredential | null
 	if (!credential) {
 		throw new Error('Failed to create credential')
 	}
-	console.log('PublicKeyCredential', credential)
 
-	// parse public key
+	const attestationResponse = credential.response as AuthenticatorAttestationResponse
+	const publicKey = attestationResponse.getPublicKey()
+	if (!publicKey) {
+		throw new Error('createCredential: Failed to get public key from attestationResponse')
+	}
+
+	const key = await crypto.subtle.importKey(
+		'spki',
+		publicKey,
+		{
+			name: 'ECDSA',
+			namedCurve: 'P-256',
+		},
+		true,
+		['verify'],
+	)
+
+	// Export the key to the raw format
+	const rawKey = await crypto.subtle.exportKey('raw', key)
+	const rawKeyBuffer = Buffer.from(rawKey)
+
+	// The first byte is 0x04 (uncompressed), followed by x and y coordinates (32 bytes each for P-256)
+	const pubKeyX = '0x' + rawKeyBuffer.subarray(1, 33).toString('hex')
+	const pubKeyY = '0x' + rawKeyBuffer.subarray(33).toString('hex')
 
 	return {
 		credentialId: credential.id,
-		pubKeyX: 'a',
-		pubKeyY: 'b',
+		pubKeyX,
+		pubKeyY,
 	}
 }
 

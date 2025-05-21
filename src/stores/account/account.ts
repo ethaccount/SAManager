@@ -1,6 +1,6 @@
 import { CHAIN_ID } from '@/stores/network/network'
 import { ValidationIdentifier } from '@/stores/validation/validation'
-import { EntryPointVersion } from 'sendop'
+import { EntryPointVersion, isSameAddress } from 'sendop'
 
 export type ImportedAccount = {
 	accountId: AccountId
@@ -65,4 +65,8 @@ export const SUPPORTED_ACCOUNTS: Record<
 
 export function displayAccountName(accountId: AccountId) {
 	return ACCOUNT_ID_TO_NAME[accountId]
+}
+
+export function isSameAccount(a: ImportedAccount, b: ImportedAccount) {
+	return isSameAddress(a.address, b.address) && a.chainId === b.chainId
 }

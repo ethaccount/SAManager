@@ -47,16 +47,23 @@ export async function getComputedAddressAndInitCode(
 			validatorInitData = EOAValidator.getInitData(validation.identifier)
 			break
 		case 'Passkey':
-			const { selectedCredential } = usePasskey()
-			if (!selectedCredential.value) {
-				throw new Error('getComputedAddressAndInitCode: selectedCredential is not found')
+			const { selectedCredential, isValidSelectedCredential } = usePasskey()
+			if (!isValidSelectedCredential.value || !selectedCredential.value) {
+				throw new Error('getComputedAddressAndInitCode: selectedCredential is invalid')
 			}
 			validatorAddress = SUPPORTED_VALIDATION_OPTIONS['Passkey'].validatorAddress
-			validatorInitData = WebAuthnValidator.getInitData({
-				pubKeyX: BigInt(hexlify(selectedCredential.value.pubKeyX)),
-				pubKeyY: BigInt(hexlify(selectedCredential.value.pubKeyY)),
-				authenticatorIdHash: getAuthenticatorIdHash(selectedCredential.value.credentialId),
-			})
+
+			try {
+				validatorInitData = WebAuthnValidator.getInitData({
+					pubKeyX: BigInt(selectedCredential.value.pubKeyX),
+					pubKeyY: BigInt(selectedCredential.value.pubKeyY),
+					authenticatorIdHash: getAuthenticatorIdHash(selectedCredential.value.credentialId),
+				})
+			} catch (e: unknown) {
+				throw new Error('getComputedAddressAndInitCode: WebAuthnValidator.getInitData', {
+					cause: e,
+				})
+			}
 			break
 		default:
 			throw new Error(`getComputedAddressAndInitCode: Unsupported validation type: ${validation.type}`)
