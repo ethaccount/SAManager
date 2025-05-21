@@ -2,10 +2,6 @@
 import { HelpCircle, Settings, MessageCircle, ExternalLink } from 'lucide-vue-next'
 import { toRoute } from '@/lib/router'
 import pkg from '../../package.json'
-// Incorporate PushFeedback styles
-import 'pushfeedback/dist/pushfeedback/pushfeedback.css'
-// Initialize the PushFeedback widget
-import 'pushfeedback/dist/pushfeedback/pushfeedback.esm.js'
 
 const router = useRouter()
 
@@ -66,7 +62,7 @@ onClickOutside(menu, () => {
 				@click="onClickGithub"
 				class="w-full px-4 py-2 flex items-center gap-2 hover:bg-accent hover:text-accent-foreground rounded-b-lg border-t border-border"
 			>
-				<svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+				<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
 					<path
 						fill-rule="evenodd"
 						clip-rule="evenodd"
@@ -78,12 +74,13 @@ onClickOutside(menu, () => {
 			</button>
 
 			<!-- Feedback -->
-			<feedback-button project="oc9bd4ntqh" modal-position="center" button-style="default" id="feedback-button">
+			<!-- @docs https://docs.pushfeedback.com/category/customization -->
+			<feedback-button project="oc9bd4ntqh" modal-position="center" button-style="default">
 				<button
-					class="w-full px-4 py-2 flex items-center gap-2 hover:bg-accent hover:text-accent-foreground rounded-b-lg border-t border-border"
+					class="w-full px-4 py-2 flex items-center gap-2 hover:bg-accent hover:text-accent-foreground border-t border-border"
 				>
 					<MessageCircle class="w-4 h-4" />
-					<span>Quick Feedback</span>
+					<span class="font-sans">Quick Feedback</span>
 				</button>
 			</feedback-button>
 
@@ -98,3 +95,5 @@ onClickOutside(menu, () => {
 		</div>
 	</div>
 </template>
+
+<style></style>

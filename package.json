@@ -1,7 +1,7 @@
 {
 	"name": "samanager",
 	"private": true,
-	"version": "0.0.13",
+	"version": "0.0.14",
 	"type": "module",
 	"repository": "https://github.com/ethaccount/SAManager",
 	"scripts": {
@@ -27,7 +27,6 @@
 		"lucide-vue-next": "^0.471.0",
 		"pinia": "^3.0.1",
 		"pinia-plugin-persistedstate": "^4.2.0",
-		"pushfeedback": "^0.1.63",
 		"radix-vue": "^1.9.12",
 		"reka-ui": "^2.2.0",
 		"sendop": "0.4.2-beta.6",
