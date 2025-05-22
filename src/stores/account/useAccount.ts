@@ -29,6 +29,11 @@ export const useAccountStore = defineStore(
 	() => {
 		const selectedAccount = ref<ImportedAccount | null>(null)
 
+		const isChainIdMatching = computed(() => {
+			const { selectedChainId } = useNetwork()
+			return selectedChainId.value === selectedAccount.value?.chainId
+		})
+
 		const isAccountConnected = computed(() => {
 			if (!selectedAccount.value) return false
 			// check if the chainId of the selected account is the same as the selected chainId
@@ -244,6 +249,7 @@ export const useAccountStore = defineStore(
 			removeAccount,
 			selectAccount,
 			checkIfAccountIsImported,
+			isChainIdMatching,
 		}
 	},
 	{

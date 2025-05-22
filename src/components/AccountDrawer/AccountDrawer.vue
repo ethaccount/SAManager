@@ -26,7 +26,7 @@ function onClickCloseSidebar() {
 	emit('close')
 }
 
-const { accounts, selectedAccount, isAccountConnected } = useAccount()
+const { accounts, selectedAccount, isAccountConnected, isChainIdMatching } = useAccount()
 const { wallet, address, isEOAWalletConnected, disconnect } = useEOAWallet()
 const { selectedCredentialId, isLogin, resetCredentialId, selectedCredentialDisplay } = usePasskey()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
@@ -88,23 +88,25 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 										class="w-3 h-3"
 										:class="isAccountConnected ? 'text-green-500' : 'text-red-500'"
 									/>
-									<span class="font-medium truncate">{{
-										shortenAddress(selectedAccount.address)
-									}}</span>
+									<span class="font-medium truncate">
+										{{ shortenAddress(selectedAccount.address) }}
+									</span>
 									<div class="flex items-center gap-1">
 										<CopyButton :address="selectedAccount.address" />
 										<AddressLinkButton :address="selectedAccount.address" />
 									</div>
 								</div>
 							</div>
-							<div class="flex flex-col text-xs text-muted-foreground">
-								<div class="flex gap-2">
-									<span>{{ displayAccountName(selectedAccount.accountId) }}</span>
-									<span>{{ displayChainName(selectedAccount.chainId) }}</span>
-								</div>
+							<div class="flex flex-col text-muted-foreground">
+								<div class="flex gap-2 items-center">
+									<!-- account Id -->
+									<div class="text-sm">{{ displayAccountName(selectedAccount.accountId) }}</div>
 
-								<div v-for="vOption in selectedAccount.vOptions" :key="vOption.type" class="mt-1">
-									<span>{{ vOption.type }}</span>
+									<ChainIcon
+										:chain-id="selectedAccount.chainId"
+										:size="20"
+										:border-color="isChainIdMatching ? 'green' : 'red'"
+									/>
 								</div>
 							</div>
 						</div>

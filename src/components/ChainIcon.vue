@@ -7,11 +7,13 @@ interface Props {
 	chainId: string
 	size?: number
 	showTooltip?: boolean
+	borderColor?: 'default' | 'red' | 'green'
 }
 
 const props = withDefaults(defineProps<Props>(), {
 	size: 40,
 	showTooltip: true,
+	borderColor: 'default',
 })
 
 const networkData = computed(() => {
@@ -21,10 +23,17 @@ const networkData = computed(() => {
 const containerStyle = computed(() => ({
 	width: `${props.size}px`,
 	height: `${props.size}px`,
-	borderStyle: isTestnet(props.chainId) ? 'dashed' : 'solid',
 }))
 
 const fallbackText = computed(() => networkData.value.name.charAt(0).toUpperCase())
+
+const iconContainerClass = computed(() => ({
+	'icon-container': true,
+	'border-red-500': props.borderColor === 'red',
+	'border-green-500': props.borderColor === 'green',
+	'border-dashed': isTestnet(props.chainId),
+	'border-solid': !isTestnet(props.chainId),
+}))
 </script>
 
 <template>
@@ -32,7 +41,7 @@ const fallbackText = computed(() => networkData.value.name.charAt(0).toUpperCase
 		<TooltipProvider :delay-duration="0" :skip-delay-duration="0">
 			<Tooltip>
 				<TooltipTrigger asChild>
-					<div class="icon-container" :style="containerStyle">
+					<div :class="iconContainerClass" :style="containerStyle">
 						<template v-if="networkData.icon">
 							<img :src="networkData.icon" :alt="networkData.name" class="chain-icon" />
 						</template>
@@ -46,7 +55,7 @@ const fallbackText = computed(() => networkData.value.name.charAt(0).toUpperCase
 		</TooltipProvider>
 	</template>
 	<template v-else>
-		<div class="icon-container" :style="containerStyle">
+		<div :class="iconContainerClass" :style="containerStyle">
 			<template v-if="networkData.icon">
 				<img :src="networkData.icon" :alt="networkData.name" class="chain-icon" />
 			</template>
@@ -59,7 +68,7 @@ const fallbackText = computed(() => networkData.value.name.charAt(0).toUpperCase
 
 <style lang="css" scoped>
 .icon-container {
-	border: 2px solid #666;
+	@apply border-2;
 	border-radius: 50%;
 	display: flex;
 	align-items: center;

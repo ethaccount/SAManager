@@ -5,8 +5,6 @@ import { toRoute } from '@/lib/router'
 import { useGetCode } from '@/lib/useGetCode'
 import { displayAccountName } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
-import { displayChainName } from '@/stores/network/network'
-import { useNetwork } from '@/stores/network/useNetwork'
 import { displayValidationIdentifier } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
 import { ArrowLeft, Loader2 } from 'lucide-vue-next'
@@ -16,8 +14,7 @@ import AMPaymasters from './AMPaymasters.vue'
 import AMSessions from './AMSessions.vue'
 
 const router = useRouter()
-const { selectedChainId } = useNetwork()
-const { selectedAccount, isModular } = useAccount()
+const { selectedAccount, isModular, isChainIdMatching } = useAccount()
 const { getCode, isDeployed, loading } = useGetCode()
 
 // Use this instead of onMounted because users might change account with the drawer
@@ -55,14 +52,14 @@ watchImmediate([selectedAccount], async () => {
 								{{ displayAccountName(selectedAccount.accountId) }}
 							</p>
 						</div>
-						<div
-							class="text-xs rounded-full bg-muted px-2.5 py-0.5"
-							:class="{
-								'border border-red-500': selectedAccount.chainId !== selectedChainId,
-								'border border-green-500': selectedAccount.chainId === selectedChainId,
-							}"
-						>
-							{{ displayChainName(selectedAccount.chainId) }}
+
+						<!-- Chain -->
+						<div>
+							<ChainIcon
+								:chain-id="selectedAccount.chainId"
+								:size="24"
+								:border-color="isChainIdMatching ? 'green' : 'red'"
+							/>
 						</div>
 
 						<!-- Category -->
