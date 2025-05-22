@@ -80,12 +80,14 @@ const IAM_CONFIG: Record<IAMStageKey, IAMStage<Component>> = {
 		attrs: {
 			mode: 'login',
 			onConfirm: () => {
-				const { selectedCredential } = usePasskey()
-				if (!selectedCredential.value)
-					throw new Error('IAMStageKey.CONNECT_PASSKEY: No selectedCredential found')
+				// For import, we only need the credentialId. The selectedCredential is not needed.
+				const { selectedCredentialId } = usePasskey()
+				if (!selectedCredentialId.value) {
+					throw new Error('IAMStageKey.CONNECT_PASSKEY: No selectedCredentialId')
+				}
 				useImportAccountModal().updateFormData({
 					category: 'Smart Account',
-					vOptions: [createPasskeyValidation(selectedCredential.value.credentialId)],
+					vOptions: [createPasskeyValidation(selectedCredentialId.value)],
 				})
 				useImportAccountModal().goNextStage(IAMStageKey.PASSKEY_ACCOUNT_OPTIONS)
 			},
