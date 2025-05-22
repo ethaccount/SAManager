@@ -78,6 +78,13 @@ async function onClickInstall(module: ModuleType) {
 		operatingModule.value = null
 	}
 }
+
+const showAvailableModules = computed(() => {
+	if (!props.isDeployed) return false
+	if (loading.value) return false
+	if (availableModules.value.length === 0) return false
+	return true
+})
 </script>
 
 <template>
@@ -117,7 +124,7 @@ async function onClickInstall(module: ModuleType) {
 			</div>
 
 			<!-- Available Modules Section -->
-			<div v-if="!loading && availableModules.length > 0" class="space-y-3 mt-8 pt-6 border-t">
+			<div v-if="showAvailableModules" class="space-y-3 mt-8 pt-6 border-t">
 				<h3 class="text-base font-medium">Available Modules</h3>
 				<div class="grid gap-3">
 					<div
