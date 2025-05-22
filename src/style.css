@@ -64,21 +64,15 @@
 	}
 }
 
-/* Only show focus rings for keyboard navigation */
-@layer base {
-	/* If something is focused by mouse/touch (not keyboard), remove all rings/outlines */
-	*:focus:not(:focus-visible) {
-		@apply !outline-none !ring-0;
-	}
+/* ==================================== hacky ==================================== */
 
-	*:focus-visible {
-		@apply !ring-1 !ring-primary/50;
-	}
+/* To disable double-tap zooming on buttons on mobile for better UX */
+button {
+	touch-action: manipulation;
 }
 
 /* ==================================== Common styles ==================================== */
 
-/* ConnectEOAWallet, TransactionModal */
 .error-section {
 	@apply p-3 bg-destructive/10 text-destructive rounded-[--radius] text-sm break-words;
 }

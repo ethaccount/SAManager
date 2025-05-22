@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { ModuleRecordModule, useAccountModule } from '@/lib/useAccountModule'
 import { MODULE_TYPE_LABELS, ModuleType, SUPPORTED_MODULES, useModuleManagement } from '@/lib/useModuleManagement'
+import { ImportedAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { ERC7579_MODULE_TYPE, isSameAddress } from 'sendop'
 
 const props = defineProps<{
+	selectedAccount: ImportedAccount
 	isDeployed: boolean
+	isModular: boolean
 }>()
-
-const { selectedAccount } = useAccount()
 
 function getModuleName(address: string) {
 	return (
@@ -19,9 +20,9 @@ function getModuleName(address: string) {
 
 const { moduleRecord, loading, updateAccountModuleRecord, hasModules, installedModuleTypes } = useAccountModule()
 
-// Watch for account changes and fetch modules
-watchImmediate([() => props.isDeployed, selectedAccount], async () => {
+onMounted(async () => {
 	if (!props.isDeployed) return
+	if (!props.isModular) return
 	await updateAccountModuleRecord()
 })
 
@@ -78,16 +79,25 @@ async function onClickInstall(module: ModuleType) {
 		operatingModule.value = null
 	}
 }
+
+const showAvailableModules = computed(() => {
+	if (!props.isDeployed) return false
+	if (loading.value) return false
+	if (availableModules.value.length === 0) return false
+	return true
+})
 </script>
 
 <template>
 	<Card>
 		<div class="space-y-6 p-6">
-			<div v-if="loading" class="text-sm text-muted-foreground">Loading modules...</div>
+			<div v-if="!isDeployed" class="text-sm text-muted-foreground">Account is not deployed</div>
+			<div v-else-if="!isModular" class="text-sm text-muted-foreground">Account is not modular</div>
+			<div v-else-if="loading" class="text-sm text-muted-foreground">Loading modules...</div>
 
+			<!-- is deployed and modular -->
 			<div v-else class="space-y-6">
-				<div v-if="!isDeployed" class="text-sm text-muted-foreground">Account is not deployed</div>
-				<div v-else-if="!hasModules" class="text-sm text-muted-foreground">No modules installed</div>
+				<div v-if="!hasModules" class="text-sm text-muted-foreground">No modules installed</div>
 				<template v-else>
 					<div v-for="type in installedModuleTypes" :key="type" class="space-y-3">
 						<h3 class="text-sm font-medium">{{ MODULE_TYPE_LABELS[type] }}</h3>
@@ -114,30 +124,32 @@ async function onClickInstall(module: ModuleType) {
 						</div>
 					</div>
 				</template>
-			</div>
 
-			<!-- Available Modules Section -->
-			<div v-if="!loading && availableModules.length > 0" class="space-y-3 mt-8 pt-6 border-t">
-				<h3 class="text-base font-medium">Available Modules</h3>
-				<div class="grid gap-3">
-					<div
-						v-for="module in availableModules"
-						:key="module"
-						class="flex items-center justify-between p-4 border rounded-lg bg-card/50 hover:bg-card/80 transition-colors"
-					>
-						<div class="space-y-1">
-							<div class="text-sm font-medium">{{ SUPPORTED_MODULES[module].name }}</div>
-							<div class="text-xs text-muted-foreground">{{ SUPPORTED_MODULES[module].description }}</div>
-						</div>
-						<Button
-							variant="outline"
-							size="sm"
-							:disabled="operatingModule !== null"
-							:loading="operatingModule === SUPPORTED_MODULES[module].address"
-							@click="onClickInstall(module)"
+				<!-- Available Modules Section -->
+				<div v-if="showAvailableModules" class="space-y-3 mt-8 pt-6 border-t">
+					<h3 class="text-sm font-medium">Available Modules</h3>
+					<div class="grid gap-3">
+						<div
+							v-for="module in availableModules"
+							:key="module"
+							class="flex items-center justify-between p-4 border rounded-lg bg-card/50 hover:bg-card/80 transition-colors"
 						>
-							Install
-						</Button>
+							<div class="space-y-1">
+								<div class="text-sm font-medium">{{ SUPPORTED_MODULES[module].name }}</div>
+								<div class="text-xs text-muted-foreground">
+									{{ SUPPORTED_MODULES[module].description }}
+								</div>
+							</div>
+							<Button
+								variant="outline"
+								size="sm"
+								:disabled="operatingModule !== null"
+								:loading="operatingModule === SUPPORTED_MODULES[module].address"
+								@click="onClickInstall(module)"
+							>
+								Install
+							</Button>
+						</div>
 					</div>
 				</div>
 			</div>

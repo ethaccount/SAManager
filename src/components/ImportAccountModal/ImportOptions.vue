@@ -3,7 +3,6 @@ import { Card } from '@/components/ui/card'
 import { IAMStageKey, useImportAccountModal } from '@/stores/useImportAccountModal'
 import { AccountCategory } from '@/stores/account/account'
 import { Code, Key, LinkIcon, Wallet, ChevronRight } from 'lucide-vue-next'
-import { usePasskey } from '@/stores/passkey/usePasskey'
 
 type AccountOption = {
 	title: string
@@ -14,13 +13,12 @@ type AccountOption = {
 }
 
 const accountOptions = computed<AccountOption[]>(() => {
-	const { isPasskeyRPHealthy } = usePasskey()
 	return [
 		{
 			title: 'Passkey',
 			description: 'Import an account using your passkey for this site',
 			icon: Key,
-			nextStageKey: isPasskeyRPHealthy.value ? IAMStageKey.CONNECT_PASSKEY : null,
+			nextStageKey: IAMStageKey.CONNECT_PASSKEY,
 			category: 'Smart Account',
 		},
 		{

@@ -1,30 +1,9 @@
-import { PasskeyCredential, serializePasskeyCredential } from '@/stores/passkey/passkey'
 import { SUPPORTED_SIGNER_TYPE } from '@/stores/validation/useSigner'
 import { shortenAddress } from '@vue-dapp/core'
 import { Contract, EventLog, isAddress, JsonRpcProvider } from 'ethers'
 import { ADDRESS } from 'sendop'
 
 export const SUPPORTED_VALIDATION_OPTIONS = {
-	'EOA-Owned': {
-		name: 'EOA-Owned',
-		description: 'Use ECDSAValidator from zerodev',
-		validatorAddress: ADDRESS.ECDSAValidator,
-		signerType: 'EOAWallet' as SUPPORTED_SIGNER_TYPE,
-
-		async getAccounts(client: JsonRpcProvider, ownerAddress: string): Promise<string[]> {
-			const validator = new Contract(
-				ADDRESS.ECDSAValidator,
-				['event OwnerRegistered(address indexed kernel, address indexed owner)'],
-				client,
-			)
-			const events = (await validator.queryFilter(
-				validator.filters.OwnerRegistered(null, ownerAddress),
-			)) as EventLog[]
-
-			const sortedEvents = events.sort((a, b) => b.blockNumber - a.blockNumber)
-			return sortedEvents.slice(0, 5).map(event => event.args[0]) as string[]
-		},
-	},
 	Passkey: {
 		name: 'Passkey',
 		description: 'Use WebAuthnValidator from zerodev',
@@ -44,7 +23,27 @@ export const SUPPORTED_VALIDATION_OPTIONS = {
 			)) as EventLog[]
 
 			const sortedEvents = events.sort((a, b) => b.blockNumber - a.blockNumber)
-			return sortedEvents.slice(0, 5).map(event => event.args[0]) as string[]
+			return sortedEvents.map(event => event.args[0]) as string[]
+		},
+	},
+	'EOA-Owned': {
+		name: 'EOA-Owned',
+		description: 'Use ECDSAValidator from zerodev',
+		validatorAddress: ADDRESS.ECDSAValidator,
+		signerType: 'EOAWallet' as SUPPORTED_SIGNER_TYPE,
+
+		async getAccounts(client: JsonRpcProvider, ownerAddress: string): Promise<string[]> {
+			const validator = new Contract(
+				ADDRESS.ECDSAValidator,
+				['event OwnerRegistered(address indexed kernel, address indexed owner)'],
+				client,
+			)
+			const events = (await validator.queryFilter(
+				validator.filters.OwnerRegistered(null, ownerAddress),
+			)) as EventLog[]
+
+			const sortedEvents = events.sort((a, b) => b.blockNumber - a.blockNumber)
+			return sortedEvents.map(event => event.args[0]) as string[]
 		},
 	},
 	SmartEOA: {
@@ -61,12 +60,12 @@ export function displayValidationName(validationType: ValidationType): string {
 	return SUPPORTED_VALIDATION_OPTIONS[validationType].name
 }
 
-export interface ValidationIdentifier {
+export interface ValidationOption {
 	type: ValidationType
 	identifier: string // address for EOA, serialized credential for Passkey
 }
 
-export function displayValidationIdentifier(validationIdentifier: ValidationIdentifier): string {
+export function displayValidationIdentifier(validationIdentifier: ValidationOption): string {
 	switch (validationIdentifier.type) {
 		case 'EOA-Owned':
 			return shortenAddress(validationIdentifier.identifier)
@@ -77,7 +76,7 @@ export function displayValidationIdentifier(validationIdentifier: ValidationIden
 	}
 }
 
-export function createEOAOwnedValidation(address: string): ValidationIdentifier {
+export function createEOAOwnedValidation(address: string): ValidationOption {
 	if (!isAddress(address)) {
 		throw new Error('createEOAOwnedValidation: Invalid address')
 	}
@@ -87,7 +86,7 @@ export function createEOAOwnedValidation(address: string): ValidationIdentifier 
 	}
 }
 
-export function createPasskeyValidation(credentialId: string): ValidationIdentifier {
+export function createPasskeyValidation(credentialId: string): ValidationOption {
 	if (!credentialId) {
 		throw new Error(`createPasskeyValidation: credentialId is empty string`)
 	}
@@ -98,7 +97,7 @@ export function createPasskeyValidation(credentialId: string): ValidationIdentif
 	}
 }
 
-export function createSmartEOAValidation(address: string): ValidationIdentifier {
+export function createSmartEOAValidation(address: string): ValidationOption {
 	if (!isAddress(address)) {
 		throw new Error('createSmartEOAValidation: Invalid address')
 	}

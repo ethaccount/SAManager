@@ -25,13 +25,13 @@ type TokenTransfer = {
 
 const tokens: Token[] = [
 	{ id: 'eth', symbol: 'ETH', name: 'Ethereum', icon: 'Ξ', address: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE' },
-	{ id: 'usdc', symbol: 'USDC', name: 'USD Coin', icon: '$', address: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238' },
+	// { id: 'usdc', symbol: 'USDC', name: 'USD Coin', icon: '$', address: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238' },
 ]
 
 function getDefaultTransfer(): TokenTransfer {
 	return {
-		recipient: '0xd78B5013757Ea4A7841811eF770711e6248dC282',
-		amount: '0.01',
+		recipient: '',
+		amount: '0',
 		tokenId: tokens[0].id,
 	}
 }
@@ -106,6 +106,7 @@ const reviewButtonText = computed(() => {
 					class="relative p-4 rounded-xl bg-muted/30 border border-border/50 backdrop-blur-sm transition-all duration-200 hover:border-border"
 				>
 					<Button
+						v-if="transfers.length > 1"
 						variant="ghost"
 						size="icon"
 						@click="removeTransfer(index)"

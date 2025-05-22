@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { usePasskey } from '@/stores/passkey/usePasskey'
-import { Loader2 } from 'lucide-vue-next'
+import { useSigner } from '@/stores/validation/useSigner'
+import { Loader2, CheckCircle, Check } from 'lucide-vue-next'
 import { uniqueNamesGenerator, adjectives, animals } from 'unique-names-generator'
 
 type PasskeyMode = 'register' | 'login' | 'both'
@@ -96,6 +97,9 @@ async function onClickLogin() {
 
 function onClickComplete() {
 	if (!isLogin.value) throw new Error('onClickComplete: No passkey credential found')
+
+	useSigner().selectSigner('Passkey')
+
 	emit('confirm')
 }
 
@@ -113,11 +117,12 @@ function onClickLogout() {
 
 		<div v-if="!isLogin" class="flex flex-col gap-3">
 			<!-- Level 1: Initial Selection -->
-			<div v-if="!isRegistrationMode" class="grid grid-cols-2 gap-2">
+			<div v-if="!isRegistrationMode" class="flex gap-2">
 				<Button
 					v-if="showRegister"
 					variant="secondary"
 					:disabled="loadingRegisterOrLogin"
+					class="w-full"
 					:class="{ 'opacity-50 cursor-not-allowed': loadingRegisterOrLogin }"
 					@click="onClickStartRegister"
 				>
@@ -128,6 +133,7 @@ function onClickLogout() {
 					v-if="showLogin"
 					variant="default"
 					:disabled="loadingRegisterOrLogin"
+					class="w-full"
 					:class="{ 'opacity-50 cursor-not-allowed': loadingRegisterOrLogin }"
 					@click="onClickLogin"
 				>
@@ -174,7 +180,7 @@ function onClickLogout() {
 		<div v-else class="flex flex-col gap-3">
 			<div class="p-4 bg-secondary rounded-[--radius] border">
 				<div class="flex items-center gap-2 text-foreground mb-2">
-					<span>✓</span>
+					<CheckCircle class="h-4 w-4 text-green-500" />
 					<span>Successfully got credential</span>
 				</div>
 				<p class="text-sm text-muted-foreground">

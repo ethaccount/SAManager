@@ -2,8 +2,8 @@
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { getErrMsg } from '@/lib/error'
+import { useGetCode } from '@/lib/useGetCode'
 import { displayAccountName } from '@/stores/account/account'
-import { checkIfAccountIsDeployed } from '@/stores/account/create'
 import { useAccount } from '@/stores/account/useAccount'
 import { displayChainName } from '@/stores/network/network'
 import { useNetwork } from '@/stores/network/useNetwork'
@@ -13,7 +13,7 @@ import { TransactionStatus, useTxModal } from '@/stores/useTxModal'
 import { useSigner } from '@/stores/validation/useSigner'
 import { shortenAddress } from '@vue-dapp/core'
 import { formatEther } from 'ethers'
-import { CircleDot, ExternalLink, X } from 'lucide-vue-next'
+import { CircleDot, ExternalLink, Loader2, X } from 'lucide-vue-next'
 import { Execution, isSameAddress } from 'sendop'
 import { VueFinalModal } from 'vue-final-modal'
 import { toast } from 'vue-sonner'
@@ -40,7 +40,7 @@ function onClickClose() {
 
 const { wallet } = useEOAWallet()
 const { client, selectedChainId, explorerUrl, selectedEntryPoint } = useNetwork()
-const { selectedAccount, selectedAccountInitCode, isAccountConnected } = useAccount()
+const { selectedAccount, initCodeData, isAccountConnected } = useAccount()
 const { selectSigner, selectedSigner } = useSigner()
 const { selectedCredentialDisplay } = usePasskey()
 
@@ -58,7 +58,7 @@ const {
 	handleSend,
 } = useTxModal()
 
-const isDeployed = ref(false)
+const { isDeployed, getCode, loading: isLoadingCode } = useGetCode()
 
 onMounted(async () => {
 	// Check if account is connected
@@ -70,12 +70,15 @@ onMounted(async () => {
 
 	// Check if account is deployed
 	if (selectedAccount.value?.address && selectedAccount.value.category === 'Smart Account') {
-		isDeployed.value = await checkIfAccountIsDeployed(client.value, selectedAccount.value.address)
-		if (!isDeployed.value && !selectedAccountInitCode.value) {
-			emit('close')
-			toast.error('Account not deployed and no init code provided')
-			return
-		}
+		await getCode(selectedAccount.value.address)
+
+		nextTick(() => {
+			if (!isDeployed.value && !initCodeData.value) {
+				emit('close')
+				toast.error('Account not deployed and no init code provided')
+				return
+			}
+		})
 	}
 })
 
@@ -97,12 +100,12 @@ async function onClickEstimate() {
 		if (isDeployed.value || selectedAccount.value.category === 'Smart EOA') {
 			await handleEstimate(props.executions)
 		} else {
-			if (!selectedAccountInitCode.value) {
+			if (!initCodeData.value) {
 				emit('close')
 				toast.error('Account not deployed and no init code provided')
 				return
 			}
-			await handleEstimate(props.executions, selectedAccountInitCode.value)
+			await handleEstimate(props.executions, initCodeData.value.initCode)
 		}
 		status.value = TransactionStatus.Sign
 	} catch (e: unknown) {
@@ -294,10 +297,13 @@ const txLink = computed(() => {
 					<div class="p-4 bg-muted/30 border border-border/50 rounded-lg space-y-3">
 						<!-- Account Address -->
 						<div class="flex items-center justify-between text-sm">
-							<span class="text-muted-foreground">Sender</span>
-							<span class="font-mono font-medium">{{
-								shortenAddress(selectedAccount?.address || '')
-							}}</span>
+							<div class="text-muted-foreground">Sender</div>
+							<div class="flex gap-2">
+								<div class="font-mono font-medium">
+									{{ shortenAddress(selectedAccount?.address || '') }}
+								</div>
+								<CopyButton :address="selectedAccount?.address || ''" />
+							</div>
 						</div>
 
 						<!-- Network -->
@@ -349,16 +355,19 @@ const txLink = computed(() => {
 							class="p-4 bg-muted/30 border border-border/50 rounded-lg space-y-2"
 						>
 							<div class="flex items-center justify-between text-sm">
-								<span class="text-muted-foreground">To</span>
-								<span class="font-mono">{{ shortenAddress(execution.to) }}</span>
+								<div class="text-muted-foreground">To</div>
+								<div class="flex gap-2">
+									<div class="font-mono">{{ shortenAddress(execution.to) }}</div>
+									<CopyButton :address="execution.to" />
+								</div>
 							</div>
 							<div class="flex items-center justify-between text-sm">
-								<span class="text-muted-foreground">Value</span>
-								<span>{{ formatEther(execution.value) }} ETH</span>
+								<div class="text-muted-foreground">Value</div>
+								<div>{{ formatEther(execution.value) }} ETH</div>
 							</div>
-							<div class="flex items-center justify-between text-sm">
-								<span class="text-muted-foreground">Data</span>
-								<span class="font-mono text-xs truncate max-w-[200px]">{{ execution.data }}</span>
+							<div class="flex flex-col text-sm">
+								<div class="text-muted-foreground">Data</div>
+								<div class="font-mono text-xs break-all">{{ execution.data }}</div>
 							</div>
 						</div>
 					</div>
@@ -413,53 +422,59 @@ const txLink = computed(() => {
 					</template>
 				</div>
 
-				<!-- Action buttons for each stage -->
+				<!-- ============================ Action buttons ============================ -->
 				<div class="space-y-2">
-					<!-- Estimate Button -->
-					<Button
-						v-if="status === TransactionStatus.Estimation || status === TransactionStatus.Estimating"
-						class="w-full"
-						size="lg"
-						:disabled="!canEstimate"
-						:loading="status === TransactionStatus.Estimating"
-						@click="onClickEstimate"
-					>
-						{{ status === TransactionStatus.Estimating ? 'Estimating...' : 'Estimate Gas' }}
-					</Button>
+					<div v-if="isLoadingCode" class="flex justify-center py-4">
+						<Loader2 class="w-6 h-6 animate-spin text-primary" />
+					</div>
 
-					<!-- Sign Button -->
-					<Button
-						v-if="(userOp && status === TransactionStatus.Sign) || status === TransactionStatus.Signing"
-						class="w-full"
-						size="lg"
-						:disabled="!canSign"
-						:loading="status === TransactionStatus.Signing"
-						@click="onClickSign"
-					>
-						{{ status === TransactionStatus.Signing ? 'Signing...' : 'Sign Transaction' }}
-					</Button>
+					<div v-else>
+						<!-- Estimate Button -->
+						<Button
+							v-if="status === TransactionStatus.Estimation || status === TransactionStatus.Estimating"
+							class="w-full"
+							size="lg"
+							:disabled="!canEstimate"
+							:loading="status === TransactionStatus.Estimating"
+							@click="onClickEstimate"
+						>
+							{{ status === TransactionStatus.Estimating ? 'Estimating...' : 'Estimate Gas' }}
+						</Button>
 
-					<!-- Send Button -->
-					<Button
-						v-if="
-							(userOp?.signature && status === TransactionStatus.Send) ||
-							status === TransactionStatus.Sending ||
-							status === TransactionStatus.Pending
-						"
-						class="w-full"
-						size="lg"
-						:disabled="!canSend"
-						:loading="status === TransactionStatus.Sending || status === TransactionStatus.Pending"
-						@click="onClickSend"
-					>
-						{{
-							status === TransactionStatus.Sending
-								? 'Sending...'
-								: status === TransactionStatus.Pending
-								? 'Pending...'
-								: 'Send Transaction'
-						}}
-					</Button>
+						<!-- Sign Button -->
+						<Button
+							v-if="(userOp && status === TransactionStatus.Sign) || status === TransactionStatus.Signing"
+							class="w-full"
+							size="lg"
+							:disabled="!canSign"
+							:loading="status === TransactionStatus.Signing"
+							@click="onClickSign"
+						>
+							{{ status === TransactionStatus.Signing ? 'Signing...' : 'Sign Transaction' }}
+						</Button>
+
+						<!-- Send Button -->
+						<Button
+							v-if="
+								(userOp?.signature && status === TransactionStatus.Send) ||
+								status === TransactionStatus.Sending ||
+								status === TransactionStatus.Pending
+							"
+							class="w-full"
+							size="lg"
+							:disabled="!canSend"
+							:loading="status === TransactionStatus.Sending || status === TransactionStatus.Pending"
+							@click="onClickSend"
+						>
+							{{
+								status === TransactionStatus.Sending
+									? 'Sending...'
+									: status === TransactionStatus.Pending
+									? 'Pending...'
+									: 'Send Transaction'
+							}}
+						</Button>
+					</div>
 				</div>
 			</div>
 		</div>

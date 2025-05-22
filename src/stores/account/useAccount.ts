@@ -1,65 +1,33 @@
-import { LOCAL_STORAGE_KEY_PREFIX } from '@/config'
-import { AccountId, ImportedAccount, isSameAccount, SUPPORTED_ACCOUNTS } from '@/stores/account/account'
-import { CHAIN_ID } from '@/stores/network/network'
+import { AccountId, ImportedAccount, SUPPORTED_ACCOUNTS } from '@/stores/account/account'
+import { InitCodeData, useInitCode } from '@/stores/account/useInitCode'
 import { useNetwork } from '@/stores/network/useNetwork'
 import { signMessage } from '@/stores/passkey/passkey'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useSigner } from '@/stores/validation/useSigner'
-import { SUPPORTED_VALIDATION_OPTIONS, ValidationIdentifier } from '@/stores/validation/validation'
+import { SUPPORTED_VALIDATION_OPTIONS } from '@/stores/validation/validation'
 import {
 	EOAValidator,
 	ERC7579Validator,
+	isSameAddress,
 	KernelV3Account,
 	NexusAccount,
 	Safe7579Account,
 	Simple7702Account,
 	WebAuthnValidator,
 } from 'sendop'
-import { toast } from 'vue-sonner'
 
 export const useAccountStore = defineStore(
 	'useAccountStore',
 	() => {
-		// ===================== addressToInitCode =====================
-		const addressToInitCode = ref<
-			Map<
-				string,
-				{
-					vOptions: ValidationIdentifier[]
-					initCode: string
-				}
-			>
-		>(new Map())
-
-		const savedData = localStorage.getItem(`${LOCAL_STORAGE_KEY_PREFIX}addressToInitCode`)
-		if (savedData) {
-			try {
-				const parsed = JSON.parse(savedData)
-				addressToInitCode.value = new Map(Object.entries(parsed))
-			} catch (e) {
-				throw new Error(`Failed to parse addressToInitCode from localStorage: ${e}`)
-			}
-		}
-
-		watchDeep(addressToInitCode, () => {
-			const storageObj = Object.fromEntries(addressToInitCode.value)
-			localStorage.setItem(`${LOCAL_STORAGE_KEY_PREFIX}addressToInitCode`, JSON.stringify(storageObj))
-		})
-		// ===================== addressToInitCode =====================
+		const { initCodeList } = useInitCode()
 
 		const selectedAccount = ref<ImportedAccount | null>(null)
-		const selectedAccountInitCode = computed<string | null>(() => {
-			if (!selectedAccount.value) return null
-			return addressToInitCode.value.get(selectedAccount.value.address)?.initCode || null
-		})
-		const isSelectedAccountModular = computed(() => {
-			if (!selectedAccount.value) return false
-			return SUPPORTED_ACCOUNTS[selectedAccount.value.accountId].isModular
-		})
 
-		const accounts = ref<ImportedAccount[]>([])
-		const hasAccounts = computed(() => accounts.value.length > 0)
+		const isChainIdMatching = computed(() => {
+			const { selectedChainId } = useNetwork()
+			return selectedChainId.value === selectedAccount.value?.chainId
+		})
 
 		const isAccountConnected = computed(() => {
 			if (!selectedAccount.value) return false
@@ -70,17 +38,39 @@ export const useAccountStore = defineStore(
 			return useSigner().isSignerEligibleForValidation(selectedAccount.value.vOptions)
 		})
 
-		watch(isAccountConnected, () => {
+		watchImmediate(isAccountConnected, () => {
 			const { switchEntryPoint } = useNetwork()
 			if (!selectedAccount.value) return
 			switchEntryPoint(SUPPORTED_ACCOUNTS[selectedAccount.value.accountId].entryPointVersion)
+		})
+
+		const isModular = computed(() => {
+			if (!selectedAccount.value) return false
+			return SUPPORTED_ACCOUNTS[selectedAccount.value.accountId].isModular
+		})
+
+		const isSmartEOA = computed(() => {
+			if (!selectedAccount.value) return false
+			return selectedAccount.value.category === 'Smart EOA'
+		})
+
+		const hasInitCode = computed<boolean>(() => {
+			const account = selectedAccount.value
+			if (!account) return false
+			return initCodeList.value.some(i => isSameAddress(i.address, account.address))
+		})
+
+		const initCodeData = computed<InitCodeData | null>(() => {
+			const account = selectedAccount.value
+			if (!account) return null
+			return initCodeList.value.find(i => isSameAddress(i.address, account.address)) || null
 		})
 
 		const erc7579Validator = computed<ERC7579Validator | null>(() => {
 			const { selectedSigner } = useSigner()
 			if (!isAccountConnected.value) return null
 			if (!selectedSigner.value) return null
-			if (!isSelectedAccountModular.value) return null
+			if (!isModular.value) return null
 			if (!selectedAccount.value) return null
 
 			switch (selectedSigner.value.type) {
@@ -157,79 +147,22 @@ export const useAccountStore = defineStore(
 			}
 		})
 
-		function importAccount(account: ImportedAccount, initCode?: string) {
-			if (!account.address || !account.chainId || !account.accountId || !account.category) {
-				throw new Error(`importAccount: Invalid values: ${JSON.stringify(account)}`)
-			}
-
-			// should have at least one vOption
-			if (!account.vOptions || account.vOptions.length === 0) {
-				throw new Error(`importAccount: No validation options`)
-			}
-
-			if (accounts.value.some(a => isSameAccount(a, account))) {
-				toast.info('Account already imported')
-				return
-			}
-
-			accounts.value.push({
-				...account,
-			})
-
-			if (initCode) {
-				addressToInitCode.value.set(account.address, {
-					vOptions: account.vOptions,
-					initCode,
-				})
-			}
-
-			toast.success('Account imported successfully')
-
-			if (accounts.value.length === 1) {
-				selectedAccount.value = accounts.value[0]
-			}
-		}
-
-		function removeAccount(account: ImportedAccount) {
-			accounts.value = accounts.value.filter(a => a.address !== account.address)
-
-			// remove the init code for the account
-			addressToInitCode.value.delete(account.address)
-
-			// if the selected account is the one being removed, select the first account in the list
-			if (selectedAccount.value?.address === account.address) {
-				if (accounts.value.length > 0) {
-					selectedAccount.value = accounts.value[0]
-				} else {
-					selectedAccount.value = null
-				}
-			}
-		}
-
-		function selectAccount(address: string, chainId: CHAIN_ID) {
-			const account = accounts.value.find(a => a.address === address && a.chainId === chainId)
-			if (!account) {
-				throw new Error(`selectAccount: Account not found: ${address} ${chainId}`)
-			}
-			selectedAccount.value = account
-		}
-
 		return {
 			selectedAccount,
-			selectedAccountInitCode,
-			accounts,
-			hasAccounts,
+			initCodeList,
+			initCodeData,
+			hasInitCode,
 			opGetter,
 			isAccountConnected,
 			erc7579Validator,
-			importAccount,
-			removeAccount,
-			selectAccount,
+			isModular,
+			isSmartEOA,
+			isChainIdMatching,
 		}
 	},
 	{
 		persist: {
-			pick: ['accounts', 'selectedAccount', 'addressToInitCode'],
+			pick: ['selectedAccount'],
 		},
 	},
 )

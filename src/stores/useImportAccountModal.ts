@@ -10,7 +10,7 @@ import {
 	createEOAOwnedValidation,
 	createPasskeyValidation,
 	createSmartEOAValidation,
-	ValidationIdentifier,
+	ValidationOption,
 } from '@/stores/validation/validation'
 import { defineStore, storeToRefs } from 'pinia'
 import { useModal } from 'vue-final-modal'
@@ -50,7 +50,7 @@ address -> input address -> address validation -> connect eoa or passkey -> conf
 type IAMFormData = {
 	address?: string
 	accountId?: AccountId
-	vOptions?: ValidationIdentifier[]
+	vOptions?: ValidationOption[]
 	category?: AccountCategory
 }
 
@@ -78,6 +78,7 @@ const IAM_CONFIG: Record<IAMStageKey, IAMStage<Component>> = {
 		next: [IAMStageKey.PASSKEY_ACCOUNT_OPTIONS],
 		title: 'Connect Passkey',
 		attrs: {
+			mode: 'login',
 			onConfirm: () => {
 				const { selectedCredential } = usePasskey()
 				if (!selectedCredential.value)

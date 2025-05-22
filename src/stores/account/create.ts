@@ -1,6 +1,5 @@
-import { deserializePasskeyCredential } from '@/stores/passkey/passkey'
-import { SUPPORTED_VALIDATION_OPTIONS, ValidationIdentifier } from '@/stores/validation/validation'
-import { hexlify, JsonRpcProvider } from 'ethers'
+import { SUPPORTED_VALIDATION_OPTIONS, ValidationOption } from '@/stores/validation/validation'
+import { JsonRpcProvider } from 'ethers'
 import {
 	ADDRESS,
 	BICONOMY_ATTESTER_ADDRESS,
@@ -14,9 +13,9 @@ import {
 	Safe7579CreationOptions,
 	WebAuthnValidator,
 } from 'sendop'
-import { AccountId } from './account'
-import { usePasskey } from '../passkey/usePasskey'
 import { getAuthenticatorIdHash } from '../passkey/passkeyNoRp'
+import { usePasskey } from '../passkey/usePasskey'
+import { AccountId } from './account'
 
 export async function checkIfAccountIsDeployed(client: JsonRpcProvider, address: string): Promise<boolean> {
 	const code = await client.getCode(address)
@@ -29,7 +28,7 @@ export async function checkIfAccountIsDeployed(client: JsonRpcProvider, address:
 export async function getComputedAddressAndInitCode(
 	client: JsonRpcProvider,
 	accountId: AccountId,
-	validation: ValidationIdentifier,
+	validation: ValidationOption,
 	salt: string,
 ): Promise<{
 	computedAddress: string

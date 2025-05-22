@@ -1,6 +1,6 @@
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
-import { SUPPORTED_VALIDATION_OPTIONS, ValidationIdentifier } from '@/stores/validation/validation'
+import { SUPPORTED_VALIDATION_OPTIONS, ValidationOption } from '@/stores/validation/validation'
 import { isSameAddress } from 'sendop'
 
 export type SUPPORTED_SIGNER_TYPE = 'EOAWallet' | 'Passkey'
@@ -61,7 +61,7 @@ export const useSignerStore = defineStore('useSignerStore', () => {
 		}
 	}
 
-	function isSignerEligibleForValidation(vOptions: ValidationIdentifier[]): boolean {
+	function isSignerEligibleForValidation(vOptions: ValidationOption[]): boolean {
 		const { selectedSigner } = useSigner()
 		if (!selectedSigner.value) return false
 

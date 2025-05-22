@@ -1,5 +1,5 @@
 import { CHAIN_ID } from '@/stores/network/network'
-import { ValidationIdentifier } from '@/stores/validation/validation'
+import { ValidationOption } from '@/stores/validation/validation'
 import { EntryPointVersion, isSameAddress } from 'sendop'
 
 export type ImportedAccount = {
@@ -7,7 +7,7 @@ export type ImportedAccount = {
 	category: AccountCategory
 	address: string
 	chainId: CHAIN_ID
-	vOptions: ValidationIdentifier[]
+	vOptions: ValidationOption[]
 }
 
 export type AccountCategory = 'Smart Account' | 'Smart EOA'

@@ -1,21 +1,21 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
-import { displayAccountName, ImportedAccount } from '@/stores/account/account'
-import { displayChainName } from '@/stores/network/network'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { toRoute } from '@/lib/router'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
+import { displayAccountName, ImportedAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
-import { useRouter } from 'vue-router'
-import { shortenAddress } from '@vue-dapp/core'
-import { Power, X, CircleDot, Plus, Download } from 'lucide-vue-next'
-import { VueFinalModal } from 'vue-final-modal'
-import { useEOAWallet } from '@/stores/useEOAWallet'
+import { useAccounts } from '@/stores/account/useAccounts'
+import { displayChainName } from '@/stores/network/network'
 import { usePasskey } from '@/stores/passkey/usePasskey'
-import { Tooltip } from '@/components/ui/tooltip'
-import { TooltipContent } from '@/components/ui/tooltip'
-import { TooltipTrigger } from '@/components/ui/tooltip'
+import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
 import { useSigner } from '@/stores/validation/useSigner'
+import { shortenAddress } from '@vue-dapp/core'
+import { breakpointsTailwind } from '@vueuse/core'
+import { CircleDot, Download, Plus, Power, X } from 'lucide-vue-next'
+import { VueFinalModal } from 'vue-final-modal'
+import { useRouter } from 'vue-router'
 
 const emit = defineEmits<{
 	(e: 'close'): void
@@ -25,9 +25,10 @@ function onClickCloseSidebar() {
 	emit('close')
 }
 
-const { accounts, selectedAccount, isAccountConnected } = useAccount()
+const { accounts } = useAccounts()
+const { selectedAccount, isAccountConnected, isChainIdMatching } = useAccount()
 const { wallet, address, isEOAWalletConnected, disconnect } = useEOAWallet()
-const { selectedCredentialId, isLogin, resetCredentialId, selectedCredentialDisplay } = usePasskey()
+const { isLogin, resetCredentialId, selectedCredentialDisplay } = usePasskey()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 const { selectSigner, selectedSigner } = useSigner()
 
@@ -36,7 +37,7 @@ function onClickSelectAccount(account: ImportedAccount) {
 }
 
 function onClickRemoveAccount(account: ImportedAccount) {
-	useAccount().removeAccount(account)
+	useAccounts().removeAccount(account)
 }
 
 const router = useRouter()
@@ -49,20 +50,27 @@ function onClickAccountManagement() {
 
 function onClickCreateAccount() {
 	router.push(toRoute('create'))
+
+	if (!xlAndLarger.value) {
+		emit('close')
+	}
 }
 
 function onClickImportAccount() {
 	const { openModal } = useImportAccountModal()
 	openModal()
 }
+
+const breakpoints = useBreakpoints(breakpointsTailwind)
+const xlAndLarger = breakpoints.greaterOrEqual('xl')
 </script>
 
 <template>
 	<VueFinalModal
 		class="account-drawer"
 		content-class="account-drawer-content"
-		hide-overlay
-		background="interactive"
+		:hide-overlay="xlAndLarger ? true : false"
+		:background="xlAndLarger ? 'interactive' : 'non-interactive'"
 		:content-transition="'account-drawer-slide'"
 		:click-to-close="true"
 		:esc-to-close="true"
@@ -80,23 +88,25 @@ function onClickImportAccount() {
 										class="w-3 h-3"
 										:class="isAccountConnected ? 'text-green-500' : 'text-red-500'"
 									/>
-									<span class="font-medium truncate">{{
-										shortenAddress(selectedAccount.address)
-									}}</span>
+									<span class="font-medium truncate">
+										{{ shortenAddress(selectedAccount.address) }}
+									</span>
 									<div class="flex items-center gap-1">
 										<CopyButton :address="selectedAccount.address" />
 										<AddressLinkButton :address="selectedAccount.address" />
 									</div>
 								</div>
 							</div>
-							<div class="flex flex-col text-xs text-muted-foreground">
-								<div class="flex gap-2">
-									<span>{{ displayAccountName(selectedAccount.accountId) }}</span>
-									<span>{{ displayChainName(selectedAccount.chainId) }}</span>
-								</div>
+							<div class="flex flex-col text-muted-foreground">
+								<div class="flex gap-2 items-center">
+									<!-- account Id -->
+									<div class="text-sm">{{ displayAccountName(selectedAccount.accountId) }}</div>
 
-								<div v-for="vOption in selectedAccount.vOptions" :key="vOption.type" class="mt-1">
-									<span>{{ vOption.type }}</span>
+									<ChainIcon
+										:chain-id="selectedAccount.chainId"
+										:size="20"
+										:border-color="isChainIdMatching ? 'green' : 'red'"
+									/>
 								</div>
 							</div>
 						</div>

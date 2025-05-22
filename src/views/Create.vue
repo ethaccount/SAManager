@@ -8,7 +8,7 @@ import { toRoute } from '@/lib/router'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
 import { ACCOUNT_ID_TO_NAME, AccountId, displayAccountName, SUPPORTED_ACCOUNTS } from '@/stores/account/account'
 import { checkIfAccountIsDeployed, getComputedAddressAndInitCode } from '@/stores/account/create'
-import { useAccount } from '@/stores/account/useAccount'
+import { useAccounts } from '@/stores/account/useAccounts'
 import { displayChainName } from '@/stores/network/network'
 import { useNetwork } from '@/stores/network/useNetwork'
 import { usePasskey } from '@/stores/passkey/usePasskey'
@@ -20,7 +20,7 @@ import {
 	createPasskeyValidation,
 	displayValidationName,
 	SUPPORTED_VALIDATION_OPTIONS,
-	ValidationIdentifier,
+	ValidationOption,
 	ValidationType,
 } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
@@ -34,7 +34,7 @@ const { wallet, address, disconnect } = useEOAWallet()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 const { isEOAWalletConnected } = useEOAWallet()
 const { selectedCredentialDisplay, isLogin, resetCredentialId } = usePasskey()
-const { importAccount, selectAccount } = useAccount()
+const { importAccount, selectAccount, checkIfAccountIsImported } = useAccounts()
 
 const supportedAccounts = Object.entries(SUPPORTED_ACCOUNTS)
 	.filter(([_, data]) => data.isModular)
@@ -84,7 +84,7 @@ const selectedValidationType = ref<ValidationType | undefined>(undefined)
 const isComputingAddress = ref(false)
 const showMoreOptions = ref(false)
 
-const selectedValidation = computed<ValidationIdentifier | null>(() => {
+const selectedValidation = computed<ValidationOption | null>(() => {
 	if (!selectedValidationType.value) return null
 
 	switch (selectedValidationType.value) {
@@ -127,10 +127,14 @@ const computedAddress = ref<string>('')
 const initCode = ref<string>('')
 const isDeployed = ref(false)
 
+const isImported = ref(false)
+
 watchImmediate([isValidationAvailable, selectedValidation, selectedAccountType, computedSalt], async () => {
 	computedAddress.value = ''
 	initCode.value = ''
 	isDeployed.value = false
+	isImported.value = false
+
 	if (isValidationAvailable.value && selectedValidation.value && selectedAccountType.value && computedSalt.value) {
 		isComputingAddress.value = true
 		try {
@@ -142,6 +146,7 @@ watchImmediate([isValidationAvailable, selectedValidation, selectedAccountType, 
 			)
 			computedAddress.value = res.computedAddress
 			initCode.value = res.initCode
+			isImported.value = checkIfAccountIsImported(computedAddress.value, selectedChainId.value)
 			isDeployed.value = await checkIfAccountIsDeployed(client.value, computedAddress.value)
 		} catch (error) {
 			throw error
@@ -168,16 +173,18 @@ function onClickImport() {
 		throw new Error('onClickImport: No validation')
 	}
 
-	importAccount(
-		{
-			accountId: selectedAccountType.value,
-			category: 'Smart Account',
-			address: computedAddress.value,
-			chainId: selectedChainId.value,
-			vOptions: [selectedValidation.value],
-		},
-		initCode.value,
-	)
+	if (!isImported.value) {
+		importAccount(
+			{
+				accountId: selectedAccountType.value,
+				category: 'Smart Account',
+				address: computedAddress.value,
+				chainId: selectedChainId.value,
+				vOptions: [selectedValidation.value],
+			},
+			initCode.value,
+		)
+	}
 
 	selectAccount(computedAddress.value, selectedChainId.value)
 
@@ -410,8 +417,9 @@ function onClickPasskeyLogout() {
 					class="grid grid-cols-2 gap-2"
 				>
 					<Button variant="default" size="lg" :disabled="disabledImportButton" @click="onClickImport">
-						Import
+						{{ isImported ? 'Account Management' : 'Import' }}
 					</Button>
+
 					<Button variant="secondary" size="lg" :disabled="disabledDeployButton" @click="onClickDeploy">
 						Deploy
 					</Button>
