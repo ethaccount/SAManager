@@ -14,12 +14,12 @@ import AMPaymasters from './AMPaymasters.vue'
 import AMSessions from './AMSessions.vue'
 
 const router = useRouter()
-const { selectedAccount, isModular, isChainIdMatching } = useAccount()
+const { selectedAccount, isModular, isChainIdMatching, hasInitCode } = useAccount()
 const { getCode, isDeployed, loading } = useGetCode()
 
 // Use this instead of onMounted because users might change account with the drawer
 watchImmediate([selectedAccount], async () => {
-	if (selectedAccount.value) {
+	if (selectedAccount.value && isChainIdMatching.value) {
 		router.replace(toRoute('account-management', { address: selectedAccount.value.address }))
 		getCode(selectedAccount.value.address)
 	}
@@ -55,23 +55,22 @@ watchImmediate([selectedAccount], async () => {
 
 						<!-- Chain -->
 						<div>
-							<ChainIcon
-								:chain-id="selectedAccount.chainId"
-								:size="24"
-								:border-color="isChainIdMatching ? 'green' : 'red'"
-							/>
+							<ChainIcon :chain-id="selectedAccount.chainId" :size="24" />
 						</div>
 
 						<!-- Category -->
 						<div class="text-xs rounded-full bg-muted px-2.5 py-0.5">
 							{{ selectedAccount.category }}
 						</div>
+					</div>
 
+					<div class="flex items-center gap-2 mt-2">
 						<!-- Deployed -->
 						<div
-							v-if="!loading && selectedAccount.category === 'Smart Account'"
+							v-if="isChainIdMatching && !loading && selectedAccount.category === 'Smart Account'"
 							class="flex items-center gap-1"
 						>
+							<!-- TODO: add tooltip -->
 							<div
 								class="text-xs rounded-full px-2.5 py-0.5"
 								:class="isDeployed ? 'bg-green-800' : 'bg-yellow-500/10 text-yellow-500'"
@@ -79,12 +78,29 @@ watchImmediate([selectedAccount], async () => {
 								{{ isDeployed ? 'Deployed' : 'Not Deployed' }}
 							</div>
 						</div>
+
+						<!-- hasInitCode -->
+
+						<div v-if="selectedAccount.category === 'Smart Account'" class="flex items-center gap-1">
+							<!-- TODO: add tooltip -->
+							<div
+								class="text-xs rounded-full px-2.5 py-0.5"
+								:class="hasInitCode ? 'bg-green-800' : 'bg-yellow-500/10 text-yellow-500'"
+							>
+								{{ hasInitCode ? 'Has InitCode' : 'No InitCode' }}
+							</div>
+						</div>
 					</div>
 				</div>
+			</div>
 
-				<!-- vOptions -->
-				<div class="space-y-4 pt-1">
-					<!-- title -->
+			<div v-if="!isChainIdMatching" class="mt-4 text-sm text-muted-foreground">
+				Chain ID mismatch. Please switch to the correct chain to manage this account.
+			</div>
+
+			<div class="mt-4" v-else>
+				<!-- Validation Options -->
+				<div class="space-y-4">
 					<div class="text-sm font-medium">Validation Options</div>
 					<div class="grid gap-1">
 						<div
@@ -101,41 +117,41 @@ watchImmediate([selectedAccount], async () => {
 						</div>
 					</div>
 				</div>
-			</div>
 
-			<div v-if="loading" class="flex justify-center py-4">
-				<Loader2 class="w-6 h-6 animate-spin text-primary" />
-			</div>
+				<div v-if="loading" class="flex justify-center py-4">
+					<Loader2 class="w-6 h-6 animate-spin text-primary" />
+				</div>
 
-			<Tabs default-value="modules" class="mt-6" v-if="!loading">
-				<TabsList class="grid grid-cols-4 w-full">
-					<TabsTrigger value="modules">Modules</TabsTrigger>
-					<!-- <TabsTrigger value="sessions">Sessions</TabsTrigger>
+				<Tabs default-value="modules" class="mt-6" v-if="!loading">
+					<TabsList class="grid grid-cols-4 w-full">
+						<TabsTrigger value="modules">Modules</TabsTrigger>
+						<!-- <TabsTrigger value="sessions">Sessions</TabsTrigger>
 					<TabsTrigger value="paymasters">Paymasters</TabsTrigger>
 					<TabsTrigger value="cross-chain">Cross-chain</TabsTrigger> -->
-				</TabsList>
+					</TabsList>
 
-				<TabsContent value="modules" class="mt-6">
-					<AMModules
-						v-if="selectedAccount"
-						:selected-account="selectedAccount"
-						:is-deployed="isDeployed"
-						:is-modular="isModular"
-					/>
-				</TabsContent>
+					<TabsContent value="modules" class="mt-6">
+						<AMModules
+							v-if="selectedAccount"
+							:selected-account="selectedAccount"
+							:is-deployed="isDeployed"
+							:is-modular="isModular"
+						/>
+					</TabsContent>
 
-				<TabsContent value="sessions" class="mt-6">
-					<AMSessions />
-				</TabsContent>
+					<TabsContent value="sessions" class="mt-6">
+						<AMSessions />
+					</TabsContent>
 
-				<TabsContent value="paymasters" class="mt-6">
-					<AMPaymasters />
-				</TabsContent>
+					<TabsContent value="paymasters" class="mt-6">
+						<AMPaymasters />
+					</TabsContent>
 
-				<TabsContent value="cross-chain" class="mt-6">
-					<AMCrossChain />
-				</TabsContent>
-			</Tabs>
+					<TabsContent value="cross-chain" class="mt-6">
+						<AMCrossChain />
+					</TabsContent>
+				</Tabs>
+			</div>
 		</div>
 	</CenterStageLayout>
 </template>
