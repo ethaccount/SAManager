@@ -146,8 +146,8 @@ watchImmediate([isValidationAvailable, selectedValidation, selectedAccountType, 
 			)
 			computedAddress.value = res.computedAddress
 			initCode.value = res.initCode
-			isDeployed.value = await checkIfAccountIsDeployed(client.value, computedAddress.value)
 			isImported.value = checkIfAccountIsImported(computedAddress.value, selectedChainId.value)
+			isDeployed.value = await checkIfAccountIsDeployed(client.value, computedAddress.value)
 		} catch (error) {
 			throw error
 		} finally {

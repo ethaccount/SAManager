@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { usePasskey } from '@/stores/passkey/usePasskey'
+import { useSigner } from '@/stores/validation/useSigner'
 import { Loader2, CheckCircle, Check } from 'lucide-vue-next'
 import { uniqueNamesGenerator, adjectives, animals } from 'unique-names-generator'
 
@@ -96,6 +97,9 @@ async function onClickLogin() {
 
 function onClickComplete() {
 	if (!isLogin.value) throw new Error('onClickComplete: No passkey credential found')
+
+	useSigner().selectSigner('Passkey')
+
 	emit('confirm')
 }
 
