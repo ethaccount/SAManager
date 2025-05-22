@@ -1,4 +1,3 @@
-import { LOCAL_STORAGE_KEY_PREFIX } from '@/config'
 import { AccountId, ImportedAccount, isSameAccount, SUPPORTED_ACCOUNTS } from '@/stores/account/account'
 import { CHAIN_ID } from '@/stores/network/network'
 import { useNetwork } from '@/stores/network/useNetwork'
@@ -19,42 +18,30 @@ import {
 } from 'sendop'
 import { toast } from 'vue-sonner'
 
+type InitCodeData = {
+	address: string
+	initCode: string
+	vOption: ValidationIdentifier
+}
+
 export const useAccountStore = defineStore(
 	'useAccountStore',
 	() => {
-		// // ===================== addressToInitCode =====================
-		const addressToInitCode = ref<
-			Map<
-				string,
-				{
-					vOptions: ValidationIdentifier[]
-					initCode: string
-				}
-			>
-		>(new Map())
-
-		const savedData = localStorage.getItem(`${LOCAL_STORAGE_KEY_PREFIX}addressToInitCode`)
-		if (savedData) {
-			try {
-				const parsed = JSON.parse(savedData)
-				addressToInitCode.value = new Map(Object.entries(parsed))
-			} catch (e) {
-				throw new Error(`Failed to parse addressToInitCode from localStorage: ${e}`)
-			}
-		}
-
-		watchDeep(addressToInitCode, () => {
-			const storageObj = Object.fromEntries(addressToInitCode.value)
-			localStorage.setItem(`${LOCAL_STORAGE_KEY_PREFIX}addressToInitCode`, JSON.stringify(storageObj))
-		})
-		// ===================== addressToInitCode =====================
-
 		const selectedAccount = ref<ImportedAccount | null>(null)
 
-		const selectedAccountInitCode = computed<string | null>(() => {
-			if (!selectedAccount.value) return null
-			// TODO: redesign data structure of addressToInitCode
-			return null
+		const isAccountConnected = computed(() => {
+			if (!selectedAccount.value) return false
+			// check if the chainId of the selected account is the same as the selected chainId
+			const { selectedChainId } = useNetwork()
+			if (selectedAccount.value.chainId !== selectedChainId.value) return false
+
+			return useSigner().isSignerEligibleForValidation(selectedAccount.value.vOptions)
+		})
+
+		watchImmediate(isAccountConnected, () => {
+			const { switchEntryPoint } = useNetwork()
+			if (!selectedAccount.value) return
+			switchEntryPoint(SUPPORTED_ACCOUNTS[selectedAccount.value.accountId].entryPointVersion)
 		})
 
 		const isModular = computed(() => {
@@ -67,23 +54,33 @@ export const useAccountStore = defineStore(
 			return selectedAccount.value.category === 'Smart EOA'
 		})
 
+		const initCodeList = ref<InitCodeData[]>([])
+
+		const hasInitCode = computed<boolean>(() => {
+			const account = selectedAccount.value
+			if (!account) return false
+			return initCodeList.value.some(i => isSameAddress(i.address, account.address))
+		})
+
+		const initCodeData = computed<InitCodeData | null>(() => {
+			const account = selectedAccount.value
+			if (!account) return null
+			return initCodeList.value.find(i => isSameAddress(i.address, account.address)) || null
+		})
+
+		function addInitCode(initCodeData: InitCodeData) {
+			if (initCodeList.value.some(i => isSameAddress(i.address, initCodeData.address))) {
+				throw new Error(`addInitCode: Init code already exists: ${initCodeData.address}`)
+			}
+			initCodeList.value.push(initCodeData)
+		}
+
+		function removeInitCode(address: string) {
+			initCodeList.value = initCodeList.value.filter(i => !isSameAddress(i.address, address))
+		}
+
 		const accounts = ref<ImportedAccount[]>([])
 		const hasAccounts = computed(() => accounts.value.length > 0)
-
-		const isAccountConnected = computed(() => {
-			if (!selectedAccount.value) return false
-			// check if the chainId of the selected account is the same as the selected chainId
-			const { selectedChainId } = useNetwork()
-			if (selectedAccount.value.chainId !== selectedChainId.value) return false
-
-			return useSigner().isSignerEligibleForValidation(selectedAccount.value.vOptions)
-		})
-
-		watch(isAccountConnected, () => {
-			const { switchEntryPoint } = useNetwork()
-			if (!selectedAccount.value) return
-			switchEntryPoint(SUPPORTED_ACCOUNTS[selectedAccount.value.accountId].entryPointVersion)
-		})
 
 		const erc7579Validator = computed<ERC7579Validator | null>(() => {
 			const { selectedSigner } = useSigner()
@@ -186,9 +183,13 @@ export const useAccountStore = defineStore(
 			})
 
 			if (initCode) {
-				addressToInitCode.value.set(account.address, {
-					vOptions: account.vOptions,
+				if (account.vOptions.length > 1) {
+					throw new Error(`importAccount: Multiple vOptions are not supported with init code`)
+				}
+				addInitCode({
+					address: account.address,
 					initCode,
+					vOption: account.vOptions[0],
 				})
 			}
 
@@ -203,7 +204,7 @@ export const useAccountStore = defineStore(
 			accounts.value = accounts.value.filter(a => a.address !== account.address)
 
 			// remove the init code for the account
-			addressToInitCode.value.delete(account.address)
+			removeInitCode(account.address)
 
 			// if the selected account is the one being removed, select the first account in the list
 			if (selectedAccount.value?.address === account.address) {
@@ -228,9 +229,10 @@ export const useAccountStore = defineStore(
 		}
 
 		return {
-			addressToInitCode,
 			selectedAccount,
-			selectedAccountInitCode,
+			initCodeList,
+			initCodeData,
+			hasInitCode,
 			accounts,
 			hasAccounts,
 			opGetter,
@@ -246,7 +248,7 @@ export const useAccountStore = defineStore(
 	},
 	{
 		persist: {
-			pick: ['accounts', 'selectedAccount', 'addressToInitCode'],
+			pick: ['accounts', 'selectedAccount', 'initCodeList'],
 		},
 	},
 )
