@@ -64,9 +64,15 @@
 	}
 }
 
+/* ==================================== hacky ==================================== */
+
+/* To disable double-tap zooming on buttons on mobile for better UX */
+button {
+	touch-action: manipulation;
+}
+
 /* ==================================== Common styles ==================================== */
 
-/* ConnectEOAWallet, TransactionModal */
 .error-section {
 	@apply p-3 bg-destructive/10 text-destructive rounded-[--radius] text-sm break-words;
 }
