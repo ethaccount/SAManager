@@ -1,30 +1,9 @@
-import { PasskeyCredential, serializePasskeyCredential } from '@/stores/passkey/passkey'
 import { SUPPORTED_SIGNER_TYPE } from '@/stores/validation/useSigner'
 import { shortenAddress } from '@vue-dapp/core'
 import { Contract, EventLog, isAddress, JsonRpcProvider } from 'ethers'
 import { ADDRESS } from 'sendop'
 
 export const SUPPORTED_VALIDATION_OPTIONS = {
-	'EOA-Owned': {
-		name: 'EOA-Owned',
-		description: 'Use ECDSAValidator from zerodev',
-		validatorAddress: ADDRESS.ECDSAValidator,
-		signerType: 'EOAWallet' as SUPPORTED_SIGNER_TYPE,
-
-		async getAccounts(client: JsonRpcProvider, ownerAddress: string): Promise<string[]> {
-			const validator = new Contract(
-				ADDRESS.ECDSAValidator,
-				['event OwnerRegistered(address indexed kernel, address indexed owner)'],
-				client,
-			)
-			const events = (await validator.queryFilter(
-				validator.filters.OwnerRegistered(null, ownerAddress),
-			)) as EventLog[]
-
-			const sortedEvents = events.sort((a, b) => b.blockNumber - a.blockNumber)
-			return sortedEvents.slice(0, 5).map(event => event.args[0]) as string[]
-		},
-	},
 	Passkey: {
 		name: 'Passkey',
 		description: 'Use WebAuthnValidator from zerodev',
@@ -44,7 +23,27 @@ export const SUPPORTED_VALIDATION_OPTIONS = {
 			)) as EventLog[]
 
 			const sortedEvents = events.sort((a, b) => b.blockNumber - a.blockNumber)
-			return sortedEvents.slice(0, 5).map(event => event.args[0]) as string[]
+			return sortedEvents.map(event => event.args[0]) as string[]
+		},
+	},
+	'EOA-Owned': {
+		name: 'EOA-Owned',
+		description: 'Use ECDSAValidator from zerodev',
+		validatorAddress: ADDRESS.ECDSAValidator,
+		signerType: 'EOAWallet' as SUPPORTED_SIGNER_TYPE,
+
+		async getAccounts(client: JsonRpcProvider, ownerAddress: string): Promise<string[]> {
+			const validator = new Contract(
+				ADDRESS.ECDSAValidator,
+				['event OwnerRegistered(address indexed kernel, address indexed owner)'],
+				client,
+			)
+			const events = (await validator.queryFilter(
+				validator.filters.OwnerRegistered(null, ownerAddress),
+			)) as EventLog[]
+
+			const sortedEvents = events.sort((a, b) => b.blockNumber - a.blockNumber)
+			return sortedEvents.map(event => event.args[0]) as string[]
 		},
 	},
 	SmartEOA: {

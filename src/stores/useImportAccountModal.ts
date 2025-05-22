@@ -78,6 +78,7 @@ const IAM_CONFIG: Record<IAMStageKey, IAMStage<Component>> = {
 		next: [IAMStageKey.PASSKEY_ACCOUNT_OPTIONS],
 		title: 'Connect Passkey',
 		attrs: {
+			mode: 'login',
 			onConfirm: () => {
 				const { selectedCredential } = usePasskey()
 				if (!selectedCredential.value)
