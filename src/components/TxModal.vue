@@ -294,10 +294,13 @@ const txLink = computed(() => {
 					<div class="p-4 bg-muted/30 border border-border/50 rounded-lg space-y-3">
 						<!-- Account Address -->
 						<div class="flex items-center justify-between text-sm">
-							<span class="text-muted-foreground">Sender</span>
-							<span class="font-mono font-medium">{{
-								shortenAddress(selectedAccount?.address || '')
-							}}</span>
+							<div class="text-muted-foreground">Sender</div>
+							<div class="flex gap-2">
+								<div class="font-mono font-medium">
+									{{ shortenAddress(selectedAccount?.address || '') }}
+								</div>
+								<CopyButton :address="selectedAccount?.address || ''" />
+							</div>
 						</div>
 
 						<!-- Network -->
@@ -349,16 +352,19 @@ const txLink = computed(() => {
 							class="p-4 bg-muted/30 border border-border/50 rounded-lg space-y-2"
 						>
 							<div class="flex items-center justify-between text-sm">
-								<span class="text-muted-foreground">To</span>
-								<span class="font-mono">{{ shortenAddress(execution.to) }}</span>
+								<div class="text-muted-foreground">To</div>
+								<div class="flex gap-2">
+									<div class="font-mono">{{ shortenAddress(execution.to) }}</div>
+									<CopyButton :address="execution.to" />
+								</div>
 							</div>
 							<div class="flex items-center justify-between text-sm">
-								<span class="text-muted-foreground">Value</span>
-								<span>{{ formatEther(execution.value) }} ETH</span>
+								<div class="text-muted-foreground">Value</div>
+								<div>{{ formatEther(execution.value) }} ETH</div>
 							</div>
-							<div class="flex items-center justify-between text-sm">
-								<span class="text-muted-foreground">Data</span>
-								<span class="font-mono text-xs truncate max-w-[200px]">{{ execution.data }}</span>
+							<div class="flex flex-col text-sm">
+								<div class="text-muted-foreground">Data</div>
+								<div class="font-mono text-xs break-all">{{ execution.data }}</div>
 							</div>
 						</div>
 					</div>

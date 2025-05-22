@@ -8,7 +8,7 @@ import { useTxModal } from '@/stores/useTxModal'
 import { Interface, parseEther } from 'ethers'
 import { Plus, X } from 'lucide-vue-next'
 import { ADDRESS } from 'sendop'
-import { computed, ref } from 'vue'
+import { IS_DEV } from '@/config'
 
 type Execution = {
 	to: string
@@ -17,12 +17,19 @@ type Execution = {
 }
 
 function getDefaultExecution(): Execution {
+	if (IS_DEV) {
+		return {
+			to: ADDRESS.Counter,
+			value: '0',
+			data: new Interface(['function setNumber(uint256)']).encodeFunctionData('setNumber', [
+				Math.floor(Math.random() * 10000),
+			]),
+		}
+	}
 	return {
-		to: ADDRESS.Counter,
+		to: '',
 		value: '0',
-		data: new Interface(['function setNumber(uint256)']).encodeFunctionData('setNumber', [
-			Math.floor(Math.random() * 10000),
-		]),
+		data: '',
 	}
 }
 
