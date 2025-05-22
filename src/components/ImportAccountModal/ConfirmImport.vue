@@ -4,7 +4,7 @@ import { useAccounts } from '@/stores/account/useAccounts'
 import { CHAIN_NAME } from '@/stores/network/network'
 import { useNetwork } from '@/stores/network/useNetwork'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
-import { ValidationIdentifier } from '@/stores/validation/validation'
+import { ValidationOption } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
 import { CheckCircle2 } from 'lucide-vue-next'
 
@@ -28,7 +28,7 @@ const onClickConfirm = () => {
 	isSuccess.value = true
 }
 
-function displayValidationOptions(vOptions: ValidationIdentifier[]) {
+function displayValidationOptions(vOptions: ValidationOption[]) {
 	return vOptions.map(v => v.type).join(', ')
 }
 </script>

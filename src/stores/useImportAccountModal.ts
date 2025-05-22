@@ -10,7 +10,7 @@ import {
 	createEOAOwnedValidation,
 	createPasskeyValidation,
 	createSmartEOAValidation,
-	ValidationIdentifier,
+	ValidationOption,
 } from '@/stores/validation/validation'
 import { defineStore, storeToRefs } from 'pinia'
 import { useModal } from 'vue-final-modal'
@@ -50,7 +50,7 @@ address -> input address -> address validation -> connect eoa or passkey -> conf
 type IAMFormData = {
 	address?: string
 	accountId?: AccountId
-	vOptions?: ValidationIdentifier[]
+	vOptions?: ValidationOption[]
 	category?: AccountCategory
 }
 

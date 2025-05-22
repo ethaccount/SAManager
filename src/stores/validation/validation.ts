@@ -60,12 +60,12 @@ export function displayValidationName(validationType: ValidationType): string {
 	return SUPPORTED_VALIDATION_OPTIONS[validationType].name
 }
 
-export interface ValidationIdentifier {
+export interface ValidationOption {
 	type: ValidationType
 	identifier: string // address for EOA, serialized credential for Passkey
 }
 
-export function displayValidationIdentifier(validationIdentifier: ValidationIdentifier): string {
+export function displayValidationIdentifier(validationIdentifier: ValidationOption): string {
 	switch (validationIdentifier.type) {
 		case 'EOA-Owned':
 			return shortenAddress(validationIdentifier.identifier)
@@ -76,7 +76,7 @@ export function displayValidationIdentifier(validationIdentifier: ValidationIden
 	}
 }
 
-export function createEOAOwnedValidation(address: string): ValidationIdentifier {
+export function createEOAOwnedValidation(address: string): ValidationOption {
 	if (!isAddress(address)) {
 		throw new Error('createEOAOwnedValidation: Invalid address')
 	}
@@ -86,7 +86,7 @@ export function createEOAOwnedValidation(address: string): ValidationIdentifier 
 	}
 }
 
-export function createPasskeyValidation(credentialId: string): ValidationIdentifier {
+export function createPasskeyValidation(credentialId: string): ValidationOption {
 	if (!credentialId) {
 		throw new Error(`createPasskeyValidation: credentialId is empty string`)
 	}
@@ -97,7 +97,7 @@ export function createPasskeyValidation(credentialId: string): ValidationIdentif
 	}
 }
 
-export function createSmartEOAValidation(address: string): ValidationIdentifier {
+export function createSmartEOAValidation(address: string): ValidationOption {
 	if (!isAddress(address)) {
 		throw new Error('createSmartEOAValidation: Invalid address')
 	}

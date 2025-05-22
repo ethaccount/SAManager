@@ -1,11 +1,11 @@
-import { ValidationIdentifier } from '@/stores/validation/validation'
+import { ValidationOption } from '@/stores/validation/validation'
 import { defineStore, storeToRefs } from 'pinia'
-import { isSameAddress } from 'sendop/dist/src/utils/ethers-helper'
+import { isSameAddress } from 'sendop'
 
 export type InitCodeData = {
 	address: string
 	initCode: string
-	vOption: ValidationIdentifier
+	vOption: ValidationOption
 }
 
 export const useInitCodeStore = defineStore(

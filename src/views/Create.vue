@@ -20,7 +20,7 @@ import {
 	createPasskeyValidation,
 	displayValidationName,
 	SUPPORTED_VALIDATION_OPTIONS,
-	ValidationIdentifier,
+	ValidationOption,
 	ValidationType,
 } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
@@ -84,7 +84,7 @@ const selectedValidationType = ref<ValidationType | undefined>(undefined)
 const isComputingAddress = ref(false)
 const showMoreOptions = ref(false)
 
-const selectedValidation = computed<ValidationIdentifier | null>(() => {
+const selectedValidation = computed<ValidationOption | null>(() => {
 	if (!selectedValidationType.value) return null
 
 	switch (selectedValidationType.value) {

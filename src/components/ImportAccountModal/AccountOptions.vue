@@ -2,7 +2,7 @@
 import { AccountId } from '@/stores/account/account'
 import { useNetwork } from '@/stores/network/useNetwork'
 import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
-import { SUPPORTED_VALIDATION_OPTIONS, ValidationIdentifier } from '@/stores/validation/validation'
+import { SUPPORTED_VALIDATION_OPTIONS, ValidationOption } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
 import { getAddress, JsonRpcProvider } from 'ethers'
 import { ChevronRight, Loader2 } from 'lucide-vue-next'
@@ -10,7 +10,7 @@ import { ERC7579_MODULE_TYPE, TIERC7579Account__factory } from 'sendop'
 import { toast } from 'vue-sonner'
 
 const props = defineProps<{
-	vOption: () => ValidationIdentifier
+	vOption: () => ValidationOption
 }>()
 
 const emit = defineEmits<{
