@@ -22,7 +22,7 @@ import { toast } from 'vue-sonner'
 export const useAccountStore = defineStore(
 	'useAccountStore',
 	() => {
-		// ===================== addressToInitCode =====================
+		// // ===================== addressToInitCode =====================
 		const addressToInitCode = ref<
 			Map<
 				string,
@@ -50,13 +50,21 @@ export const useAccountStore = defineStore(
 		// ===================== addressToInitCode =====================
 
 		const selectedAccount = ref<ImportedAccount | null>(null)
+
 		const selectedAccountInitCode = computed<string | null>(() => {
 			if (!selectedAccount.value) return null
-			return addressToInitCode.value.get(selectedAccount.value.address)?.initCode || null
+			// TODO: redesign data structure of addressToInitCode
+			return null
 		})
-		const isSelectedAccountModular = computed(() => {
+
+		const isModular = computed(() => {
 			if (!selectedAccount.value) return false
 			return SUPPORTED_ACCOUNTS[selectedAccount.value.accountId].isModular
+		})
+
+		const isSmartEOA = computed(() => {
+			if (!selectedAccount.value) return false
+			return selectedAccount.value.category === 'Smart EOA'
 		})
 
 		const accounts = ref<ImportedAccount[]>([])
@@ -81,7 +89,7 @@ export const useAccountStore = defineStore(
 			const { selectedSigner } = useSigner()
 			if (!isAccountConnected.value) return null
 			if (!selectedSigner.value) return null
-			if (!isSelectedAccountModular.value) return null
+			if (!isModular.value) return null
 			if (!selectedAccount.value) return null
 
 			switch (selectedSigner.value.type) {
@@ -220,6 +228,7 @@ export const useAccountStore = defineStore(
 		}
 
 		return {
+			addressToInitCode,
 			selectedAccount,
 			selectedAccountInitCode,
 			accounts,
@@ -227,6 +236,8 @@ export const useAccountStore = defineStore(
 			opGetter,
 			isAccountConnected,
 			erc7579Validator,
+			isModular,
+			isSmartEOA,
 			importAccount,
 			removeAccount,
 			selectAccount,

@@ -94,6 +94,7 @@ async function onClickSend() {
 					class="relative p-4 rounded-xl bg-muted/30 border border-border/50 backdrop-blur-sm transition-all duration-200 hover:border-border"
 				>
 					<Button
+						v-if="executions.length > 1"
 						variant="ghost"
 						size="icon"
 						@click="removeExecution(index)"

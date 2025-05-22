@@ -2,38 +2,30 @@
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toRoute } from '@/lib/router'
+import { useGetCode } from '@/lib/useGetCode'
 import { displayAccountName } from '@/stores/account/account'
-import { checkIfAccountIsDeployed } from '@/stores/account/create'
 import { useAccount } from '@/stores/account/useAccount'
 import { displayChainName } from '@/stores/network/network'
 import { useNetwork } from '@/stores/network/useNetwork'
 import { displayValidationIdentifier } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
-import { ArrowLeft } from 'lucide-vue-next'
+import { ArrowLeft, Loader2 } from 'lucide-vue-next'
 import AMCrossChain from './AMCrossChain.vue'
 import AMModules from './AMModules.vue'
 import AMPaymasters from './AMPaymasters.vue'
 import AMSessions from './AMSessions.vue'
 
 const router = useRouter()
-const { client, selectedChainId } = useNetwork()
-const { selectedAccount } = useAccount()
-
-const isDeployed = ref(false)
+const { selectedChainId } = useNetwork()
+const { selectedAccount, isModular } = useAccount()
+const { getCode, isDeployed, loading } = useGetCode()
 
 // Use this instead of onMounted because users might change account with the drawer
-watchImmediate(selectedAccount, async () => {
-	isDeployed.value = false
-
-	if (!selectedAccount.value) {
-		throw new Error('No account selected')
-	}
-
+watchImmediate([selectedAccount], async () => {
 	if (selectedAccount.value) {
 		router.replace(toRoute('account-management', { address: selectedAccount.value.address }))
+		getCode(selectedAccount.value.address)
 	}
-
-	isDeployed.value = await checkIfAccountIsDeployed(client.value, selectedAccount.value.address)
 })
 </script>
 
@@ -79,7 +71,10 @@ watchImmediate(selectedAccount, async () => {
 						</div>
 
 						<!-- Deployed -->
-						<div v-if="selectedAccount.category === 'Smart Account'" class="flex items-center gap-1">
+						<div
+							v-if="!loading && selectedAccount.category === 'Smart Account'"
+							class="flex items-center gap-1"
+						>
 							<div
 								class="text-xs rounded-full px-2.5 py-0.5"
 								:class="isDeployed ? 'bg-green-800' : 'bg-yellow-500/10 text-yellow-500'"
@@ -111,7 +106,11 @@ watchImmediate(selectedAccount, async () => {
 				</div>
 			</div>
 
-			<Tabs default-value="modules" class="mt-6">
+			<div v-if="loading" class="flex justify-center py-4">
+				<Loader2 class="w-6 h-6 animate-spin text-primary" />
+			</div>
+
+			<Tabs default-value="modules" class="mt-6" v-if="!loading">
 				<TabsList class="grid grid-cols-4 w-full">
 					<TabsTrigger value="modules">Modules</TabsTrigger>
 					<!-- <TabsTrigger value="sessions">Sessions</TabsTrigger>
@@ -120,7 +119,12 @@ watchImmediate(selectedAccount, async () => {
 				</TabsList>
 
 				<TabsContent value="modules" class="mt-6">
-					<AMModules :is-deployed="isDeployed" />
+					<AMModules
+						v-if="selectedAccount"
+						:selected-account="selectedAccount"
+						:is-deployed="isDeployed"
+						:is-modular="isModular"
+					/>
 				</TabsContent>
 
 				<TabsContent value="sessions" class="mt-6">
