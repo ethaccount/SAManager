@@ -34,7 +34,7 @@ const { wallet, address, disconnect } = useEOAWallet()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 const { isEOAWalletConnected } = useEOAWallet()
 const { selectedCredentialDisplay, isLogin, resetCredentialId } = usePasskey()
-const { importAccount, selectAccount } = useAccount()
+const { importAccount, selectAccount, checkIfAccountIsImported } = useAccount()
 
 const supportedAccounts = Object.entries(SUPPORTED_ACCOUNTS)
 	.filter(([_, data]) => data.isModular)
@@ -127,10 +127,14 @@ const computedAddress = ref<string>('')
 const initCode = ref<string>('')
 const isDeployed = ref(false)
 
+const isImported = ref(false)
+
 watchImmediate([isValidationAvailable, selectedValidation, selectedAccountType, computedSalt], async () => {
 	computedAddress.value = ''
 	initCode.value = ''
 	isDeployed.value = false
+	isImported.value = false
+
 	if (isValidationAvailable.value && selectedValidation.value && selectedAccountType.value && computedSalt.value) {
 		isComputingAddress.value = true
 		try {
@@ -143,6 +147,7 @@ watchImmediate([isValidationAvailable, selectedValidation, selectedAccountType, 
 			computedAddress.value = res.computedAddress
 			initCode.value = res.initCode
 			isDeployed.value = await checkIfAccountIsDeployed(client.value, computedAddress.value)
+			isImported.value = checkIfAccountIsImported(computedAddress.value, selectedChainId.value)
 		} catch (error) {
 			throw error
 		} finally {
@@ -168,16 +173,18 @@ function onClickImport() {
 		throw new Error('onClickImport: No validation')
 	}
 
-	importAccount(
-		{
-			accountId: selectedAccountType.value,
-			category: 'Smart Account',
-			address: computedAddress.value,
-			chainId: selectedChainId.value,
-			vOptions: [selectedValidation.value],
-		},
-		initCode.value,
-	)
+	if (!isImported.value) {
+		importAccount(
+			{
+				accountId: selectedAccountType.value,
+				category: 'Smart Account',
+				address: computedAddress.value,
+				chainId: selectedChainId.value,
+				vOptions: [selectedValidation.value],
+			},
+			initCode.value,
+		)
+	}
 
 	selectAccount(computedAddress.value, selectedChainId.value)
 
@@ -410,8 +417,9 @@ function onClickPasskeyLogout() {
 					class="grid grid-cols-2 gap-2"
 				>
 					<Button variant="default" size="lg" :disabled="disabledImportButton" @click="onClickImport">
-						Import
+						{{ isImported ? 'Account Management' : 'Import' }}
 					</Button>
+
 					<Button variant="secondary" size="lg" :disabled="disabledDeployButton" @click="onClickDeploy">
 						Deploy
 					</Button>

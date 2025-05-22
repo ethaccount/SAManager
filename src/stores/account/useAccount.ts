@@ -10,6 +10,7 @@ import { SUPPORTED_VALIDATION_OPTIONS, ValidationIdentifier } from '@/stores/val
 import {
 	EOAValidator,
 	ERC7579Validator,
+	isSameAddress,
 	KernelV3Account,
 	NexusAccount,
 	Safe7579Account,
@@ -214,6 +215,10 @@ export const useAccountStore = defineStore(
 			selectedAccount.value = account
 		}
 
+		function checkIfAccountIsImported(accountAddress: string, chainId: CHAIN_ID) {
+			return accounts.value.some(a => isSameAddress(a.address, accountAddress) && a.chainId === chainId)
+		}
+
 		return {
 			selectedAccount,
 			selectedAccountInitCode,
@@ -225,6 +230,7 @@ export const useAccountStore = defineStore(
 			importAccount,
 			removeAccount,
 			selectAccount,
+			checkIfAccountIsImported,
 		}
 	},
 	{

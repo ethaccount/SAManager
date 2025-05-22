@@ -15,20 +15,18 @@ async function onClickImportAccount() {
 	<div class="flex flex-col items-center justify-center gap-8 py-8">
 		<div class="text-center space-y-4">
 			<h1 class="text-4xl font-bold tracking-tight">Welcome to Smart Account Manager</h1>
-			<p class="text-xl text-muted-foreground max-w-2xl">
-				An alternative interface to access your ERC-4337 smart accounts.
-			</p>
+			<p class="text-xl text-muted-foreground max-w-2xl">An interface to manage your smart accounts.</p>
 		</div>
 
 		<div class="inline-flex justify-center gap-2 w-auto px-4">
-			<Button size="lg" @click="onClickImportAccount">
+			<Button size="lg" variant="outline" @click="onClickImportAccount">
 				<Plus class="w-5 h-5 mr-2" />
 				<span class="hidden sm:inline">Import Existing Account</span>
 				<span class="sm:hidden">Import</span>
 			</Button>
 
 			<RouterLink :to="toRoute('create')">
-				<Button size="lg" variant="outline">
+				<Button size="lg" variant="default">
 					<Wallet class="w-5 h-5 mr-2" />
 					<span class="hidden sm:inline">Create New Account</span>
 					<span class="sm:hidden">Create</span>
