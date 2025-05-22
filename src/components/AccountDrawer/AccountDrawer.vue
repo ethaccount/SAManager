@@ -16,6 +16,7 @@ import { TooltipContent } from '@/components/ui/tooltip'
 import { TooltipTrigger } from '@/components/ui/tooltip'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
 import { useSigner } from '@/stores/validation/useSigner'
+import { breakpointsTailwind } from '@vueuse/core'
 
 const emit = defineEmits<{
 	(e: 'close'): void
@@ -49,20 +50,27 @@ function onClickAccountManagement() {
 
 function onClickCreateAccount() {
 	router.push(toRoute('create'))
+
+	if (!xlAndLarger.value) {
+		emit('close')
+	}
 }
 
 function onClickImportAccount() {
 	const { openModal } = useImportAccountModal()
 	openModal()
 }
+
+const breakpoints = useBreakpoints(breakpointsTailwind)
+const xlAndLarger = breakpoints.greaterOrEqual('xl')
 </script>
 
 <template>
 	<VueFinalModal
 		class="account-drawer"
 		content-class="account-drawer-content"
-		hide-overlay
-		background="interactive"
+		:hide-overlay="xlAndLarger ? true : false"
+		:background="xlAndLarger ? 'interactive' : 'non-interactive'"
 		:content-transition="'account-drawer-slide'"
 		:click-to-close="true"
 		:esc-to-close="true"
