@@ -1,11 +1,11 @@
-import { AccountId, ImportedAccount, isSameAccount, SUPPORTED_ACCOUNTS } from '@/stores/account/account'
-import { CHAIN_ID } from '@/stores/network/network'
+import { AccountId, ImportedAccount, SUPPORTED_ACCOUNTS } from '@/stores/account/account'
+import { InitCodeData, useInitCode } from '@/stores/account/useInitCode'
 import { useNetwork } from '@/stores/network/useNetwork'
 import { signMessage } from '@/stores/passkey/passkey'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useSigner } from '@/stores/validation/useSigner'
-import { SUPPORTED_VALIDATION_OPTIONS, ValidationIdentifier } from '@/stores/validation/validation'
+import { SUPPORTED_VALIDATION_OPTIONS } from '@/stores/validation/validation'
 import {
 	EOAValidator,
 	ERC7579Validator,
@@ -16,17 +16,12 @@ import {
 	Simple7702Account,
 	WebAuthnValidator,
 } from 'sendop'
-import { toast } from 'vue-sonner'
-
-type InitCodeData = {
-	address: string
-	initCode: string
-	vOption: ValidationIdentifier
-}
 
 export const useAccountStore = defineStore(
 	'useAccountStore',
 	() => {
+		const { initCodeList } = useInitCode()
+
 		const selectedAccount = ref<ImportedAccount | null>(null)
 
 		const isChainIdMatching = computed(() => {
@@ -59,8 +54,6 @@ export const useAccountStore = defineStore(
 			return selectedAccount.value.category === 'Smart EOA'
 		})
 
-		const initCodeList = ref<InitCodeData[]>([])
-
 		const hasInitCode = computed<boolean>(() => {
 			const account = selectedAccount.value
 			if (!account) return false
@@ -72,20 +65,6 @@ export const useAccountStore = defineStore(
 			if (!account) return null
 			return initCodeList.value.find(i => isSameAddress(i.address, account.address)) || null
 		})
-
-		function addInitCode(initCodeData: InitCodeData) {
-			if (initCodeList.value.some(i => isSameAddress(i.address, initCodeData.address))) {
-				throw new Error(`addInitCode: Init code already exists: ${initCodeData.address}`)
-			}
-			initCodeList.value.push(initCodeData)
-		}
-
-		function removeInitCode(address: string) {
-			initCodeList.value = initCodeList.value.filter(i => !isSameAddress(i.address, address))
-		}
-
-		const accounts = ref<ImportedAccount[]>([])
-		const hasAccounts = computed(() => accounts.value.length > 0)
 
 		const erc7579Validator = computed<ERC7579Validator | null>(() => {
 			const { selectedSigner } = useSigner()
@@ -168,93 +147,22 @@ export const useAccountStore = defineStore(
 			}
 		})
 
-		function importAccount(account: ImportedAccount, initCode?: string) {
-			if (!account.address || !account.chainId || !account.accountId || !account.category) {
-				throw new Error(`importAccount: Invalid values: ${JSON.stringify(account)}`)
-			}
-
-			// should have at least one vOption
-			if (!account.vOptions || account.vOptions.length === 0) {
-				throw new Error(`importAccount: No validation options`)
-			}
-
-			if (accounts.value.some(a => isSameAccount(a, account))) {
-				toast.info('Account already imported')
-				return
-			}
-
-			accounts.value.push({
-				...account,
-			})
-
-			if (initCode) {
-				if (account.vOptions.length > 1) {
-					throw new Error(`importAccount: Multiple vOptions are not supported with init code`)
-				}
-				addInitCode({
-					address: account.address,
-					initCode,
-					vOption: account.vOptions[0],
-				})
-			}
-
-			toast.success('Account imported successfully')
-
-			if (accounts.value.length === 1) {
-				selectedAccount.value = accounts.value[0]
-			}
-		}
-
-		function removeAccount(account: ImportedAccount) {
-			accounts.value = accounts.value.filter(a => a.address !== account.address)
-
-			// remove the init code for the account
-			removeInitCode(account.address)
-
-			// if the selected account is the one being removed, select the first account in the list
-			if (selectedAccount.value?.address === account.address) {
-				if (accounts.value.length > 0) {
-					selectedAccount.value = accounts.value[0]
-				} else {
-					selectedAccount.value = null
-				}
-			}
-		}
-
-		function selectAccount(address: string, chainId: CHAIN_ID) {
-			const account = accounts.value.find(a => a.address === address && a.chainId === chainId)
-			if (!account) {
-				throw new Error(`selectAccount: Account not found: ${address} ${chainId}`)
-			}
-			selectedAccount.value = account
-		}
-
-		function checkIfAccountIsImported(accountAddress: string, chainId: CHAIN_ID) {
-			return accounts.value.some(a => isSameAddress(a.address, accountAddress) && a.chainId === chainId)
-		}
-
 		return {
 			selectedAccount,
 			initCodeList,
 			initCodeData,
 			hasInitCode,
-			accounts,
-			hasAccounts,
 			opGetter,
 			isAccountConnected,
 			erc7579Validator,
 			isModular,
 			isSmartEOA,
-			importAccount,
-			removeAccount,
-			selectAccount,
-			checkIfAccountIsImported,
 			isChainIdMatching,
 		}
 	},
 	{
 		persist: {
-			pick: ['accounts', 'selectedAccount', 'initCodeList'],
+			pick: ['selectedAccount'],
 		},
 	},
 )

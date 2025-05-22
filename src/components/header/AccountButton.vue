@@ -2,9 +2,11 @@
 import { useAccountDrawer } from '@/components/AccountDrawer/useAccountDrawer'
 import { Button } from '@/components/ui/button'
 import { useAccount } from '@/stores/account/useAccount'
+import { useAccounts } from '@/stores/account/useAccounts'
 import { Wallet } from 'lucide-vue-next'
 
-const { isAccountConnected, accounts } = useAccount()
+const { accounts } = useAccounts()
+const { isAccountConnected } = useAccount()
 
 function onClickAccountButton() {
 	const { openAccountDrawer } = useAccountDrawer()

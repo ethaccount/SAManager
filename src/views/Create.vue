@@ -8,7 +8,7 @@ import { toRoute } from '@/lib/router'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
 import { ACCOUNT_ID_TO_NAME, AccountId, displayAccountName, SUPPORTED_ACCOUNTS } from '@/stores/account/account'
 import { checkIfAccountIsDeployed, getComputedAddressAndInitCode } from '@/stores/account/create'
-import { useAccount } from '@/stores/account/useAccount'
+import { useAccounts } from '@/stores/account/useAccounts'
 import { displayChainName } from '@/stores/network/network'
 import { useNetwork } from '@/stores/network/useNetwork'
 import { usePasskey } from '@/stores/passkey/usePasskey'
@@ -34,7 +34,7 @@ const { wallet, address, disconnect } = useEOAWallet()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 const { isEOAWalletConnected } = useEOAWallet()
 const { selectedCredentialDisplay, isLogin, resetCredentialId } = usePasskey()
-const { importAccount, selectAccount, checkIfAccountIsImported } = useAccount()
+const { importAccount, selectAccount, checkIfAccountIsImported } = useAccounts()
 
 const supportedAccounts = Object.entries(SUPPORTED_ACCOUNTS)
 	.filter(([_, data]) => data.isModular)

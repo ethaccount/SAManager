@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { displayAccountName, ImportedAccount } from '@/stores/account/account'
-import { useAccount } from '@/stores/account/useAccount'
+import { useAccounts } from '@/stores/account/useAccounts'
 import { CHAIN_NAME } from '@/stores/network/network'
 import { useNetwork } from '@/stores/network/useNetwork'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
@@ -13,11 +13,12 @@ const props = defineProps<{
 }>()
 
 const { selectedChainId } = useNetwork()
+const { importAccount } = useAccounts()
 
 const isSuccess = ref(false)
 
 const onClickConfirm = () => {
-	useAccount().importAccount({
+	importAccount({
 		address: props.accountData().address,
 		accountId: props.accountData().accountId,
 		vOptions: props.accountData().vOptions,
