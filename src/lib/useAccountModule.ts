@@ -9,6 +9,7 @@ export type ModuleRecord = Record<ERC7579_MODULE_TYPE, ModuleRecordModule[]>
 
 export function useAccountModule() {
 	const loading = ref(false)
+	const error = ref<string | null>(null)
 	const modules = ref<Record<string, string[]>>({})
 	const moduleRecord = ref<ModuleRecord>(getDefaultModules())
 
@@ -21,7 +22,11 @@ export function useAccountModule() {
 	 */
 	async function updateAccountModuleRecord() {
 		loading.value = true
+		error.value = null
+
 		try {
+			// throw new Error('test')
+
 			if (!selectedAccount.value?.address || !tenderlyClient.value) return
 			const accountAddress = selectedAccount.value.address
 
@@ -56,7 +61,8 @@ export function useAccountModule() {
 				}
 			}
 		} catch (e: unknown) {
-			throw new Error(`Error fetching modules: ${e}`)
+			error.value = `Failed to fetch modules: ${e instanceof Error ? e.message : String(e)}`
+			throw new Error('Failed to fetch modules')
 		} finally {
 			loading.value = false
 		}
@@ -76,6 +82,7 @@ export function useAccountModule() {
 		moduleRecord,
 		modules,
 		loading,
+		error,
 		hasModules,
 		installedModuleTypes,
 		updateAccountModuleRecord,

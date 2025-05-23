@@ -18,7 +18,14 @@ function getModuleName(address: string) {
 	)
 }
 
-const { moduleRecord, loading, updateAccountModuleRecord, hasModules, installedModuleTypes } = useAccountModule()
+const {
+	moduleRecord,
+	loading,
+	error: fetchModulesError,
+	updateAccountModuleRecord,
+	hasModules,
+	installedModuleTypes,
+} = useAccountModule()
 
 onMounted(async () => {
 	if (!props.isDeployed) return
@@ -83,6 +90,7 @@ async function onClickInstall(module: ModuleType) {
 const showAvailableModules = computed(() => {
 	if (!props.isDeployed) return false
 	if (loading.value) return false
+	if (fetchModulesError.value) return false
 	if (availableModules.value.length === 0) return false
 	return true
 })
@@ -97,7 +105,10 @@ const showAvailableModules = computed(() => {
 
 			<!-- is deployed and modular -->
 			<div v-else class="space-y-6">
-				<div v-if="!hasModules" class="text-sm text-muted-foreground">No modules installed</div>
+				<div v-if="fetchModulesError" class="error-section">
+					{{ fetchModulesError }}
+				</div>
+				<div v-else-if="!hasModules" class="text-sm text-muted-foreground">No modules installed</div>
 				<template v-else>
 					<div v-for="type in installedModuleTypes" :key="type" class="space-y-3">
 						<h3 class="text-sm font-medium">{{ MODULE_TYPE_LABELS[type] }}</h3>

@@ -95,7 +95,7 @@ watchImmediate([selectedAccount], async () => {
 			</div>
 
 			<div v-if="!isChainIdMatching" class="mt-4 text-sm text-muted-foreground">
-				Chain ID mismatch. Please switch to the correct chain to manage this account.
+				Chain mismatch. Please switch to the correct chain to manage this account.
 			</div>
 
 			<div class="mt-4" v-else>
