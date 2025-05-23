@@ -79,7 +79,7 @@ function onClickNetworkSelector() {
 			<!-- Network Section -->
 			<DropdownMenuLabel>Network</DropdownMenuLabel>
 			<DropdownMenuSeparator />
-			<DropdownMenuGroup class="space-y-1 pl-4">
+			<DropdownMenuGroup class="space-y-1">
 				<DropdownMenuItem
 					v-for="id in supportedChainIds"
 					:key="id"
@@ -87,7 +87,7 @@ function onClickNetworkSelector() {
 					:class="selectedChainId === id ? 'bg-accent font-medium' : ''"
 					@click="onClickChain(id)"
 				>
-					<div class="flex items-center justify-between w-full">
+					<div class="item-container">
 						<div class="flex items-center gap-2">
 							<ChainIcon :chain-id="id" :size="24" :show-tooltip="false" />
 							<span>{{ displayChainName(id) }}</span>
@@ -101,7 +101,7 @@ function onClickNetworkSelector() {
 			<DropdownMenuSeparator />
 			<DropdownMenuLabel>Bundler</DropdownMenuLabel>
 			<DropdownMenuSeparator />
-			<DropdownMenuGroup class="space-y-1 pl-4">
+			<DropdownMenuGroup class="space-y-1">
 				<DropdownMenuItem
 					v-for="bundler in supportedBundlers"
 					:key="bundler"
@@ -109,7 +109,7 @@ function onClickNetworkSelector() {
 					:class="selectedBundler === bundler ? 'bg-accent font-medium' : ''"
 					@click="onClickBundler(bundler)"
 				>
-					<div class="flex items-center justify-between w-full">
+					<div class="item-container">
 						<span>{{ displayBundlerName(bundler) }}</span>
 						<Check v-if="selectedBundler === bundler" class="h-4 w-4" />
 					</div>
@@ -120,7 +120,7 @@ function onClickNetworkSelector() {
 			<DropdownMenuSeparator />
 			<DropdownMenuLabel>Node</DropdownMenuLabel>
 			<DropdownMenuSeparator />
-			<DropdownMenuGroup class="space-y-1 pl-4">
+			<DropdownMenuGroup class="space-y-1">
 				<DropdownMenuItem
 					v-for="node in supportedNodes"
 					:key="node"
@@ -128,7 +128,7 @@ function onClickNetworkSelector() {
 					:class="selectedNode === node ? 'bg-accent font-medium' : ''"
 					@click="onClickNode(node)"
 				>
-					<div class="flex items-center justify-between w-full">
+					<div class="item-container">
 						<span>{{ displayNodeName(node) }}</span>
 						<Check v-if="selectedNode === node" class="h-4 w-4" />
 					</div>
@@ -138,4 +138,8 @@ function onClickNetworkSelector() {
 	</DropdownMenu>
 </template>
 
-<style lang="css" scoped></style>
+<style lang="css" scoped>
+.item-container {
+	@apply flex items-center justify-between w-full pl-4;
+}
+</style>

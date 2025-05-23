@@ -8,17 +8,17 @@ import { useAccount } from '@/stores/account/useAccount'
 import { useAccounts } from '@/stores/account/useAccounts'
 import { useInitCode } from '@/stores/account/useInitCode'
 import { displayChainName } from '@/stores/network/network'
+import { useNetwork } from '@/stores/network/useNetwork'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
 import { useSigner } from '@/stores/validation/useSigner'
 import { shortenAddress } from '@vue-dapp/core'
 import { breakpointsTailwind } from '@vueuse/core'
-import { ArrowRight, CircleDot, Download, Plus, Power, X } from 'lucide-vue-next'
+import { ArrowRight, CheckCircle, CircleDot, Download, Plus, Power, X } from 'lucide-vue-next'
 import { isSameAddress } from 'sendop'
 import { VueFinalModal } from 'vue-final-modal'
 import { useRouter } from 'vue-router'
-import { useNetwork } from '@/stores/network/useNetwork'
 
 const emit = defineEmits<{
 	(e: 'close'): void
@@ -123,10 +123,20 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 						<div v-if="selectedAccount" class="p-1.5">
 							<div class="flex justify-between items-center mb-1">
 								<div class="flex items-center gap-2">
-									<CircleDot
-										class="w-3 h-3"
-										:class="isAccountConnected ? 'text-green-500' : 'text-red-500'"
-									/>
+									<TooltipProvider>
+										<Tooltip>
+											<TooltipTrigger asChild>
+												<CircleDot
+													class="w-3 h-3"
+													:class="isAccountConnected ? 'text-green-500' : 'text-red-500'"
+												/>
+											</TooltipTrigger>
+											<TooltipContent class="z-[1100]">
+												{{ isAccountConnected ? 'Connected' : 'Not Connected' }}
+											</TooltipContent>
+										</Tooltip>
+									</TooltipProvider>
+
 									<span class="font-medium truncate">
 										{{ shortenAddress(selectedAccount.address) }}
 									</span>
@@ -205,7 +215,7 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 						<div v-if="isEOAWalletConnected" class="space-y-1">
 							<div class="flex justify-between items-center">
 								<div class="flex items-center gap-1.5 text-xs">
-									<CircleDot
+									<CheckCircle
 										class="w-2.5 h-2.5"
 										:class="
 											selectedSigner?.type === 'EOAWallet'
@@ -237,13 +247,14 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 								size="sm"
 								class="h-7 text-xs px-2.5"
 								@click="openConnectPasskeyBoth"
-								>Connect</Button
 							>
+								Connect
+							</Button>
 						</div>
 						<div v-if="isLogin" class="space-y-1">
 							<div class="flex justify-between items-center">
 								<div class="flex items-center gap-1.5 text-xs">
-									<CircleDot
+									<CheckCircle
 										class="w-2.5 h-2.5"
 										:class="
 											selectedSigner?.type === 'Passkey'

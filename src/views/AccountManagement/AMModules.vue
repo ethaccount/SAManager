@@ -3,6 +3,7 @@ import { MODULE_TYPE_LABELS, ModuleType, SUPPORTED_MODULES } from '@/lib/module-
 import { ModuleRecordModule, useAccountModule } from '@/lib/module-management/useAccountModule'
 import { useModuleManagement } from '@/lib/module-management/useModuleManagement'
 import { ImportedAccount } from '@/stores/account/account'
+import { shortenAddress } from '@vue-dapp/core'
 import { ERC7579_MODULE_TYPE, isSameAddress } from 'sendop'
 
 const props = defineProps<{
@@ -110,6 +111,7 @@ const showAvailableModules = computed(() => {
 				</div>
 				<div v-else-if="!hasModules" class="text-sm text-muted-foreground">No modules installed</div>
 				<template v-else>
+					<!-- Installed Modules -->
 					<div v-for="type in installedModuleTypes" :key="type" class="space-y-3">
 						<h3 class="text-sm font-medium">{{ MODULE_TYPE_LABELS[type] }}</h3>
 						<div class="grid gap-2">
@@ -120,7 +122,13 @@ const showAvailableModules = computed(() => {
 							>
 								<div class="space-y-1">
 									<div class="text-sm font-medium">{{ getModuleName(module.address) }}</div>
-									<div class="text-xs text-muted-foreground break-all">{{ module.address }}</div>
+									<div class="flex items-center gap-1 text-xs text-muted-foreground">
+										<div>{{ shortenAddress(module.address) }}</div>
+										<div class="flex items-center gap-1">
+											<CopyButton size="xs" :address="module.address" />
+											<AddressLinkButton size="xs" :address="module.address" />
+										</div>
+									</div>
 								</div>
 								<Button
 									:disabled="onlyOneValidator || operatingModule !== null"
