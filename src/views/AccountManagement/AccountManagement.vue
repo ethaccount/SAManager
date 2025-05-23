@@ -31,6 +31,10 @@ function onClickSwitchToCorrectChain() {
 	if (!selectedAccount.value) return
 	useNetwork().switchChain(selectedAccount.value.chainId)
 }
+
+const showSwitchToCorrectChain = computed(() => {
+	return !isCrossChain && !isChainIdMatching
+})
 </script>
 
 <template>
@@ -121,7 +125,7 @@ function onClickSwitchToCorrectChain() {
 				</div>
 			</div>
 
-			<div v-if="!isChainIdMatching" class="mt-4 text-sm text-muted-foreground">
+			<div v-if="showSwitchToCorrectChain" class="mt-4 text-sm text-muted-foreground">
 				<p>Please switch to the account's chain to manage it</p>
 				<Button variant="outline" size="sm" class="mt-2" @click="onClickSwitchToCorrectChain">
 					Switch to {{ displayChainName(selectedAccount.chainId) }}

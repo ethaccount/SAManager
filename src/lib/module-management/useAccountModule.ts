@@ -1,5 +1,5 @@
-import { fetchModules } from '@/lib/aa'
-import { SUPPORTED_MODULES } from '@/lib/useModuleManagement'
+import { fetchModules } from '@/lib/module-management/fetch-modules'
+import { SUPPORTED_MODULES } from '@/lib/module-management/useModuleManagement'
 import { useAccount } from '@/stores/account/useAccount'
 import { useNetwork } from '@/stores/network/useNetwork'
 import { ERC7579_MODULE_TYPE, isSameAddress, TIERC7579Account__factory } from 'sendop'
@@ -16,11 +16,21 @@ export function useAccountModule() {
 	const { selectedAccount } = useAccount()
 	const { client, tenderlyClient } = useNetwork()
 
+	const hasModules = computed(() => {
+		return Object.values(moduleRecord.value).some(modules => modules.length > 0)
+	})
+
+	const installedModuleTypes = computed<ERC7579_MODULE_TYPE[]>(() => {
+		return Object.keys(moduleRecord.value)
+			.map(Number)
+			.filter(type => moduleRecord.value[type]?.length > 0)
+	})
+
 	/**
 	 * fetch the modules for the selected account
 	 * @returns
 	 */
-	async function updateAccountModuleRecord() {
+	async function fetchAccountModules() {
 		loading.value = true
 		error.value = null
 
@@ -60,6 +70,37 @@ export function useAccountModule() {
 					})
 				}
 			}
+
+			// TODO: if the account has a validator but the validation option is not set, set it to the account's vOptions
+			// for (const module of moduleRecord.value[ERC7579_MODULE_TYPE.VALIDATOR]) {
+			// 	// if there's no validation option for the module, add it to the vOptions
+			// 	if (
+			// 		!selectedAccount.value.vOptions.some((vOption: ValidationOption) => {
+			// 			const validatorAddress = SUPPORTED_VALIDATION_OPTIONS[vOption.type].validatorAddress
+			// 			if (validatorAddress) {
+			// 				return isSameAddress(validatorAddress, module.address)
+			// 			}
+			// 			return false
+			// 		})
+			// 	) {
+			// 		// the validator module is not set in the vOptions, add it
+			// 		if (isSameAddress(module.address, SUPPORTED_VALIDATION_OPTIONS['EOA-Owned'].validatorAddress)) {
+			// 			selectedAccount.value.vOptions.push({
+			// 				type: 'EOA-Owned',
+			// 				identifier: '', // how to get the signer address?
+			// 			})
+			// 			return
+			// 		}
+
+			// 		if (isSameAddress(module.address, SUPPORTED_VALIDATION_OPTIONS['Passkey'].validatorAddress)) {
+			// 			selectedAccount.value.vOptions.push({
+			// 				type: 'Passkey',
+			// 				identifier: '', // how to get the credential id?
+			// 			})
+			// 			return
+			// 		}
+			// 	}
+			// }
 		} catch (e: unknown) {
 			error.value = `Failed to fetch modules: ${e instanceof Error ? e.message : String(e)}`
 			throw new Error('Failed to fetch modules')
@@ -68,16 +109,6 @@ export function useAccountModule() {
 		}
 	}
 
-	const hasModules = computed(() => {
-		return Object.values(moduleRecord.value).some(modules => modules.length > 0)
-	})
-
-	const installedModuleTypes = computed<ERC7579_MODULE_TYPE[]>(() => {
-		return Object.keys(moduleRecord.value)
-			.map(Number)
-			.filter(type => moduleRecord.value[type]?.length > 0)
-	})
-
 	return {
 		moduleRecord,
 		modules,
@@ -85,7 +116,7 @@ export function useAccountModule() {
 		error,
 		hasModules,
 		installedModuleTypes,
-		updateAccountModuleRecord,
+		fetchAccountModules,
 	}
 }
 

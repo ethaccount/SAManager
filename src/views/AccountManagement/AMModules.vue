@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import { ModuleRecordModule, useAccountModule } from '@/lib/useAccountModule'
-import { MODULE_TYPE_LABELS, ModuleType, SUPPORTED_MODULES, useModuleManagement } from '@/lib/useModuleManagement'
+import { ModuleRecordModule, useAccountModule } from '@/lib/module-management/useAccountModule'
+import {
+	MODULE_TYPE_LABELS,
+	ModuleType,
+	SUPPORTED_MODULES,
+	useModuleManagement,
+} from '@/lib/module-management/useModuleManagement'
 import { ImportedAccount } from '@/stores/account/account'
-import { useAccount } from '@/stores/account/useAccount'
 import { ERC7579_MODULE_TYPE, isSameAddress } from 'sendop'
 
 const props = defineProps<{
@@ -22,7 +26,7 @@ const {
 	moduleRecord,
 	loading,
 	error: fetchModulesError,
-	updateAccountModuleRecord,
+	fetchAccountModules,
 	hasModules,
 	installedModuleTypes,
 } = useAccountModule()
@@ -30,7 +34,7 @@ const {
 onMounted(async () => {
 	if (!props.isDeployed) return
 	if (!props.isModular) return
-	await updateAccountModuleRecord()
+	await fetchAccountModules()
 })
 
 const onlyOneValidator = computed(() => {
@@ -66,7 +70,7 @@ async function onClickUninstall(recordModule: ModuleRecordModule) {
 
 		await operateValidator('uninstall', moduleType, {
 			onSuccess: async () => {
-				await updateAccountModuleRecord()
+				await fetchAccountModules()
 			},
 		})
 	} finally {
@@ -79,7 +83,7 @@ async function onClickInstall(module: ModuleType) {
 		operatingModule.value = SUPPORTED_MODULES[module].address
 		await operateValidator('install', module, {
 			onSuccess: async () => {
-				await updateAccountModuleRecord()
+				await fetchAccountModules()
 			},
 		})
 	} finally {

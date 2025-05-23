@@ -24,7 +24,7 @@ import {
 	zeroPadLeft,
 } from 'sendop'
 import { toast } from 'vue-sonner'
-import { useConnectSignerModal } from './useConnectSignerModal'
+import { useConnectSignerModal } from '../useConnectSignerModal'
 import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
 
 export const MODULE_TYPE_LABELS = {
