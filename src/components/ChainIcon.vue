@@ -33,6 +33,7 @@ const iconContainerClass = computed(() => ({
 	'border-green-500': props.borderColor === 'green',
 	'border-dashed': isTestnet(props.chainId),
 	'border-solid': !isTestnet(props.chainId),
+	'cursor-pointer': props.showTooltip,
 }))
 </script>
 
@@ -74,7 +75,6 @@ const iconContainerClass = computed(() => ({
 	align-items: center;
 	justify-content: center;
 	padding: 3px;
-	cursor: pointer;
 }
 
 .chain-icon {

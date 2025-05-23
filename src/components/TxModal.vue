@@ -39,7 +39,7 @@ function onClickClose() {
 }
 
 const { wallet } = useEOAWallet()
-const { client, selectedChainId, explorerUrl, selectedEntryPoint } = useNetwork()
+const { selectedChainId, explorerUrl, selectedEntryPoint } = useNetwork()
 const { selectedAccount, selectedAccountInitCodeData, isAccountConnected } = useAccount()
 const { selectSigner, selectedSigner } = useSigner()
 const { selectedCredentialDisplay } = usePasskey()
@@ -309,7 +309,10 @@ const txLink = computed(() => {
 						<!-- Network -->
 						<div class="flex items-center justify-between text-sm">
 							<span class="text-muted-foreground">Network</span>
-							<span class="text-sm">{{ displayChainName(selectedChainId) }}</span>
+							<div class="flex items-center gap-2">
+								<ChainIcon :chain-id="selectedChainId" :size="24" :show-tooltip="false" />
+								<span class="text-sm">{{ displayChainName(selectedChainId) }}</span>
+							</div>
 						</div>
 
 						<!-- Account Type -->

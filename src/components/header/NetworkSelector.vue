@@ -1,36 +1,23 @@
 <script setup lang="ts">
+import ChainIcon from '@/components/ChainIcon.vue'
 import { Button } from '@/components/ui/button'
 import {
-	CHAIN_ID,
-	displayChainName,
-	SUPPORTED_BUNDLER,
-	SUPPORTED_ENTRY_POINT,
-	SUPPORTED_NODE,
-} from '@/stores/network/network'
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuGroup,
+	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { CHAIN_ID, displayChainName, SUPPORTED_BUNDLER, SUPPORTED_NODE } from '@/stores/network/network'
 import { useNetwork } from '@/stores/network/useNetwork'
 import { Check } from 'lucide-vue-next'
-import ChainIcon from '@/components/ChainIcon.vue'
 
-// Watch for popover state changes to toggle body scroll lock
 const isOpen = ref(false)
-watch(isOpen, newValue => {
-	if (newValue) {
-		document.body.style.overflow = 'hidden'
-	} else {
-		document.body.style.overflow = ''
-	}
-})
 
-const {
-	selectedChainId,
-	supportedChainIds,
-	selectedNode,
-	selectedBundler,
-	selectedEntryPoint,
-	supportedBundlers,
-	supportedNodes,
-	supportedEntryPoints,
-} = useNetwork()
+const { selectedChainId, supportedChainIds, selectedNode, selectedBundler, supportedBundlers, supportedNodes } =
+	useNetwork()
 
 function displayBundlerName(bundler: SUPPORTED_BUNDLER) {
 	switch (bundler) {
@@ -65,73 +52,90 @@ function onClickBundler(bundler: SUPPORTED_BUNDLER) {
 function onClickNode(node: SUPPORTED_NODE) {
 	selectedNode.value = node
 }
+
+function onClickNetworkSelector() {
+	isOpen.value = true
+}
 </script>
 
 <template>
-	<Popover v-model:open="isOpen">
-		<PopoverTrigger as-child>
-			<Button variant="outline" class="rounded-full pl-1.5 py-1">
+	<DropdownMenu v-model:open="isOpen">
+		<DropdownMenuTrigger as-child>
+			<Button variant="outline" class="hidden sm:flex rounded-full pl-1.5 py-1" @click="onClickNetworkSelector">
 				<ChainIcon :chain-id="selectedChainId" :size="24" :show-tooltip="false" />
 				{{ displayChainName(selectedChainId) }}
 			</Button>
-		</PopoverTrigger>
+			<Button
+				variant="ghost"
+				size="icon"
+				class="sm:hidden flex items-center justify-center"
+				@click="onClickNetworkSelector"
+			>
+				<ChainIcon :chain-id="selectedChainId" :size="32" :show-tooltip="false" />
+			</Button>
+		</DropdownMenuTrigger>
 
-		<PopoverContent class="w-80 max-h-[80vh] overflow-y-auto p-4 divide-y">
-			<!-- Chain Section -->
-			<div class="py-3 first:pt-0 last:pb-0">
-				<h3 class="text-sm font-semibold uppercase tracking-wider mb-3">Network</h3>
-				<div class="flex flex-col gap-1">
-					<Button
-						v-for="id in supportedChainIds"
-						:key="id"
-						variant="ghost"
-						:class="['justify-between', selectedChainId === id ? 'bg-accent font-medium' : '']"
-						@click="onClickChain(id)"
-					>
+		<DropdownMenuContent class="w-80 max-h-[80vh] overflow-y-auto">
+			<!-- Network Section -->
+			<DropdownMenuLabel>Network</DropdownMenuLabel>
+			<DropdownMenuSeparator />
+			<DropdownMenuGroup class="space-y-1 pl-4">
+				<DropdownMenuItem
+					v-for="id in supportedChainIds"
+					:key="id"
+					class="cursor-pointer"
+					:class="selectedChainId === id ? 'bg-accent font-medium' : ''"
+					@click="onClickChain(id)"
+				>
+					<div class="flex items-center justify-between w-full">
 						<div class="flex items-center gap-2">
 							<ChainIcon :chain-id="id" :size="24" :show-tooltip="false" />
-							{{ displayChainName(id) }}
+							<span>{{ displayChainName(id) }}</span>
 						</div>
 						<Check v-if="selectedChainId === id" class="h-4 w-4" />
-					</Button>
-				</div>
-			</div>
+					</div>
+				</DropdownMenuItem>
+			</DropdownMenuGroup>
 
 			<!-- Bundler Section -->
-			<div class="py-3">
-				<h3 class="text-sm font-semibold uppercase tracking-wider mb-3">Bundler</h3>
-				<div class="flex flex-col gap-1">
-					<Button
-						v-for="bundler in supportedBundlers"
-						:key="bundler"
-						variant="ghost"
-						:class="['justify-between', selectedBundler === bundler ? 'bg-accent font-medium' : '']"
-						@click="onClickBundler(bundler)"
-					>
-						{{ displayBundlerName(bundler) }}
+			<DropdownMenuSeparator />
+			<DropdownMenuLabel>Bundler</DropdownMenuLabel>
+			<DropdownMenuSeparator />
+			<DropdownMenuGroup class="space-y-1 pl-4">
+				<DropdownMenuItem
+					v-for="bundler in supportedBundlers"
+					:key="bundler"
+					class="cursor-pointer"
+					:class="selectedBundler === bundler ? 'bg-accent font-medium' : ''"
+					@click="onClickBundler(bundler)"
+				>
+					<div class="flex items-center justify-between w-full">
+						<span>{{ displayBundlerName(bundler) }}</span>
 						<Check v-if="selectedBundler === bundler" class="h-4 w-4" />
-					</Button>
-				</div>
-			</div>
+					</div>
+				</DropdownMenuItem>
+			</DropdownMenuGroup>
 
 			<!-- Node Section -->
-			<div class="py-3">
-				<h3 class="text-sm font-semibold uppercase tracking-wider mb-3">Node</h3>
-				<div class="flex flex-col gap-1">
-					<Button
-						v-for="node in supportedNodes"
-						:key="node"
-						variant="ghost"
-						:class="['justify-between', selectedNode === node ? 'bg-accent font-medium' : '']"
-						@click="onClickNode(node)"
-					>
-						{{ displayNodeName(node) }}
+			<DropdownMenuSeparator />
+			<DropdownMenuLabel>Node</DropdownMenuLabel>
+			<DropdownMenuSeparator />
+			<DropdownMenuGroup class="space-y-1 pl-4">
+				<DropdownMenuItem
+					v-for="node in supportedNodes"
+					:key="node"
+					class="cursor-pointer"
+					:class="selectedNode === node ? 'bg-accent font-medium' : ''"
+					@click="onClickNode(node)"
+				>
+					<div class="flex items-center justify-between w-full">
+						<span>{{ displayNodeName(node) }}</span>
 						<Check v-if="selectedNode === node" class="h-4 w-4" />
-					</Button>
-				</div>
-			</div>
-		</PopoverContent>
-	</Popover>
+					</div>
+				</DropdownMenuItem>
+			</DropdownMenuGroup>
+		</DropdownMenuContent>
+	</DropdownMenu>
 </template>
 
 <style lang="css" scoped></style>

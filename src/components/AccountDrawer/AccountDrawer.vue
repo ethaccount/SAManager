@@ -149,8 +149,7 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 										<div v-if="isCrossChain">
 											<span class="text-xs text-muted-foreground">Cross Chain</span>
 										</div>
-										<div v-else>
-											<ChainIcon :chain-id="selectedAccount.chainId" :size="20" />
+										<div v-else class="flex items-center gap-2">
 											<div>
 												<span>{{ displayChainName(selectedAccount.chainId) }}</span>
 												<span v-if="!isChainIdMatching" class="text-yellow-500">
@@ -185,8 +184,8 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 
 			<!-- Signers Connection -->
 			<div class="mt-4">
-				<h3 class="text-sm font-medium tracking-wider mb-2">Signers</h3>
-				<div class="space-y-2">
+				<h3 class="text-sm font-medium tracking-wider">Signers</h3>
+				<div class="mt-2 space-y-2">
 					<div
 						class="flex flex-col p-2.5 border rounded-lg transition-all cursor-pointer"
 						:class="{ 'bg-secondary/50 border-primary/20': isEOAWalletConnected }"
@@ -268,13 +267,13 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 
 			<!-- Account List -->
 			<div class="mt-4 flex-1 flex flex-col overflow-hidden">
-				<div class="flex justify-between items-center mb-3">
+				<div class="flex justify-between items-center">
 					<h3 class="text-sm font-medium tracking-wider">Accounts</h3>
-					<div class="flex gap-1">
+					<div class="flex gap-1 mr-2">
 						<TooltipProvider>
 							<Tooltip>
 								<TooltipTrigger asChild>
-									<Button variant="ghost" size="icon" class="h-6 w-6" @click="onClickImportAccount">
+									<Button variant="ghost" size="icon" class="h-7 w-7" @click="onClickImportAccount">
 										<Download class="h-4 w-4" />
 									</Button>
 								</TooltipTrigger>
@@ -285,7 +284,7 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 						<TooltipProvider>
 							<Tooltip>
 								<TooltipTrigger asChild>
-									<Button variant="ghost" size="icon" class="h-6 w-6" @click="onClickCreateAccount">
+									<Button variant="ghost" size="icon" class="h-7 w-7" @click="onClickCreateAccount">
 										<Plus class="h-4 w-4" />
 									</Button>
 								</TooltipTrigger>
@@ -295,7 +294,7 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 					</div>
 				</div>
 				<!-- Account List Scrollable Container -->
-				<div class="flex-1 overflow-y-auto overflow-x-hidden space-y-2 pt-2 pr-2">
+				<div class="mt-2 flex-1 overflow-y-auto overflow-x-hidden space-y-2 pr-2">
 					<div
 						v-for="account in accountList"
 						:key="account.address"

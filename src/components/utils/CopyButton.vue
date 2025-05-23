@@ -19,7 +19,8 @@ const props = withDefaults(
 
 const isCopied = ref(false)
 
-function onClickCopyAddress() {
+function onClickCopyAddress(event: Event) {
+	event.stopPropagation()
 	navigator.clipboard.writeText(props.address || '')
 	isCopied.value = true
 	setTimeout(() => {
