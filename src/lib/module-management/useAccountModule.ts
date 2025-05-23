@@ -1,5 +1,5 @@
 import { fetchModules } from '@/lib/module-management/fetch-modules'
-import { SUPPORTED_MODULES } from '@/lib/module-management/useModuleManagement'
+import { SUPPORTED_MODULES } from '@/lib/module-management/module-constants'
 import { useAccount } from '@/stores/account/useAccount'
 import { useNetwork } from '@/stores/network/useNetwork'
 import { ERC7579_MODULE_TYPE, isSameAddress, TIERC7579Account__factory } from 'sendop'

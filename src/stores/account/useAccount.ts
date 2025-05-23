@@ -38,12 +38,6 @@ export const useAccountStore = defineStore(
 			return useSigner().isSignerEligibleForValidation(selectedAccount.value.vOptions)
 		})
 
-		watchImmediate(isAccountConnected, () => {
-			const { switchEntryPoint } = useNetwork()
-			if (!selectedAccount.value) return
-			switchEntryPoint(SUPPORTED_ACCOUNTS[selectedAccount.value.accountId].entryPointVersion)
-		})
-
 		const isModular = computed(() => {
 			if (!selectedAccount.value) return false
 			return SUPPORTED_ACCOUNTS[selectedAccount.value.accountId].isModular

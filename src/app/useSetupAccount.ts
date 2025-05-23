@@ -1,0 +1,22 @@
+import { SUPPORTED_ACCOUNTS } from '@/stores/account/account'
+import { useAccount } from '@/stores/account/useAccount'
+import { useAccounts } from '@/stores/account/useAccounts'
+import { useNetwork } from '@/stores/network/useNetwork'
+
+export function useSetupAccount() {
+	const { selectAccount } = useAccounts()
+	const { selectedAccount, isAccountConnected, isCrossChain } = useAccount()
+	const { selectedChainId, switchEntryPoint } = useNetwork()
+
+	watchImmediate(isAccountConnected, () => {
+		if (!selectedAccount.value) return
+		switchEntryPoint(SUPPORTED_ACCOUNTS[selectedAccount.value.accountId].entryPointVersion)
+	})
+
+	watchImmediate(selectedChainId, () => {
+		if (!selectedAccount.value) return
+		if (isCrossChain && selectedAccount.value.chainId !== selectedChainId.value) {
+			selectAccount(selectedAccount.value.address, selectedChainId.value)
+		}
+	})
+}

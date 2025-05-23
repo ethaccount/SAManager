@@ -1,11 +1,7 @@
 <script setup lang="ts">
+import { MODULE_TYPE_LABELS, ModuleType, SUPPORTED_MODULES } from '@/lib/module-management/module-constants'
 import { ModuleRecordModule, useAccountModule } from '@/lib/module-management/useAccountModule'
-import {
-	MODULE_TYPE_LABELS,
-	ModuleType,
-	SUPPORTED_MODULES,
-	useModuleManagement,
-} from '@/lib/module-management/useModuleManagement'
+import { useModuleManagement } from '@/lib/module-management/useModuleManagement'
 import { ImportedAccount } from '@/stores/account/account'
 import { ERC7579_MODULE_TYPE, isSameAddress } from 'sendop'
 

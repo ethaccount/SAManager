@@ -5,6 +5,7 @@ import { VueDappModal } from '@vue-dapp/modal'
 import { onMounted } from 'vue'
 import { ModalsContainer } from 'vue-final-modal'
 import { toast, Toaster } from 'vue-sonner'
+import { useSetupAccount } from './app/useSetupAccount'
 import { useSetupVueDapp } from './app/useSetupVueDapp'
 import { IS_DEV } from './config'
 import { usePasskey } from './stores/passkey/usePasskey'
@@ -16,6 +17,7 @@ const { selectSigner } = useSigner()
 
 useChainIdRoute()
 useSetupVueDapp()
+useSetupAccount()
 
 onMounted(async () => {
 	if (!IS_DEV) {
