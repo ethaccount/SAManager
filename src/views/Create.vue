@@ -15,6 +15,7 @@ import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useTxModal } from '@/stores/useTxModal'
 import { useSigner } from '@/stores/validation/useSigner'
+import { useAccount } from '@/stores/account/useAccount'
 import {
 	createEOAOwnedValidation,
 	createPasskeyValidation,
@@ -29,7 +30,7 @@ import { ChevronRight, Power } from 'lucide-vue-next'
 import { toBytes32 } from 'sendop'
 
 const router = useRouter()
-const { client, selectedChainId } = useNetwork()
+const { client, selectedChainId, switchEntryPoint } = useNetwork()
 const { wallet, address, disconnect } = useEOAWallet()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 const { isEOAWalletConnected } = useEOAWallet()
@@ -67,8 +68,8 @@ const supportedValidationOptions = computed(() => {
 
 const selectedAccountType = ref<AccountId | undefined>(undefined)
 
-// Reset validation type if not supported by new account type
 watch(selectedAccountType, newAccountType => {
+	// Reset validation type if not supported by new account type
 	if (!newAccountType) {
 		selectedValidationType.value = undefined
 		return
@@ -77,6 +78,17 @@ watch(selectedAccountType, newAccountType => {
 	const allowedValidations = CREATE_ACCOUNT_VALIDATION_RULES[newAccountType]
 	if (selectedValidationType.value && !allowedValidations.includes(selectedValidationType.value)) {
 		selectedValidationType.value = undefined
+	}
+
+	// Fix EntryPointMismatch: Switch EntryPoint version based on the selected account type
+	switchEntryPoint(SUPPORTED_ACCOUNTS[newAccountType].entryPointVersion)
+})
+
+// Fix EntryPointMismatch: When users leave Create page, reset the EntryPoint version for the selected account
+onBeforeRouteLeave(() => {
+	const { selectedAccount } = useAccount()
+	if (selectedAccount.value) {
+		switchEntryPoint(SUPPORTED_ACCOUNTS[selectedAccount.value.accountId].entryPointVersion)
 	}
 })
 
