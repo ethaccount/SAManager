@@ -108,6 +108,10 @@ export const useNetworkStore = defineStore(
 
 		const pmGetter = computed(() => new PublicPaymaster(ADDRESS.PublicPaymaster))
 
+		function switchChain(chainId: CHAIN_ID) {
+			selectedChainId.value = chainId
+		}
+
 		return {
 			selectedChainId,
 			supportedChainIds,
@@ -127,6 +131,7 @@ export const useNetworkStore = defineStore(
 			chainIdBigInt,
 			tenderlyClient,
 			switchEntryPoint,
+			switchChain,
 		}
 	},
 	{

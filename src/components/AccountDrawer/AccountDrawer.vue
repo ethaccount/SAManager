@@ -6,6 +6,7 @@ import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
 import { displayAccountName, ImportedAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useAccounts } from '@/stores/account/useAccounts'
+import { useInitCode } from '@/stores/account/useInitCode'
 import { displayChainName } from '@/stores/network/network'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
@@ -13,9 +14,11 @@ import { useImportAccountModal } from '@/stores/useImportAccountModal'
 import { useSigner } from '@/stores/validation/useSigner'
 import { shortenAddress } from '@vue-dapp/core'
 import { breakpointsTailwind } from '@vueuse/core'
-import { CircleDot, Download, Plus, Power, X } from 'lucide-vue-next'
+import { ArrowRight, CircleDot, Download, Plus, Power, X } from 'lucide-vue-next'
+import { isSameAddress } from 'sendop'
 import { VueFinalModal } from 'vue-final-modal'
 import { useRouter } from 'vue-router'
+import { useNetwork } from '@/stores/network/useNetwork'
 
 const emit = defineEmits<{
 	(e: 'close'): void
@@ -26,14 +29,47 @@ function onClickCloseSidebar() {
 }
 
 const { accounts } = useAccounts()
-const { selectedAccount, isAccountConnected, isChainIdMatching } = useAccount()
+const { hasInitCode } = useInitCode()
+const { selectedAccount, isAccountConnected, isChainIdMatching, isCrossChain } = useAccount()
 const { wallet, address, isEOAWalletConnected, disconnect } = useEOAWallet()
 const { isLogin, resetCredentialId, selectedCredentialDisplay } = usePasskey()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 const { selectSigner, selectedSigner } = useSigner()
 
-function onClickSelectAccount(account: ImportedAccount) {
-	selectedAccount.value = account
+const accountList = computed(() =>
+	accounts.value.reduce((acc, cur) => {
+		const account = {
+			...cur,
+			isCrossChain: cur.category === 'Smart Account' && hasInitCode(cur.address),
+		}
+
+		if (!acc.some(a => isSameAddress(a.address, account.address))) {
+			acc.push(account)
+		}
+
+		return acc
+	}, [] as (ImportedAccount & { isCrossChain: boolean })[]),
+)
+
+function onClickSelectAccount(account: ImportedAccount & { isCrossChain: boolean }) {
+	const { selectedChainId } = useNetwork()
+	const { isAccountImported, selectAccount, importAccount } = useAccounts()
+
+	if (account.isCrossChain) {
+		const isImported = isAccountImported(account.address, selectedChainId.value)
+		if (!isImported) {
+			// import the account with current chainId if it's cross chain and not imported
+			const { isCrossChain, ...acc } = account
+
+			importAccount({
+				...acc,
+				chainId: selectedChainId.value,
+			})
+		}
+		selectAccount(account.address, selectedChainId.value)
+	} else {
+		selectAccount(account.address, account.chainId)
+	}
 }
 
 function onClickRemoveAccount(account: ImportedAccount) {
@@ -45,7 +81,10 @@ const router = useRouter()
 function onClickAccountManagement() {
 	if (!selectedAccount.value) return
 	router.push(toRoute('account-management', { address: selectedAccount.value.address }))
-	emit('close')
+
+	if (!xlAndLarger.value) {
+		emit('close')
+	}
 }
 
 function onClickCreateAccount() {
@@ -98,15 +137,28 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 								</div>
 							</div>
 							<div class="flex flex-col text-muted-foreground">
-								<div class="flex gap-2 items-center">
+								<div class="flex flex-col gap-1">
 									<!-- account Id -->
-									<div class="text-sm">{{ displayAccountName(selectedAccount.accountId) }}</div>
+									<div class="flex items-center gap-1 text-xs">
+										<span>{{ displayAccountName(selectedAccount.accountId) }}</span>
+										<span>({{ selectedAccount.accountId }})</span>
+									</div>
 
-									<ChainIcon
-										:chain-id="selectedAccount.chainId"
-										:size="20"
-										:border-color="isChainIdMatching ? 'green' : 'red'"
-									/>
+									<!-- chain -->
+									<div class="flex items-center gap-2 text-xs">
+										<div v-if="isCrossChain">
+											<span class="text-xs text-muted-foreground">Cross Chain</span>
+										</div>
+										<div v-else>
+											<ChainIcon :chain-id="selectedAccount.chainId" :size="20" />
+											<div>
+												<span>{{ displayChainName(selectedAccount.chainId) }}</span>
+												<span v-if="!isChainIdMatching" class="text-yellow-500">
+													(Chain Mismatch)</span
+												>
+											</div>
+										</div>
+									</div>
 								</div>
 							</div>
 						</div>
@@ -123,10 +175,11 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 				<Button
 					:disabled="!selectedAccount"
 					variant="outline"
-					class="w-full justify-start"
+					class="w-full justify-between"
 					@click="onClickAccountManagement"
 				>
 					Account Management
+					<ArrowRight class="w-4 h-4" />
 				</Button>
 			</div>
 
@@ -244,7 +297,7 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 				<!-- Account List Scrollable Container -->
 				<div class="flex-1 overflow-y-auto overflow-x-hidden space-y-2 pt-2 pr-2">
 					<div
-						v-for="account in accounts"
+						v-for="account in accountList"
 						:key="account.address"
 						class="relative group p-3 rounded-lg border transition-colors hover:bg-accent cursor-pointer overflow-visible"
 						:class="{
@@ -257,9 +310,10 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 						<div>
 							<div class="flex justify-between items-center mb-1">
 								<span class="text-xs truncate">{{ shortenAddress(account.address) }}</span>
-								<span class="text-xs text-muted-foreground">
+								<span v-if="!account.isCrossChain" class="text-xs text-muted-foreground">
 									{{ displayChainName(account.chainId) }}
 								</span>
+								<span v-else class="text-xs text-muted-foreground">Cross Chain</span>
 								<!-- <span class="text-xs text-muted-foreground">{{ account.type }}</span> -->
 							</div>
 							<div class="flex justify-between items-center text-xs text-muted-foreground">

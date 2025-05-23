@@ -2,10 +2,8 @@
 import { useAccountDrawer } from '@/components/AccountDrawer/useAccountDrawer'
 import { Button } from '@/components/ui/button'
 import { useAccount } from '@/stores/account/useAccount'
-import { useAccounts } from '@/stores/account/useAccounts'
 import { Wallet } from 'lucide-vue-next'
 
-const { accounts } = useAccounts()
 const { isAccountConnected } = useAccount()
 
 function onClickAccountButton() {
@@ -21,7 +19,6 @@ function onClickAccountButton() {
 			class="w-9 h-9 rounded-full ring-0"
 			:class="{
 				'ring-1 ring-green-500': isAccountConnected,
-				'ring-1 ring-red-500': !isAccountConnected && accounts.length !== 0,
 			}"
 			@click="onClickAccountButton"
 		>

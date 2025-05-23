@@ -37,10 +37,20 @@ export const useInitCodeStore = defineStore(
 			initCodeList.value = initCodeList.value.filter(i => !isSameAddress(i.address, address))
 		}
 
+		function hasInitCode(address: string) {
+			return initCodeList.value.some(i => isSameAddress(i.address, address))
+		}
+
+		function getInitCodeData(address: string) {
+			return initCodeList.value.find(i => isSameAddress(i.address, address))
+		}
+
 		return {
 			initCodeList,
 			addInitCode,
 			removeInitCode,
+			hasInitCode,
+			getInitCodeData,
 		}
 	},
 	{

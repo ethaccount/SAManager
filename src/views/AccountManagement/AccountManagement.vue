@@ -12,9 +12,11 @@ import AMCrossChain from './AMCrossChain.vue'
 import AMModules from './AMModules.vue'
 import AMPaymasters from './AMPaymasters.vue'
 import AMSessions from './AMSessions.vue'
+import { displayChainName } from '@/stores/network/network'
+import { useNetwork } from '@/stores/network/useNetwork'
 
 const router = useRouter()
-const { selectedAccount, isModular, isChainIdMatching, hasInitCode } = useAccount()
+const { selectedAccount, isModular, isChainIdMatching, isCrossChain } = useAccount()
 const { getCode, isDeployed, loading } = useGetCode()
 
 // Use this instead of onMounted because users might change account with the drawer
@@ -24,6 +26,11 @@ watchImmediate([selectedAccount], async () => {
 		getCode(selectedAccount.value.address)
 	}
 })
+
+function onClickSwitchToCorrectChain() {
+	if (!selectedAccount.value) return
+	useNetwork().switchChain(selectedAccount.value.chainId)
+}
 </script>
 
 <template>
@@ -37,7 +44,8 @@ watchImmediate([selectedAccount], async () => {
 		</div>
 		<div v-else class="w-full mx-auto">
 			<div class="space-y-4">
-				<div>
+				<div class="space-y-2">
+					<!-- address -->
 					<div class="flex items-center gap-2">
 						<h1 class="text-xl font-medium">{{ shortenAddress(selectedAccount.address) }}</h1>
 						<div class="flex items-center gap-1">
@@ -46,56 +54,78 @@ watchImmediate([selectedAccount], async () => {
 						</div>
 					</div>
 
+					<!-- account Id -->
 					<div class="flex items-center gap-3 mt-2">
 						<div>
 							<p class="text-sm text-muted-foreground">
-								{{ displayAccountName(selectedAccount.accountId) }}
+								{{ displayAccountName(selectedAccount.accountId) }} ({{ selectedAccount.accountId }})
 							</p>
 						</div>
+					</div>
 
-						<!-- Chain -->
-						<div>
-							<ChainIcon :chain-id="selectedAccount.chainId" :size="24" />
+					<!-- Chain -->
+					<div v-if="!isCrossChain">
+						<div class="flex items-center gap-2 text-sm">
+							<ChainIcon :chain-id="selectedAccount.chainId" :size="20" />
+							<div>
+								<span>{{ displayChainName(selectedAccount.chainId) }}</span>
+								<span v-if="!isChainIdMatching" class="text-yellow-500"> (Chain Mismatch)</span>
+							</div>
 						</div>
+					</div>
 
+					<!-- tag section -->
+					<div class="flex items-center gap-2 mt-2">
 						<!-- Category -->
 						<div class="text-xs rounded-full bg-muted px-2.5 py-0.5">
 							{{ selectedAccount.category }}
 						</div>
-					</div>
 
-					<div class="flex items-center gap-2 mt-2">
-						<!-- Deployed -->
-						<div
+						<!-- Deployed tag -->
+						<TooltipProvider
 							v-if="isChainIdMatching && !loading && selectedAccount.category === 'Smart Account'"
-							class="flex items-center gap-1"
 						>
-							<!-- TODO: add tooltip -->
-							<div
-								class="text-xs rounded-full px-2.5 py-0.5"
-								:class="isDeployed ? 'bg-green-800' : 'bg-yellow-500/10 text-yellow-500'"
-							>
-								{{ isDeployed ? 'Deployed' : 'Not Deployed' }}
-							</div>
-						</div>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<div class="flex items-center gap-1">
+										<div
+											class="text-xs rounded-full px-2.5 py-0.5"
+											:class="isDeployed ? 'bg-green-800' : 'bg-yellow-500/10 text-yellow-500'"
+										>
+											{{ isDeployed ? 'Deployed' : 'Not Deployed' }}
+										</div>
+									</div>
+								</TooltipTrigger>
+								<TooltipContent>
+									{{
+										isDeployed
+											? `The account is deployed on ${displayChainName(selectedAccount.chainId)}`
+											: 'The account is not deployed'
+									}}
+								</TooltipContent>
+							</Tooltip>
+						</TooltipProvider>
 
-						<!-- hasInitCode -->
-
-						<div v-if="selectedAccount.category === 'Smart Account'" class="flex items-center gap-1">
-							<!-- TODO: add tooltip -->
-							<div
-								class="text-xs rounded-full px-2.5 py-0.5"
-								:class="hasInitCode ? 'bg-green-800' : 'bg-yellow-500/10 text-yellow-500'"
-							>
-								{{ hasInitCode ? 'Has InitCode' : 'No InitCode' }}
-							</div>
-						</div>
+						<!-- Cross-chain tag -->
+						<TooltipProvider v-if="isCrossChain">
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<div class="flex items-center gap-1">
+										<div class="text-xs rounded-full px-2.5 py-0.5 bg-green-800">Cross Chain</div>
+									</div>
+								</TooltipTrigger>
+								<TooltipContent> The account can be used on all supported chains</TooltipContent>
+							</Tooltip>
+						</TooltipProvider>
 					</div>
 				</div>
 			</div>
 
 			<div v-if="!isChainIdMatching" class="mt-4 text-sm text-muted-foreground">
-				Chain mismatch. Please switch to the correct chain to manage this account.
+				<p>Please switch to the account's chain to manage it</p>
+				<Button variant="outline" size="sm" class="mt-2" @click="onClickSwitchToCorrectChain">
+					Switch to {{ displayChainName(selectedAccount.chainId) }}
+				</Button>
 			</div>
 
 			<div class="mt-4" v-else>
@@ -106,12 +136,15 @@ watchImmediate([selectedAccount], async () => {
 						<div
 							v-for="(vOption, index) in selectedAccount.vOptions"
 							:key="index"
-							class="group flex items-center justify-between py-2.5 px-3 bg-card border border-border/40 rounded-lg"
+							class="group flex items-center justify-between py-2 px-3 bg-card border border-border/40 rounded-lg"
 						>
 							<div class="w-full flex items-center justify-between gap-3">
-								<div class="text-sm font-medium min-w-20">{{ vOption.type }}</div>
-								<div class="font-mono text-sm text-muted-foreground">
-									{{ displayValidationIdentifier(vOption) }}
+								<div class="text-xs font-medium px-2.5 py-1 rounded-full bg-muted">
+									{{ vOption.type }}
+								</div>
+								<div class="font-mono text-xs text-muted-foreground flex items-center gap-2">
+									<span>{{ shortenAddress(displayValidationIdentifier(vOption)) }}</span>
+									<CopyButton :address="displayValidationIdentifier(vOption)" />
 								</div>
 							</div>
 						</div>

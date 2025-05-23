@@ -62,10 +62,6 @@ function onClickBundler(bundler: SUPPORTED_BUNDLER) {
 	selectedBundler.value = bundler
 }
 
-function onClickEntryPoint(ep: SUPPORTED_ENTRY_POINT) {
-	selectedEntryPoint.value = ep
-}
-
 function onClickNode(node: SUPPORTED_NODE) {
 	selectedNode.value = node
 }
@@ -74,7 +70,8 @@ function onClickNode(node: SUPPORTED_NODE) {
 <template>
 	<Popover v-model:open="isOpen">
 		<PopoverTrigger as-child>
-			<Button variant="outline">
+			<Button variant="outline" class="rounded-full pl-1.5 py-1">
+				<ChainIcon :chain-id="selectedChainId" :size="24" :show-tooltip="false" />
 				{{ displayChainName(selectedChainId) }}
 			</Button>
 		</PopoverTrigger>

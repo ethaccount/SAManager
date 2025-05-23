@@ -19,11 +19,12 @@ const breakpoints = useBreakpoints(breakpointsTailwind)
 					</div>
 				</RouterLink>
 
+				<NetworkSelector />
+
 				<Navigator />
 			</div>
 
 			<div class="flex items-center gap-2 sm:gap-4" :class="{ 'gap-3': breakpoints.isSmaller('sm') }">
-				<NetworkSelector />
 				<AccountButton />
 			</div>
 		</div>

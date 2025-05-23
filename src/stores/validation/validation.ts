@@ -2,6 +2,7 @@ import { SUPPORTED_SIGNER_TYPE } from '@/stores/validation/useSigner'
 import { shortenAddress } from '@vue-dapp/core'
 import { Contract, EventLog, isAddress, JsonRpcProvider } from 'ethers'
 import { ADDRESS } from 'sendop'
+import { getAuthenticatorIdHash } from '../passkey/passkeyNoRp'
 
 export const SUPPORTED_VALIDATION_OPTIONS = {
 	Passkey: {
@@ -68,11 +69,11 @@ export interface ValidationOption {
 export function displayValidationIdentifier(validationIdentifier: ValidationOption): string {
 	switch (validationIdentifier.type) {
 		case 'EOA-Owned':
-			return shortenAddress(validationIdentifier.identifier)
+			return validationIdentifier.identifier
 		case 'Passkey':
-			return ''
+			return getAuthenticatorIdHash(validationIdentifier.identifier)
 		case 'SmartEOA':
-			return shortenAddress(validationIdentifier.identifier)
+			return validationIdentifier.identifier
 	}
 }
 

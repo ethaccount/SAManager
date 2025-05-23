@@ -40,7 +40,7 @@ function onClickClose() {
 
 const { wallet } = useEOAWallet()
 const { client, selectedChainId, explorerUrl, selectedEntryPoint } = useNetwork()
-const { selectedAccount, initCodeData, isAccountConnected } = useAccount()
+const { selectedAccount, selectedAccountInitCodeData, isAccountConnected } = useAccount()
 const { selectSigner, selectedSigner } = useSigner()
 const { selectedCredentialDisplay } = usePasskey()
 
@@ -73,7 +73,7 @@ onMounted(async () => {
 		await getCode(selectedAccount.value.address)
 
 		nextTick(() => {
-			if (!isDeployed.value && !initCodeData.value) {
+			if (!isDeployed.value && !selectedAccountInitCodeData.value) {
 				emit('close')
 				toast.error('Account not deployed and no init code provided')
 				return
@@ -100,12 +100,12 @@ async function onClickEstimate() {
 		if (isDeployed.value || selectedAccount.value.category === 'Smart EOA') {
 			await handleEstimate(props.executions)
 		} else {
-			if (!initCodeData.value) {
+			if (!selectedAccountInitCodeData.value) {
 				emit('close')
 				toast.error('Account not deployed and no init code provided')
 				return
 			}
-			await handleEstimate(props.executions, initCodeData.value.initCode)
+			await handleEstimate(props.executions, selectedAccountInitCodeData.value.initCode)
 		}
 		status.value = TransactionStatus.Sign
 	} catch (e: unknown) {

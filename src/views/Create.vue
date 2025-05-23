@@ -34,7 +34,7 @@ const { wallet, address, disconnect } = useEOAWallet()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 const { isEOAWalletConnected } = useEOAWallet()
 const { selectedCredentialDisplay, isLogin, resetCredentialId } = usePasskey()
-const { importAccount, selectAccount, checkIfAccountIsImported } = useAccounts()
+const { importAccount, selectAccount, isAccountImported } = useAccounts()
 
 const supportedAccounts = Object.entries(SUPPORTED_ACCOUNTS)
 	.filter(([_, data]) => data.isModular)
@@ -146,7 +146,7 @@ watchImmediate([isValidationAvailable, selectedValidation, selectedAccountType, 
 			)
 			computedAddress.value = res.computedAddress
 			initCode.value = res.initCode
-			isImported.value = checkIfAccountIsImported(computedAddress.value, selectedChainId.value)
+			isImported.value = isAccountImported(computedAddress.value, selectedChainId.value)
 			isDeployed.value = await checkIfAccountIsDeployed(client.value, computedAddress.value)
 		} catch (error) {
 			throw error

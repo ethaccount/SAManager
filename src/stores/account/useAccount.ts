@@ -20,7 +20,7 @@ import {
 export const useAccountStore = defineStore(
 	'useAccountStore',
 	() => {
-		const { initCodeList } = useInitCode()
+		const { initCodeList, hasInitCode } = useInitCode()
 
 		const selectedAccount = ref<ImportedAccount | null>(null)
 
@@ -54,13 +54,14 @@ export const useAccountStore = defineStore(
 			return selectedAccount.value.category === 'Smart EOA'
 		})
 
-		const hasInitCode = computed<boolean>(() => {
+		const isCrossChain = computed<boolean>(() => {
 			const account = selectedAccount.value
 			if (!account) return false
-			return initCodeList.value.some(i => isSameAddress(i.address, account.address))
+			if (account.category !== 'Smart Account') return false
+			return hasInitCode(account.address)
 		})
 
-		const initCodeData = computed<InitCodeData | null>(() => {
+		const selectedAccountInitCodeData = computed<InitCodeData | null>(() => {
 			const account = selectedAccount.value
 			if (!account) return null
 			return initCodeList.value.find(i => isSameAddress(i.address, account.address)) || null
@@ -149,10 +150,9 @@ export const useAccountStore = defineStore(
 
 		return {
 			selectedAccount,
-			initCodeList,
-			initCodeData,
-			hasInitCode,
+			selectedAccountInitCodeData,
 			opGetter,
+			isCrossChain,
 			isAccountConnected,
 			erc7579Validator,
 			isModular,

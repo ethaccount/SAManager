@@ -69,14 +69,14 @@ export const useAccountsStore = defineStore(
 		}
 
 		function selectAccount(address: string, chainId: CHAIN_ID) {
-			const account = accounts.value.find(a => a.address === address && a.chainId === chainId)
+			const account = accounts.value.find(a => isSameAddress(a.address, address) && a.chainId === chainId)
 			if (!account) {
 				throw new Error(`selectAccount: Account not found: ${address} ${chainId}`)
 			}
 			selectedAccount.value = account
 		}
 
-		function checkIfAccountIsImported(accountAddress: string, chainId: CHAIN_ID) {
+		function isAccountImported(accountAddress: string, chainId: CHAIN_ID) {
 			return accounts.value.some(a => isSameAddress(a.address, accountAddress) && a.chainId === chainId)
 		}
 
@@ -86,7 +86,7 @@ export const useAccountsStore = defineStore(
 			importAccount,
 			removeAccount,
 			selectAccount,
-			checkIfAccountIsImported,
+			isAccountImported,
 		}
 	},
 	{
