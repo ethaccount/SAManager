@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { useAccount } from '@/stores/account/useAccount'
 import { useTxModal } from '@/stores/useTxModal'
-import { Interface, parseEther } from 'ethers'
+import { Interface, isAddress, parseEther } from 'ethers'
 import { Plus, X } from 'lucide-vue-next'
 import { ADDRESS } from 'sendop'
 import { IS_DEV } from '@/config'
@@ -48,7 +48,17 @@ const removeExecution = (index: number) => {
 }
 
 const isValidExecutions = computed(() => {
-	return executions.value.every(exec => exec.to.trim() !== '' && exec.value.trim() !== '' && exec.data.trim() !== '')
+	return executions.value.every(exec => {
+		const to = exec.to
+		const value = exec.value
+
+		if (!isAddress(to)) return false
+		if (value === '') return false
+		if (!Number.isFinite(Number(value))) return false // note: Number.isFinite cannot check empty string
+		if (Number(value) < 0) return false
+
+		return true
+	})
 })
 
 const { isAccountConnected } = useAccount()

@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAccount } from '@/stores/account/useAccount'
 import { useTxModal } from '@/stores/useTxModal'
-import { parseEther } from 'ethers'
+import { isAddress, parseEther } from 'ethers'
 import { Plus, X } from 'lucide-vue-next'
 import { INTERFACES } from 'sendop'
 
@@ -39,9 +39,17 @@ function getDefaultTransfer(): TokenTransfer {
 const transfers = ref<TokenTransfer[]>([getDefaultTransfer()])
 
 const isValidTransfers = computed(() => {
-	return transfers.value.every(
-		transfer => transfer.recipient.trim() !== '' && transfer.amount.trim() !== '' && Number(transfer.amount) > 0,
-	)
+	return transfers.value.every(transfer => {
+		const recipient = transfer.recipient
+		const amount = transfer.amount
+
+		if (!isAddress(recipient)) return false
+		if (amount === '') return false
+		if (!Number.isFinite(Number(amount))) return false // note: Number.isFinite cannot check empty string
+		if (Number(amount) <= 0) return false
+
+		return true
+	})
 })
 
 const addTransfer = () => {
@@ -81,7 +89,9 @@ const reviewDisabled = computed(() => {
 })
 
 const reviewButtonText = computed(() => {
-	return isAccountConnected.value ? 'Review Transfers' : 'Connect your account to review'
+	if (!isAccountConnected.value) return 'Connect your account to review'
+	if (!isValidTransfers.value) return 'Invalid transfers'
+	return 'Review Transfers'
 })
 </script>
 
@@ -128,7 +138,7 @@ const reviewButtonText = computed(() => {
 							<div class="col-span-2">
 								<Input
 									id="amount"
-									type="number"
+									type="text"
 									placeholder="0.0"
 									v-model="transfer.amount"
 									class="border-none bg-muted text-lg placeholder:text-muted-foreground/50"
