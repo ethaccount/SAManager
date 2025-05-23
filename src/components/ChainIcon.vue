@@ -38,7 +38,7 @@ const iconContainerClass = computed(() => ({
 
 <template>
 	<template v-if="showTooltip">
-		<TooltipProvider :delay-duration="0" :skip-delay-duration="0">
+		<TooltipProvider>
 			<Tooltip>
 				<TooltipTrigger asChild>
 					<div :class="iconContainerClass" :style="containerStyle">
