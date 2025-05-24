@@ -14,8 +14,10 @@ async function onClickImportAccount() {
 <template>
 	<div class="flex flex-col items-center justify-center gap-8 py-8">
 		<div class="text-center space-y-4">
-			<h1 class="text-4xl font-bold tracking-tight">Welcome to Smart Account Manager</h1>
-			<p class="text-xl text-muted-foreground max-w-2xl">An interface to manage your smart accounts.</p>
+			<h1 class="text-4xl font-bold tracking-tight">Smart Account Manager</h1>
+			<p class="text-xl text-muted-foreground max-w-2xl">
+				A user-friendly interface to create, import, and manage ERC-4337 compatible smart accounts.
+			</p>
 		</div>
 
 		<div class="inline-flex justify-center gap-2 w-auto px-4">
