@@ -1,6 +1,5 @@
 import { useVueDapp, type EIP1193Provider } from '@vue-dapp/core'
 import { ethers } from 'ethers'
-import { defineStore } from 'pinia'
 
 export const useEOAWalletStore = defineStore('useEOAWalletStore', () => {
 	const provider = ref<ethers.BrowserProvider | null>(null)
@@ -20,12 +19,17 @@ export const useEOAWalletStore = defineStore('useEOAWalletStore', () => {
 		return signer.value !== null
 	})
 
+	const { providerDetails } = useVueDapp()
+
+	const isEOAWalletSupported = computed(() => providerDetails.value.length > 0)
+
 	return {
 		provider,
 		signer,
 		setWallet,
 		resetWallet,
 		isEOAWalletConnected,
+		isEOAWalletSupported,
 	}
 })
 

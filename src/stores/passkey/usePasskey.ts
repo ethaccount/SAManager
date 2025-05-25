@@ -6,6 +6,7 @@ import { isBytes } from 'sendop'
 export const usePasskeyStore = defineStore(
 	'usePasskeyStore',
 	() => {
+		const isPasskeySupported = ref(false)
 		const storedCredentials = ref<PasskeyCredential[]>([])
 
 		const selectedCredentialId = ref<string | null>(null)
@@ -72,6 +73,7 @@ export const usePasskeyStore = defineStore(
 		}
 
 		return {
+			isPasskeySupported,
 			storedCredentials,
 			selectedCredentialId,
 			selectedCredential,

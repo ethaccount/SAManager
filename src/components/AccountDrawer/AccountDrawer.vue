@@ -15,7 +15,7 @@ import { useImportAccountModal } from '@/stores/useImportAccountModal'
 import { useSigner } from '@/stores/validation/useSigner'
 import { shortenAddress } from '@vue-dapp/core'
 import { breakpointsTailwind } from '@vueuse/core'
-import { ArrowRight, CheckCircle, CircleDot, Download, Plus, Power, X } from 'lucide-vue-next'
+import { ArrowRight, CheckCircle, CircleDot, Download, Plus, Power, X, AlertCircle } from 'lucide-vue-next'
 import { isSameAddress } from 'sendop'
 import { VueFinalModal } from 'vue-final-modal'
 import { useRouter } from 'vue-router'
@@ -31,8 +31,8 @@ function onClickCloseSidebar() {
 const { accounts } = useAccounts()
 const { hasInitCode } = useInitCode()
 const { selectedAccount, isAccountConnected, isChainIdMatching, isCrossChain } = useAccount()
-const { wallet, address, isEOAWalletConnected, disconnect } = useEOAWallet()
-const { isLogin, resetCredentialId, selectedCredentialDisplay } = usePasskey()
+const { wallet, address, isEOAWalletConnected, disconnect, isEOAWalletSupported } = useEOAWallet()
+const { isLogin, resetCredentialId, selectedCredentialDisplay, isPasskeySupported } = usePasskey()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 const { selectSigner, selectedSigner } = useSigner()
 
@@ -196,7 +196,9 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 			<div class="mt-4">
 				<h3 class="text-sm font-medium tracking-wider">Signers</h3>
 				<div class="mt-2 space-y-2">
+					<!-- EOA Wallet Signer -->
 					<div
+						v-if="isEOAWalletSupported"
 						class="flex flex-col p-2.5 border rounded-lg transition-all cursor-pointer"
 						:class="{ 'bg-secondary/50 border-primary/20': isEOAWalletConnected }"
 						@click="isEOAWalletConnected && selectSigner('EOAWallet')"
@@ -235,7 +237,19 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 						</div>
 					</div>
 
+					<!-- EOA Wallet Not Supported -->
+					<div v-else class="flex flex-col p-2 border rounded-lg border-border/50 bg-background">
+						<div class="flex items-center gap-1.5">
+							<AlertCircle class="w-3 h-3 text-muted-foreground/70" />
+							<span class="text-xs text-muted-foreground/70">
+								EOA Wallet not supported in this browser
+							</span>
+						</div>
+					</div>
+
+					<!-- Passkey Signer -->
 					<div
+						v-if="isPasskeySupported"
 						class="flex flex-col p-2.5 border rounded-lg transition-all cursor-pointer"
 						:class="{ 'bg-secondary/50 border-primary/20': isLogin }"
 						@click="isLogin && selectSigner('Passkey')"
@@ -271,6 +285,14 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 							<div class="text-[11px] text-muted-foreground">
 								{{ selectedCredentialDisplay }}
 							</div>
+						</div>
+					</div>
+
+					<!-- Passkey Not Supported -->
+					<div v-else class="flex flex-col p-2 border rounded-lg border-border/50 bg-background">
+						<div class="flex items-center gap-1.5">
+							<AlertCircle class="w-3 h-3 text-muted-foreground/70" />
+							<span class="text-xs text-muted-foreground/70">Passkey not supported in this browser</span>
 						</div>
 					</div>
 				</div>

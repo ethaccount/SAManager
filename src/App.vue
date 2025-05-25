@@ -1,15 +1,14 @@
 <script lang="ts" setup>
 import { useChainIdRoute } from '@/app/useChainIdRoute'
-import { usePasskeyAutoConnect } from '@/app/usePasskeyAutoConnect'
 import { useSetupAccount } from '@/app/useSetupAccount'
+import { useSetupPasskey } from '@/app/useSetupPasskey'
 import { useSetupVueDapp } from '@/app/useSetupVueDapp'
-import { IS_DEV } from '@/config'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useSigner } from '@/stores/validation/useSigner'
 import { VueDappModal } from '@vue-dapp/modal'
 import { ModalsContainer } from 'vue-final-modal'
-import { toast, Toaster } from 'vue-sonner'
+import { Toaster } from 'vue-sonner'
 
 const { isEOAWalletConnected } = useEOAWallet()
 const { isLogin } = usePasskey()
@@ -18,7 +17,7 @@ const { selectSigner } = useSigner()
 useChainIdRoute()
 useSetupVueDapp()
 useSetupAccount()
-usePasskeyAutoConnect()
+useSetupPasskey()
 
 // Auto-select signer when connected
 watchImmediate([isEOAWalletConnected, isLogin], ([eoaWalletConnected, passkeyConnected]) => {

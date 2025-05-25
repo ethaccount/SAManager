@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useSigner } from '@/stores/validation/useSigner'
-import { Loader2, CheckCircle, Check } from 'lucide-vue-next'
-import { uniqueNamesGenerator, adjectives, animals } from 'unique-names-generator'
+import { CheckCircle, Loader2 } from 'lucide-vue-next'
+import { adjectives, animals, uniqueNamesGenerator } from 'unique-names-generator'
 
 type PasskeyMode = 'register' | 'login' | 'both'
 
