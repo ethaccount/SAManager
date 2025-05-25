@@ -20,15 +20,6 @@ useSetupVueDapp()
 useSetupAccount()
 usePasskeyAutoConnect()
 
-onMounted(async () => {
-	if (!IS_DEV) {
-		toast.info('Under Construction', {
-			description: 'This website is actively developed',
-			duration: 5000,
-		})
-	}
-})
-
 // Auto-select signer when connected
 watchImmediate([isEOAWalletConnected, isLogin], ([eoaWalletConnected, passkeyConnected]) => {
 	if (eoaWalletConnected && !passkeyConnected) {
