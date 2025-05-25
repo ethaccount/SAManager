@@ -46,8 +46,8 @@ export async function getComputedAddressAndInitCode(
 			validatorInitData = EOAValidator.getInitData(validation.identifier)
 			break
 		case 'Passkey':
-			const { selectedCredential, isValidSelectedCredential } = usePasskey()
-			if (!isValidSelectedCredential.value || !selectedCredential.value) {
+			const { selectedCredential, isFullCredential } = usePasskey()
+			if (!isFullCredential.value || !selectedCredential.value) {
 				throw new Error('getComputedAddressAndInitCode: selectedCredential is invalid')
 			}
 			validatorAddress = SUPPORTED_VALIDATION_OPTIONS['Passkey'].validatorAddress

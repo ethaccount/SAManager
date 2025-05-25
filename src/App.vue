@@ -1,15 +1,15 @@
 <script lang="ts" setup>
 import { useChainIdRoute } from '@/app/useChainIdRoute'
+import { usePasskeyAutoConnect } from '@/app/usePasskeyAutoConnect'
+import { useSetupAccount } from '@/app/useSetupAccount'
+import { useSetupVueDapp } from '@/app/useSetupVueDapp'
+import { IS_DEV } from '@/config'
+import { usePasskey } from '@/stores/passkey/usePasskey'
+import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useSigner } from '@/stores/validation/useSigner'
 import { VueDappModal } from '@vue-dapp/modal'
-import { onMounted } from 'vue'
 import { ModalsContainer } from 'vue-final-modal'
 import { toast, Toaster } from 'vue-sonner'
-import { useSetupAccount } from './app/useSetupAccount'
-import { useSetupVueDapp } from './app/useSetupVueDapp'
-import { IS_DEV } from './config'
-import { usePasskey } from './stores/passkey/usePasskey'
-import { useEOAWallet } from './stores/useEOAWallet'
 
 const { isEOAWalletConnected } = useEOAWallet()
 const { isLogin } = usePasskey()
@@ -18,6 +18,7 @@ const { selectSigner } = useSigner()
 useChainIdRoute()
 useSetupVueDapp()
 useSetupAccount()
+usePasskeyAutoConnect()
 
 onMounted(async () => {
 	if (!IS_DEV) {

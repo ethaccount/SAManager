@@ -38,11 +38,11 @@ function onClickClose() {
 	emit('close')
 }
 
-const { wallet } = useEOAWallet()
+const { wallet, isConnected } = useEOAWallet()
 const { selectedChainId, explorerUrl, selectedEntryPoint } = useNetwork()
 const { selectedAccount, selectedAccountInitCodeData, isAccountConnected } = useAccount()
 const { selectSigner, selectedSigner } = useSigner()
-const { selectedCredentialDisplay } = usePasskey()
+const { selectedCredentialDisplay, isLogin } = usePasskey()
 
 const {
 	userOp,
@@ -171,6 +171,18 @@ const txLink = computed(() => {
 	}
 	return `${explorerUrl.value}/tx/${foundLog.transactionHash}`
 })
+
+const showEOAWalletValidationMethod = computed(() => {
+	if (!selectedAccount.value) return false
+	if (!isConnected.value) return false
+	return selectedAccount.value.vOptions.some(v => v.type === 'EOA-Owned' || v.type === 'SmartEOA')
+})
+
+const showPasskeyValidationMethod = computed(() => {
+	if (!selectedAccount.value) return false
+	if (!isLogin.value) return false
+	return selectedAccount.value.vOptions.some(v => v.type === 'Passkey')
+})
 </script>
 
 <template>
@@ -239,7 +251,7 @@ const txLink = computed(() => {
 					<div class="space-y-2">
 						<!-- EOA-Owned or SmartEOA -->
 						<div
-							v-if="selectedAccount?.vOptions.find(v => v.type === 'EOA-Owned' || v.type === 'SmartEOA')"
+							v-if="showEOAWalletValidationMethod"
 							class="flex flex-col p-2.5 border rounded-lg transition-all cursor-pointer"
 							@click="selectSigner('EOAWallet')"
 						>
@@ -265,7 +277,7 @@ const txLink = computed(() => {
 
 						<!-- Passkey -->
 						<div
-							v-if="selectedAccount?.vOptions.find(v => v.type === 'Passkey')"
+							v-if="showPasskeyValidationMethod"
 							class="flex flex-col p-2.5 border rounded-lg transition-all"
 							:class="{ 'cursor-pointer': selectedSigner?.type !== 'Passkey' }"
 							@click="selectSigner('Passkey')"

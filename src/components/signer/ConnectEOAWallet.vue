@@ -4,7 +4,7 @@ import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useSigner } from '@/stores/validation/useSigner'
 import { RdnsEnum, shortenAddress, type RDNS } from '@vue-dapp/core'
 import { useVueDappModal } from '@vue-dapp/modal'
-import { Loader2 } from 'lucide-vue-next'
+import { CheckCircle, Loader2 } from 'lucide-vue-next'
 
 const emit = defineEmits<{ (e: 'confirm', address: string): void }>()
 
@@ -47,6 +47,8 @@ const onClickConfirm = () => {
 		throw new Error('No address found')
 	}
 
+	useSigner().selectSigner('EOAWallet')
+
 	emit('confirm', address.value)
 }
 </script>
@@ -82,7 +84,7 @@ const onClickConfirm = () => {
 
 			<div v-if="isEOAWalletConnected" class="flex flex-col gap-3 p-4 bg-secondary rounded-[--radius] border">
 				<div class="flex items-center gap-2 text-foreground">
-					<span>✓</span>
+					<CheckCircle class="w-4 h-4 text-green-500" />
 					<span>{{ wallet.providerInfo?.name }} Connected</span>
 				</div>
 				<div class="flex items-center justify-between">

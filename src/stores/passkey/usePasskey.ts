@@ -14,8 +14,7 @@ export const usePasskeyStore = defineStore(
 			return storedCredentials.value.find(cred => cred.credentialId === selectedCredentialId.value)
 		})
 
-		const isLogin = computed(() => !!selectedCredentialId.value)
-		const isValidSelectedCredential = computed(() => {
+		const isFullCredential = computed(() => {
 			if (!selectedCredential.value) return false
 			if (!isBytes(selectedCredential.value.pubKeyX)) return false
 			if (!isBytes(selectedCredential.value.pubKeyY)) return false
@@ -23,9 +22,14 @@ export const usePasskeyStore = defineStore(
 			return true
 		})
 
+		const isLogin = computed(() => {
+			if (!selectedCredentialId.value) return false
+			return true
+		})
+
 		const selectedCredentialDisplay = computed(() => {
 			if (!isLogin.value) return null
-			if (!isValidSelectedCredential.value) return selectedCredentialId.value
+			if (!isFullCredential.value) return selectedCredentialId.value
 			if (selectedCredential.value?.username) return selectedCredential.value.username
 			return selectedCredential.value?.credentialId
 		})
@@ -77,13 +81,13 @@ export const usePasskeyStore = defineStore(
 			isPasskeyRPHealthy,
 			checkPasskeyRPHealth,
 			resetCredentialId,
-			isValidSelectedCredential,
+			isFullCredential,
 			selectedCredentialDisplay,
 		}
 	},
 	{
 		persist: {
-			pick: ['storedCredentials'],
+			pick: ['storedCredentials', 'selectedCredentialId'],
 		},
 	},
 )
