@@ -1,12 +1,12 @@
 {
 	"name": "samanager",
 	"private": true,
-	"version": "0.0.20",
+	"version": "0.0.21",
 	"type": "module",
 	"repository": "https://github.com/ethaccount/SAManager",
 	"scripts": {
 		"dev": "vite",
-		"build": "vite build",
+		"build": "vue-tsc --noEmit && vite build",
 		"preview": "vite preview",
 		"clean": "rm -rf dist && rm -rf node_modules",
 		"typecheck": "vue-tsc --noEmit"
