@@ -34,7 +34,7 @@ const { client, selectedChainId, switchEntryPoint } = useNetwork()
 const { wallet, address, disconnect } = useEOAWallet()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 const { isEOAWalletConnected } = useEOAWallet()
-const { selectedCredentialDisplay, isLogin, resetCredentialId } = usePasskey()
+const { selectedCredentialDisplay, isLogin, resetCredentialId, isFullCredential, selectedCredential } = usePasskey()
 const { importAccount, selectAccount, isAccountImported } = useAccounts()
 
 const supportedAccounts = Object.entries(SUPPORTED_ACCOUNTS)
@@ -105,7 +105,6 @@ const selectedValidation = computed<ValidationOption | null>(() => {
 			if (!signer.value) return null
 			return createEOAOwnedValidation(signer.value.address)
 		case 'Passkey':
-			const { selectedCredential } = usePasskey()
 			if (!selectedCredential.value) return null
 			return createPasskeyValidation(selectedCredential.value.credentialId)
 		default:
@@ -141,11 +140,14 @@ const isDeployed = ref(false)
 
 const isImported = ref(false)
 
-watchImmediate([isValidationAvailable, selectedValidation, selectedAccountType, computedSalt], async () => {
+const errMsg = ref<string | null>(null)
+
+watchImmediate([isValidationAvailable, selectedValidation, isLogin, selectedAccountType, computedSalt], async () => {
 	computedAddress.value = ''
 	initCode.value = ''
 	isDeployed.value = false
 	isImported.value = false
+	errMsg.value = null
 
 	if (isValidationAvailable.value && selectedValidation.value && selectedAccountType.value && computedSalt.value) {
 		isComputingAddress.value = true
@@ -164,6 +166,11 @@ watchImmediate([isValidationAvailable, selectedValidation, selectedAccountType, 
 			throw error
 		} finally {
 			isComputingAddress.value = false
+		}
+	} else if (!selectedValidation.value) {
+		if (selectedValidationType.value === 'Passkey' && isLogin.value && !isFullCredential.value) {
+			errMsg.value =
+				"This passkey's public key is not stored in the frontend, so it can only be used for signing but not for installing a new webauthn validator. To use a passkey with a public key, please create a new one."
 		}
 	}
 })
@@ -400,6 +407,10 @@ function onClickPasskeyLogout() {
 							class="w-full px-3 py-2 bg-muted/30 border border-border/50 rounded-lg focus:border-primary transition-colors"
 						/>
 					</div>
+				</div>
+
+				<div v-if="errMsg" class="warning-section">
+					{{ errMsg }}
 				</div>
 
 				<div v-if="isValidationAvailable" class="p-4 rounded-lg bg-muted/30 space-y-1.5">
