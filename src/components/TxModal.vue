@@ -100,6 +100,7 @@ async function onClickEstimate() {
 		if (isDeployed.value || selectedAccount.value.category === 'Smart EOA') {
 			await handleEstimate(props.executions)
 		} else {
+			// If the account is not deployed, check if there is init code provided
 			if (!selectedAccountInitCodeData.value) {
 				emit('close')
 				toast.error('Account not deployed and no init code provided')
