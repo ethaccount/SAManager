@@ -317,7 +317,7 @@ function getEncodedInstallScheduledTransfers(accountId: AccountId, initData: str
 
 <template>
 	<Card class="w-full bg-background/50 backdrop-blur-sm border-none shadow-none">
-		<CardContent class="pt-6">
+		<CardContent class="pt-4">
 			<div class="mb-4">
 				<Button
 					class="w-full bg-primary/90 hover:bg-primary disabled:opacity-50"

@@ -28,6 +28,7 @@ declare module 'vue' {
     AutoFormFieldNumber: typeof import('./components/ui/auto-form/AutoFormFieldNumber.vue')['default']
     AutoFormFieldObject: typeof import('./components/ui/auto-form/AutoFormFieldObject.vue')['default']
     AutoFormLabel: typeof import('./components/ui/auto-form/AutoFormLabel.vue')['default']
+    Badge: typeof import('./components/ui/badge/Badge.vue')['default']
     Button: typeof import('./components/ui/button/Button.vue')['default']
     Calendar: typeof import('./components/ui/calendar/Calendar.vue')['default']
     CalendarCell: typeof import('./components/ui/calendar/CalendarCell.vue')['default']
