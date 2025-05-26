@@ -3,30 +3,12 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { TokenTransfer, tokens } from '@/lib/token'
 import { useAccount } from '@/stores/account/useAccount'
 import { useTxModal } from '@/stores/useTxModal'
-import { isAddress, parseEther } from 'ethers'
-import { Plus, X } from 'lucide-vue-next'
-import { INTERFACES } from 'sendop'
+import { isAddress } from 'ethers'
 
-type Token = {
-	id: string
-	symbol: string
-	name: string
-	icon: string
-	address: string
-}
-
-type TokenTransfer = {
-	recipient: string
-	amount: string
-	tokenId: string
-}
-
-const tokens: Token[] = [
-	{ id: 'eth', symbol: 'ETH', name: 'Ethereum', icon: 'Ξ', address: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE' },
-	// { id: 'usdc', symbol: 'USDC', name: 'USD Coin', icon: '$', address: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238' },
-]
+const { isAccountConnected } = useAccount()
 
 function getDefaultTransfer(): TokenTransfer {
 	return {
@@ -36,62 +18,34 @@ function getDefaultTransfer(): TokenTransfer {
 	}
 }
 
-const transfers = ref<TokenTransfer[]>([getDefaultTransfer()])
+const transfer = ref<TokenTransfer>(getDefaultTransfer())
 
 const isValidTransfers = computed(() => {
-	return transfers.value.every(transfer => {
-		const recipient = transfer.recipient
-		const amount = transfer.amount
+	const recipient = transfer.value.recipient
+	const amount = transfer.value.amount
 
-		if (!isAddress(recipient)) return false
-		if (amount === '') return false
-		if (!Number.isFinite(Number(amount))) return false // note: Number.isFinite cannot check empty string
-		if (Number(amount) <= 0) return false
+	if (!isAddress(recipient)) return false
+	if (amount === '') return false
+	if (!Number.isFinite(Number(amount))) return false // note: Number.isFinite cannot check empty string
+	if (Number(amount) <= 0) return false
 
-		return true
-	})
+	return true
 })
-
-const addTransfer = () => {
-	transfers.value.push(getDefaultTransfer())
-}
-
-const removeTransfer = (index: number) => {
-	if (transfers.value.length > 1) {
-		transfers.value.splice(index, 1)
-	}
-}
 
 const onClickReview = () => {
 	useTxModal().openModal({
-		executions: transfers.value.map(t => {
-			if (t.tokenId === 'eth') {
-				return {
-					to: t.recipient,
-					value: BigInt(parseEther(t.amount)),
-					data: '0x',
-				}
-			} else {
-				return {
-					to: t.recipient,
-					value: 0n,
-					data: INTERFACES.IERC20.encodeFunctionData('transfer', [t.recipient, parseEther(t.amount)]),
-				}
-			}
-		}),
+		executions: [],
 	})
 }
 
-const { isAccountConnected } = useAccount()
-
 const reviewDisabled = computed(() => {
-	return !isAccountConnected.value || !isValidTransfers.value || transfers.value.length === 0
+	return !isAccountConnected.value || !isValidTransfers.value
 })
 
 const reviewButtonText = computed(() => {
 	if (!isAccountConnected.value) return 'Connect your account to review'
-	if (!isValidTransfers.value) return 'Invalid transfers'
-	return 'Review Transfers'
+	if (!isValidTransfers.value) return 'Invalid schedule transfer'
+	return 'Review schedule transfer'
 })
 </script>
 
@@ -111,21 +65,8 @@ const reviewButtonText = computed(() => {
 
 			<div class="space-y-3">
 				<div
-					v-for="(transfer, index) in transfers"
-					:key="index"
 					class="relative p-4 rounded-xl bg-muted/30 border border-border/50 backdrop-blur-sm transition-all duration-200 hover:border-border"
 				>
-					<Button
-						v-if="transfers.length > 1"
-						variant="ghost"
-						size="icon"
-						@click="removeTransfer(index)"
-						:disabled="transfers.length === 1"
-						class="absolute -right-2 -top-2 h-6 w-6 opacity-50 hover:opacity-100 hover:bg-destructive/10 rounded-full bg-background shadow-sm"
-					>
-						<X class="h-3 w-3" />
-					</Button>
-
 					<div class="space-y-3">
 						<Input
 							id="recipient"
@@ -176,15 +117,6 @@ const reviewButtonText = computed(() => {
 					</div>
 				</div>
 			</div>
-
-			<Button
-				variant="ghost"
-				class="w-full mt-3 border border-dashed border-border/50 hover:border-primary hover:bg-primary/5"
-				@click="addTransfer"
-			>
-				<Plus class="mr-2 h-4 w-4" />
-				Add Transfer
-			</Button>
 		</CardContent>
 	</Card>
 </template>
