@@ -8,6 +8,10 @@ const route = useRoute()
 			<router-view />
 		</SendLayout>
 
+		<ScheduleLayout v-else-if="route.name === 'scheduling-transfer' || route.name === 'scheduling-jobs'">
+			<router-view />
+		</ScheduleLayout>
+
 		<router-view v-else />
 	</main>
 </template>

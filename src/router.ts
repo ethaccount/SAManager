@@ -67,17 +67,17 @@ const router = createRouter({
 						{
 							path: '/:chainId/scheduling/transfer',
 							name: 'scheduling-transfer',
-							component: () => import('@/views/UnderConstruction.vue'),
+							component: () => import('@/views/ScheduleTransfer.vue'),
 						},
-						{
-							path: '/:chainId/scheduling/swap',
-							name: 'scheduling-swap',
-							component: () => import('@/views/UnderConstruction.vue'),
-						},
+						// {
+						// 	path: '/:chainId/scheduling/swap',
+						// 	name: 'scheduling-swap',
+						// 	component: () => import('@/views/UnderConstruction.vue'),
+						// },
 						{
 							path: '/:chainId/scheduling/jobs',
 							name: 'scheduling-jobs',
-							component: () => import('@/views/UnderConstruction.vue'),
+							component: () => import('@/views/ScheduledJobs.vue'),
 						},
 						// Recovery
 						{

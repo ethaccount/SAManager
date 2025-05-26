@@ -4,8 +4,8 @@ import { toRoute } from '@/lib/router'
 const route = useRoute()
 
 const tabs = [
-	{ name: 'Token', route: 'send-token' },
-	{ name: 'Raw', route: 'send-raw' },
+	{ name: 'Transfer', route: 'scheduling-transfer' },
+	{ name: 'Jobs', route: 'scheduling-jobs' },
 ]
 </script>
 

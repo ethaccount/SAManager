@@ -91,6 +91,7 @@ declare module 'vue' {
     RadioGroupItem: typeof import('./components/ui/radio-group/RadioGroupItem.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    ScheduleLayout: typeof import('./components/layout/ScheduleLayout.vue')['default']
     Select: typeof import('./components/ui/select/Select.vue')['default']
     SelectContent: typeof import('./components/ui/select/SelectContent.vue')['default']
     SelectGroup: typeof import('./components/ui/select/SelectGroup.vue')['default']

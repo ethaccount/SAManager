@@ -5,6 +5,8 @@ import { toRoute } from '@/lib/router'
 import { Menu } from 'lucide-vue-next'
 import { RouterLink } from 'vue-router'
 
+const route = useRoute()
+
 const isOpen = ref(false)
 
 const closeSheet = () => {
@@ -15,17 +17,36 @@ const closeSheet = () => {
 <template>
 	<!-- Desktop Navigation -->
 	<nav class="hidden sm:flex items-center space-x-6 text-sm font-medium">
-		<RouterLink :to="toRoute('send-token')" class="transition-colors hover:text-foreground/80 text-foreground/60">
+		<RouterLink
+			:to="toRoute('create')"
+			class="transition-colors hover:text-foreground/80 text-foreground/60"
+			:class="{
+				'text-foreground/80': route.name === 'create',
+			}"
+		>
+			Create
+		</RouterLink>
+
+		<RouterLink
+			:to="toRoute('send-token')"
+			class="transition-colors hover:text-foreground/80 text-foreground/60"
+			:class="{
+				'text-foreground/80': route.name === 'send-token',
+			}"
+		>
 			Send
 		</RouterLink>
-		<!-- <RouterLink
+
+		<RouterLink
 			:to="toRoute('scheduling-transfer')"
 			class="transition-colors hover:text-foreground/80 text-foreground/60"
-			disabled
+			:class="{
+				'text-foreground/80': route.name === 'scheduling-transfer',
+			}"
 		>
 			Scheduling
 		</RouterLink>
-		<RouterLink
+		<!-- <RouterLink
 			:to="toRoute('recovery-setup')"
 			class="transition-colors hover:text-foreground/80 text-foreground/60"
 			disabled
@@ -49,24 +70,59 @@ const closeSheet = () => {
 			</SheetHeader>
 			<nav class="flex flex-col gap-4 mt-4">
 				<RouterLink
-					:to="toRoute('send-token')"
+					:to="toRoute('create')"
 					class="transition-colors hover:text-foreground/80 text-foreground/60"
+					:class="{
+						'text-foreground/80': route.name === 'create',
+					}"
 					@click="closeSheet"
 				>
-					<Button variant="ghost" class="w-full justify-start">Send</Button>
+					Create New Account
 				</RouterLink>
-				<!-- <RouterLink
+
+				<RouterLink
+					:to="toRoute('send-token')"
+					class="transition-colors hover:text-foreground/80 text-foreground/60"
+					:class="{
+						'text-foreground/80': route.name === 'send-token',
+					}"
+					@click="closeSheet"
+				>
+					Send Token
+				</RouterLink>
+
+				<RouterLink
+					:to="toRoute('send-raw')"
+					class="transition-colors hover:text-foreground/80 text-foreground/60"
+					:class="{
+						'text-foreground/80': route.name === 'send-raw',
+					}"
+					@click="closeSheet"
+				>
+					Send Raw Data
+				</RouterLink>
+
+				<RouterLink
 					:to="toRoute('scheduling-transfer')"
 					class="transition-colors hover:text-foreground/80 text-foreground/60"
+					:class="{
+						'text-foreground/80': route.name === 'scheduling-transfer',
+					}"
+					@click="closeSheet"
 				>
-					Scheduling
+					Schedule Transfer
 				</RouterLink>
+
 				<RouterLink
-					:to="toRoute('recovery-setup')"
+					:to="toRoute('scheduling-jobs')"
 					class="transition-colors hover:text-foreground/80 text-foreground/60"
+					:class="{
+						'text-foreground/80': route.name === 'scheduling-jobs',
+					}"
+					@click="closeSheet"
 				>
-					Recovery
-				</RouterLink> -->
+					Scheduled Jobs
+				</RouterLink>
 			</nav>
 		</SheetContent>
 	</Sheet>

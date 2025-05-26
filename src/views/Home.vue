@@ -61,8 +61,8 @@ async function onClickImportAccount() {
 					<CardDescription>Schedule recurring transactions and manage automated tasks</CardDescription>
 				</CardHeader>
 				<CardFooter class="mt-auto pt-4">
-					<RouterLink to="" class="w-full">
-						<Button variant="outline" disabled class="w-full">Under Construction</Button>
+					<RouterLink :to="toRoute('scheduling-transfer')" class="w-full">
+						<Button variant="outline" class="w-full">Get Started</Button>
 					</RouterLink>
 				</CardFooter>
 			</Card>
