@@ -1,33 +1,61 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { TokenTransfer, tokens } from '@/lib/token'
+import { IS_DEV } from '@/config'
+import { ScheduleTransfer, tokens } from '@/lib/token'
 import { useAccount } from '@/stores/account/useAccount'
 import { useTxModal } from '@/stores/useTxModal'
+import { DateFormatter, getLocalTimeZone, today } from '@internationalized/date'
 import { isAddress } from 'ethers'
+import { CalendarIcon } from 'lucide-vue-next'
 
 const { isAccountConnected } = useAccount()
 
-function getDefaultTransfer(): TokenTransfer {
+function getDefaultTransfer(): ScheduleTransfer {
+	if (IS_DEV) {
+		return {
+			recipient: '0xd78B5013757Ea4A7841811eF770711e6248dC282',
+			amount: '0.0001',
+			tokenId: tokens[0].id,
+			frequency: '3min',
+			times: 3,
+			startDate: today(getLocalTimeZone()),
+		}
+	}
 	return {
 		recipient: '',
 		amount: '0',
 		tokenId: tokens[0].id,
+		frequency: 'weekly',
+		times: 3,
+		startDate: today(getLocalTimeZone()),
 	}
 }
 
-const transfer = ref<TokenTransfer>(getDefaultTransfer())
+const scheduledTransfer = ref<ScheduleTransfer>(getDefaultTransfer())
+
+const frequencies = computed(() => [
+	...(IS_DEV ? [{ id: '3min', label: '3 min' }] : []),
+	{ id: 'daily', label: 'Daily' },
+	{ id: 'weekly', label: 'Weekly' },
+	{ id: 'monthly', label: 'Monthly' },
+])
+
+const dateFormatter = new DateFormatter('en-US', {
+	dateStyle: 'long',
+})
 
 const isValidTransfers = computed(() => {
-	const recipient = transfer.value.recipient
-	const amount = transfer.value.amount
+	const recipient = scheduledTransfer.value.recipient
+	const amount = scheduledTransfer.value.amount
+	const times = scheduledTransfer.value.times
 
 	if (!isAddress(recipient)) return false
 	if (amount === '') return false
 	if (!Number.isFinite(Number(amount))) return false // note: Number.isFinite cannot check empty string
 	if (Number(amount) <= 0) return false
+
+	if (times === undefined) return false
+	if (!Number.isInteger(times)) return false
+	if (times < 1 || times > 10) return false
 
 	return true
 })
@@ -44,8 +72,32 @@ const reviewDisabled = computed(() => {
 
 const reviewButtonText = computed(() => {
 	if (!isAccountConnected.value) return 'Connect your account to review'
-	if (!isValidTransfers.value) return 'Invalid schedule transfer'
-	return 'Review schedule transfer'
+	if (!isValidTransfers.value) return 'Invalid scheduled transfer'
+	return 'Review scheduled transfer'
+})
+
+const formattedScheduledTransfer = computed(() => {
+	const frequencyToSeconds: Record<string, number> = {
+		'3min': 3 * 60,
+		daily: 24 * 60 * 60,
+		weekly: 7 * 24 * 60 * 60,
+		monthly: 30 * 24 * 60 * 60,
+	}
+
+	const token = tokens.find(t => t.id === scheduledTransfer.value.tokenId)
+
+	return {
+		recipient: scheduledTransfer.value.recipient,
+		amount: scheduledTransfer.value.amount,
+		tokenAddress: token?.address || '',
+		executeInterval: frequencyToSeconds[scheduledTransfer.value.frequency] || 0,
+		numOfExecutions: scheduledTransfer.value.times,
+		startDate: Math.floor(scheduledTransfer.value.startDate.toDate(getLocalTimeZone()).getTime() / 1000),
+	}
+})
+
+watchImmediate(formattedScheduledTransfer, () => {
+	console.log('scheduledTransfer', formattedScheduledTransfer.value)
 })
 </script>
 
@@ -71,7 +123,7 @@ const reviewButtonText = computed(() => {
 						<Input
 							id="recipient"
 							placeholder="Recipient Address (0x...)"
-							v-model="transfer.recipient"
+							v-model="scheduledTransfer.recipient"
 							class="border-none bg-muted placeholder:text-muted-foreground/50"
 						/>
 
@@ -81,20 +133,22 @@ const reviewButtonText = computed(() => {
 									id="amount"
 									type="text"
 									placeholder="0.0"
-									v-model="transfer.amount"
+									v-model="scheduledTransfer.amount"
 									class="border-none bg-muted text-lg placeholder:text-muted-foreground/50"
 								/>
 							</div>
 							<div>
-								<Select v-model="transfer.tokenId">
+								<Select v-model="scheduledTransfer.tokenId">
 									<SelectTrigger id="token" class="border-none bg-muted">
 										<SelectValue>
 											<template #placeholder>Token</template>
 											<div class="flex items-center">
 												<span class="mr-2 text-lg">{{
-													tokens.find(t => t.id === transfer.tokenId)?.icon
+													tokens.find(t => t.id === scheduledTransfer.tokenId)?.icon
 												}}</span>
-												<span>{{ tokens.find(t => t.id === transfer.tokenId)?.symbol }}</span>
+												<span>{{
+													tokens.find(t => t.id === scheduledTransfer.tokenId)?.symbol
+												}}</span>
 											</div>
 										</SelectValue>
 									</SelectTrigger>
@@ -115,6 +169,71 @@ const reviewButtonText = computed(() => {
 							</div>
 						</div>
 					</div>
+				</div>
+
+				<!-- Frequency Section -->
+				<div
+					class="relative p-4 rounded-xl bg-muted/30 border border-border/50 backdrop-blur-sm transition-all duration-200 hover:border-border"
+				>
+					<div class="grid grid-cols-2 gap-4">
+						<div>
+							<h3 class="mb-2 text-sm font-medium">Frequency</h3>
+							<Select v-model="scheduledTransfer.frequency">
+								<SelectTrigger id="frequency" class="border-none bg-muted">
+									<SelectValue>
+										<template #placeholder>Select frequency</template>
+										{{ frequencies.find(f => f.id === scheduledTransfer.frequency)?.label }}
+									</SelectValue>
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem
+										v-for="frequency in frequencies"
+										:key="frequency.id"
+										:value="frequency.id"
+										class="cursor-pointer"
+									>
+										{{ frequency.label }}
+									</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
+						<div>
+							<h3 class="mb-2 text-sm font-medium">Number of Times</h3>
+							<Input
+								id="times"
+								type="number"
+								min="1"
+								max="10"
+								v-model.number="scheduledTransfer.times"
+								class="border-none bg-muted"
+							/>
+						</div>
+					</div>
+				</div>
+
+				<!-- Start Date Section -->
+				<div
+					class="relative p-4 rounded-xl bg-muted/30 border border-border/50 backdrop-blur-sm transition-all duration-200 hover:border-border"
+				>
+					<h3 class="mb-2 text-sm font-medium">Start Date</h3>
+					<Popover>
+						<PopoverTrigger class="w-full">
+							<Button
+								variant="outline"
+								class="w-full justify-start text-left font-normal border-none bg-muted"
+							>
+								<CalendarIcon class="mr-2 h-4 w-4" />
+								{{
+									scheduledTransfer.startDate
+										? dateFormatter.format(scheduledTransfer.startDate.toDate(getLocalTimeZone()))
+										: 'Pick a date'
+								}}
+							</Button>
+						</PopoverTrigger>
+						<PopoverContent class="w-auto p-0">
+							<Calendar v-model="scheduledTransfer.startDate" />
+						</PopoverContent>
+					</Popover>
 				</div>
 			</div>
 		</CardContent>

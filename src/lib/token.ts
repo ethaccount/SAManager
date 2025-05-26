@@ -12,6 +12,12 @@ export type TokenTransfer = {
 	tokenId: string
 }
 
+export type ScheduleTransfer = TokenTransfer & {
+	frequency: string
+	times: number
+	startDate: any
+}
+
 export const tokens: Token[] = [
 	{ id: 'eth', symbol: 'ETH', name: 'Ethereum', icon: 'Ξ', address: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE' },
 	// { id: 'usdc', symbol: 'USDC', name: 'USD Coin', icon: '$', address: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238' },
