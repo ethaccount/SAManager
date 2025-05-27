@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { DISABLE_SCHEDULING } from '@/config'
 import { toRoute } from '@/lib/router'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
 import { Clock, Plus, Send, Shield, Wallet } from 'lucide-vue-next'
@@ -61,9 +62,10 @@ async function onClickImportAccount() {
 					<CardDescription>Schedule recurring transactions and manage automated tasks</CardDescription>
 				</CardHeader>
 				<CardFooter class="mt-auto pt-4">
-					<RouterLink :to="toRoute('scheduling-transfer')" class="w-full">
+					<RouterLink v-if="!DISABLE_SCHEDULING" :to="toRoute('scheduling-transfer')" class="w-full">
 						<Button variant="outline" class="w-full">Get Started</Button>
 					</RouterLink>
+					<Button v-else variant="outline" disabled class="w-full">Coming Soon</Button>
 				</CardFooter>
 			</Card>
 
@@ -77,7 +79,7 @@ async function onClickImportAccount() {
 				</CardHeader>
 				<CardFooter class="mt-auto pt-4">
 					<RouterLink to="" class="w-full">
-						<Button variant="outline" disabled class="w-full">Under Construction</Button>
+						<Button variant="outline" disabled class="w-full">Coming Soon</Button>
 					</RouterLink>
 				</CardFooter>
 			</Card>
