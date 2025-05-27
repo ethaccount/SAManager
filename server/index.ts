@@ -59,9 +59,29 @@ export default {
 			}
 
 			try {
-				return await fetch(providerUrl, request)
+				const upstreamRequest = new Request(providerUrl, {
+					method: request.method,
+					headers: request.headers,
+					body: request.body,
+					redirect: 'manual',
+				})
+
+				const upstreamResponse = await fetch(upstreamRequest)
+
+				// @note Remove content-encoding header when proxying streamed responses
+				// For alchmey, this is essential to avoid truncatation of the response
+				const responseHeaders = new Headers(upstreamResponse.headers)
+				responseHeaders.delete('content-encoding')
+
+				return new Response(upstreamResponse.body, {
+					status: upstreamResponse.status,
+					headers: responseHeaders,
+				})
 			} catch (e: unknown) {
-				return Response.json({ error: `Failed to proxy provider request: ${e}` }, { status: 500 })
+				return Response.json(
+					{ error: `Failed to proxy provider request: ${(e as Error).message}` },
+					{ status: 500 },
+				)
 			}
 		}
 
