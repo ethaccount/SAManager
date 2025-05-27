@@ -1,4 +1,4 @@
-import { ALCHEMY_API_KEY, IS_DEV, PIMLICO_API_KEY } from '@/config'
+import { IS_DEV } from '@/config'
 import {
 	CHAIN_ID,
 	EXPLORER_URL,
@@ -9,7 +9,7 @@ import {
 	TESTNET_CHAIN_ID,
 } from '@/stores/network/network'
 import { JsonRpcProvider } from 'ethers'
-import { alchemy, publicNode, tenderly } from 'evm-providers'
+import { publicNode, tenderly } from 'evm-providers'
 import { defineStore } from 'pinia'
 import { ADDRESS, AlchemyBundler, Bundler, EntryPointVersion, PimlicoBundler, PublicPaymaster } from 'sendop'
 
@@ -17,6 +17,14 @@ export const DEFAULT_CHAIN_ID = IS_DEV ? TESTNET_CHAIN_ID.LOCAL : TESTNET_CHAIN_
 export const DEFAULT_ENTRY_POINT_VERSION: EntryPointVersion = 'v0.7'
 export const DEFAULT_NODE = SUPPORTED_NODE.ALCHEMY
 export const DEFAULT_BUNDLER = SUPPORTED_BUNDLER.PIMLICO
+
+function getAlchemyUrl(chainId: CHAIN_ID) {
+	return `${window.location.origin}/api/provider?chainId=${chainId}&provider=alchemy`
+}
+
+function getPimlicoUrl(chainId: CHAIN_ID) {
+	return `${window.location.origin}/api/provider?chainId=${chainId}&provider=pimlico`
+}
 
 export const useNetworkStore = defineStore(
 	'useNetworkStore',
@@ -39,7 +47,7 @@ export const useNetworkStore = defineStore(
 		const rpcUrl = computed(() => {
 			switch (selectedNode.value) {
 				case SUPPORTED_NODE.ALCHEMY:
-					return alchemy(Number(selectedChainId.value) as any, ALCHEMY_API_KEY)
+					return getAlchemyUrl(selectedChainId.value)
 				case SUPPORTED_NODE.PUBLIC_NODE:
 					return publicNode(Number(selectedChainId.value) as any)
 			}
@@ -69,9 +77,9 @@ export const useNetworkStore = defineStore(
 			}
 			switch (selectedBundler.value) {
 				case SUPPORTED_BUNDLER.PIMLICO:
-					return `https://api.pimlico.io/v2/${selectedChainId.value}/rpc?apikey=${PIMLICO_API_KEY}`
+					return getPimlicoUrl(selectedChainId.value)
 				case SUPPORTED_BUNDLER.ALCHEMY:
-					return alchemy(Number(selectedChainId.value) as any, ALCHEMY_API_KEY)
+					return getAlchemyUrl(selectedChainId.value)
 			}
 		})
 

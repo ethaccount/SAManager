@@ -4,7 +4,7 @@
 	"version": "0.0.23",
 	"type": "module",
 	"repository": "https://github.com/ethaccount/SAManager",
-	"homepage": "https://samanager.up.railway.app",
+	"homepage": "https://samanager.johnson86tw.workers.dev",
 	"author": "Johnson Chen <https://x.com/johnson86tw>",
 	"license": "AGPL-3.0-only",
 	"description": "A user-friendly interface to create, import, and manage ERC-4337 compatible smart accounts.",
@@ -21,7 +21,9 @@
 		"build": "vue-tsc --noEmit && vite build",
 		"preview": "vite preview",
 		"clean": "rm -rf dist && rm -rf node_modules",
-		"typecheck": "vue-tsc --noEmit"
+		"typecheck": "vue-tsc --noEmit",
+		"deploy": "pnpm run build && wrangler deploy",
+		"cf-typegen": "wrangler types"
 	},
 	"dependencies": {
 		"@internationalized/date": "^3.7.0",
@@ -54,6 +56,7 @@
 	},
 	"devDependencies": {
 		"@babel/helpers": "^7.27.1",
+		"@cloudflare/vite-plugin": "^1.2.4",
 		"@simplewebauthn/typescript-types": "^8.3.4",
 		"@types/node": "^22.10.6",
 		"@vitejs/plugin-vue": "^5.2.1",
@@ -68,7 +71,8 @@
 		"vite-bundle-analyzer": "^0.18.1",
 		"vite-plugin-html-config": "^2.0.2",
 		"vite-plugin-node-polyfills": "^0.23.0",
-		"vue-tsc": "^2.2.8"
+		"vue-tsc": "^2.2.8",
+		"wrangler": "^4.16.1"
 	},
 	"pnpm": {
 		"overrides": {

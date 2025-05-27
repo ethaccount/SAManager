@@ -1,4 +1,4 @@
-import { PASSKEY_RP_URL } from '@/config'
+import { env } from '@/app/useSetupEnv'
 import { PasskeyCredential } from '@/stores/passkey/passkey'
 import { createCredential, getCredential } from './passkeyNoRp'
 import { isBytes } from 'sendop'
@@ -59,7 +59,7 @@ export const usePasskeyStore = defineStore(
 
 		async function checkPasskeyRPHealth(): Promise<boolean> {
 			try {
-				const baseUrl = new URL(PASSKEY_RP_URL).origin
+				const baseUrl = new URL(env.VITE_PASSKEY_RP_URL).origin
 				const healthUrl = baseUrl + '/health'
 				console.log('checking passkey rp health on', healthUrl)
 				const response = await fetch(healthUrl)

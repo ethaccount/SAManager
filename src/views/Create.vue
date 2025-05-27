@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { SALT } from '@/config'
+import { env } from '@/app/useSetupEnv'
 import { toRoute } from '@/lib/router'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
 import { ACCOUNT_ID_TO_NAME, AccountId, displayAccountName, SUPPORTED_ACCOUNTS } from '@/stores/account/account'
@@ -122,7 +122,7 @@ watchImmediate(selectedValidationType, () => {
 
 const saltInput = ref<number | null>(null)
 const computedSalt = computed(() => {
-	if (!saltInput.value) return SALT
+	if (!saltInput.value) return env.APP_SALT
 	return toBytes32(BigInt(saltInput.value))
 })
 

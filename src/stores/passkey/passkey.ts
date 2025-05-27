@@ -1,4 +1,4 @@
-import { PASSKEY_RP_URL } from '@/config'
+import { env } from '@/app/useSetupEnv'
 import { decodeBase64URL } from '@/lib/helper'
 import { p256 } from '@noble/curves/p256'
 import { startAuthentication, startRegistration } from '@simplewebauthn/browser'
@@ -32,7 +32,7 @@ export function deserializePasskeyCredential(value: string): PasskeyCredential {
  */
 export async function register(username: string): Promise<PasskeyCredential> {
 	// Get registration options
-	const registerOptionsResponse = await fetch(`${PASSKEY_RP_URL}/register/options`, {
+	const registerOptionsResponse = await fetch(`${env.VITE_PASSKEY_RP_URL}/register/options`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -50,7 +50,7 @@ export async function register(username: string): Promise<PasskeyCredential> {
 	console.log('authenticatorId', authenticatorId)
 
 	// Verify registration
-	const registerVerifyResponse = await fetch(`${PASSKEY_RP_URL}/register/verify`, {
+	const registerVerifyResponse = await fetch(`${env.VITE_PASSKEY_RP_URL}/register/verify`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -111,7 +111,7 @@ export async function register(username: string): Promise<PasskeyCredential> {
  */
 export async function login(): Promise<Omit<PasskeyCredential, 'username'>> {
 	// Get login options
-	const loginOptionsResponse = await fetch(`${PASSKEY_RP_URL}/login/options`, {
+	const loginOptionsResponse = await fetch(`${env.VITE_PASSKEY_RP_URL}/login/options`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -128,7 +128,7 @@ export async function login(): Promise<Omit<PasskeyCredential, 'username'>> {
 	console.log('authenticatorId', authenticatorId)
 
 	// Verify authentication
-	const loginVerifyResponse = await fetch(`${PASSKEY_RP_URL}/login/verify`, {
+	const loginVerifyResponse = await fetch(`${env.VITE_PASSKEY_RP_URL}/login/verify`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',

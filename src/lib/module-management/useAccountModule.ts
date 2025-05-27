@@ -102,8 +102,8 @@ export function useAccountModule() {
 			// 	}
 			// }
 		} catch (e: unknown) {
+			console.error(e)
 			error.value = `Failed to fetch modules: ${e instanceof Error ? e.message : String(e)}`
-			throw new Error('Failed to fetch modules')
 		} finally {
 			loading.value = false
 		}

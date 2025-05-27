@@ -6,6 +6,8 @@ import Components from 'unplugin-vue-components/vite'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import htmlPlugin from 'vite-plugin-html-config'
 import { htmlConfig } from './htmlConfig'
+import { cloudflare } from '@cloudflare/vite-plugin'
+
 // import { analyzer } from 'vite-bundle-analyzer'
 
 // https://vitejs.dev/config/
@@ -30,6 +32,7 @@ export default defineConfig({
 			dts: 'src/components.d.ts',
 		}),
 		htmlPlugin(htmlConfig),
+		cloudflare(),
 		// analyzer(),
 	],
 	resolve: {
