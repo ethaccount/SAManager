@@ -75,7 +75,7 @@ onClickOutside(menu, () => {
 
 			<!-- Feedback -->
 			<!-- @docs https://docs.pushfeedback.com/category/customization -->
-			<feedback-button project="oc9bd4ntqh" modal-position="center" button-style="default">
+			<feedback-button project="oc9bd4ntqh" hide-rating="true" modal-position="center" button-style="default">
 				<button
 					class="w-full px-4 py-2 flex items-center gap-2 hover:bg-accent hover:text-accent-foreground border-t border-border"
 				>
