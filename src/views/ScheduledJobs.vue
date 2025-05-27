@@ -1,31 +1,47 @@
 <script setup lang="ts">
 import { toRoute } from '@/lib/router'
-import { fetchJobs, Job } from '@/lib/scheduling'
+import { formatDate, formatInterval, formatNextExecution, isJobOverdue, useFetchJobs } from '@/lib/scheduling'
 import { useAccount } from '@/stores/account/useAccount'
-import { useNetwork } from '@/stores/network/useNetwork'
-import { Clock, Loader2, Pause, Play, Trash2 } from 'lucide-vue-next'
+import { shortenAddress } from '@vue-dapp/core'
+import { formatUnits } from 'ethers'
+import { Clock, Loader2, Pause, Play, Zap } from 'lucide-vue-next'
 
 const router = useRouter()
 const { selectedAccount } = useAccount()
-const { client } = useNetwork()
 
-const loading = ref(false)
-const error = ref<string | null>(null)
-const jobs = ref<Job[]>([])
+const { loading, error, jobs, fetchAccountJobs } = useFetchJobs()
 
 onMounted(async () => {
+	await fetchAccountJobs()
+})
+
+const onClickJobAction = async (jobId: number, action: 'disable' | 'enable') => {
 	if (!selectedAccount.value) return
 
 	try {
-		loading.value = true
-		jobs.value = await fetchJobs(client.value, selectedAccount.value.address)
+		// TODO: Implement actual job management functions
+		console.log(`${action} job ${jobId}`)
+		// For now, just refresh the jobs list
+		await fetchAccountJobs()
 	} catch (err) {
-		console.error(err)
+		console.error(`Failed to ${action} job:`, err)
 		error.value = err instanceof Error ? err.message : String(err)
-	} finally {
-		loading.value = false
 	}
-})
+}
+
+const onClickExecute = async (jobId: number) => {
+	if (!selectedAccount.value) return
+
+	try {
+		// TODO: Implement actual job execution function
+		console.log(`Execute job ${jobId}`)
+		// For now, just refresh the jobs list
+		await fetchAccountJobs()
+	} catch (err) {
+		console.error(`Failed to execute job:`, err)
+		error.value = err instanceof Error ? err.message : String(err)
+	}
+}
 </script>
 
 <template>
@@ -44,6 +60,12 @@ onMounted(async () => {
 					<div v-else-if="loading">
 						<Loader2 class="w-6 h-6 animate-spin text-primary mx-auto" />
 					</div>
+					<div v-else-if="error" class="text-center">
+						<h3 class="text-xl font-semibold mb-3 text-destructive">Error loading jobs</h3>
+						<p class="text-muted-foreground mb-6 max-w-sm mx-auto">
+							{{ error }}
+						</p>
+					</div>
 					<div v-else-if="!jobs.length" class="text-center">
 						<h3 class="text-xl font-semibold mb-3">No scheduled jobs</h3>
 						<p class="text-muted-foreground mb-6 max-w-sm mx-auto">
@@ -60,36 +82,49 @@ onMounted(async () => {
 					<div
 						v-for="job in jobs"
 						:key="job.id"
-						class="group relative p-6 rounded-xl bg-muted/30 border border-border/40 backdrop-blur-sm transition-all duration-300 hover:border-border hover:shadow-lg hover:shadow-primary/5"
+						class="group relative p-6 rounded-xl bg-muted/30 border border-border/40"
 					>
 						<div class="flex items-start justify-between">
+							<!-- Job title and status -->
 							<div class="flex items-center space-x-3">
 								<div class="flex items-center space-x-2">
-									<div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-									<h3 class="text-lg font-semibold text-foreground">Send 0.1 ETH</h3>
+									<div
+										:class="[
+											'w-2 h-2 rounded-full',
+											job.isEnabled ? 'bg-green-500 animate-pulse' : 'bg-gray-400',
+										]"
+									></div>
+									<h3 class="text-lg font-semibold text-foreground">
+										Send {{ formatUnits(job.amount, job.tokenDecimals) }} {{ job.tokenSymbol }}
+									</h3>
 								</div>
-								<Badge
-									variant="secondary"
-									class="bg-green-500/10 text-green-600 border-green-500/20 font-medium"
-								>
-									Active
-								</Badge>
+								<div class="flex items-center space-x-2">
+									<Badge v-if="!job.isEnabled" variant="outline"> Disabled </Badge>
+									<Badge v-else-if="isJobOverdue(job)" variant="destructive"> Overdue </Badge>
+								</div>
 							</div>
-							<div
-								class="flex items-center space-x-1 opacity-60 group-hover:opacity-100 transition-opacity"
-							>
-								<Button variant="ghost" size="sm" class="h-9 w-9 p-0 hover:bg-muted/60">
-									<Pause class="w-4 h-4" />
-								</Button>
-								<Button variant="ghost" size="sm" class="h-9 w-9 p-0 hover:bg-muted/60">
-									<Play class="w-4 h-4" />
+
+							<!-- Enable/Disable and Execute buttons -->
+							<div class="flex items-center space-x-1">
+								<Button
+									v-if="job.isEnabled && isJobOverdue(job)"
+									variant="ghost"
+									size="sm"
+									class="h-9 w-9 p-0 hover:bg-orange-500/10 text-orange-600 hover:text-orange-700"
+									@click="onClickExecute(job.id)"
+									title="Execute now"
+								>
+									<Zap class="w-4 h-4" />
 								</Button>
 								<Button
 									variant="ghost"
 									size="sm"
-									class="h-9 w-9 p-0 hover:bg-destructive/10 hover:text-destructive"
+									class="h-9 w-9 p-0 hover:bg-muted/60"
+									@click="onClickJobAction(job.id, job.isEnabled ? 'disable' : 'enable')"
+									:title="job.isEnabled ? 'Disable' : 'Enable'"
 								>
-									<Trash2 class="w-4 h-4" />
+									<Pause v-if="job.isEnabled" class="w-4 h-4" />
+									<Play v-else class="w-4 h-4" />
 								</Button>
 							</div>
 						</div>
@@ -97,24 +132,37 @@ onMounted(async () => {
 						<!-- Destination -->
 						<div class="flex items-center space-x-2 mb-2">
 							<span class="text-sm text-muted-foreground">To:</span>
-							<code class="px-2 py-1 bg-muted/50 rounded-md text-sm font-mono">0x1234...5678</code>
+							<div class="flex items-center space-x-1">
+								<code class="px-2 py-1 bg-muted/50 rounded-md text-sm font-mono">
+									{{ shortenAddress(job.recipient) }}
+								</code>
+								<CopyButton :address="job.recipient" />
+							</div>
 						</div>
 
 						<!-- Schedule Info -->
 						<div class="flex items-center space-x-4">
 							<div class="flex items-center space-x-2">
 								<Clock class="w-4 h-4 text-muted-foreground" />
-								<span class="text-sm font-medium">Daily</span>
+								<span class="text-sm font-medium">{{ formatInterval(job.executeInterval) }}</span>
 							</div>
-							<div class="text-sm text-muted-foreground">Started Apr 1, 2023</div>
+							<div class="text-sm text-muted-foreground">Started {{ formatDate(job.startDate) }}</div>
 						</div>
 
 						<!-- Progress Section -->
 						<div class="mt-2">
 							<div class="flex">
-								<span class="text-sm text-muted-foreground">3 of 10 executions</span>
+								<span class="text-sm text-muted-foreground">
+									{{ job.numberOfExecutionsCompleted }} of {{ job.numberOfExecutions }} executions
+								</span>
 							</div>
-							<div class="text-xs text-muted-foreground">Last execution: Apr 3, 2023</div>
+							<div v-if="job.lastExecutionTime > 0" class="text-xs text-muted-foreground">
+								Last execution: {{ formatDate(job.lastExecutionTime) }}
+							</div>
+							<div v-else class="text-sm text-muted-foreground">
+								<span v-if="job.isEnabled"> Next execution: {{ formatNextExecution(job) }} </span>
+								<span v-else> Job is paused - will start when resumed </span>
+							</div>
 						</div>
 					</div>
 				</div>
