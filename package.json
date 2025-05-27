@@ -1,9 +1,21 @@
 {
-	"name": "samanager",
+	"name": "smart-account-manager",
 	"private": true,
 	"version": "0.0.23",
 	"type": "module",
 	"repository": "https://github.com/ethaccount/SAManager",
+	"homepage": "https://samanager.up.railway.app",
+	"author": "Johnson Chen <https://x.com/johnson86tw>",
+	"license": "AGPL-3.0-only",
+	"description": "A user-friendly interface to create, import, and manage ERC-4337 compatible smart accounts.",
+	"keywords": [
+		"ERC-4337",
+		"smart accounts",
+		"web3",
+		"blockchain",
+		"wallet",
+		"ethereum"
+	],
 	"scripts": {
 		"dev": "vite",
 		"build": "vue-tsc --noEmit && vite build",
@@ -54,6 +66,7 @@
 		"unplugin-vue-components": "0.25.1",
 		"vite": "^6.3.5",
 		"vite-bundle-analyzer": "^0.18.1",
+		"vite-plugin-html-config": "^2.0.2",
 		"vite-plugin-node-polyfills": "^0.23.0",
 		"vue-tsc": "^2.2.8"
 	},
