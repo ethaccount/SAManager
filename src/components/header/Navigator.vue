@@ -1,10 +1,7 @@
 <script lang="ts" setup>
-import { Button } from '@/components/ui/button'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { DISABLE_SCHEDULING } from '@/config'
 import { toRoute } from '@/lib/router'
 import { Menu } from 'lucide-vue-next'
-import { RouterLink } from 'vue-router'
 
 const route = useRoute()
 
@@ -48,13 +45,6 @@ const closeSheet = () => {
 		>
 			Scheduling
 		</RouterLink>
-		<!-- <RouterLink
-			:to="toRoute('recovery-setup')"
-			class="transition-colors hover:text-foreground/80 text-foreground/60"
-			disabled
-		>
-			Recovery
-		</RouterLink> -->
 	</nav>
 
 	<!-- Mobile Navigation -->
@@ -105,6 +95,7 @@ const closeSheet = () => {
 				</RouterLink>
 
 				<RouterLink
+					v-if="!DISABLE_SCHEDULING"
 					:to="toRoute('scheduling-transfer')"
 					class="transition-colors hover:text-foreground/80 text-foreground/60"
 					:class="{
@@ -116,6 +107,7 @@ const closeSheet = () => {
 				</RouterLink>
 
 				<RouterLink
+					v-if="!DISABLE_SCHEDULING"
 					:to="toRoute('scheduling-jobs')"
 					class="transition-colors hover:text-foreground/80 text-foreground/60"
 					:class="{
