@@ -6,9 +6,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { useAccount } from '@/stores/account/useAccount'
 import { useTxModal } from '@/stores/useTxModal'
 import { Interface, isAddress, parseEther } from 'ethers'
-import { Plus, X } from 'lucide-vue-next'
-import { ADDRESS } from 'sendop'
-import { IS_DEV } from '@/config'
+import { Eraser, Plus, X, Zap } from 'lucide-vue-next'
+
+const { isAccountConnected, selectedAccount } = useAccount()
 
 type Execution = {
 	to: string
@@ -17,15 +17,6 @@ type Execution = {
 }
 
 function getDefaultExecution(): Execution {
-	if (IS_DEV) {
-		return {
-			to: ADDRESS.Counter,
-			value: '0',
-			data: new Interface(['function setNumber(uint256)']).encodeFunctionData('setNumber', [
-				Math.floor(Math.random() * 10000),
-			]),
-		}
-	}
 	return {
 		to: '',
 		value: '0',
@@ -47,6 +38,27 @@ const removeExecution = (index: number) => {
 	}
 }
 
+const onClickMintTestToken = (index: number) => {
+	if (!selectedAccount.value) return
+
+	executions.value[index] = {
+		to: '0xef26611a6f2cb9f2f6234F4635d98a7094c801Ce',
+		value: '0',
+		data: new Interface(['function mint(address,uint256)']).encodeFunctionData('mint', [
+			selectedAccount.value?.address,
+			parseEther('10'),
+		]),
+	}
+}
+
+const onClickClearInputs = (index: number) => {
+	executions.value[index] = {
+		to: '',
+		value: '0',
+		data: '',
+	}
+}
+
 const isValidExecutions = computed(() => {
 	return executions.value.every(exec => {
 		const to = exec.to
@@ -60,8 +72,6 @@ const isValidExecutions = computed(() => {
 		return true
 	})
 })
-
-const { isAccountConnected } = useAccount()
 
 const reviewDisabled = computed(() => {
 	return !isAccountConnected.value || !isValidExecutions.value || executions.value.length === 0
@@ -133,6 +143,29 @@ async function onClickSend() {
 							placeholder="Call Data (0x...)"
 							class="border-none bg-muted placeholder:text-muted-foreground/50 font-mono min-h-[80px] resize-y"
 						/>
+
+						<div class="flex gap-2 mt-2">
+							<Button
+								variant="outline"
+								size="sm"
+								@click="onClickMintTestToken(index)"
+								class="px-3 py-1 text-xs border-border/50 hover:border-primary hover:bg-primary/5"
+								:disabled="!isAccountConnected"
+							>
+								<Zap class="mr-1 h-3 w-3" />
+								Mint Test Token
+							</Button>
+
+							<Button
+								variant="outline"
+								size="sm"
+								@click="onClickClearInputs(index)"
+								class="px-3 py-1 text-xs border-border/50 hover:border-destructive hover:bg-destructive/5"
+							>
+								<Eraser class="mr-1 h-3 w-3" />
+								Clear
+							</Button>
+						</div>
 					</div>
 				</div>
 			</div>

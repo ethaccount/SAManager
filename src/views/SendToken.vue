@@ -3,12 +3,12 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { TokenTransfer, tokens } from '@/lib/token'
 import { useAccount } from '@/stores/account/useAccount'
 import { useTxModal } from '@/stores/useTxModal'
-import { isAddress, parseEther } from 'ethers'
-import { Plus, X } from 'lucide-vue-next'
+import { isAddress, parseUnits } from 'ethers'
+import { Eraser, Plus, X, Zap } from 'lucide-vue-next'
 import { INTERFACES } from 'sendop'
-import { Token, TokenTransfer, tokens } from '@/lib/token'
 
 function getDefaultTransfer(): TokenTransfer {
 	return {
@@ -44,20 +44,43 @@ const removeTransfer = (index: number) => {
 	}
 }
 
+const onClickSendTestToken = (index: number) => {
+	transfers.value[index] = {
+		recipient: '0xd78B5013757Ea4A7841811eF770711e6248dC282',
+		amount: '1',
+		tokenId: tokens[1].id,
+	}
+}
+
+const onClickClearInputs = (index: number) => {
+	transfers.value[index] = {
+		recipient: '',
+		amount: '0',
+		tokenId: tokens[0].id,
+	}
+}
+
 const onClickReview = () => {
 	useTxModal().openModal({
 		executions: transfers.value.map(t => {
 			if (t.tokenId === 'eth') {
 				return {
 					to: t.recipient,
-					value: BigInt(parseEther(t.amount)),
+					value: parseUnits(t.amount, 18),
 					data: '0x',
 				}
 			} else {
+				const token = tokens.find(tt => tt.id === t.tokenId)
+				if (!token) {
+					throw new Error(`Token ${t.tokenId} not found`)
+				}
 				return {
-					to: t.recipient,
+					to: token.address,
 					value: 0n,
-					data: INTERFACES.IERC20.encodeFunctionData('transfer', [t.recipient, parseEther(t.amount)]),
+					data: INTERFACES.IERC20.encodeFunctionData('transfer', [
+						t.recipient,
+						parseUnits(t.amount, token.decimals),
+					]),
 				}
 			}
 		}),
@@ -154,6 +177,29 @@ const reviewButtonText = computed(() => {
 									</SelectContent>
 								</Select>
 							</div>
+						</div>
+
+						<div class="flex gap-2 mt-2">
+							<Button
+								variant="outline"
+								size="sm"
+								@click="onClickSendTestToken(index)"
+								class="px-3 py-1 text-xs border-border/50 hover:border-primary hover:bg-primary/5"
+								:disabled="!isAccountConnected"
+							>
+								<Zap class="mr-1 h-3 w-3" />
+								Send Test Token
+							</Button>
+
+							<Button
+								variant="outline"
+								size="sm"
+								@click="onClickClearInputs(index)"
+								class="px-3 py-1 text-xs border-border/50 hover:border-destructive hover:bg-destructive/5"
+							>
+								<Eraser class="mr-1 h-3 w-3" />
+								Clear
+							</Button>
 						</div>
 					</div>
 				</div>
