@@ -51,6 +51,19 @@ const router = createRouter({
 							path: '/:chainId/:address',
 							name: 'account-management',
 							component: () => import('@/views/AccountManagement/AccountManagement.vue'),
+							redirect: to => `${to.path}/modules`,
+							children: [
+								{
+									path: 'modules',
+									name: 'account-modules',
+									component: () => import('@/views/AccountManagement/AMModules.vue'),
+								},
+								{
+									path: 'permissions',
+									name: 'account-permissions',
+									component: () => import('@/views/AccountManagement/AMPermissions.vue'),
+								},
+							],
 						},
 						// Send
 						{

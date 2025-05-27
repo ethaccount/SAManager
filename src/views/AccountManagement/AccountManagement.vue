@@ -1,19 +1,13 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toRoute } from '@/lib/router'
 import { useGetCode } from '@/lib/useGetCode'
 import { displayAccountName } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
+import { displayChainName } from '@/stores/network/network'
+import { useNetwork } from '@/stores/network/useNetwork'
 import { displayValidationIdentifier } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
 import { ArrowLeft, Loader2 } from 'lucide-vue-next'
-import AMCrossChain from './AMCrossChain.vue'
-import AMModules from './AMModules.vue'
-import AMPaymasters from './AMPaymasters.vue'
-import AMSessions from './AMSessions.vue'
-import { displayChainName } from '@/stores/network/network'
-import { useNetwork } from '@/stores/network/useNetwork'
 
 const router = useRouter()
 const { selectedAccount, isModular, isChainIdMatching, isCrossChain } = useAccount()
@@ -22,7 +16,10 @@ const { getCode, isDeployed, loading } = useGetCode()
 // Use this instead of onMounted because users might change account with the drawer
 watchImmediate([selectedAccount], async () => {
 	if (selectedAccount.value && isChainIdMatching.value) {
-		router.replace(toRoute('account-management', { address: selectedAccount.value.address }))
+		// Only redirect if we're on the exact account-management route (not on a child route)
+		if (router.currentRoute.value.name === 'account-management') {
+			router.replace(toRoute('account-modules', { address: selectedAccount.value.address }))
+		}
 		getCode(selectedAccount.value.address)
 	}
 })
@@ -159,35 +156,42 @@ const showSwitchToCorrectChain = computed(() => {
 					<Loader2 class="w-6 h-6 animate-spin text-primary" />
 				</div>
 
-				<Tabs default-value="modules" class="mt-6" v-if="!loading">
-					<TabsList class="grid grid-cols-4 w-full">
-						<TabsTrigger value="modules">Modules</TabsTrigger>
-						<!-- <TabsTrigger value="sessions">Sessions</TabsTrigger>
-					<TabsTrigger value="paymasters">Paymasters</TabsTrigger>
-					<TabsTrigger value="cross-chain">Cross-chain</TabsTrigger> -->
-					</TabsList>
+				<div v-if="!loading" class="mt-6">
+					<div class="flex border-b">
+						<RouterLink
+							:to="toRoute('account-modules', { address: selectedAccount.address })"
+							class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+							:class="
+								$route.name === 'account-modules'
+									? 'border-primary text-primary'
+									: 'border-transparent text-muted-foreground hover:text-foreground'
+							"
+						>
+							Modules
+						</RouterLink>
 
-					<TabsContent value="modules" class="mt-6">
-						<AMModules
+						<RouterLink
+							:to="toRoute('account-permissions', { address: selectedAccount.address })"
+							class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+							:class="
+								$route.name === 'account-permissions'
+									? 'border-primary text-primary'
+									: 'border-transparent text-muted-foreground hover:text-foreground'
+							"
+						>
+							Permissions
+						</RouterLink>
+					</div>
+
+					<div class="mt-6">
+						<RouterView
 							v-if="selectedAccount"
 							:selected-account="selectedAccount"
 							:is-deployed="isDeployed"
 							:is-modular="isModular"
 						/>
-					</TabsContent>
-
-					<TabsContent value="sessions" class="mt-6">
-						<AMSessions />
-					</TabsContent>
-
-					<TabsContent value="paymasters" class="mt-6">
-						<AMPaymasters />
-					</TabsContent>
-
-					<TabsContent value="cross-chain" class="mt-6">
-						<AMCrossChain />
-					</TabsContent>
-				</Tabs>
+					</div>
+				</div>
 			</div>
 		</div>
 	</CenterStageLayout>
