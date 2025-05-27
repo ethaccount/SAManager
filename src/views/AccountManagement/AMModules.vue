@@ -5,6 +5,7 @@ import { useModuleManagement } from '@/lib/module-management/useModuleManagement
 import { ImportedAccount } from '@/stores/account/account'
 import { shortenAddress } from '@vue-dapp/core'
 import { ERC7579_MODULE_TYPE, isSameAddress } from 'sendop'
+import { Loader2 } from 'lucide-vue-next'
 
 const props = defineProps<{
 	selectedAccount: ImportedAccount
@@ -102,7 +103,9 @@ const showAvailableModules = computed(() => {
 		<div class="space-y-6 p-6">
 			<div v-if="!isDeployed" class="text-sm text-muted-foreground">Account is not deployed</div>
 			<div v-else-if="!isModular" class="text-sm text-muted-foreground">Account is not modular</div>
-			<div v-else-if="loading" class="text-sm text-muted-foreground">Loading modules...</div>
+			<div v-else-if="loading" class="flex justify-center py-8">
+				<Loader2 class="w-6 h-6 animate-spin text-primary" />
+			</div>
 
 			<!-- is deployed and modular -->
 			<div v-else class="space-y-6">
