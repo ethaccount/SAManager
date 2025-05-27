@@ -1,9 +1,9 @@
-import { useNetwork } from '@/stores/network/useNetwork'
+import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { dataSlice, isAddress } from 'ethers'
 import { getBytesLength } from 'sendop'
 
 export function useGetCode() {
-	const { client } = useNetwork()
+	const { client } = useBlockchain()
 
 	const code = ref('')
 	const loading = ref(false)

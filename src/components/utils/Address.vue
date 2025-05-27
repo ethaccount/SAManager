@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { shortenAddress } from '@vue-dapp/core'
 import { ExternalLink } from 'lucide-vue-next'
-import { useNetworkStore } from '@/stores/network/useNetwork'
+import { useBlockchainStore } from '@/stores/blockchain/useBlockchain'
 
 const props = defineProps<{
 	address?: string
@@ -9,7 +9,7 @@ const props = defineProps<{
 
 const externalLink = computed(() => {
 	if (!props.address) return ''
-	const networkStore = useNetworkStore()
+	const networkStore = useBlockchainStore()
 	if (!networkStore.explorerUrl) {
 		return ''
 	}

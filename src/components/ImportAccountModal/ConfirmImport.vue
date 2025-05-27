@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { displayAccountName, ImportedAccount } from '@/stores/account/account'
 import { useAccounts } from '@/stores/account/useAccounts'
-import { CHAIN_NAME } from '@/stores/network/network'
-import { useNetwork } from '@/stores/network/useNetwork'
+import { CHAIN_NAME } from '@/stores/blockchain/blockchain'
+import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
 import { ValidationOption } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
@@ -12,7 +12,7 @@ const props = defineProps<{
 	accountData: () => Omit<ImportedAccount, 'chainId'>
 }>()
 
-const { selectedChainId } = useNetwork()
+const { selectedChainId } = useBlockchain()
 const { importAccount } = useAccounts()
 
 const isSuccess = ref(false)

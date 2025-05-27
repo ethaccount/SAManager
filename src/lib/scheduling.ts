@@ -1,6 +1,6 @@
 import { NATIVE_TOKEN_ADDRESS } from '@/lib/token'
 import { useAccount } from '@/stores/account/useAccount'
-import { useNetwork } from '@/stores/network/useNetwork'
+import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { AbiCoder, JsonRpcProvider } from 'ethers'
 import { ADDRESS, TIERC20__factory, TScheduledTransfers__factory } from 'sendop'
 
@@ -22,7 +22,7 @@ export type Job = {
 }
 
 export function useFetchJobs() {
-	const { client } = useNetwork()
+	const { client } = useBlockchain()
 	const { selectedAccount } = useAccount()
 
 	const loading = ref(false)

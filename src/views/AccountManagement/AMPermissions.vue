@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useAccount } from '@/stores/account/useAccount'
-import { useNetwork } from '@/stores/network/useNetwork'
+import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { shortenAddress } from '@vue-dapp/core'
 import { Eye, EyeOff, Loader2 } from 'lucide-vue-next'
 import { ADDRESS, TSmartSession__factory } from 'sendop'
@@ -12,7 +12,7 @@ const props = defineProps<{
 	isModular: boolean
 }>()
 
-const { tenderlyClient } = useNetwork()
+const { tenderlyClient } = useBlockchain()
 const { selectedAccount } = useAccount()
 
 interface SessionData {

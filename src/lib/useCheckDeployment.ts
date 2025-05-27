@@ -1,9 +1,9 @@
 import { useAccount } from '@/stores/account/useAccount'
-import { useNetwork } from '@/stores/network/useNetwork'
+import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 
 export function useCheckDeployment() {
 	// TODO:
-	const { client, selectedChainId } = useNetwork()
+	const { client, selectedChainId } = useBlockchain()
 	const { selectedAccount } = useAccount()
 
 	const isDeployed = ref(false)

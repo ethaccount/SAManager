@@ -1,10 +1,10 @@
-import { CHAIN_ID, isSupportedChainId } from '@/stores/network/network'
-import { DEFAULT_CHAIN_ID, useNetwork } from '@/stores/network/useNetwork'
+import { CHAIN_ID, isSupportedChainId } from '@/stores/blockchain/blockchain'
+import { DEFAULT_CHAIN_ID, useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { useRouter } from 'vue-router'
 
 export function useChainIdRoute() {
 	const router = useRouter()
-	const { selectedChainId } = useNetwork()
+	const { selectedChainId } = useBlockchain()
 
 	const urlChainId = window.location.pathname.split('/')[1]
 

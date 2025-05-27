@@ -1,7 +1,7 @@
 import { ImportedAccount, isSameAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useInitCode } from '@/stores/account/useInitCode'
-import { CHAIN_ID } from '@/stores/network/network'
+import { CHAIN_ID } from '@/stores/blockchain/blockchain'
 import { isSameAddress } from 'sendop'
 import { toast } from 'vue-sonner'
 

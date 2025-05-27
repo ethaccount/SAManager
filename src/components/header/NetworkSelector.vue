@@ -10,14 +10,14 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { CHAIN_ID, displayChainName, SUPPORTED_BUNDLER, SUPPORTED_NODE } from '@/stores/network/network'
-import { useNetwork } from '@/stores/network/useNetwork'
+import { CHAIN_ID, displayChainName, SUPPORTED_BUNDLER, SUPPORTED_NODE } from '@/stores/blockchain/blockchain'
+import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { Check } from 'lucide-vue-next'
 
 const isOpen = ref(false)
 
 const { selectedChainId, supportedChainIds, selectedNode, selectedBundler, supportedBundlers, supportedNodes } =
-	useNetwork()
+	useBlockchain()
 
 function displayBundlerName(bundler: SUPPORTED_BUNDLER) {
 	switch (bundler) {

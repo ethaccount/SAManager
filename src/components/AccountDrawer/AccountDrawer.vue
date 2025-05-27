@@ -7,8 +7,8 @@ import { displayAccountName, ImportedAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useAccounts } from '@/stores/account/useAccounts'
 import { useInitCode } from '@/stores/account/useInitCode'
-import { displayChainName } from '@/stores/network/network'
-import { useNetwork } from '@/stores/network/useNetwork'
+import { displayChainName } from '@/stores/blockchain/blockchain'
+import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
@@ -52,7 +52,7 @@ const accountList = computed(() =>
 )
 
 function onClickSelectAccount(account: ImportedAccount & { isCrossChain: boolean }) {
-	const { selectedChainId } = useNetwork()
+	const { selectedChainId } = useBlockchain()
 	const { isAccountImported, selectAccount, importAccount } = useAccounts()
 
 	if (account.isCrossChain) {

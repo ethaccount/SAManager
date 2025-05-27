@@ -7,7 +7,7 @@ import {
 	SUPPORTED_NODE,
 	TENDERLY_API_KEYS,
 	TESTNET_CHAIN_ID,
-} from '@/stores/network/network'
+} from '@/stores/blockchain/blockchain'
 import { JsonRpcProvider } from 'ethers'
 import { publicNode, tenderly } from 'evm-providers'
 import { defineStore } from 'pinia'
@@ -26,8 +26,8 @@ function getPimlicoUrl(chainId: CHAIN_ID) {
 	return `${window.location.origin}/api/provider?chainId=${chainId}&provider=pimlico`
 }
 
-export const useNetworkStore = defineStore(
-	'useNetworkStore',
+export const useBlockchainStore = defineStore(
+	'useBlockchainStore',
 	() => {
 		const selectedChainId = ref<CHAIN_ID>(DEFAULT_CHAIN_ID)
 		const chainIdBigInt = computed(() => BigInt(selectedChainId.value))
@@ -149,8 +149,8 @@ export const useNetworkStore = defineStore(
 	},
 )
 
-export function useNetwork() {
-	const store = useNetworkStore()
+export function useBlockchain() {
+	const store = useBlockchainStore()
 	return {
 		...store,
 		...storeToRefs(store),

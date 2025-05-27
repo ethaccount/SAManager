@@ -1,6 +1,6 @@
 import { AccountId, ImportedAccount, SUPPORTED_ACCOUNTS } from '@/stores/account/account'
 import { InitCodeData, useInitCode } from '@/stores/account/useInitCode'
-import { useNetwork } from '@/stores/network/useNetwork'
+import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { signMessage } from '@/stores/passkey/passkey'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
@@ -25,14 +25,14 @@ export const useAccountStore = defineStore(
 		const selectedAccount = ref<ImportedAccount | null>(null)
 
 		const isChainIdMatching = computed(() => {
-			const { selectedChainId } = useNetwork()
+			const { selectedChainId } = useBlockchain()
 			return selectedChainId.value === selectedAccount.value?.chainId
 		})
 
 		const isAccountConnected = computed(() => {
 			if (!selectedAccount.value) return false
 			// check if the chainId of the selected account is the same as the selected chainId
-			const { selectedChainId } = useNetwork()
+			const { selectedChainId } = useBlockchain()
 			if (selectedAccount.value.chainId !== selectedChainId.value) return false
 
 			return useSigner().isSignerEligibleForValidation(selectedAccount.value.vOptions)
@@ -93,7 +93,7 @@ export const useAccountStore = defineStore(
 		const opGetter = computed(() => {
 			if (!selectedAccount.value || !isAccountConnected.value) return null
 
-			const { client, bundler } = useNetwork()
+			const { client, bundler } = useBlockchain()
 
 			switch (selectedAccount.value.accountId) {
 				case AccountId['kernel.advanced.v0.3.1']:

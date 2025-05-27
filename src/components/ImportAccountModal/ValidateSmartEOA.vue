@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useNetwork } from '@/stores/network/useNetwork'
+import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { ADDRESS, getSmartEOADelegateAddress, isSameAddress } from 'sendop'
 import { ref, onMounted } from 'vue'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
@@ -13,7 +13,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{ (e: 'confirm', accountId: AccountId): void }>()
 
-const { client } = useNetwork()
+const { client } = useBlockchain()
 const importAccountModal = useImportAccountModal()
 
 const validationState = ref<'loading' | 'success' | 'failed'>('loading')

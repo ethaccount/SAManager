@@ -1,6 +1,6 @@
 import TxModal from '@/components/TxModal.vue'
 import { useAccount } from '@/stores/account/useAccount'
-import { useNetwork } from '@/stores/network/useNetwork'
+import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { defineStore, storeToRefs } from 'pinia'
 import {
 	ADDRESS,
@@ -52,7 +52,7 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 		open()
 	}
 
-	const { bundler } = useNetwork()
+	const { bundler } = useBlockchain()
 	const { selectedAccount, opGetter } = useAccount()
 
 	const paymasters = [

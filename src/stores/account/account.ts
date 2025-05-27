@@ -1,4 +1,4 @@
-import { CHAIN_ID } from '@/stores/network/network'
+import { CHAIN_ID } from '@/stores/blockchain/blockchain'
 import { ValidationOption } from '@/stores/validation/validation'
 import { EntryPointVersion, isSameAddress } from 'sendop'
 

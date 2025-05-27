@@ -3,8 +3,8 @@ import { toRoute } from '@/lib/router'
 import { useGetCode } from '@/lib/useGetCode'
 import { displayAccountName } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
-import { displayChainName } from '@/stores/network/network'
-import { useNetwork } from '@/stores/network/useNetwork'
+import { displayChainName } from '@/stores/blockchain/blockchain'
+import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { displayValidationIdentifier } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
 import { ArrowLeft, Loader2 } from 'lucide-vue-next'
@@ -26,7 +26,7 @@ watchImmediate([selectedAccount], async () => {
 
 function onClickSwitchToCorrectChain() {
 	if (!selectedAccount.value) return
-	useNetwork().switchChain(selectedAccount.value.chainId)
+	useBlockchain().switchChain(selectedAccount.value.chainId)
 }
 
 const showSwitchToCorrectChain = computed(() => {

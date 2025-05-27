@@ -1,7 +1,7 @@
 import { fetchModules } from '@/lib/module-management/fetch-modules'
 import { SUPPORTED_MODULES } from '@/lib/module-management/module-constants'
 import { useAccount } from '@/stores/account/useAccount'
-import { useNetwork } from '@/stores/network/useNetwork'
+import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { ERC7579_MODULE_TYPE, isSameAddress, TIERC7579Account__factory } from 'sendop'
 
 export type ModuleRecordModule = { id: string; address: string }
@@ -14,7 +14,7 @@ export function useAccountModule() {
 	const moduleRecord = ref<ModuleRecord>(getDefaultModules())
 
 	const { selectedAccount } = useAccount()
-	const { client, tenderlyClient } = useNetwork()
+	const { client, tenderlyClient } = useBlockchain()
 
 	const hasModules = computed(() => {
 		return Object.values(moduleRecord.value).some(modules => modules.length > 0)

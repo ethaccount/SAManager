@@ -1,6 +1,6 @@
 import { AccountId } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
-import { useNetwork } from '@/stores/network/useNetwork'
+import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
@@ -30,7 +30,7 @@ import { ModuleType, SUPPORTED_MODULES } from './module-constants'
 export function useModuleManagement() {
 	const { selectedAccount, isAccountConnected } = useAccount()
 	const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
-	const { client } = useNetwork()
+	const { client } = useBlockchain()
 
 	const isLoading = ref(false)
 

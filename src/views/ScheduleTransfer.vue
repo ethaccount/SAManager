@@ -3,7 +3,7 @@ import { IS_DEV } from '@/config'
 import { ScheduleTransfer, tokens } from '@/lib/token'
 import { AccountId } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
-import { useNetwork } from '@/stores/network/useNetwork'
+import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { useTxModal } from '@/stores/useTxModal'
 import { DateFormatter, getLocalTimeZone, today } from '@internationalized/date'
 import { concat, isAddress, parseEther, toBeHex } from 'ethers'
@@ -123,7 +123,7 @@ async function onClickReview() {
 	errorReview.value = null
 
 	const { isModular, selectedAccount } = useAccount()
-	const { client } = useNetwork()
+	const { client } = useBlockchain()
 
 	if (!selectedAccount.value) {
 		throw new Error('No account selected')

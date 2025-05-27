@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { AccountId } from '@/stores/account/account'
-import { useNetwork } from '@/stores/network/useNetwork'
+import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
 import { SUPPORTED_VALIDATION_OPTIONS, ValidationOption } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
@@ -46,7 +46,7 @@ onMounted(async () => {
 			throw new Error('Unsupported validation type')
 		}
 
-		const { tenderlyClient, client } = useNetwork()
+		const { tenderlyClient, client } = useBlockchain()
 
 		if (!tenderlyClient.value) {
 			throw new Error("Tenderly RPC Node isn't configured on current network")

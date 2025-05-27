@@ -5,8 +5,8 @@ import { getErrMsg } from '@/lib/error'
 import { useGetCode } from '@/lib/useGetCode'
 import { displayAccountName } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
-import { displayChainName } from '@/stores/network/network'
-import { useNetwork } from '@/stores/network/useNetwork'
+import { displayChainName } from '@/stores/blockchain/blockchain'
+import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { TransactionStatus, useTxModal } from '@/stores/useTxModal'
@@ -39,7 +39,7 @@ function onClickClose() {
 }
 
 const { wallet, isConnected } = useEOAWallet()
-const { selectedChainId, explorerUrl, selectedEntryPoint } = useNetwork()
+const { selectedChainId, explorerUrl, selectedEntryPoint } = useBlockchain()
 const { selectedAccount, selectedAccountInitCodeData, isAccountConnected } = useAccount()
 const { selectSigner, selectedSigner } = useSigner()
 const { selectedCredentialDisplay, isLogin } = usePasskey()

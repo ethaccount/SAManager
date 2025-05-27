@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useNetwork } from '@/stores/network/useNetwork'
+import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { ExternalLink } from 'lucide-vue-next'
 
 const props = withDefaults(
@@ -29,7 +29,7 @@ const SIZES = {
 
 const externalLink = computed(() => {
 	if (!props.address) return ''
-	const { explorerUrl } = useNetwork()
+	const { explorerUrl } = useBlockchain()
 	return `${explorerUrl.value}/address/${props.address}`
 })
 

@@ -9,8 +9,8 @@ import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
 import { ACCOUNT_ID_TO_NAME, AccountId, displayAccountName, SUPPORTED_ACCOUNTS } from '@/stores/account/account'
 import { checkIfAccountIsDeployed, getComputedAddressAndInitCode } from '@/stores/account/create'
 import { useAccounts } from '@/stores/account/useAccounts'
-import { displayChainName } from '@/stores/network/network'
-import { useNetwork } from '@/stores/network/useNetwork'
+import { displayChainName } from '@/stores/blockchain/blockchain'
+import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useTxModal } from '@/stores/useTxModal'
@@ -30,7 +30,7 @@ import { ChevronRight, Power } from 'lucide-vue-next'
 import { toBytes32 } from 'sendop'
 
 const router = useRouter()
-const { client, selectedChainId, switchEntryPoint } = useNetwork()
+const { client, selectedChainId, switchEntryPoint } = useBlockchain()
 const { wallet, address, disconnect } = useEOAWallet()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 const { isEOAWalletConnected } = useEOAWallet()
