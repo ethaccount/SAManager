@@ -1,7 +1,7 @@
 {
 	"name": "samanager",
 	"private": true,
-	"version": "0.0.22",
+	"version": "0.0.23",
 	"type": "module",
 	"repository": "https://github.com/ethaccount/SAManager",
 	"scripts": {
