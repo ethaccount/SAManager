@@ -43,11 +43,14 @@ export default defineConfig({
 	build: {
 		rollupOptions: {
 			output: {
-				manualChunks: {
-					sendop: ['sendop'],
-					ethers: ['ethers'],
-					'radix-vue': ['radix-vue'],
-					'@vueuse/core': ['@vueuse/core'],
+				manualChunks: (id: string) => {
+					// only create manual chunks for client build to prevent from empty chunks
+					if (process.env.SSR) return undefined
+
+					if (id.includes('sendop')) return 'sendop'
+					if (id.includes('ethers')) return 'ethers'
+					if (id.includes('radix-vue')) return 'radix-vue'
+					if (id.includes('@vueuse/core')) return '@vueuse/core'
 				},
 			},
 		},
