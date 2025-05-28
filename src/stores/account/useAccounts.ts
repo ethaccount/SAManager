@@ -45,7 +45,7 @@ export const useAccountsStore = defineStore(
 				})
 			}
 
-			toast.success('Account imported successfully')
+			// toast.success('Account imported successfully')
 
 			if (accounts.value.length === 1) {
 				selectedAccount.value = accounts.value[0]

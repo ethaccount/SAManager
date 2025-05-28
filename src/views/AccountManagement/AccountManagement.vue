@@ -13,14 +13,15 @@ const router = useRouter()
 const { selectedAccount, isModular, isChainIdMatching, isCrossChain } = useAccount()
 const { getCode, isDeployed, loading } = useGetCode()
 
+// Timing: App loaded, Account changed
 // Use this instead of onMounted because users might change account with the drawer
-watchImmediate([selectedAccount], async () => {
+watchImmediate(selectedAccount, async () => {
 	if (selectedAccount.value && isChainIdMatching.value) {
 		// Only redirect if we're on the exact account-management route (not on a child route)
 		if (router.currentRoute.value.name === 'account-management') {
 			router.replace(toRoute('account-modules', { address: selectedAccount.value.address }))
 		}
-		getCode(selectedAccount.value.address)
+		await getCode(selectedAccount.value.address)
 	}
 })
 
@@ -30,14 +31,14 @@ function onClickSwitchToCorrectChain() {
 }
 
 const showSwitchToCorrectChain = computed(() => {
-	return !isCrossChain && !isChainIdMatching
+	return !isCrossChain.value && !isChainIdMatching.value
 })
 </script>
 
 <template>
 	<CenterStageLayout>
 		<div v-if="!selectedAccount" class="w-full mx-auto flex justify-center items-center h-full flex-col gap-4">
-			<div class="text-sm text-muted-foreground">Import an account to view its settings</div>
+			<div class="text-sm text-muted-foreground">Import or create an account to view its settings</div>
 			<Button variant="outline" size="sm" @click="router.push(toRoute('home'))">
 				<ArrowLeft class="h-3.5 w-3.5" />
 				Go to home page

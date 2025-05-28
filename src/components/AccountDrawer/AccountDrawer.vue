@@ -57,6 +57,7 @@ function onClickSelectAccount(account: ImportedAccount & { isCrossChain: boolean
 	const { isAccountImported, selectAccount, importAccount } = useAccounts()
 
 	if (account.isCrossChain) {
+		// Auto import account if it's cross chain, and there's no account imported for this chain
 		const isImported = isAccountImported(account.address, selectedChainId.value)
 		if (!isImported) {
 			// import the account with current chainId if it's cross chain and not imported
@@ -167,7 +168,8 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 									<!-- account Id -->
 									<div class="flex items-center gap-1 text-xs">
 										<span>{{ displayAccountName(selectedAccount.accountId) }}</span>
-										<span>({{ selectedAccount.accountId }})</span>
+										<!-- Long name with ID may cause layout break -->
+										<!-- <span>({{ selectedAccount.accountId }})</span> -->
 									</div>
 
 									<!-- chain -->

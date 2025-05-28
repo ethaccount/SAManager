@@ -51,9 +51,13 @@ export const useAccountStore = defineStore(
 		const isCrossChain = computed<boolean>(() => {
 			const account = selectedAccount.value
 			if (!account) return false
+			return checkIsCrossChain(account)
+		})
+
+		function checkIsCrossChain(account: ImportedAccount) {
 			if (account.category !== 'Smart Account') return false
 			return hasInitCode(account.address)
-		})
+		}
 
 		if (isCrossChain.value) {
 		}
