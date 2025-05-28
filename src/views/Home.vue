@@ -6,6 +6,7 @@ import { toRoute } from '@/lib/router'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
 import { Clock, Plus, Send, Shield, Wallet } from 'lucide-vue-next'
 import { RouterLink } from 'vue-router'
+import packageJson from '../../package.json'
 
 async function onClickImportAccount() {
 	await useImportAccountModal().openModal()
@@ -17,7 +18,7 @@ async function onClickImportAccount() {
 		<div class="text-center space-y-4">
 			<h1 class="text-4xl font-bold tracking-tight">Smart Account Manager</h1>
 			<p class="text-xl text-muted-foreground max-w-2xl">
-				A user-friendly interface to create, import, and manage ERC-4337 compatible smart accounts.
+				{{ packageJson.description }}
 			</p>
 		</div>
 

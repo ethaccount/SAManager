@@ -61,7 +61,7 @@ function onClickSelectAccount(account: ImportedAccount & { isCrossChain: boolean
 		const isImported = isAccountImported(account.address, selectedChainId.value)
 		if (!isImported) {
 			// import the account with current chainId if it's cross chain and not imported
-			const { isCrossChain, ...acc } = account
+			const { isCrossChain, ...acc } = account // eslint-disable-line @typescript-eslint/no-unused-vars
 
 			importAccount({
 				...acc,

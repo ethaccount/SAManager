@@ -3,7 +3,7 @@ import { X } from 'lucide-vue-next'
 import { VueFinalModal } from 'vue-final-modal'
 import { Button } from '@/components/ui/button'
 
-const props = defineProps<{
+defineProps<{
 	title?: string
 	message: string
 	confirmText?: string

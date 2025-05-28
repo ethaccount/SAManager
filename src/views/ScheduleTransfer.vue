@@ -14,7 +14,6 @@ import {
 	ERC7579_MODULE_TYPE,
 	Execution,
 	getEncodedFunctionParams,
-	getPermissionId,
 	INTERFACES,
 	KernelV3Account,
 	NexusAccount,
@@ -206,7 +205,7 @@ async function onClickReview() {
 		],
 		permitERC4337Paymaster: true,
 	}
-	const permissionId = getPermissionId(session)
+	// const permissionId = getPermissionId(session)
 
 	const sessions: SessionStruct[] = [session]
 	const encodedSessions = getEncodedFunctionParams(

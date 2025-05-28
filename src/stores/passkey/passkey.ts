@@ -158,7 +158,7 @@ export async function login(): Promise<Omit<PasskeyCredential, 'username'>> {
 		throw new Error('No authenticator id returned from registration credential')
 	}
 
-	const authenticatorIdHash = keccak256(decodeBase64URL(authenticatorId))
+	// const authenticatorIdHash = keccak256(decodeBase64URL(authenticatorId))
 
 	const spkiDer = Buffer.from(pubKey, 'base64')
 	const key = await crypto.subtle.importKey(

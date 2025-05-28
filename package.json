@@ -1,13 +1,13 @@
 {
 	"name": "smart-account-manager",
 	"private": true,
-	"version": "0.0.27",
+	"version": "0.0.28",
 	"type": "module",
 	"repository": "https://github.com/ethaccount/SAManager",
 	"homepage": "https://samanager.johnson86tw.workers.dev",
 	"author": "Johnson Chen <https://x.com/johnson86tw>",
 	"license": "AGPL-3.0-only",
-	"description": "A user-friendly interface to create, import, and manage ERC-4337 compatible smart accounts.",
+	"description": "A user-centric interface to create, import, and manage ERC-4337 compatible smart accounts.",
 	"keywords": [
 		"ERC-4337",
 		"smart accounts",
