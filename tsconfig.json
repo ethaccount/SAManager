@@ -23,7 +23,8 @@
 		"paths": {
 			"@/*": ["./src/*"]
 		},
-		"noImplicitAny": false // prevents error in router.ts when importing component
+		"noImplicitAny": false, // prevents error in router.ts when importing component
+		"types": ["vitest/globals"]
 	},
 	"include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"],
 	"references": [{ "path": "./tsconfig.node.json" }, { "path": "./tsconfig.worker.json" }]

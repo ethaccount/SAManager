@@ -23,7 +23,7 @@ export default defineConfig({
 		nodePolyfills(),
 		AutoImport({
 			dts: 'src/auto-import.d.ts',
-			imports: ['vue', 'vue-router', 'pinia', '@vueuse/core'],
+			imports: ['vue', 'vue-router', 'pinia', '@vueuse/core', 'vitest'],
 			eslintrc: {
 				enabled: true,
 			},
