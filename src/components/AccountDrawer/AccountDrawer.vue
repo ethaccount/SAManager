@@ -263,7 +263,7 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 						<div class="flex items-center gap-1.5">
 							<AlertCircle class="w-3 h-3 text-muted-foreground/70" />
 							<span class="text-xs text-muted-foreground/70">
-								EOA Wallet not supported in this browser
+								EOA Wallet not supported by this browser
 							</span>
 						</div>
 					</div>
@@ -313,7 +313,7 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 					<div v-else class="flex flex-col p-2 border rounded-lg border-border/50 bg-background">
 						<div class="flex items-center gap-1.5">
 							<AlertCircle class="w-3 h-3 text-muted-foreground/70" />
-							<span class="text-xs text-muted-foreground/70">Passkey not supported in this browser</span>
+							<span class="text-xs text-muted-foreground/70">Passkey not supported by this browser</span>
 						</div>
 					</div>
 				</div>

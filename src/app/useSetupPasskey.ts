@@ -13,6 +13,7 @@ export function useSetupPasskey() {
 
 		// Check if passkey is supported by the browser
 		try {
+			// throw new Error('test')
 			if (
 				window.PublicKeyCredential &&
 				typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function'

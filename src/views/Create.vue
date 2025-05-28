@@ -26,15 +26,22 @@ import {
 } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
 import { isAddress } from 'ethers'
-import { ChevronRight, Power } from 'lucide-vue-next'
+import { ChevronRight, Power, AlertCircle } from 'lucide-vue-next'
 import { toBytes32 } from 'sendop'
 
 const router = useRouter()
 const { client, selectedChainId, switchEntryPoint } = useBlockchain()
 const { wallet, address, disconnect } = useEOAWallet()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
-const { isEOAWalletConnected } = useEOAWallet()
-const { selectedCredentialDisplay, isLogin, resetCredentialId, isFullCredential, selectedCredential } = usePasskey()
+const { isEOAWalletConnected, isEOAWalletSupported } = useEOAWallet()
+const {
+	selectedCredentialDisplay,
+	isLogin,
+	resetCredentialId,
+	isFullCredential,
+	selectedCredential,
+	isPasskeySupported,
+} = usePasskey()
 const { importAccount, selectAccount, isAccountImported } = useAccounts()
 
 const supportedAccounts = Object.entries(SUPPORTED_ACCOUNTS)
@@ -340,6 +347,7 @@ function onClickPasskeyLogout() {
 				<!-- Signer connection -->
 				<div v-if="selectedValidationType === 'EOA-Owned'">
 					<div
+						v-if="isEOAWalletSupported"
 						class="flex flex-col p-3 border rounded-lg bg-muted/30"
 						:class="{ 'bg-secondary': isEOAWalletConnected }"
 					>
@@ -363,15 +371,26 @@ function onClickPasskeyLogout() {
 							</div>
 						</div>
 					</div>
+					<!-- EOA Wallet Not Supported -->
+					<div v-else class="warning-section">
+						<div class="flex items-center gap-1.5">
+							<AlertCircle class="w-4 h-4" />
+							<span> EOA Wallet not supported by this browser </span>
+						</div>
+					</div>
 				</div>
 
 				<div v-if="selectedValidationType === 'Passkey'">
-					<div class="flex flex-col p-3 border rounded-lg" :class="{ 'bg-secondary': isLogin }">
+					<div
+						v-if="isPasskeySupported"
+						class="flex flex-col p-3 border rounded-lg"
+						:class="{ 'bg-secondary': isLogin }"
+					>
 						<div v-if="!isLogin" class="flex justify-between items-center">
 							<span>Passkey</span>
 							<Button variant="outline" size="sm" @click="openConnectPasskeyBoth">Connect</Button>
 						</div>
-						<div v-if="isLogin" class="">
+						<div v-if="isLogin">
 							<div class="flex justify-between items-center gap-2 text-sm text-muted-foreground">
 								<div>Passkey Connected</div>
 								<Button variant="ghost" size="icon" @click="onClickPasskeyLogout">
@@ -381,6 +400,13 @@ function onClickPasskeyLogout() {
 							<div class="text-xs">
 								{{ selectedCredentialDisplay }}
 							</div>
+						</div>
+					</div>
+					<!-- Passkey Not Supported -->
+					<div v-else class="warning-section">
+						<div class="flex items-center gap-1.5">
+							<AlertCircle class="w-4 h-4" />
+							<span>Passkey not supported by this browser</span>
 						</div>
 					</div>
 				</div>

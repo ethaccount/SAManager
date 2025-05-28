@@ -24,7 +24,7 @@ const username = ref(randomName)
 const displayUsername = computed(() => USERNAME_PREFIX + username.value)
 const isRegistrationMode = ref(false)
 
-const { passkeyRegister, passkeyLogin, isLogin, selectedCredentialDisplay } = usePasskey()
+const { passkeyRegister, passkeyLogin, isLogin, selectedCredentialDisplay, isPasskeySupported } = usePasskey()
 
 const loadingRegister = ref(false)
 const loadingLogin = ref(false)
@@ -111,35 +111,44 @@ function onClickLogout() {
 
 <template>
 	<div class="flex flex-col gap-4 p-4">
-		<!-- <p v-if="!isPasskeyRPHealthy" class="p-3 bg-destructive/10 text-destructive rounded-[--radius] text-sm">
-			Passkey server is not responding. Please try again later.
-		</p> -->
+		<p v-if="!isPasskeySupported" class="warning-section">
+			Passkey is not supported by your browser. Please use other signer.
+		</p>
 
 		<div v-if="!isLogin" class="flex flex-col gap-3">
 			<!-- Level 1: Initial Selection -->
-			<div v-if="!isRegistrationMode" class="flex gap-2">
-				<Button
-					v-if="showRegister"
-					variant="secondary"
-					:disabled="loadingRegisterOrLogin"
-					class="w-full"
-					:class="{ 'opacity-50 cursor-not-allowed': loadingRegisterOrLogin }"
-					@click="onClickStartRegister"
-				>
-					Create Credential
-				</Button>
 
-				<Button
-					v-if="showLogin"
-					variant="default"
-					:disabled="loadingRegisterOrLogin"
-					class="w-full"
-					:class="{ 'opacity-50 cursor-not-allowed': loadingRegisterOrLogin }"
-					@click="onClickLogin"
-				>
-					<Loader2 v-if="loadingLogin" class="mr-2 h-4 w-4 animate-spin" />
-					Get Credential
-				</Button>
+			<div v-if="!isRegistrationMode" class="flex flex-col gap-2">
+				<div class="flex gap-2">
+					<Button
+						v-if="showRegister"
+						variant="secondary"
+						:disabled="loadingRegisterOrLogin || !isPasskeySupported"
+						class="w-full"
+						:class="{ 'opacity-50 cursor-not-allowed': loadingRegisterOrLogin }"
+						@click="onClickStartRegister"
+					>
+						Create Credential
+					</Button>
+
+					<Button
+						v-if="showLogin"
+						variant="default"
+						:disabled="loadingRegisterOrLogin || !isPasskeySupported"
+						class="w-full"
+						:class="{ 'opacity-50 cursor-not-allowed': loadingRegisterOrLogin }"
+						@click="onClickLogin"
+					>
+						<Loader2 v-if="loadingLogin" class="mr-2 h-4 w-4 animate-spin" />
+						Get Credential
+					</Button>
+				</div>
+
+				<p class="info-section">
+					Note: This is a frontend-only implementation. Your passkey data is stored locally in your browser.
+					If you deploy an account, the public key will be on-chain. If not deployed and you lose local
+					storage, you can still sign but cannot install the validator by the passkey.
+				</p>
 			</div>
 
 			<!-- Level 2: Registration -->
