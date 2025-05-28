@@ -3,7 +3,6 @@ import { useAccount } from '@/stores/account/useAccount'
 import { useInitCode } from '@/stores/account/useInitCode'
 import { CHAIN_ID } from '@/stores/blockchain/blockchain'
 import { isSameAddress } from 'sendop'
-import { toast } from 'vue-sonner'
 
 export const useAccountsStore = defineStore(
 	'useAccountsStore',
@@ -26,7 +25,7 @@ export const useAccountsStore = defineStore(
 			}
 
 			if (accounts.value.some(a => isSameAccount(a, account))) {
-				toast.info('Account already imported')
+				console.log('Account already imported', account)
 				return
 			}
 
@@ -45,7 +44,7 @@ export const useAccountsStore = defineStore(
 				})
 			}
 
-			// toast.success('Account imported successfully')
+			console.log('Account imported successfully', account)
 
 			if (accounts.value.length === 1) {
 				selectedAccount.value = accounts.value[0]

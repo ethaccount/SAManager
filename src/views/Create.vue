@@ -145,7 +145,9 @@ const computedAddress = ref<string>('')
 const initCode = ref<string>('')
 const isDeployed = ref(false)
 
-const isImported = ref(false)
+const isImported = computed(() => {
+	return isAccountImported(computedAddress.value, selectedChainId.value)
+})
 
 const errMsg = ref<string | null>(null)
 
@@ -153,7 +155,6 @@ watchImmediate([isValidationAvailable, selectedValidation, isLogin, selectedAcco
 	computedAddress.value = ''
 	initCode.value = ''
 	isDeployed.value = false
-	isImported.value = false
 	errMsg.value = null
 
 	if (isValidationAvailable.value && selectedValidation.value && selectedAccountType.value && computedSalt.value) {
@@ -167,7 +168,6 @@ watchImmediate([isValidationAvailable, selectedValidation, isLogin, selectedAcco
 			)
 			computedAddress.value = res.computedAddress
 			initCode.value = res.initCode
-			isImported.value = isAccountImported(computedAddress.value, selectedChainId.value)
 			isDeployed.value = await checkIfAccountIsDeployed(client.value, computedAddress.value)
 		} catch (error) {
 			throw error
