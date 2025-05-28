@@ -15,10 +15,11 @@ import { useImportAccountModal } from '@/stores/useImportAccountModal'
 import { useSigner } from '@/stores/validation/useSigner'
 import { shortenAddress } from '@vue-dapp/core'
 import { breakpointsTailwind } from '@vueuse/core'
-import { ArrowRight, CheckCircle, CircleDot, Download, Plus, Power, X, AlertCircle } from 'lucide-vue-next'
+import { ArrowRight, CheckCircle, CircleDot, Download, Plus, Power, X, AlertCircle, Trash2 } from 'lucide-vue-next'
 import { isSameAddress } from 'sendop'
 import { VueFinalModal } from 'vue-final-modal'
 import { useRouter } from 'vue-router'
+import { useConfirmModal } from '../ConfirmModal/useConfirmModal'
 
 const emit = defineEmits<{
 	(e: 'close'): void
@@ -72,8 +73,23 @@ function onClickSelectAccount(account: ImportedAccount & { isCrossChain: boolean
 	}
 }
 
-function onClickRemoveAccount(account: ImportedAccount) {
-	useAccounts().removeAccount(account)
+function onClickDeleteAccount(account: ImportedAccount) {
+	const { openModal } = useConfirmModal()
+	openModal({
+		title: 'Delete Account',
+		message: 'Are you sure you want to delete this account? This action cannot be undone.',
+		confirmText: 'Delete',
+		cancelText: 'Cancel',
+		onResult: confirmed => {
+			if (confirmed) {
+				useAccounts().removeAccount(account)
+			}
+		},
+	})
+}
+
+function onClickUnselectAccount() {
+	useAccounts().unselectAccount()
 }
 
 const router = useRouter()
@@ -173,9 +189,14 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 						</div>
 					</div>
 
-					<Button variant="ghost" size="icon" @click="onClickCloseSidebar">
-						<X class="h-4 w-4" />
-					</Button>
+					<div class="flex gap-1">
+						<Button v-if="selectedAccount" variant="ghost" size="icon" @click="onClickUnselectAccount">
+							<Power class="h-4 w-4" />
+						</Button>
+						<Button variant="ghost" size="icon" @click="onClickCloseSidebar">
+							<X class="h-4 w-4" />
+						</Button>
+					</div>
 				</div>
 			</div>
 
@@ -357,10 +378,10 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 						<Button
 							variant="ghost"
 							size="icon"
-							class="absolute rounded-full -right-2 -top-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground z-[60]"
-							@click.stop="onClickRemoveAccount(account)"
+							class="absolute right-1 top-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground z-[60]"
+							@click.stop="onClickDeleteAccount(account)"
 						>
-							<X class="h-4 w-4" />
+							<X class="h-3 w-3" />
 						</Button>
 					</div>
 				</div>

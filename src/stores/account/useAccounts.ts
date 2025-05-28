@@ -76,6 +76,10 @@ export const useAccountsStore = defineStore(
 			selectedAccount.value = account
 		}
 
+		function unselectAccount() {
+			selectedAccount.value = null
+		}
+
 		function isAccountImported(accountAddress: string, chainId: CHAIN_ID) {
 			return accounts.value.some(a => isSameAddress(a.address, accountAddress) && a.chainId === chainId)
 		}
@@ -86,6 +90,7 @@ export const useAccountsStore = defineStore(
 			importAccount,
 			removeAccount,
 			selectAccount,
+			unselectAccount,
 			isAccountImported,
 		}
 	},
