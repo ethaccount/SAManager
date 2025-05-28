@@ -1,11 +1,14 @@
-import { alchemy, pimlico } from 'evm-providers'
-import { Chain as AlchemyChain } from 'evm-providers/dist/providers/alchemy'
-import { Chain as PimlicoChain } from 'evm-providers/dist/providers/pimlico'
+import { alchemy, pimlico, tenderly, TenderlyChain, AlchemyChain, PimlicoChain } from 'evm-providers'
 
 export interface Env {
 	ALCHEMY_API_KEY: string
 	PIMLICO_API_KEY: string
 	APP_SALT: string
+	TENDERLY_API_KEY_SEPOLIA: string
+	TENDERLY_API_KEY_OPTIMISM_SEPOLIA: string
+	TENDERLY_API_KEY_ARBITRUM_SEPOLIA: string
+	TENDERLY_API_KEY_BASE_SEPOLIA: string
+	TENDERLY_API_KEY_POLYGON_AMOY: string
 }
 
 let envValidated = false
@@ -14,6 +17,28 @@ function validateEnv(env: Env) {
 	if (!env.ALCHEMY_API_KEY) throw new Error('Missing ALCHEMY_API_KEY')
 	if (!env.PIMLICO_API_KEY) throw new Error('Missing PIMLICO_API_KEY')
 	if (!env.APP_SALT) throw new Error('Missing APP_SALT')
+	if (!env.TENDERLY_API_KEY_SEPOLIA) throw new Error('Missing TENDERLY_API_KEY_SEPOLIA')
+	if (!env.TENDERLY_API_KEY_OPTIMISM_SEPOLIA) throw new Error('Missing TENDERLY_API_KEY_OPTIMISM_SEPOLIA')
+	if (!env.TENDERLY_API_KEY_ARBITRUM_SEPOLIA) throw new Error('Missing TENDERLY_API_KEY_ARBITRUM_SEPOLIA')
+	if (!env.TENDERLY_API_KEY_BASE_SEPOLIA) throw new Error('Missing TENDERLY_API_KEY_BASE_SEPOLIA')
+	if (!env.TENDERLY_API_KEY_POLYGON_AMOY) throw new Error('Missing TENDERLY_API_KEY_POLYGON_AMOY')
+}
+
+function getTenderlyApiKey(chainId: number, env: Env): string | null {
+	switch (chainId) {
+		case 11155111: // SEPOLIA
+			return env.TENDERLY_API_KEY_SEPOLIA
+		case 11155420: // OPTIMISM_SEPOLIA
+			return env.TENDERLY_API_KEY_OPTIMISM_SEPOLIA
+		case 421614: // ARBITRUM_SEPOLIA
+			return env.TENDERLY_API_KEY_ARBITRUM_SEPOLIA
+		case 84532: // BASE_SEPOLIA
+			return env.TENDERLY_API_KEY_BASE_SEPOLIA
+		case 80002: // POLYGON_AMOY
+			return env.TENDERLY_API_KEY_POLYGON_AMOY
+		default:
+			return null
+	}
 }
 
 export default {
@@ -55,6 +80,13 @@ export default {
 					break
 				case 'pimlico':
 					providerUrl = pimlico(chainIdNum as PimlicoChain, env.PIMLICO_API_KEY)
+					break
+				case 'tenderly':
+					const tenderlyApiKey = getTenderlyApiKey(chainIdNum, env)
+					if (!tenderlyApiKey) {
+						return Response.json({ error: `Tenderly not supported for chain ${chainId}` }, { status: 400 })
+					}
+					providerUrl = tenderly(chainIdNum as TenderlyChain, tenderlyApiKey)
 					break
 			}
 

@@ -5,11 +5,10 @@ import {
 	SUPPORTED_BUNDLER,
 	SUPPORTED_ENTRY_POINT,
 	SUPPORTED_NODE,
-	TENDERLY_API_KEYS,
 	TESTNET_CHAIN_ID,
 } from '@/stores/blockchain/blockchain'
 import { JsonRpcProvider } from 'ethers'
-import { publicNode, tenderly } from 'evm-providers'
+import { publicNode } from 'evm-providers'
 import { defineStore } from 'pinia'
 import { ADDRESS, AlchemyBundler, Bundler, EntryPointVersion, PimlicoBundler, PublicPaymaster } from 'sendop'
 
@@ -24,6 +23,10 @@ function getAlchemyUrl(chainId: CHAIN_ID) {
 
 function getPimlicoUrl(chainId: CHAIN_ID) {
 	return `${window.location.origin}/api/provider?chainId=${chainId}&provider=pimlico`
+}
+
+function getTenderlyUrl(chainId: CHAIN_ID) {
+	return `${window.location.origin}/api/provider?chainId=${chainId}&provider=tenderly`
 }
 
 export const useBlockchainStore = defineStore(
@@ -94,11 +97,7 @@ export const useBlockchainStore = defineStore(
 
 		// only for fetching event logs
 		const tenderlyClient = computed<JsonRpcProvider | null>(() => {
-			const apiKey = TENDERLY_API_KEYS[selectedChainId.value]
-			if (!apiKey) {
-				return null
-			}
-			return new JsonRpcProvider(tenderly(Number(selectedChainId.value) as any, apiKey), undefined, {
+			return new JsonRpcProvider(getTenderlyUrl(selectedChainId.value), undefined, {
 				staticNetwork: true,
 			})
 		})

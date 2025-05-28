@@ -20,6 +20,15 @@ pnpm typecheck
 pnpm dlx shadcn-vue@2.1.0 add button
 ```
 
+### Secrets on Workers
+
+docs: https://developers.cloudflare.com/workers/configuration/secrets/
+
+```
+pnpm wrangler secret list
+pnpm wrangler secret put <KEY>
+```
+
 ### Reference
 
 - token lists: https://github.com/Uniswap/token-lists

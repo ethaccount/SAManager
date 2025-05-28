@@ -56,25 +56,6 @@ export enum SUPPORTED_BUNDLER {
 
 export type SUPPORTED_ENTRY_POINT = EntryPointVersion
 
-export const TENDERLY_API_KEYS: { [key in TESTNET_CHAIN_ID | MAINNET_CHAIN_ID]: string | null } = {
-	// Mainnet
-	[MAINNET_CHAIN_ID.ETHEREUM]: null,
-	[MAINNET_CHAIN_ID.OPTIMISM]: null,
-	[MAINNET_CHAIN_ID.ARBITRUM]: null,
-	[MAINNET_CHAIN_ID.BASE]: null,
-	[MAINNET_CHAIN_ID.POLYGON]: null,
-
-	// Testnet
-	[TESTNET_CHAIN_ID.SEPOLIA]: '2fEyzbAmkayJu7EnY162xJ',
-	[TESTNET_CHAIN_ID.OPTIMISM_SEPOLIA]: '2gTvT6PzaDTfHnbXSE7hEo',
-	[TESTNET_CHAIN_ID.ARBITRUM_SEPOLIA]: '2gFxHJIA6Xt8Cltka2Orex',
-	[TESTNET_CHAIN_ID.BASE_SEPOLIA]: '6ywGIMMdCDfaARGMe1nQIf',
-	[TESTNET_CHAIN_ID.POLYGON_AMOY]: '79tFYKlo5hDWqiM0ZjHlUe',
-
-	// Local
-	[TESTNET_CHAIN_ID.LOCAL]: null,
-}
-
 export function isSupportedChainId(chainId: string | number | bigint): chainId is TESTNET_CHAIN_ID | MAINNET_CHAIN_ID {
 	try {
 		return Object.values({ ...TESTNET_CHAIN_ID, ...MAINNET_CHAIN_ID }).includes(
