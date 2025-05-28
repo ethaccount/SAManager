@@ -1,7 +1,7 @@
 {
 	"name": "smart-account-manager",
 	"private": true,
-	"version": "0.0.28",
+	"version": "0.1.0-beta.0",
 	"type": "module",
 	"repository": "https://github.com/ethaccount/SAManager",
 	"homepage": "https://samanager.johnson86tw.workers.dev",
