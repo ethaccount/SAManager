@@ -60,7 +60,7 @@ onMounted(async () => {
 				)
 
 				// Specially check if the module is installed because the ECDSAValidator doesn't emit event when uninstalled
-				let filteredAddresses: string[] = []
+				const filteredAddresses: string[] = []
 				for (const address of addresses) {
 					const account = TIERC7579Account__factory.connect(address, client.value) // use client for batch RPC
 					const isInstalled = await account.isModuleInstalled(

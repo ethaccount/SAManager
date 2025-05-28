@@ -66,7 +66,7 @@ export const usePasskeyStore = defineStore(
 				const data = await response.json()
 				isPasskeyRPHealthy.value = data.status === 'ok'
 				return isPasskeyRPHealthy.value
-			} catch (error: unknown) {
+			} catch {
 				isPasskeyRPHealthy.value = false
 				return false
 			}

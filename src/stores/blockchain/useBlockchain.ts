@@ -8,7 +8,7 @@ import {
 	TESTNET_CHAIN_ID,
 } from '@/stores/blockchain/blockchain'
 import { JsonRpcProvider } from 'ethers'
-import { publicNode } from 'evm-providers'
+import { publicNode, PublicNodeChain } from 'evm-providers'
 import { defineStore } from 'pinia'
 import { ADDRESS, AlchemyBundler, Bundler, EntryPointVersion, PimlicoBundler, PublicPaymaster } from 'sendop'
 
@@ -52,7 +52,7 @@ export const useBlockchainStore = defineStore(
 				case SUPPORTED_NODE.ALCHEMY:
 					return getAlchemyUrl(selectedChainId.value)
 				case SUPPORTED_NODE.PUBLIC_NODE:
-					return publicNode(Number(selectedChainId.value) as any)
+					return publicNode(Number(selectedChainId.value) as PublicNodeChain)
 				default:
 					return getAlchemyUrl(selectedChainId.value)
 			}

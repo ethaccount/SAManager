@@ -15,10 +15,6 @@ const router = createRouter({
 							path: '/:chainId/test',
 							children: [
 								{
-									path: '/:chainId/test/playground',
-									component: () => import('@/views/test/Playground.vue'),
-								},
-								{
 									path: '/:chainId/test/connect',
 									component: () => import('@/views/test/Connect.vue'),
 								},

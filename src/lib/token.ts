@@ -1,3 +1,5 @@
+import { DateValue } from '@internationalized/date'
+
 export type Token = {
 	id: string
 	symbol: string
@@ -16,7 +18,7 @@ export type TokenTransfer = {
 export type ScheduleTransfer = TokenTransfer & {
 	frequency: string
 	times: number
-	startDate: any
+	startDate: DateValue
 }
 
 export const NATIVE_TOKEN_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'

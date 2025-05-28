@@ -61,7 +61,7 @@ export function isSupportedChainId(chainId: string | number | bigint): chainId i
 		return Object.values({ ...TESTNET_CHAIN_ID, ...MAINNET_CHAIN_ID }).includes(
 			chainId.toString() as TESTNET_CHAIN_ID | MAINNET_CHAIN_ID,
 		)
-	} catch (error) {
+	} catch {
 		return false
 	}
 }

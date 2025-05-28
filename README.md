@@ -37,7 +37,7 @@ pnpm wrangler secret put <KEY>
 - web3icons: https://tokenicons.io/
 - Toast: https://vue-sonner.robertshaw.id/
 - Modal: https://vue-final-modal.org/use-cases/playground
-- eslint: https://eslint.vuejs.org/user-guide/
+- eslint: https://github.com/vuejs/eslint-config-typescript/?tab=readme-ov-file#vueeslint-config-typescript
 
 ## Credits
 

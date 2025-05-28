@@ -5,7 +5,7 @@ import { AccountId } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { useTxModal } from '@/stores/useTxModal'
-import { DateFormatter, getLocalTimeZone, today } from '@internationalized/date'
+import { DateFormatter, getLocalTimeZone, today, type DateValue } from '@internationalized/date'
 import { concat, isAddress, parseEther, toBeHex } from 'ethers'
 import { CalendarIcon } from 'lucide-vue-next'
 import {
@@ -448,7 +448,7 @@ function getEncodedInstallScheduledTransfers(accountId: AccountId, initData: str
 							</Button>
 						</PopoverTrigger>
 						<PopoverContent class="w-auto p-0">
-							<Calendar v-model="scheduledTransferInput.startDate" />
+							<Calendar v-model="scheduledTransferInput.startDate as DateValue" />
 						</PopoverContent>
 					</Popover>
 				</div>

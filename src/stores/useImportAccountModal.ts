@@ -326,18 +326,18 @@ export const useImportAccountModalStore = defineStore('useImportAccountModalStor
 	})
 
 	return {
-		openModal: open,
-		closeModal: close,
+		stageKeyHistory,
 		stageKey,
 		stage,
 		canGoBack,
 		canGoNext,
+		formData,
+		openModal: open,
+		closeModal: close,
 		goNextStage,
 		goBackStage,
 		reset,
-		formData,
 		updateFormData,
-		stageKeyHistory,
 	}
 })
 

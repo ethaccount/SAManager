@@ -21,7 +21,7 @@ export function getErrMsg(err: unknown, defaultMsg: string): string {
 }
 
 export function getErrorChainMessage(err: Error): string {
-	let messages: string[] = []
+	const messages: string[] = []
 
 	while (err instanceof Error) {
 		messages.push(`${err.name}: ${err.message}`)

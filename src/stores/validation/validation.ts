@@ -1,5 +1,4 @@
 import { SUPPORTED_SIGNER_TYPE } from '@/stores/validation/useSigner'
-import { shortenAddress } from '@vue-dapp/core'
 import { Contract, EventLog, isAddress, JsonRpcProvider } from 'ethers'
 import { ADDRESS } from 'sendop'
 import { getAuthenticatorIdHash } from '../passkey/passkeyNoRp'
