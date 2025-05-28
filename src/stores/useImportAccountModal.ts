@@ -337,6 +337,7 @@ export const useImportAccountModalStore = defineStore('useImportAccountModalStor
 		reset,
 		formData,
 		updateFormData,
+		stageKeyHistory,
 	}
 })
 

@@ -55,6 +55,9 @@ export const useAccountStore = defineStore(
 			return hasInitCode(account.address)
 		})
 
+		if (isCrossChain.value) {
+		}
+
 		const selectedAccountInitCodeData = computed<InitCodeData | null>(() => {
 			const account = selectedAccount.value
 			if (!account) return null
@@ -87,6 +90,8 @@ export const useAccountStore = defineStore(
 						address: SUPPORTED_VALIDATION_OPTIONS['Passkey'].validatorAddress,
 						signMessage: signMessage,
 					})
+				default:
+					return null
 			}
 		})
 

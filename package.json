@@ -19,12 +19,14 @@
 	"scripts": {
 		"dev": "vite",
 		"test": "vitest --run",
-		"build": "vue-tsc --noEmit && vite build",
+		"build": "vue-tsc --noEmit && pnpm run lint && vite build",
 		"preview": "vite preview",
 		"clean": "rm -rf dist && rm -rf node_modules",
 		"typecheck": "vue-tsc --noEmit",
 		"deploy": "pnpm run build && wrangler deploy",
-		"cf-typegen": "wrangler types"
+		"cf-typegen": "wrangler types",
+		"lint": "eslint . --ext .vue,.js,.ts",
+		"lint:fix": "eslint . --ext .vue,.js,.ts --fix"
 	},
 	"dependencies": {
 		"@internationalized/date": "^3.7.0",
@@ -60,8 +62,13 @@
 		"@cloudflare/vite-plugin": "^1.2.4",
 		"@simplewebauthn/typescript-types": "^8.3.4",
 		"@types/node": "^22.10.6",
+		"@typescript-eslint/parser": "^8.33.0",
 		"@vitejs/plugin-vue": "^5.2.1",
 		"autoprefixer": "10.4.14",
+		"eslint": "^9.27.0",
+		"eslint-plugin-pinia": "^0.4.1",
+		"eslint-plugin-vue": "^10.1.0",
+		"globals": "^16.2.0",
 		"postcss": "8.5.3",
 		"tailwindcss": "3.3.3",
 		"tailwindcss-animate": "^1.0.7",

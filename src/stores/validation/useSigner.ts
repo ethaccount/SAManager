@@ -93,6 +93,7 @@ export const useSignerStore = defineStore('useSignerStore', () => {
 		selectedSigner,
 		selectSigner,
 		isSignerEligibleForValidation,
+		selectedSignerType,
 	}
 })
 

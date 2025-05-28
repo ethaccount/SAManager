@@ -50,6 +50,8 @@ export const useBlockchainStore = defineStore(
 					return getAlchemyUrl(selectedChainId.value)
 				case SUPPORTED_NODE.PUBLIC_NODE:
 					return publicNode(Number(selectedChainId.value) as any)
+				default:
+					return getAlchemyUrl(selectedChainId.value)
 			}
 		})
 
@@ -79,6 +81,8 @@ export const useBlockchainStore = defineStore(
 				case SUPPORTED_BUNDLER.PIMLICO:
 					return getPimlicoUrl(selectedChainId.value)
 				case SUPPORTED_BUNDLER.ALCHEMY:
+					return getAlchemyUrl(selectedChainId.value)
+				default:
 					return getAlchemyUrl(selectedChainId.value)
 			}
 		})
@@ -110,6 +114,8 @@ export const useBlockchainStore = defineStore(
 				case SUPPORTED_BUNDLER.PIMLICO:
 					return new PimlicoBundler(chainIdBigInt.value, bundlerUrl.value, bundlerOptions)
 				case SUPPORTED_BUNDLER.ALCHEMY:
+					return new AlchemyBundler(chainIdBigInt.value, bundlerUrl.value, bundlerOptions)
+				default:
 					return new AlchemyBundler(chainIdBigInt.value, bundlerUrl.value, bundlerOptions)
 			}
 		})

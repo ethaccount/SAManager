@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { useAccount } from '@/stores/account/useAccount'
+import { ImportedAccount } from '@/stores/account/account'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { shortenAddress } from '@vue-dapp/core'
 import { Eye, EyeOff, Loader2 } from 'lucide-vue-next'
 import { ADDRESS, TSmartSession__factory } from 'sendop'
-import { ImportedAccount } from '@/stores/account/account'
 
 const props = defineProps<{
 	selectedAccount: ImportedAccount
@@ -13,7 +12,6 @@ const props = defineProps<{
 }>()
 
 const { tenderlyClient } = useBlockchain()
-const { selectedAccount } = useAccount()
 
 interface SessionData {
 	permissionId: string
@@ -41,8 +39,6 @@ onMounted(async () => {
 })
 
 async function loadSessions() {
-	if (!selectedAccount.value) return
-
 	loading.value = true
 	try {
 		const sessionCreatedEvents = await smartsession.value.queryFilter(smartsession.value.filters.SessionCreated())
@@ -50,22 +46,22 @@ async function loadSessions() {
 		const accountSessions: SessionData[] = []
 
 		for (const event of sessionCreatedEvents) {
-			if (event.args.account === selectedAccount.value.address) {
+			if (event.args.account === props.selectedAccount.address) {
 				const permissionId = event.args.permissionId
 
 				// Get basic session info
 				const isPermissionEnabled = await smartsession.value.isPermissionEnabled(
 					permissionId,
-					selectedAccount.value.address,
+					props.selectedAccount.address,
 				)
 
 				const [sessionValidator, sessionValidatorData] = await smartsession.value.getSessionValidatorAndConfig(
-					selectedAccount.value.address,
+					props.selectedAccount.address,
 					permissionId,
 				)
 
 				const enabledActions = await smartsession.value.getEnabledActions(
-					selectedAccount.value.address,
+					props.selectedAccount.address,
 					permissionId,
 				)
 
@@ -77,13 +73,13 @@ async function loadSessions() {
 				}> = []
 				for (const actionId of enabledActions) {
 					const isActionIdEnabled = await smartsession.value.isActionIdEnabled(
-						selectedAccount.value.address,
+						props.selectedAccount.address,
 						permissionId,
 						actionId,
 					)
 
 					const actionPolicies = await smartsession.value.getActionPolicies(
-						selectedAccount.value.address,
+						props.selectedAccount.address,
 						permissionId,
 						actionId,
 					)

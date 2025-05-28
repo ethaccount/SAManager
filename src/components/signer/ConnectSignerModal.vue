@@ -30,6 +30,8 @@ const title = computed(() => {
 			return 'Register Passkey'
 		case 'passkey-only-login':
 			return 'Login Passkey'
+		default:
+			return 'Unknown'
 	}
 })
 </script>

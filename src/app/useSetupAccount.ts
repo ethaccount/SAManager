@@ -15,7 +15,9 @@ export function useSetupAccount() {
 
 	watchImmediate(selectedChainId, () => {
 		if (!selectedAccount.value) return
-		if (isCrossChain && selectedAccount.value.chainId !== selectedChainId.value) {
+
+		// TODO: isCrossChain without .value cannot be detected by eslint
+		if (isCrossChain.value && selectedAccount.value.chainId !== selectedChainId.value) {
 			selectAccount(selectedAccount.value.address, selectedChainId.value)
 		}
 	})

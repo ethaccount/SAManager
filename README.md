@@ -28,6 +28,7 @@ pnpm dlx shadcn-vue@2.1.0 add button
 - web3icons: https://tokenicons.io/
 - Toast: https://vue-sonner.robertshaw.id/
 - Modal: https://vue-final-modal.org/use-cases/playground
+- eslint: https://eslint.vuejs.org/user-guide/
 
 ## Credits
 
