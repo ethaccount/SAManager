@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { toRoute } from '@/lib/router'
-import { formatDate, formatInterval, formatNextExecution, isJobOverdue, useFetchJobs } from '@/lib/scheduling'
+import { useFetchJobs } from '@/lib/scheduling/useFetchJobs'
+import { formatDate, formatInterval, formatNextExecution, isJobOverdue, isJobCompleted } from '@/lib/scheduling/jobs'
 import { useAccount } from '@/stores/account/useAccount'
 import { useTxModal } from '@/stores/useTxModal'
 import { shortenAddress } from '@vue-dapp/core'
@@ -12,6 +13,10 @@ const router = useRouter()
 const { selectedAccount } = useAccount()
 
 const { loading, error, jobs, fetchAccountJobs } = useFetchJobs()
+
+const displayJobs = computed(() => {
+	return jobs.value.slice().sort((a, b) => Number(b.startDate - a.startDate))
+})
 
 onMounted(async () => {
 	await fetchAccountJobs()
@@ -98,7 +103,7 @@ const onClickExecute = async (jobId: number) => {
 					</div>
 
 					<div
-						v-for="job in jobs"
+						v-for="job in displayJobs"
 						:key="job.id"
 						class="group relative p-6 rounded-xl bg-muted/30 border border-border/40"
 					>
@@ -123,7 +128,7 @@ const onClickExecute = async (jobId: number) => {
 							</div>
 
 							<!-- Enable/Disable and Execute buttons -->
-							<div class="flex items-center space-x-1">
+							<div v-if="!isJobCompleted(job)" class="flex items-center space-x-1">
 								<Button
 									v-if="job.isEnabled && isJobOverdue(job)"
 									variant="ghost"
