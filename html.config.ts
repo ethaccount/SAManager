@@ -8,7 +8,7 @@ const KEYWORDS = packageJson.keywords.join(', ')
 const AUTHOR = packageJson.author
 const COVER_IMAGE = `${BASE_URL}/cover.png`
 
-export const htmlConfig: Options = {
+export default {
 	metas: [
 		{
 			name: 'description',
@@ -69,4 +69,4 @@ export const htmlConfig: Options = {
 			content: COVER_IMAGE,
 		},
 	],
-}
+} satisfies Options
