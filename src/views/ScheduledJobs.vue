@@ -2,9 +2,11 @@
 import { toRoute } from '@/lib/router'
 import { formatDate, formatInterval, formatNextExecution, isJobOverdue, useFetchJobs } from '@/lib/scheduling'
 import { useAccount } from '@/stores/account/useAccount'
+import { useTxModal } from '@/stores/useTxModal'
 import { shortenAddress } from '@vue-dapp/core'
 import { formatUnits } from 'ethers'
 import { Clock, Loader2, Pause, Play, Zap } from 'lucide-vue-next'
+import { ADDRESS, Execution, INTERFACES } from 'sendop'
 
 const router = useRouter()
 const { selectedAccount } = useAccount()
@@ -19,10 +21,18 @@ const onClickJobAction = async (jobId: number, action: 'disable' | 'enable') => 
 	if (!selectedAccount.value) return
 
 	try {
-		// TODO: Implement actual job management functions
-		console.log(`${action} job ${jobId}`)
-		// For now, just refresh the jobs list
-		await fetchAccountJobs()
+		const execution: Execution = {
+			to: ADDRESS.ScheduledTransfers,
+			value: 0n,
+			data: INTERFACES.ScheduledTransfers.encodeFunctionData('toggleOrder', [jobId]),
+		}
+
+		useTxModal().openModal({
+			executions: [execution],
+			onSuccess: async () => {
+				await fetchAccountJobs()
+			},
+		})
 	} catch (err) {
 		console.error(`Failed to ${action} job:`, err)
 		error.value = err instanceof Error ? err.message : String(err)
@@ -33,10 +43,18 @@ const onClickExecute = async (jobId: number) => {
 	if (!selectedAccount.value) return
 
 	try {
-		// TODO: Implement actual job execution function
-		console.log(`Execute job ${jobId}`)
-		// For now, just refresh the jobs list
-		await fetchAccountJobs()
+		const execution: Execution = {
+			to: ADDRESS.ScheduledTransfers,
+			value: 0n,
+			data: INTERFACES.ScheduledTransfers.encodeFunctionData('executeOrder', [jobId]),
+		}
+
+		useTxModal().openModal({
+			executions: [execution],
+			onSuccess: async () => {
+				await fetchAccountJobs()
+			},
+		})
 	} catch (err) {
 		console.error(`Failed to execute job:`, err)
 		error.value = err instanceof Error ? err.message : String(err)
@@ -141,27 +159,32 @@ const onClickExecute = async (jobId: number) => {
 						</div>
 
 						<!-- Schedule Info -->
-						<div class="flex items-center space-x-4">
-							<div class="flex items-center space-x-2">
-								<Clock class="w-4 h-4 text-muted-foreground" />
-								<span class="text-sm font-medium">{{ formatInterval(job.executeInterval) }}</span>
+						<div class="mt-2 flex flex-col space-y-2">
+							<!-- Interval -->
+							<div class="flex items-center justify-between">
+								<div class="flex items-center space-x-2">
+									<Clock class="w-4 h-4 text-muted-foreground" />
+									<span class="text-xs font-medium text-muted-foreground">
+										{{ formatInterval(job.executeInterval) }}
+									</span>
+								</div>
+								<div class="text-xs text-muted-foreground">Started {{ formatDate(job.startDate) }}</div>
 							</div>
-							<div class="text-sm text-muted-foreground">Started {{ formatDate(job.startDate) }}</div>
-						</div>
 
-						<!-- Progress Section -->
-						<div class="mt-2">
+							<!-- Progress -->
 							<div class="flex">
-								<span class="text-sm text-muted-foreground">
+								<span class="text-base font-medium">
 									{{ job.numberOfExecutionsCompleted }} of {{ job.numberOfExecutions }} executions
 								</span>
 							</div>
-							<div v-if="job.lastExecutionTime > 0" class="text-xs text-muted-foreground">
-								Last execution: {{ formatDate(job.lastExecutionTime) }}
-							</div>
-							<div v-else class="text-sm text-muted-foreground">
-								<span v-if="job.isEnabled"> Next execution: {{ formatNextExecution(job) }} </span>
-								<span v-else> Job is paused - will start when resumed </span>
+
+							<!-- Last execution and next execution -->
+							<div class="flex flex-col text-xs text-muted-foreground">
+								<div>Last execution: {{ formatDate(job.lastExecutionTime) }}</div>
+								<div v-if="job.numberOfExecutionsCompleted < job.numberOfExecutions">
+									<span v-if="job.isEnabled"> Next execution: {{ formatNextExecution(job) }} </span>
+									<span v-else> Job is paused - will start when resumed </span>
+								</div>
 							</div>
 						</div>
 					</div>
