@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { isScheduledTransferSession } from '@/lib/permissions/session'
+import { useSessionList } from '@/lib/permissions/useSessionList'
 import { ImportedAccount } from '@/stores/account/account'
-import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { shortenAddress } from '@vue-dapp/core'
 import { Eye, EyeOff, Loader2 } from 'lucide-vue-next'
-import { ADDRESS, TSmartSession__factory } from 'sendop'
 
 const props = defineProps<{
 	selectedAccount: ImportedAccount
@@ -11,104 +11,13 @@ const props = defineProps<{
 	isModular: boolean
 }>()
 
-const { tenderlyClient } = useBlockchain()
-
-interface SessionData {
-	permissionId: string
-	isEnabled: boolean
-	sessionValidator: string
-	sessionValidatorData: string
-	enabledActions: string[]
-	actionDetails: Array<{
-		actionId: string
-		isEnabled: boolean
-		actionPolicies: string[]
-	}>
-}
-
-const sessions = ref<SessionData[]>([])
-const loading = ref(false)
-const expandedSessions = ref<Set<string>>(new Set())
-
-const smartsession = computed(() => TSmartSession__factory.connect(ADDRESS.SmartSession, tenderlyClient.value))
+const { sessions, loading, expandedSessions, loadSessions } = useSessionList()
 
 onMounted(async () => {
 	if (!props.isDeployed) return
 	if (!props.isModular) return
-	await loadSessions()
+	await loadSessions(props.selectedAccount.address)
 })
-
-async function loadSessions() {
-	loading.value = true
-	try {
-		const sessionCreatedEvents = await smartsession.value.queryFilter(smartsession.value.filters.SessionCreated())
-
-		const accountSessions: SessionData[] = []
-
-		for (const event of sessionCreatedEvents) {
-			if (event.args.account === props.selectedAccount.address) {
-				const permissionId = event.args.permissionId
-
-				// Get basic session info
-				const isPermissionEnabled = await smartsession.value.isPermissionEnabled(
-					permissionId,
-					props.selectedAccount.address,
-				)
-
-				const [sessionValidator, sessionValidatorData] = await smartsession.value.getSessionValidatorAndConfig(
-					props.selectedAccount.address,
-					permissionId,
-				)
-
-				const enabledActions = await smartsession.value.getEnabledActions(
-					props.selectedAccount.address,
-					permissionId,
-				)
-
-				// Get action details
-				const actionDetails: Array<{
-					actionId: string
-					isEnabled: boolean
-					actionPolicies: string[]
-				}> = []
-				for (const actionId of enabledActions) {
-					const isActionIdEnabled = await smartsession.value.isActionIdEnabled(
-						props.selectedAccount.address,
-						permissionId,
-						actionId,
-					)
-
-					const actionPolicies = await smartsession.value.getActionPolicies(
-						props.selectedAccount.address,
-						permissionId,
-						actionId,
-					)
-
-					actionDetails.push({
-						actionId,
-						isEnabled: isActionIdEnabled,
-						actionPolicies,
-					})
-				}
-
-				accountSessions.push({
-					permissionId,
-					isEnabled: isPermissionEnabled,
-					sessionValidator,
-					sessionValidatorData,
-					enabledActions,
-					actionDetails,
-				})
-			}
-		}
-
-		sessions.value = accountSessions
-	} catch (error) {
-		console.error('Error loading sessions:', error)
-	} finally {
-		loading.value = false
-	}
-}
 
 function toggleSessionExpansion(permissionId: string) {
 	if (expandedSessions.value.has(permissionId)) {
@@ -117,6 +26,15 @@ function toggleSessionExpansion(permissionId: string) {
 		expandedSessions.value.add(permissionId)
 	}
 }
+
+const displaySessionList = computed(() => {
+	return sessions.value.map(session => {
+		return {
+			...session,
+			sessionName: isScheduledTransferSession(session) ? 'Scheduled Transfer' : undefined,
+		}
+	})
+})
 </script>
 
 <template>
@@ -133,7 +51,7 @@ function toggleSessionExpansion(permissionId: string) {
 					No permissions found for this account
 				</div>
 
-				<div v-for="session in sessions" :key="session.permissionId" class="border rounded-lg">
+				<div v-for="session in displaySessionList" :key="session.permissionId" class="border rounded-lg">
 					<!-- Session Header -->
 					<div
 						class="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50"
@@ -145,7 +63,13 @@ function toggleSessionExpansion(permissionId: string) {
 								<EyeOff v-else class="w-4 h-4" />
 							</div>
 							<div>
-								<div class="font-medium">{{ shortenAddress(session.permissionId) }}</div>
+								<div class="flex items-center gap-2">
+									<div class="font-medium">{{ shortenAddress(session.permissionId) }}</div>
+									<div v-if="session.sessionName" class="text-sm text-muted-foreground">
+										({{ session.sessionName }})
+									</div>
+								</div>
+
 								<div class="text-sm text-muted-foreground">
 									{{ session.enabledActions.length }} action(s)
 								</div>
@@ -195,9 +119,9 @@ function toggleSessionExpansion(permissionId: string) {
 									>
 										<div class="flex items-center justify-between mb-2">
 											<div class="flex items-center gap-2">
-												<span class="text-sm font-mono">{{
-													shortenAddress(action.actionId)
-												}}</span>
+												<span class="text-sm font-mono">
+													{{ shortenAddress(action.actionId) }}
+												</span>
 												<CopyButton :address="action.actionId" />
 											</div>
 											<div
