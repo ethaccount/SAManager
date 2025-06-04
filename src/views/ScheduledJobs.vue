@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { toRoute } from '@/lib/router'
+import { formatDate, formatInterval, formatNextExecution, isJobCompleted, isJobOverdue } from '@/lib/scheduling/jobs'
 import { useFetchJobs } from '@/lib/scheduling/useFetchJobs'
-import { formatDate, formatInterval, formatNextExecution, isJobOverdue, isJobCompleted } from '@/lib/scheduling/jobs'
 import { useAccount } from '@/stores/account/useAccount'
 import { useTxModal } from '@/stores/useTxModal'
 import { shortenAddress } from '@vue-dapp/core'
@@ -13,10 +13,6 @@ const router = useRouter()
 const { selectedAccount } = useAccount()
 
 const { loading, error, jobs, fetchAccountJobs } = useFetchJobs()
-
-const displayJobs = computed(() => {
-	return jobs.value.slice().sort((a, b) => Number(b.startDate - a.startDate))
-})
 
 onMounted(async () => {
 	await fetchAccountJobs()
@@ -65,6 +61,16 @@ const onClickExecute = async (jobId: number) => {
 		error.value = err instanceof Error ? err.message : String(err)
 	}
 }
+
+function displayLastExecutionTime(lastExecutionTime: bigint) {
+	if (lastExecutionTime === 0n) return 'Never'
+	return formatDate(lastExecutionTime)
+}
+
+// sort by job id in descending order
+const displayJobs = computed(() => {
+	return jobs.value.slice().sort((a, b) => Number(b.id - a.id))
+})
 </script>
 
 <template>
@@ -120,6 +126,9 @@ const onClickExecute = async (jobId: number) => {
 									<h3 class="text-lg font-semibold text-foreground">
 										Send {{ formatUnits(job.amount, job.tokenDecimals) }} {{ job.tokenSymbol }}
 									</h3>
+									<span class="text-xs text-muted-foreground font-mono bg-muted/50 px-2 py-1 rounded">
+										#{{ job.id }}
+									</span>
 								</div>
 								<div class="flex items-center space-x-2">
 									<Badge v-if="!job.isEnabled" variant="outline"> Disabled </Badge>
@@ -185,7 +194,7 @@ const onClickExecute = async (jobId: number) => {
 
 							<!-- Last execution and next execution -->
 							<div class="flex flex-col text-xs text-muted-foreground">
-								<div>Last execution: {{ formatDate(job.lastExecutionTime) }}</div>
+								<div>Last execution: {{ displayLastExecutionTime(job.lastExecutionTime) }}</div>
 								<div v-if="job.numberOfExecutionsCompleted < job.numberOfExecutions">
 									<span v-if="job.isEnabled"> Next execution: {{ formatNextExecution(job) }} </span>
 									<span v-else> Job is paused - will start when resumed </span>

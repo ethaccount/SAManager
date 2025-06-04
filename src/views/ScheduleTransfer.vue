@@ -3,6 +3,7 @@ import { IS_DEV } from '@/config'
 import { getEncodedInstallScheduledTransfers, getEncodedInstallSmartSession } from '@/lib/module-management/module'
 import { createScheduledTransferSession, getScheduledTransferSessionStatus } from '@/lib/permissions/session'
 import { useSessionList } from '@/lib/permissions/useSessionList'
+import { registerJob } from '@/lib/scheduling/registerJob'
 import { getOrderData } from '@/lib/scheduling/scheduleTransfer'
 import { ScheduleTransfer, tokens } from '@/lib/token'
 import { useAccount } from '@/stores/account/useAccount'
@@ -21,6 +22,7 @@ import {
 	SMART_SESSIONS_ENABLE_MODE,
 	TIERC7579Account__factory,
 	TRegistry__factory,
+	TScheduledTransfers__factory,
 } from 'sendop'
 import { SessionStruct } from 'sendop/dist/src/contract-types/TSmartSession'
 
@@ -137,6 +139,7 @@ async function onClickReview() {
 	let isSmartSessionInstalled = false
 	let isScheduledTransfersInstalled = false
 	let isSessionExist = false
+	let existingPermissionId: string | null = null
 
 	try {
 		isLoadingReview.value = true
@@ -155,13 +158,14 @@ async function onClickReview() {
 			const { sessions, loadSessions } = useSessionList()
 			await loadSessions(selectedAccount.value.address)
 
-			isSessionExist = sessions.value.some(session => {
+			for (const session of sessions.value) {
 				const status = getScheduledTransferSessionStatus(session)
 				if (status.isActionEnabled && status.isPermissionEnabled) {
-					return true
+					isSessionExist = true
+					existingPermissionId = session.permissionId
+					break
 				}
-				return false
-			})
+			}
 		}
 
 		// check if the account has ScheduledTransfers module
@@ -188,7 +192,7 @@ async function onClickReview() {
 
 		Is Smartsession installed?
 			- Yes: Is there a session for scheduledTransfer?
-				- Yes: No new execution needed
+				- Yes: get the permission id
 				- No: create a new session
 			- No: Install the module and enable it
 
@@ -197,34 +201,49 @@ async function onClickReview() {
 			- No: Install and enable it
 	*/
 
-	const sessions: SessionStruct[] = [createScheduledTransferSession().session]
-	const scheduledTransfersInitData = getOrderData(scheduledTransfer.value)
 	const executions: Execution[] = []
+	let permissionId: string | null = null
 
-	if (isSmartSessionInstalled) {
-		if (!isSessionExist) {
-			// create a new session
-			executions.push({
-				to: ADDRESS.SmartSession,
-				value: 0n,
-				data: INTERFACES.SmartSession.encodeFunctionData('enableSessions', [sessions]),
-			})
-			console.log('SmartSession installed, but no session for scheduledTransfer, create a new session')
-		}
-	} else {
-		// install smart session module and enable the session
-		const encodedSessions = getEncodedFunctionParams(
-			INTERFACES.SmartSession.encodeFunctionData('enableSessions', [sessions]),
-		)
-		const smartSessionInitData = concat([SMART_SESSIONS_ENABLE_MODE, encodedSessions])
-
-		executions.push({
-			to: selectedAccount.value.address,
-			value: 0n,
-			data: getEncodedInstallSmartSession(selectedAccount.value.accountId, smartSessionInitData),
-		})
-		console.log('SmartSession not installed, install and enable the session')
+	if (isSmartSessionInstalled && isSessionExist) {
+		// get the permission id
+		permissionId = existingPermissionId
 	}
+
+	{
+		const { session, permissionId: newPermissionId } = createScheduledTransferSession()
+		permissionId = newPermissionId
+
+		const sessions: SessionStruct[] = [session]
+
+		if (isSmartSessionInstalled) {
+			if (!isSessionExist) {
+				// create a new session
+				executions.push({
+					to: ADDRESS.SmartSession,
+					value: 0n,
+					data: INTERFACES.SmartSession.encodeFunctionData('enableSessions', [sessions]),
+				})
+				console.log('SmartSession installed, but no session for scheduledTransfer, create a new session')
+			}
+		} else {
+			// install smart session module and enable the session
+			const encodedSessions = getEncodedFunctionParams(
+				INTERFACES.SmartSession.encodeFunctionData('enableSessions', [sessions]),
+			)
+			const smartSessionInitData = concat([SMART_SESSIONS_ENABLE_MODE, encodedSessions])
+
+			executions.push({
+				to: selectedAccount.value.address,
+				value: 0n,
+				data: getEncodedInstallSmartSession(selectedAccount.value.accountId, smartSessionInitData),
+			})
+			console.log('SmartSession not installed, install and enable the session')
+		}
+	}
+
+	// Is ScheduledTransfers installed?
+
+	const scheduledTransfersInitData = getOrderData(scheduledTransfer.value)
 
 	if (isScheduledTransfersInstalled) {
 		// add a order
@@ -257,8 +276,35 @@ async function onClickReview() {
 		console.log('Rhinestone Attester not trusted, trust it')
 	}
 
+	// Get the job id for this scheduled transfer
+	const scheduledTransfers = TScheduledTransfers__factory.connect(ADDRESS.ScheduledTransfers, client.value)
+	const jobCount = await scheduledTransfers.accountJobCount(selectedAccount.value.address)
+	const jobId = jobCount + 1n
+
 	useTxModal().openModal({
 		executions,
+		async onSuccess() {
+			const { bundler } = useBlockchain()
+
+			if (!selectedAccount.value) {
+				throw new Error('No account selected')
+			}
+
+			try {
+				await registerJob({
+					accountId: selectedAccount.value.accountId,
+					accountAddress: selectedAccount.value.address,
+					permissionId,
+					jobId,
+					client: client.value,
+					bundler: bundler.value,
+				})
+			} catch (e: unknown) {
+				const msg = 'Register job failed: ' + (e instanceof Error ? e.message : String(e))
+				console.error(msg)
+				throw new Error(msg)
+			}
+		},
 	})
 }
 </script>
