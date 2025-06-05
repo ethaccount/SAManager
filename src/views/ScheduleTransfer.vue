@@ -139,7 +139,8 @@ async function onClickReview() {
 	let isSmartSessionInstalled = false
 	let isScheduledTransfersInstalled = false
 	let isSessionExist = false
-	let existingPermissionId: string | null = null
+
+	let permissionId: string | null = null
 
 	try {
 		isLoadingReview.value = true
@@ -162,7 +163,7 @@ async function onClickReview() {
 				const status = getScheduledTransferSessionStatus(session)
 				if (status.isActionEnabled && status.isPermissionEnabled) {
 					isSessionExist = true
-					existingPermissionId = session.permissionId
+					permissionId = session.permissionId
 					break
 				}
 			}
@@ -202,14 +203,8 @@ async function onClickReview() {
 	*/
 
 	const executions: Execution[] = []
-	let permissionId: string | null = null
 
-	if (isSmartSessionInstalled && isSessionExist) {
-		// get the permission id
-		permissionId = existingPermissionId
-	}
-
-	{
+	if (!permissionId) {
 		const { session, permissionId: newPermissionId } = createScheduledTransferSession()
 		permissionId = newPermissionId
 
