@@ -117,7 +117,9 @@ const displayJobs = computed(() => {
 							<!-- Job title and status -->
 							<div class="flex items-center space-x-3">
 								<div class="flex items-center space-x-2">
+									<!-- Job status -->
 									<div
+										v-if="!isJobCompleted(job)"
 										:class="[
 											'w-2 h-2 rounded-full',
 											job.isEnabled ? 'bg-green-500 animate-pulse' : 'bg-gray-400',
@@ -131,7 +133,14 @@ const displayJobs = computed(() => {
 									</span>
 								</div>
 								<div class="flex items-center space-x-2">
-									<Badge v-if="!job.isEnabled" variant="outline"> Disabled </Badge>
+									<Badge
+										v-if="isJobCompleted(job)"
+										variant="outline"
+										class="bg-green-500/30 border-green-500/50"
+									>
+										Completed
+									</Badge>
+									<Badge v-else-if="!job.isEnabled" variant="outline"> Disabled </Badge>
 									<Badge v-else-if="isJobOverdue(job)" variant="destructive"> Overdue </Badge>
 								</div>
 							</div>

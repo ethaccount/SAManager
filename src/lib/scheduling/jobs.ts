@@ -67,6 +67,10 @@ export function formatNextExecution(job: Job) {
 
 // Helper function to check if job is overdue
 export function isJobOverdue(job: Job) {
+	if (isJobCompleted(job)) {
+		return false
+	}
+
 	const nextTime = getNextExecutionTime(job)
 	const now = new Date()
 	return nextTime.getTime() < now.getTime()
