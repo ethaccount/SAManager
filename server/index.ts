@@ -9,6 +9,8 @@ export interface Env {
 	TENDERLY_API_KEY_ARBITRUM_SEPOLIA: string
 	TENDERLY_API_KEY_BASE_SEPOLIA: string
 	TENDERLY_API_KEY_POLYGON_AMOY: string
+	BACKEND_URL: string
+	BACKEND_SECRET: string
 }
 
 let envValidated = false
@@ -22,6 +24,8 @@ function validateEnv(env: Env) {
 	if (!env.TENDERLY_API_KEY_ARBITRUM_SEPOLIA) throw new Error('Missing TENDERLY_API_KEY_ARBITRUM_SEPOLIA')
 	if (!env.TENDERLY_API_KEY_BASE_SEPOLIA) throw new Error('Missing TENDERLY_API_KEY_BASE_SEPOLIA')
 	if (!env.TENDERLY_API_KEY_POLYGON_AMOY) throw new Error('Missing TENDERLY_API_KEY_POLYGON_AMOY')
+	if (!env.BACKEND_URL) throw new Error('Missing BACKEND_URL')
+	if (!env.BACKEND_SECRET) throw new Error('Missing BACKEND_SECRET')
 }
 
 function getTenderlyApiKey(chainId: number, env: Env): string | null {
@@ -58,6 +62,39 @@ export default {
 			return Response.json({
 				APP_SALT: env.APP_SALT,
 			})
+		}
+
+		if (url.pathname.startsWith('/backend')) {
+			// Proxy requests to backend service
+			const backendPath = url.pathname.replace('/backend', '/api/v1')
+			const backendUrl = new URL(backendPath + url.search, env.BACKEND_URL)
+
+			try {
+				const upstreamRequest = new Request(backendUrl.toString(), {
+					method: request.method,
+					headers: {
+						...Object.fromEntries(request.headers.entries()),
+						'X-API-Secret': env.BACKEND_SECRET,
+					},
+					body: request.body,
+					redirect: 'manual',
+				})
+
+				const upstreamResponse = await fetch(upstreamRequest)
+
+				const responseHeaders = new Headers(upstreamResponse.headers)
+				responseHeaders.delete('content-encoding')
+
+				return new Response(upstreamResponse.body, {
+					status: upstreamResponse.status,
+					headers: responseHeaders,
+				})
+			} catch (e: unknown) {
+				return Response.json(
+					{ error: `Failed to proxy backend request: ${(e as Error).message}` },
+					{ status: 500 },
+				)
+			}
 		}
 
 		if (url.pathname === '/api/provider') {
