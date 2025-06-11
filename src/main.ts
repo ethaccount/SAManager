@@ -41,3 +41,12 @@ app.config.errorHandler = (error: unknown, _vm, _info) => {
 		duration: ERROR_NOTIFICATION_DURATION,
 	})
 }
+
+// Load Cloudflare Web Analytics only in production
+if (import.meta.env.PROD) {
+	const script = document.createElement('script')
+	script.defer = true
+	script.src = 'https://static.cloudflareinsights.com/beacon.min.js'
+	script.setAttribute('data-cf-beacon', '{"token": "0742cf5e720f49a9a49f1f9b26393a9d"}')
+	document.head.appendChild(script)
+}
