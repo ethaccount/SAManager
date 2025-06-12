@@ -35,7 +35,6 @@ export function useSetupEnv() {
 				script.src = 'https://static.cloudflareinsights.com/beacon.min.js'
 				script.setAttribute('data-cf-beacon', `{"token": "${env.CLOUDFLARE_ANALYTICS_TOKEN}"}`)
 				document.head.appendChild(script)
-				console.log('Cloudflare Web Analytics loaded')
 			}
 		} catch (err: unknown) {
 			console.error(err)

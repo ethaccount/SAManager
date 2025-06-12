@@ -54,7 +54,7 @@ export default {
 				validateEnv(env)
 				envValidated = true
 			} catch (e) {
-				return Response.json({ error: `Server is not ready: ${(e as Error).message}` }, { status: 503 })
+				return Response.json({ error: `Worker is not ready: ${(e as Error).message}` }, { status: 503 })
 			}
 		}
 
