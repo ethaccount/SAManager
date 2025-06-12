@@ -2,7 +2,7 @@ import { NATIVE_TOKEN_ADDRESS } from '@/lib/token'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { JsonRpcProvider } from 'ethers'
-import { ADDRESS, TIERC20__factory, TScheduledTransfers__factory } from 'sendop'
+import { ADDRESS, isSameAddress, TIERC20__factory, TScheduledTransfers__factory } from 'sendop'
 import { decodeExecutionData } from './jobs'
 
 export type Job = {
@@ -72,7 +72,13 @@ export async function fetchJobs(client: JsonRpcProvider, accountAddress: string)
 	// Decode all execution data and collect unique token addresses
 	const decodedExecutionDataList = executionLogs.map(job => decodeExecutionData(job.executionData))
 	const uniqueTokenAddresses = new Set(
-		decodedExecutionDataList.map(data => data.tokenAddress).filter(address => address !== NATIVE_TOKEN_ADDRESS),
+		decodedExecutionDataList
+			.map(data => data.tokenAddress)
+			.filter(
+				address =>
+					!isSameAddress(address, NATIVE_TOKEN_ADDRESS) &&
+					!isSameAddress(address, '0x0000000000000000000000000000000000000000'),
+			),
 	)
 
 	// Batch fetch token info for all unique non-native tokens
@@ -101,7 +107,10 @@ export async function fetchJobs(client: JsonRpcProvider, accountAddress: string)
 		let tokenSymbol = 'ETH'
 		let tokenDecimals = 18n
 
-		if (decodedExecutionData.tokenAddress !== NATIVE_TOKEN_ADDRESS) {
+		if (
+			!isSameAddress(decodedExecutionData.tokenAddress, NATIVE_TOKEN_ADDRESS) &&
+			!isSameAddress(decodedExecutionData.tokenAddress, '0x0000000000000000000000000000000000000000')
+		) {
 			const tokenInfo = tokenInfoMap.get(decodedExecutionData.tokenAddress)
 			if (tokenInfo) {
 				tokenName = tokenInfo.name

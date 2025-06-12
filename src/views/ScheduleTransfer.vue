@@ -4,7 +4,7 @@ import { getEncodedInstallScheduledTransfers, getEncodedInstallSmartSession } fr
 import { createScheduledTransferSession, getScheduledTransferSessionStatus } from '@/lib/permissions/session'
 import { useSessionList } from '@/lib/permissions/useSessionList'
 import { registerJob } from '@/lib/scheduling/registerJob'
-import { getOrderData } from '@/lib/scheduling/scheduleTransfer'
+import { createScheduledTransfersInitData } from '@/lib/scheduling/scheduleTransfer'
 import { ScheduleTransfer, tokens } from '@/lib/token'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
@@ -238,7 +238,7 @@ async function onClickReview() {
 
 	// Is ScheduledTransfers installed?
 
-	const scheduledTransfersInitData = getOrderData(scheduledTransfer.value)
+	const scheduledTransfersInitData = createScheduledTransfersInitData(scheduledTransfer.value)
 
 	if (isScheduledTransfersInstalled) {
 		// add a order
