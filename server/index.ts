@@ -10,7 +10,7 @@ export interface Env {
 	TENDERLY_API_KEY_BASE_SEPOLIA: string
 	TENDERLY_API_KEY_POLYGON_AMOY: string
 	BACKEND_URL: string
-	BACKEND_SECRET: string
+	API_SECRET: string
 	CLOUDFLARE_ANALYTICS_TOKEN: string
 }
 
@@ -26,7 +26,7 @@ function validateEnv(env: Env) {
 	if (!env.TENDERLY_API_KEY_BASE_SEPOLIA) throw new Error('Missing TENDERLY_API_KEY_BASE_SEPOLIA')
 	if (!env.TENDERLY_API_KEY_POLYGON_AMOY) throw new Error('Missing TENDERLY_API_KEY_POLYGON_AMOY')
 	if (!env.BACKEND_URL) throw new Error('Missing BACKEND_URL')
-	if (!env.BACKEND_SECRET) throw new Error('Missing BACKEND_SECRET')
+	if (!env.API_SECRET) throw new Error('Missing API_SECRET')
 	if (!env.CLOUDFLARE_ANALYTICS_TOKEN) throw new Error('Missing CLOUDFLARE_ANALYTICS_TOKEN')
 }
 
@@ -77,7 +77,7 @@ export default {
 					method: request.method,
 					headers: {
 						...Object.fromEntries(request.headers.entries()),
-						'X-API-Secret': env.BACKEND_SECRET,
+						'X-API-Secret': env.API_SECRET,
 					},
 					body: request.body,
 					redirect: 'manual',
