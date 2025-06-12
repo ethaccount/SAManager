@@ -60,26 +60,58 @@ export async function fetchJobs(client: JsonRpcProvider, accountAddress: string)
 
 	const jobCount = await scheduledTransfers.accountJobCount(accountAddress)
 
-	const jobs: Job[] = []
+	if (jobCount === 0n) return []
 
-	for (let i = 1; i <= jobCount; i++) {
-		const job = await scheduledTransfers.executionLog(accountAddress, i)
-		const decodedExecutionData = decodeExecutionData(job.executionData)
+	// Batch fetch all execution logs
+	const executionLogPromises = Array.from({ length: Number(jobCount) }, (_, i) =>
+		scheduledTransfers.executionLog(accountAddress, i + 1),
+	)
+
+	const executionLogs = await Promise.all(executionLogPromises)
+
+	// Decode all execution data and collect unique token addresses
+	const decodedExecutionDataList = executionLogs.map(job => decodeExecutionData(job.executionData))
+	const uniqueTokenAddresses = new Set(
+		decodedExecutionDataList.map(data => data.tokenAddress).filter(address => address !== NATIVE_TOKEN_ADDRESS),
+	)
+
+	// Batch fetch token info for all unique non-native tokens
+	const tokenInfoMap = new Map<string, { name: string; symbol: string; decimals: bigint }>()
+
+	if (uniqueTokenAddresses.size > 0) {
+		const tokenInfoPromises = Array.from(uniqueTokenAddresses).map(async tokenAddress => {
+			const token = TIERC20__factory.connect(tokenAddress, client)
+			const [name, symbol, decimals] = await Promise.all([token.name(), token.symbol(), token.decimals()])
+			return { tokenAddress, name, symbol, decimals }
+		})
+
+		const tokenInfoResults = await Promise.all(tokenInfoPromises)
+		tokenInfoResults.forEach(({ tokenAddress, name, symbol, decimals }) => {
+			tokenInfoMap.set(tokenAddress, { name, symbol, decimals })
+		})
+	}
+
+	// Build final jobs array
+	const jobs: Job[] = []
+	for (let i = 0; i < executionLogs.length; i++) {
+		const job = executionLogs[i]
+		const decodedExecutionData = decodedExecutionDataList[i]
 
 		let tokenName = 'ETH'
 		let tokenSymbol = 'ETH'
 		let tokenDecimals = 18n
 
 		if (decodedExecutionData.tokenAddress !== NATIVE_TOKEN_ADDRESS) {
-			// fetch token info
-			const token = TIERC20__factory.connect(decodedExecutionData.tokenAddress, client)
-			tokenName = await token.name()
-			tokenSymbol = await token.symbol()
-			tokenDecimals = await token.decimals()
+			const tokenInfo = tokenInfoMap.get(decodedExecutionData.tokenAddress)
+			if (tokenInfo) {
+				tokenName = tokenInfo.name
+				tokenSymbol = tokenInfo.symbol
+				tokenDecimals = tokenInfo.decimals
+			}
 		}
 
 		jobs.push({
-			id: i,
+			id: i + 1,
 			executeInterval: job.executeInterval,
 			numberOfExecutions: job.numberOfExecutions,
 			numberOfExecutionsCompleted: job.numberOfExecutionsCompleted,
