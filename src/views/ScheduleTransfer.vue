@@ -1,29 +1,28 @@
 <script setup lang="ts">
 import { IS_DEV } from '@/config'
+import { getEncodedInstallScheduledTransfers, getEncodedInstallSmartSession } from '@/lib/module-management/module'
+import { createScheduledTransferSession, getScheduledTransferSessionStatus } from '@/lib/permissions/session'
+import { useSessionList } from '@/lib/permissions/useSessionList'
+import { registerJob } from '@/lib/scheduling/registerJob'
+import { createScheduledTransfersInitData } from '@/lib/scheduling/scheduleTransfer'
 import { ScheduleTransfer, tokens } from '@/lib/token'
-import { AccountId } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { useTxModal } from '@/stores/useTxModal'
 import { DateFormatter, getLocalTimeZone, today, type DateValue } from '@internationalized/date'
-import { concat, isAddress, parseEther, toBeHex } from 'ethers'
+import { concat, isAddress, parseEther } from 'ethers'
 import { CalendarIcon } from 'lucide-vue-next'
 import {
-	abiEncode,
 	ADDRESS,
 	ERC7579_MODULE_TYPE,
 	Execution,
 	getEncodedFunctionParams,
 	INTERFACES,
-	KernelV3Account,
-	NexusAccount,
 	RHINESTONE_ATTESTER_ADDRESS,
-	Safe7579Account,
 	SMART_SESSIONS_ENABLE_MODE,
 	TIERC7579Account__factory,
 	TRegistry__factory,
-	TSmartSession__factory,
-	zeroPadLeft,
+	TScheduledTransfers__factory,
 } from 'sendop'
 import { SessionStruct } from 'sendop/dist/src/contract-types/TSmartSession'
 
@@ -134,9 +133,14 @@ async function onClickReview() {
 		return
 	}
 
+	// fetch data to check if the account has the module and session
+
 	let isRhinestoneAttesterTrusted = true
 	let isSmartSessionInstalled = false
 	let isScheduledTransfersInstalled = false
+	let isSessionExist = false
+
+	let permissionId: string | null = null
 
 	try {
 		isLoadingReview.value = true
@@ -150,6 +154,21 @@ async function onClickReview() {
 			'0x',
 		)
 
+		if (isSmartSessionInstalled) {
+			// check if the account has a session for scheduledTransfer
+			const { sessions, loadSessions } = useSessionList()
+			await loadSessions(selectedAccount.value.address)
+
+			for (const session of sessions.value) {
+				const status = getScheduledTransferSessionStatus(session)
+				if (status.isActionEnabled && status.isPermissionEnabled) {
+					isSessionExist = true
+					permissionId = session.permissionId
+					break
+				}
+			}
+		}
+
 		// check if the account has ScheduledTransfers module
 		isScheduledTransfersInstalled = await account.isModuleInstalled(
 			ERC7579_MODULE_TYPE.EXECUTOR,
@@ -159,7 +178,7 @@ async function onClickReview() {
 
 		// if acccount type is Kernel, check if Rhinestone Attester is trusted
 		if (selectedAccount.value.accountId === 'kernel.advanced.v0.3.1') {
-			// TODO: check
+			// TODO: check isRhinestoneAttesterTrusted for Kernel
 			isRhinestoneAttesterTrusted = false
 		}
 	} catch (e: unknown) {
@@ -169,83 +188,77 @@ async function onClickReview() {
 		isLoadingReview.value = false
 	}
 
-	// @TODO: impl it later
-	if (isSmartSessionInstalled || isScheduledTransfersInstalled) {
-		throw new Error('Account already have SmartSession or ScheduledTransfers module')
+	/*
+		Logic flow:
+
+		Is Smartsession installed?
+			- Yes: Is there a session for scheduledTransfer?
+				- Yes: get the permission id
+				- No: create a new session
+			- No: Install the module and enable it
+
+		Is ScheduledTransfers installed?
+			- Yes: add execution for addOrder
+			- No: Install and enable it
+	*/
+
+	const executions: Execution[] = []
+
+	if (!permissionId) {
+		const { session, permissionId: newPermissionId } = createScheduledTransferSession()
+		permissionId = newPermissionId
+
+		const sessions: SessionStruct[] = [session]
+
+		if (isSmartSessionInstalled) {
+			if (!isSessionExist) {
+				// create a new session
+				executions.push({
+					to: ADDRESS.SmartSession,
+					value: 0n,
+					data: INTERFACES.SmartSession.encodeFunctionData('enableSessions', [sessions]),
+				})
+				console.log('SmartSession installed, but no session for scheduledTransfer, create a new session')
+			}
+		} else {
+			// install smart session module and enable the session
+			const encodedSessions = getEncodedFunctionParams(
+				INTERFACES.SmartSession.encodeFunctionData('enableSessions', [sessions]),
+			)
+			const smartSessionInitData = concat([SMART_SESSIONS_ENABLE_MODE, encodedSessions])
+
+			executions.push({
+				to: selectedAccount.value.address,
+				value: 0n,
+				data: getEncodedInstallSmartSession(selectedAccount.value.accountId, smartSessionInitData),
+			})
+			console.log('SmartSession not installed, install and enable the session')
+		}
 	}
 
-	// create smartsession init data
-	const SESSION_SIGNER_ADDRESS = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8' // acc1
+	// Is ScheduledTransfers installed?
 
-	const session: SessionStruct = {
-		sessionValidator: ADDRESS.OwnableValidator,
-		sessionValidatorInitData: abiEncode(['uint256', 'address[]'], [1, [SESSION_SIGNER_ADDRESS]]), // threshold, signers
-		salt: zeroPadLeft(toBeHex(1), 32),
-		userOpPolicies: [
-			{
-				policy: ADDRESS.SudoPolicy,
-				initData: '0x',
-			},
-		],
-		erc7739Policies: {
-			erc1271Policies: [],
-			allowedERC7739Content: [],
-		},
-		actions: [
-			{
-				actionTargetSelector: INTERFACES.ScheduledTransfers.getFunction('executeOrder').selector,
-				actionTarget: ADDRESS.ScheduledTransfers,
-				actionPolicies: [
-					{
-						policy: ADDRESS.SudoPolicy,
-						initData: '0x',
-					},
-				],
-			},
-		],
-		permitERC4337Paymaster: true,
-	}
-	// const permissionId = getPermissionId(session)
+	const scheduledTransfersInitData = createScheduledTransfersInitData(scheduledTransfer.value)
 
-	const sessions: SessionStruct[] = [session]
-	const encodedSessions = getEncodedFunctionParams(
-		TSmartSession__factory.createInterface().encodeFunctionData('enableSessions', [sessions]),
-	)
-
-	const smartSessionInitData = concat([SMART_SESSIONS_ENABLE_MODE, encodedSessions])
-
-	// create scheduled transfers init data
-	const executeInterval = scheduledTransfer.value.executeInterval
-	const numOfExecutions = scheduledTransfer.value.numOfExecutions
-	const startDate = scheduledTransfer.value.startDate
-	const recipient = scheduledTransfer.value.recipient
-	const tokenAddress = scheduledTransfer.value.tokenAddress
-	const amount = scheduledTransfer.value.amount
-
-	// initData: executeInterval (6) ++ numOfExecutions (2) ++ startDate (6) ++ executionData
-	const scheduledTransfersInitData = concat([
-		zeroPadLeft(toBeHex(executeInterval), 6),
-		zeroPadLeft(toBeHex(numOfExecutions), 2),
-		zeroPadLeft(toBeHex(startDate), 6),
-		abiEncode(['address', 'address', 'uint256'], [recipient, tokenAddress, amount]),
-	])
-
-	// construct the execution
-	const executions: Execution[] = [
-		// install smart session module and enable the session
-		{
-			to: selectedAccount.value.address,
+	if (isScheduledTransfersInstalled) {
+		// add a order
+		executions.push({
+			to: ADDRESS.ScheduledTransfers,
 			value: 0n,
-			data: getEncodedInstallSmartSession(selectedAccount.value.accountId, smartSessionInitData),
-		},
+			data: INTERFACES.ScheduledTransfers.encodeFunctionData('addOrder', [scheduledTransfersInitData]),
+		})
+		console.log('ScheduledTransfers installed, add a order')
+	} else {
 		// install scheduled transfers module and create a job
-		{
+		executions.push({
 			to: selectedAccount.value.address,
 			value: 0n,
 			data: getEncodedInstallScheduledTransfers(selectedAccount.value.accountId, scheduledTransfersInitData),
-		},
-	]
+		})
+		console.log('ScheduledTransfers not installed, install and add a order')
+	}
 
+	// only for kernel account
 	if (!isRhinestoneAttesterTrusted) {
 		executions.unshift({
 			to: ADDRESS.Registry,
@@ -255,62 +268,39 @@ async function onClickReview() {
 				[RHINESTONE_ATTESTER_ADDRESS],
 			]),
 		})
+		console.log('Rhinestone Attester not trusted, trust it')
 	}
+
+	// Get the job id for this scheduled transfer
+	const scheduledTransfers = TScheduledTransfers__factory.connect(ADDRESS.ScheduledTransfers, client.value)
+	const jobCount = await scheduledTransfers.accountJobCount(selectedAccount.value.address)
+	const jobId = jobCount + 1n
 
 	useTxModal().openModal({
 		executions,
+		async onSuccess() {
+			const { bundler } = useBlockchain()
+
+			if (!selectedAccount.value) {
+				throw new Error('No account selected')
+			}
+
+			try {
+				await registerJob({
+					accountId: selectedAccount.value.accountId,
+					accountAddress: selectedAccount.value.address,
+					permissionId,
+					jobId,
+					client: client.value,
+					bundler: bundler.value,
+				})
+			} catch (e: unknown) {
+				const msg = 'Register job failed: ' + (e instanceof Error ? e.message : String(e))
+				console.error(msg)
+				throw new Error(msg)
+			}
+		},
 	})
-}
-
-function getEncodedInstallSmartSession(accountId: AccountId, initData: string) {
-	switch (accountId) {
-		case AccountId['kernel.advanced.v0.3.1']:
-			return KernelV3Account.encodeInstallModule({
-				moduleType: ERC7579_MODULE_TYPE.VALIDATOR,
-				moduleAddress: ADDRESS.SmartSession,
-				initData,
-				selectorData: INTERFACES.KernelV3.getFunction('execute').selector,
-			})
-		case AccountId['biconomy.nexus.1.0.2']:
-			return NexusAccount.encodeInstallModule({
-				moduleType: ERC7579_MODULE_TYPE.VALIDATOR,
-				moduleAddress: ADDRESS.SmartSession,
-				initData,
-			})
-		case AccountId['rhinestone.safe7579.v1.0.0']:
-			return Safe7579Account.encodeInstallModule({
-				moduleType: ERC7579_MODULE_TYPE.VALIDATOR,
-				moduleAddress: ADDRESS.SmartSession,
-				initData,
-			})
-		default:
-			throw new Error(`getEncodedInstallSmartSession: Unsupported account for install: ${accountId}`)
-	}
-}
-
-function getEncodedInstallScheduledTransfers(accountId: AccountId, initData: string) {
-	switch (accountId) {
-		case AccountId['kernel.advanced.v0.3.1']:
-			return KernelV3Account.encodeInstallModule({
-				moduleType: ERC7579_MODULE_TYPE.EXECUTOR,
-				moduleAddress: ADDRESS.ScheduledTransfers,
-				initData,
-			})
-		case AccountId['biconomy.nexus.1.0.2']:
-			return NexusAccount.encodeInstallModule({
-				moduleType: ERC7579_MODULE_TYPE.EXECUTOR,
-				moduleAddress: ADDRESS.ScheduledTransfers,
-				initData,
-			})
-		case AccountId['rhinestone.safe7579.v1.0.0']:
-			return Safe7579Account.encodeInstallModule({
-				moduleType: ERC7579_MODULE_TYPE.EXECUTOR,
-				moduleAddress: ADDRESS.ScheduledTransfers,
-				initData,
-			})
-		default:
-			throw new Error(`getEncodedInstallScheduledTransfers: Unsupported account for install: ${accountId}`)
-	}
 }
 </script>
 
