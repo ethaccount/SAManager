@@ -10,6 +10,7 @@ import { VueDappModal } from '@vue-dapp/modal'
 import { ModalsContainer } from 'vue-final-modal'
 import { Toaster } from 'vue-sonner'
 import { useSetupEnv } from '@/app/useSetupEnv'
+import { env } from '@/app/useSetupEnv'
 
 const { isEOAWalletConnected } = useEOAWallet()
 const { isLogin } = usePasskey()

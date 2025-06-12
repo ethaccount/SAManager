@@ -11,6 +11,7 @@ export interface Env {
 	TENDERLY_API_KEY_POLYGON_AMOY: string
 	BACKEND_URL: string
 	BACKEND_SECRET: string
+	CLOUDFLARE_ANALYTICS_TOKEN: string
 }
 
 let envValidated = false
@@ -26,6 +27,7 @@ function validateEnv(env: Env) {
 	if (!env.TENDERLY_API_KEY_POLYGON_AMOY) throw new Error('Missing TENDERLY_API_KEY_POLYGON_AMOY')
 	if (!env.BACKEND_URL) throw new Error('Missing BACKEND_URL')
 	if (!env.BACKEND_SECRET) throw new Error('Missing BACKEND_SECRET')
+	if (!env.CLOUDFLARE_ANALYTICS_TOKEN) throw new Error('Missing CLOUDFLARE_ANALYTICS_TOKEN')
 }
 
 function getTenderlyApiKey(chainId: number, env: Env): string | null {
@@ -61,6 +63,7 @@ export default {
 		if (url.pathname === '/env.json') {
 			return Response.json({
 				APP_SALT: env.APP_SALT,
+				CLOUDFLARE_ANALYTICS_TOKEN: env.CLOUDFLARE_ANALYTICS_TOKEN,
 			})
 		}
 
