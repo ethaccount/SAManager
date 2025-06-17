@@ -105,7 +105,6 @@ export const useBlockchainStore = defineStore(
 		const bundler = computed<Bundler>(() => {
 			const bundlerOptions = {
 				parseError: true,
-				debug: true,
 				entryPointVersion: selectedEntryPoint.value,
 			}
 

@@ -23,14 +23,14 @@ useSetupPasskey()
 useSetupEnv()
 
 // Backend health check
-const checkBackendHealth = async () => {
+async function checkBackendHealth() {
 	try {
 		const response = await fetch('/backend/health')
 		if (!response.ok) {
-			console.log('Backend service is unavailable - HTTP status:', response.status)
+			console.error('Backend service is unavailable - HTTP status:', response.status)
 		}
 	} catch (error) {
-		console.log(
+		console.error(
 			'Backend service is unavailable - Connection failed:',
 			error instanceof Error ? error.message : String(error),
 		)
