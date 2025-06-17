@@ -1,21 +1,21 @@
-import { getEncodedInstallScheduledTransfers, getEncodedInstallSmartSession } from '@/lib/module-management/module'
-import { createScheduledTransferSession, getScheduledTransferSessionStatus } from '@/lib/permissions/session'
+import { getEncodedInstallScheduledOrders, getEncodedInstallSmartSession } from '@/lib/module-management/module'
+import { createScheduledSwapSession, getScheduledSwapSessionStatus } from '@/lib/permissions/session'
 import { useSessionList } from '@/lib/permissions/useSessionList'
-import {
-	BaseModuleStatus,
-	buildRhinestoneAttesterExecutions,
-	checkBaseModuleStatus,
-	frequencyToSeconds,
-	validateAccount,
-} from '@/lib/scheduling/common'
 import { registerJob } from '@/lib/scheduling/registerJob'
-import { getToken, NATIVE_TOKEN_ADDRESS, TokenTransfer } from '@/lib/token'
+import {
+	validateAccount,
+	checkBaseModuleStatus,
+	buildRhinestoneAttesterExecutions,
+	frequencyToSeconds,
+	BaseModuleStatus,
+} from '@/lib/scheduling/common'
+import { getToken } from '@/lib/token'
 import { AccountId } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { useTxModal } from '@/stores/useTxModal'
 import { DateValue, getLocalTimeZone } from '@internationalized/date'
-import { concat, parseEther, toBeHex, ZeroAddress } from 'ethers'
+import { concat, parseEther, toBeHex } from 'ethers'
 import {
 	abiEncode,
 	ADDRESS,
@@ -23,58 +23,56 @@ import {
 	Execution,
 	getEncodedFunctionParams,
 	INTERFACES,
-	isSameAddress,
 	SMART_SESSIONS_ENABLE_MODE,
 	TIERC7579Account__factory,
-	TScheduledTransfers__factory,
+	TScheduledOrders__factory,
 	zeroPadLeft,
 } from 'sendop'
 import { SessionStruct } from 'sendop/dist/src/contract-types/TSmartSession'
 
-export type ScheduleTransfer = TokenTransfer & {
+const SWAP_ROUTER = '0x65669fE35312947050C450Bd5d36e6361F85eC12'
+
+export type ScheduleSwap = {
+	tokenIn: string
+	tokenOut: string
+	amountIn: string
 	frequency: string
 	times: number
 	startDate: DateValue
 }
 
 type ModuleStatus = BaseModuleStatus & {
-	isScheduledTransfersInstalled: boolean
+	isScheduledOrdersInstalled: boolean
 }
 
-type ScheduleTransferConfig = {
-	recipient: string
-	amount: bigint
-	tokenAddress: string
+type ScheduleSwapConfig = {
+	tokenIn: string
+	tokenOut: string
+	amountIn: bigint
 	executeInterval: number
 	numOfExecutions: number
 	startDate: number
 }
 
-export function useScheduleTransfer() {
+export function useScheduleSwap() {
 	const isLoadingReview = ref(false)
 	const errorReview = ref<string | null>(null)
 
-	function createScheduledTransfersInitData({
+	function createScheduledOrdersInitData({
 		executeInterval,
 		numOfExecutions,
 		startDate,
-		recipient,
-		tokenAddress,
-		amount,
-	}: ScheduleTransferConfig) {
-		let tokenAddressToUse = tokenAddress
-
-		// ScheduledTransfers.executeOrder use zero address for native token
-		if (isSameAddress(tokenAddress, NATIVE_TOKEN_ADDRESS)) {
-			tokenAddressToUse = ZeroAddress
-		}
-
-		// initData: executeInterval (6) ++ numOfExecutions (2) ++ startDate (6) ++ executionData
+		tokenIn,
+		tokenOut,
+		amountIn,
+	}: ScheduleSwapConfig) {
+		// initData: SWAP_ROUTER (20) ++ executeInterval (6) ++ numOfExecutions (2) ++ startDate (6) ++ executionData
 		return concat([
+			SWAP_ROUTER,
 			zeroPadLeft(toBeHex(executeInterval), 6),
 			zeroPadLeft(toBeHex(numOfExecutions), 2),
 			zeroPadLeft(toBeHex(startDate), 6),
-			abiEncode(['address', 'address', 'uint256'], [recipient, tokenAddressToUse, amount]),
+			abiEncode(['address', 'address', 'uint256'], [tokenIn, tokenOut, amountIn]),
 		])
 	}
 
@@ -85,14 +83,14 @@ export function useScheduleTransfer() {
 
 		const account = TIERC7579Account__factory.connect(accountAddress, client.value)
 
-		// Check if ScheduledTransfers module is installed
-		const isScheduledTransfersInstalled = await account.isModuleInstalled(
+		// Check if ScheduledOrders module is installed
+		const isScheduledOrdersInstalled = await account.isModuleInstalled(
 			ERC7579_MODULE_TYPE.EXECUTOR,
-			ADDRESS.ScheduledTransfers,
+			ADDRESS.ScheduledOrders,
 			'0x',
 		)
 
-		// Check if session exists for scheduled transfers
+		// Check if session exists for scheduled swaps
 		let isSessionExist = false
 		let permissionId: string | null = null
 
@@ -101,7 +99,7 @@ export function useScheduleTransfer() {
 			await loadSessions(accountAddress)
 
 			for (const session of sessions.value) {
-				const status = getScheduledTransferSessionStatus(session)
+				const status = getScheduledSwapSessionStatus(session)
 				if (status.isActionEnabled && status.isPermissionEnabled) {
 					isSessionExist = true
 					permissionId = session.permissionId
@@ -112,7 +110,7 @@ export function useScheduleTransfer() {
 
 		return {
 			...baseStatus,
-			isScheduledTransfersInstalled,
+			isScheduledOrdersInstalled,
 			isSessionExist,
 			permissionId,
 		}
@@ -126,7 +124,7 @@ export function useScheduleTransfer() {
 		let permissionId = moduleStatus.permissionId
 
 		if (!permissionId) {
-			const { session, permissionId: newPermissionId } = createScheduledTransferSession()
+			const { session, permissionId: newPermissionId } = createScheduledSwapSession()
 			permissionId = newPermissionId
 
 			const sessions: SessionStruct[] = [session]
@@ -139,7 +137,7 @@ export function useScheduleTransfer() {
 						value: 0n,
 						data: INTERFACES.SmartSession.encodeFunctionData('enableSessions', [sessions]),
 					})
-					console.log('SmartSession installed, but no session for scheduledTransfer, create a new session')
+					console.log('SmartSession installed, but no session for scheduledSwap, create a new session')
 				}
 			} else {
 				// Install smart session module and enable the session
@@ -160,56 +158,57 @@ export function useScheduleTransfer() {
 		return { executions, permissionId }
 	}
 
-	function buildScheduledTransfersExecutions(
+	function buildScheduledOrdersExecutions(
 		moduleStatus: ModuleStatus,
 		accountId: AccountId,
-		scheduledTransfersInitData: string,
+		scheduledOrdersInitData: string,
 	): Execution[] {
 		const executions: Execution[] = []
 
-		if (moduleStatus.isScheduledTransfersInstalled) {
+		if (moduleStatus.isScheduledOrdersInstalled) {
 			// Add a order
 			executions.push({
-				to: ADDRESS.ScheduledTransfers,
+				to: ADDRESS.ScheduledOrders,
 				value: 0n,
-				data: INTERFACES.ScheduledTransfers.encodeFunctionData('addOrder', [scheduledTransfersInitData]),
+				data: INTERFACES.ScheduledOrders.encodeFunctionData('addOrder', [scheduledOrdersInitData]),
 			})
-			console.log('ScheduledTransfers installed, add a order')
+			console.log('ScheduledOrders installed, add a order')
 		} else {
-			// Install scheduled transfers module and create a job
+			// Install scheduled orders module and create a job
 			executions.push({
 				to: useAccount().selectedAccount.value!.address,
 				value: 0n,
-				data: getEncodedInstallScheduledTransfers(accountId, scheduledTransfersInitData),
+				data: getEncodedInstallScheduledOrders(accountId, scheduledOrdersInitData),
 			})
-			console.log('ScheduledTransfers not installed, install and add a order')
+			console.log('ScheduledOrders not installed, install and add a order')
 		}
 
 		return executions
 	}
 
-	function createScheduleTransferConfig(scheduledTransfer: ScheduleTransfer): ScheduleTransferConfig {
+	function createScheduleSwapConfig(scheduledSwap: ScheduleSwap): ScheduleSwapConfig {
 		const { selectedChainId } = useBlockchain()
-		const token = getToken(selectedChainId.value, scheduledTransfer.tokenAddress)
+		const tokenIn = getToken(selectedChainId.value, scheduledSwap.tokenIn)
+		const tokenOut = getToken(selectedChainId.value, scheduledSwap.tokenOut)
 
 		return {
-			recipient: scheduledTransfer.recipient,
-			amount: parseEther(scheduledTransfer.amount),
-			tokenAddress: token?.address || '',
-			executeInterval: frequencyToSeconds[scheduledTransfer.frequency] || 0,
-			numOfExecutions: scheduledTransfer.times,
-			startDate: Math.floor(scheduledTransfer.startDate.toDate(getLocalTimeZone()).getTime() / 1000),
+			tokenIn: tokenIn?.address || '',
+			tokenOut: tokenOut?.address || '',
+			amountIn: parseEther(scheduledSwap.amountIn),
+			executeInterval: frequencyToSeconds[scheduledSwap.frequency] || 0,
+			numOfExecutions: scheduledSwap.times,
+			startDate: Math.floor(scheduledSwap.startDate.toDate(getLocalTimeZone()).getTime() / 1000),
 		}
 	}
 
 	async function getJobId(accountAddress: string): Promise<bigint> {
 		const { client } = useBlockchain()
-		const scheduledTransfers = TScheduledTransfers__factory.connect(ADDRESS.ScheduledTransfers, client.value)
-		const jobCount = await scheduledTransfers.accountJobCount(accountAddress)
+		const scheduledOrders = TScheduledOrders__factory.connect(ADDRESS.ScheduledOrders, client.value)
+		const jobCount = await scheduledOrders.accountJobCount(accountAddress)
 		return jobCount + 1n
 	}
 
-	async function reviewScheduleTransfer(scheduledTransfer: ScheduleTransfer) {
+	async function reviewScheduleSwap(scheduledSwap: ScheduleSwap) {
 		try {
 			errorReview.value = null
 			isLoadingReview.value = true
@@ -226,15 +225,15 @@ export function useScheduleTransfer() {
 				selectedAccount.accountId,
 			)
 
-			// Step 4: Create schedule transfer configuration
-			const config = createScheduleTransferConfig(scheduledTransfer)
-			const scheduledTransfersInitData = createScheduledTransfersInitData(config)
+			// Step 4: Create schedule swap configuration
+			const config = createScheduleSwapConfig(scheduledSwap)
+			const scheduledOrdersInitData = createScheduledOrdersInitData(config)
 
-			// Step 5: Build ScheduledTransfers executions
-			const scheduledTransfersExecutions = buildScheduledTransfersExecutions(
+			// Step 5: Build ScheduledOrders executions
+			const scheduledOrdersExecutions = buildScheduledOrdersExecutions(
 				moduleStatus,
 				selectedAccount.accountId,
-				scheduledTransfersInitData,
+				scheduledOrdersInitData,
 			)
 
 			// Step 6: Build Rhinestone Attester executions (for Kernel accounts)
@@ -244,7 +243,7 @@ export function useScheduleTransfer() {
 			const executions: Execution[] = [
 				...rhinestoneExecutions,
 				...smartSessionExecutions,
-				...scheduledTransfersExecutions,
+				...scheduledOrdersExecutions,
 			]
 
 			// Step 8: Get job ID and open transaction modal
@@ -285,6 +284,6 @@ export function useScheduleTransfer() {
 	return {
 		isLoadingReview,
 		errorReview,
-		reviewScheduleTransfer,
+		reviewScheduleSwap,
 	}
 }

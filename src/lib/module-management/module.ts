@@ -51,3 +51,28 @@ export function getEncodedInstallScheduledTransfers(accountId: AccountId, initDa
 			throw new Error(`getEncodedInstallScheduledTransfers: Unsupported account for install: ${accountId}`)
 	}
 }
+
+export function getEncodedInstallScheduledOrders(accountId: AccountId, initData: string) {
+	switch (accountId) {
+		case AccountId['kernel.advanced.v0.3.1']:
+			return KernelV3Account.encodeInstallModule({
+				moduleType: ERC7579_MODULE_TYPE.EXECUTOR,
+				moduleAddress: ADDRESS.ScheduledOrders,
+				initData,
+			})
+		case AccountId['biconomy.nexus.1.0.2']:
+			return NexusAccount.encodeInstallModule({
+				moduleType: ERC7579_MODULE_TYPE.EXECUTOR,
+				moduleAddress: ADDRESS.ScheduledOrders,
+				initData,
+			})
+		case AccountId['rhinestone.safe7579.v1.0.0']:
+			return Safe7579Account.encodeInstallModule({
+				moduleType: ERC7579_MODULE_TYPE.EXECUTOR,
+				moduleAddress: ADDRESS.ScheduledOrders,
+				initData,
+			})
+		default:
+			throw new Error(`getEncodedInstallScheduledOrders: Unsupported account for install: ${accountId}`)
+	}
+}
