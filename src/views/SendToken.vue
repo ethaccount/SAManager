@@ -3,18 +3,22 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { TokenTransfer, tokens } from '@/lib/token'
+import { TokenTransfer, getTokens, getToken, NATIVE_TOKEN_ADDRESS } from '@/lib/token'
 import { useAccount } from '@/stores/account/useAccount'
+import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { useTxModal } from '@/stores/useTxModal'
 import { isAddress, parseUnits } from 'ethers'
 import { Eraser, Plus, X, Zap } from 'lucide-vue-next'
 import { INTERFACES } from 'sendop'
 
+const { selectedChainId } = useBlockchain()
+const availableTokens = computed(() => getTokens(selectedChainId.value))
+
 function getDefaultTransfer(): TokenTransfer {
 	return {
 		recipient: '',
 		amount: '0',
-		tokenId: tokens[0].id,
+		tokenAddress: NATIVE_TOKEN_ADDRESS,
 	}
 }
 
@@ -45,10 +49,12 @@ const removeTransfer = (index: number) => {
 }
 
 const onClickSendTestToken = (index: number) => {
+	// Find SAM token for test token
+	const samToken = availableTokens.value.find(token => token.symbol === 'SAM')
 	transfers.value[index] = {
 		recipient: '0xd78B5013757Ea4A7841811eF770711e6248dC282',
 		amount: '1',
-		tokenId: tokens[1].id,
+		tokenAddress: samToken?.address || NATIVE_TOKEN_ADDRESS,
 	}
 }
 
@@ -56,23 +62,23 @@ const onClickClearInputs = (index: number) => {
 	transfers.value[index] = {
 		recipient: '',
 		amount: '0',
-		tokenId: tokens[0].id,
+		tokenAddress: NATIVE_TOKEN_ADDRESS,
 	}
 }
 
 const onClickReview = () => {
 	useTxModal().openModal({
 		executions: transfers.value.map(t => {
-			if (t.tokenId === 'eth') {
+			if (t.tokenAddress === NATIVE_TOKEN_ADDRESS) {
 				return {
 					to: t.recipient,
 					value: parseUnits(t.amount, 18),
 					data: '0x',
 				}
 			} else {
-				const token = tokens.find(tt => tt.id === t.tokenId)
+				const token = getToken(selectedChainId.value, t.tokenAddress)
 				if (!token) {
-					throw new Error(`Token ${t.tokenId} not found`)
+					throw new Error(`Token ${t.tokenAddress} not found`)
 				}
 				return {
 					to: token.address,
@@ -150,23 +156,25 @@ const reviewButtonText = computed(() => {
 								/>
 							</div>
 							<div>
-								<Select v-model="transfer.tokenId">
+								<Select v-model="transfer.tokenAddress">
 									<SelectTrigger id="token" class="border-none bg-muted">
 										<SelectValue>
 											<template #placeholder>Token</template>
 											<div class="flex items-center">
 												<span class="mr-2 text-lg">{{
-													tokens.find(t => t.id === transfer.tokenId)?.icon
+													getToken(selectedChainId, transfer.tokenAddress)?.icon
 												}}</span>
-												<span>{{ tokens.find(t => t.id === transfer.tokenId)?.symbol }}</span>
+												<span>{{
+													getToken(selectedChainId, transfer.tokenAddress)?.symbol
+												}}</span>
 											</div>
 										</SelectValue>
 									</SelectTrigger>
 									<SelectContent>
 										<SelectItem
-											v-for="token in tokens"
-											:key="token.id"
-											:value="token.id"
+											v-for="token in availableTokens"
+											:key="token.address"
+											:value="token.address"
 											class="cursor-pointer"
 										>
 											<div class="flex items-center">

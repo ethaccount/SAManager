@@ -5,7 +5,7 @@ import { createScheduledTransferSession, getScheduledTransferSessionStatus } fro
 import { useSessionList } from '@/lib/permissions/useSessionList'
 import { registerJob } from '@/lib/scheduling/registerJob'
 import { createScheduledTransfersInitData } from '@/lib/scheduling/scheduleTransfer'
-import { ScheduleTransfer, tokens } from '@/lib/token'
+import { ScheduleTransfer, getTokens, getToken, NATIVE_TOKEN_ADDRESS } from '@/lib/token'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { useTxModal } from '@/stores/useTxModal'
@@ -27,13 +27,16 @@ import {
 import { SessionStruct } from 'sendop/dist/src/contract-types/TSmartSession'
 
 const { isAccountConnected } = useAccount()
+const { selectedChainId } = useBlockchain()
+
+const availableTokens = computed(() => getTokens(selectedChainId.value))
 
 function getDefaultTransfer(): ScheduleTransfer {
 	if (IS_DEV) {
 		return {
 			recipient: '0xd78B5013757Ea4A7841811eF770711e6248dC282',
 			amount: '0.0001',
-			tokenId: tokens[0].id,
+			tokenAddress: NATIVE_TOKEN_ADDRESS,
 			frequency: '3min',
 			times: 3,
 			startDate: today(getLocalTimeZone()),
@@ -42,7 +45,7 @@ function getDefaultTransfer(): ScheduleTransfer {
 	return {
 		recipient: '',
 		amount: '0',
-		tokenId: tokens[0].id,
+		tokenAddress: NATIVE_TOKEN_ADDRESS,
 		frequency: 'weekly',
 		times: 3,
 		startDate: today(getLocalTimeZone()),
@@ -91,7 +94,7 @@ const scheduledTransfer = computed(() => {
 		monthly: 30 * 24 * 60 * 60,
 	}
 
-	const token = tokens.find(t => t.id === scheduledTransferInput.value.tokenId)
+	const token = getToken(selectedChainId.value, scheduledTransferInput.value.tokenAddress)
 
 	return {
 		recipient: scheduledTransferInput.value.recipient,
@@ -342,25 +345,26 @@ async function onClickReview() {
 								/>
 							</div>
 							<div>
-								<Select v-model="scheduledTransferInput.tokenId">
+								<Select v-model="scheduledTransferInput.tokenAddress">
 									<SelectTrigger id="token" class="border-none bg-muted">
 										<SelectValue>
 											<template #placeholder>Token</template>
 											<div class="flex items-center">
 												<span class="mr-2 text-lg">{{
-													tokens.find(t => t.id === scheduledTransferInput.tokenId)?.icon
+													getToken(selectedChainId, scheduledTransferInput.tokenAddress)?.icon
 												}}</span>
 												<span>{{
-													tokens.find(t => t.id === scheduledTransferInput.tokenId)?.symbol
+													getToken(selectedChainId, scheduledTransferInput.tokenAddress)
+														?.symbol
 												}}</span>
 											</div>
 										</SelectValue>
 									</SelectTrigger>
 									<SelectContent>
 										<SelectItem
-											v-for="token in tokens"
-											:key="token.id"
-											:value="token.id"
+											v-for="token in availableTokens"
+											:key="token.address"
+											:value="token.address"
 											class="cursor-pointer"
 										>
 											<div class="flex items-center">
