@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { useChainIdRoute } from '@/app/useChainIdRoute'
 import { useSetupAccount } from '@/app/useSetupAccount'
+import { useSetupEnv } from '@/app/useSetupEnv'
 import { useSetupPasskey } from '@/app/useSetupPasskey'
 import { useSetupVueDapp } from '@/app/useSetupVueDapp'
 import { usePasskey } from '@/stores/passkey/usePasskey'
@@ -9,8 +10,6 @@ import { useSigner } from '@/stores/validation/useSigner'
 import { VueDappModal } from '@vue-dapp/modal'
 import { ModalsContainer } from 'vue-final-modal'
 import { Toaster } from 'vue-sonner'
-import { useSetupEnv } from '@/app/useSetupEnv'
-import { env } from '@/app/useSetupEnv'
 import { useBackend } from './stores/useBackend'
 
 const { isEOAWalletConnected } = useEOAWallet()

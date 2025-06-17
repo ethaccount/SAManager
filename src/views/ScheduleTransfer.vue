@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { IS_DEV } from '@/config'
+import { useFrequencies, useReviewButton, validateAmount, validateTimes } from '@/lib/scheduling/common'
 import { ScheduleTransfer, useScheduleTransfer } from '@/lib/scheduling/useScheduleTransfer'
 import { getToken, getTokens, NATIVE_TOKEN_ADDRESS } from '@/lib/token'
-import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { useBackend } from '@/stores/useBackend'
 import { DateFormatter, getLocalTimeZone, today, type DateValue } from '@internationalized/date'
 import { isAddress } from 'ethers'
 import { CalendarIcon } from 'lucide-vue-next'
 
-const { isAccountConnected } = useAccount()
 const { selectedChainId } = useBlockchain()
+
+const dateFormatter = new DateFormatter('en-US', {
+	dateStyle: 'long',
+})
 
 const availableTokens = computed(() => getTokens(selectedChainId.value))
 
@@ -37,16 +39,7 @@ function getDefaultTransfer(): ScheduleTransfer {
 
 const scheduledTransferInput = ref<ScheduleTransfer>(getDefaultTransfer())
 
-const frequencies = computed(() => [
-	...(IS_DEV ? [{ id: '3min', label: '3 min' }] : []),
-	{ id: 'daily', label: 'Daily' },
-	{ id: 'weekly', label: 'Weekly' },
-	{ id: 'monthly', label: 'Monthly' },
-])
-
-const dateFormatter = new DateFormatter('en-US', {
-	dateStyle: 'long',
-})
+const { frequencies } = useFrequencies()
 
 const isValidTransfers = computed(() => {
 	const recipient = scheduledTransferInput.value.recipient
@@ -54,18 +47,15 @@ const isValidTransfers = computed(() => {
 	const times = scheduledTransferInput.value.times
 
 	if (!isAddress(recipient)) return false
-	if (amount === '') return false
-	if (!Number.isFinite(Number(amount))) return false // note: Number.isFinite cannot check empty string
-	if (Number(amount) <= 0) return false
-
-	if (times === undefined) return false
-	if (!Number.isInteger(times)) return false
-	if (times < 1 || times > 10) return false
+	if (!validateAmount(amount)) return false
+	if (!validateTimes(times)) return false
 
 	return true
 })
 
 const { isLoadingReview, errorReview, reviewScheduleTransfer } = useScheduleTransfer()
+
+const { reviewDisabled, reviewButtonText } = useReviewButton(isValidTransfers, errorReview, isLoadingReview, 'transfer')
 
 async function onClickReview() {
 	await reviewScheduleTransfer({
@@ -73,20 +63,6 @@ async function onClickReview() {
 		startDate: scheduledTransferInput.value.startDate as DateValue,
 	})
 }
-
-const { isBackendHealthy } = useBackend()
-
-const reviewDisabled = computed(() => {
-	return !isAccountConnected.value || !isValidTransfers.value || !isBackendHealthy.value
-})
-
-const reviewButtonText = computed(() => {
-	if (!isBackendHealthy.value) return 'Backend service is unavailable'
-	if (!isAccountConnected.value) return 'Connect your account to review'
-	if (!isValidTransfers.value) return 'Invalid scheduled transfer'
-	if (errorReview.value) return errorReview.value
-	return 'Review scheduled transfer'
-})
 </script>
 
 <template>

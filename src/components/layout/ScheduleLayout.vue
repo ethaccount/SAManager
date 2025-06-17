@@ -5,6 +5,7 @@ const route = useRoute()
 
 const tabs = [
 	{ name: 'Transfer', route: 'scheduling-transfer' },
+	{ name: 'Swap', route: 'scheduling-swap' },
 	{ name: 'Jobs', route: 'scheduling-jobs' },
 ]
 </script>
