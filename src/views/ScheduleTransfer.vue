@@ -4,6 +4,7 @@ import { ScheduleTransfer, useScheduleTransfer } from '@/lib/scheduling/useSched
 import { getToken, getTokens, NATIVE_TOKEN_ADDRESS } from '@/lib/token'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
+import { useBackend } from '@/stores/useBackend'
 import { DateFormatter, getLocalTimeZone, today, type DateValue } from '@internationalized/date'
 import { isAddress } from 'ethers'
 import { CalendarIcon } from 'lucide-vue-next'
@@ -73,11 +74,14 @@ async function onClickReview() {
 	})
 }
 
+const { isBackendHealthy } = useBackend()
+
 const reviewDisabled = computed(() => {
-	return !isAccountConnected.value || !isValidTransfers.value
+	return !isAccountConnected.value || !isValidTransfers.value || !isBackendHealthy.value
 })
 
 const reviewButtonText = computed(() => {
+	if (!isBackendHealthy.value) return 'Backend service is unavailable'
 	if (!isAccountConnected.value) return 'Connect your account to review'
 	if (!isValidTransfers.value) return 'Invalid scheduled transfer'
 	if (errorReview.value) return errorReview.value

@@ -11,6 +11,7 @@ import { ModalsContainer } from 'vue-final-modal'
 import { Toaster } from 'vue-sonner'
 import { useSetupEnv } from '@/app/useSetupEnv'
 import { env } from '@/app/useSetupEnv'
+import { useBackend } from './stores/useBackend'
 
 const { isEOAWalletConnected } = useEOAWallet()
 const { isLogin } = usePasskey()
@@ -22,23 +23,11 @@ useSetupAccount()
 useSetupPasskey()
 useSetupEnv()
 
-// Backend health check
-async function checkBackendHealth() {
-	try {
-		const response = await fetch('/backend/health')
-		if (!response.ok) {
-			console.error('Backend service is unavailable - HTTP status:', response.status)
-		}
-	} catch (error) {
-		console.error(
-			'Backend service is unavailable - Connection failed:',
-			error instanceof Error ? error.message : String(error),
-		)
-	}
-}
+const { checkBackendHealth } = useBackend()
 
-// Check backend health on app startup
-checkBackendHealth()
+onMounted(async () => {
+	await checkBackendHealth()
+})
 
 // Auto-select signer when connected
 watchImmediate([isEOAWalletConnected, isLogin], ([eoaWalletConnected, passkeyConnected]) => {
