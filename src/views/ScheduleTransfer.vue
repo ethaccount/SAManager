@@ -1,30 +1,12 @@
 <script setup lang="ts">
 import { IS_DEV } from '@/config'
-import { getEncodedInstallScheduledTransfers, getEncodedInstallSmartSession } from '@/lib/module-management/module'
-import { createScheduledTransferSession, getScheduledTransferSessionStatus } from '@/lib/permissions/session'
-import { useSessionList } from '@/lib/permissions/useSessionList'
-import { registerJob } from '@/lib/scheduling/registerJob'
-import { createScheduledTransfersInitData } from '@/lib/scheduling/scheduleTransfer'
-import { ScheduleTransfer, getTokens, getToken, NATIVE_TOKEN_ADDRESS } from '@/lib/token'
+import { ScheduleTransfer, useScheduleTransfer } from '@/lib/scheduling/useScheduleTransfer'
+import { getToken, getTokens, NATIVE_TOKEN_ADDRESS } from '@/lib/token'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { useTxModal } from '@/stores/useTxModal'
 import { DateFormatter, getLocalTimeZone, today, type DateValue } from '@internationalized/date'
-import { concat, isAddress, parseEther } from 'ethers'
+import { isAddress } from 'ethers'
 import { CalendarIcon } from 'lucide-vue-next'
-import {
-	ADDRESS,
-	ERC7579_MODULE_TYPE,
-	Execution,
-	getEncodedFunctionParams,
-	INTERFACES,
-	RHINESTONE_ATTESTER_ADDRESS,
-	SMART_SESSIONS_ENABLE_MODE,
-	TIERC7579Account__factory,
-	TRegistry__factory,
-	TScheduledTransfers__factory,
-} from 'sendop'
-import { SessionStruct } from 'sendop/dist/src/contract-types/TSmartSession'
 
 const { isAccountConnected } = useAccount()
 const { selectedChainId } = useBlockchain()
@@ -82,32 +64,17 @@ const isValidTransfers = computed(() => {
 	return true
 })
 
+const { isLoadingReview, errorReview, reviewScheduleTransfer } = useScheduleTransfer()
+
+async function onClickReview() {
+	await reviewScheduleTransfer({
+		...scheduledTransferInput.value,
+		startDate: scheduledTransferInput.value.startDate as DateValue,
+	})
+}
+
 const reviewDisabled = computed(() => {
 	return !isAccountConnected.value || !isValidTransfers.value
-})
-
-const scheduledTransfer = computed(() => {
-	const frequencyToSeconds: Record<string, number> = {
-		'3min': 3 * 60,
-		daily: 24 * 60 * 60,
-		weekly: 7 * 24 * 60 * 60,
-		monthly: 30 * 24 * 60 * 60,
-	}
-
-	const token = getToken(selectedChainId.value, scheduledTransferInput.value.tokenAddress)
-
-	return {
-		recipient: scheduledTransferInput.value.recipient,
-		amount: parseEther(scheduledTransferInput.value.amount),
-		tokenAddress: token?.address || '',
-		executeInterval: frequencyToSeconds[scheduledTransferInput.value.frequency] || 0,
-		numOfExecutions: scheduledTransferInput.value.times,
-		startDate: Math.floor(scheduledTransferInput.value.startDate.toDate(getLocalTimeZone()).getTime() / 1000),
-	}
-})
-
-watchImmediate(scheduledTransfer, () => {
-	console.log('scheduledTransfer', scheduledTransfer.value)
 })
 
 const reviewButtonText = computed(() => {
@@ -116,195 +83,6 @@ const reviewButtonText = computed(() => {
 	if (errorReview.value) return errorReview.value
 	return 'Review scheduled transfer'
 })
-
-const isLoadingReview = ref(false)
-const errorReview = ref<string | null>(null)
-
-async function onClickReview() {
-	errorReview.value = null
-
-	const { isModular, selectedAccount } = useAccount()
-	const { client } = useBlockchain()
-
-	if (!selectedAccount.value) {
-		throw new Error('No account selected')
-	}
-
-	// check if the account is modular
-	if (!isModular.value) {
-		errorReview.value = 'Account is not modular'
-		return
-	}
-
-	// fetch data to check if the account has the module and session
-
-	let isRhinestoneAttesterTrusted = true
-	let isSmartSessionInstalled = false
-	let isScheduledTransfersInstalled = false
-	let isSessionExist = false
-
-	let permissionId: string | null = null
-
-	try {
-		isLoadingReview.value = true
-
-		const account = TIERC7579Account__factory.connect(selectedAccount.value.address, client.value)
-
-		// check if the account has SmartSession module
-		isSmartSessionInstalled = await account.isModuleInstalled(
-			ERC7579_MODULE_TYPE.VALIDATOR,
-			ADDRESS.SmartSession,
-			'0x',
-		)
-
-		if (isSmartSessionInstalled) {
-			// check if the account has a session for scheduledTransfer
-			const { sessions, loadSessions } = useSessionList()
-			await loadSessions(selectedAccount.value.address)
-
-			for (const session of sessions.value) {
-				const status = getScheduledTransferSessionStatus(session)
-				if (status.isActionEnabled && status.isPermissionEnabled) {
-					isSessionExist = true
-					permissionId = session.permissionId
-					break
-				}
-			}
-		}
-
-		// check if the account has ScheduledTransfers module
-		isScheduledTransfersInstalled = await account.isModuleInstalled(
-			ERC7579_MODULE_TYPE.EXECUTOR,
-			ADDRESS.ScheduledTransfers,
-			'0x',
-		)
-
-		// if acccount type is Kernel, check if Rhinestone Attester is trusted
-		if (selectedAccount.value.accountId === 'kernel.advanced.v0.3.1') {
-			// TODO: check isRhinestoneAttesterTrusted for Kernel
-			isRhinestoneAttesterTrusted = false
-		}
-	} catch (e: unknown) {
-		console.error(e)
-		throw e
-	} finally {
-		isLoadingReview.value = false
-	}
-
-	/*
-		Logic flow:
-
-		Is Smartsession installed?
-			- Yes: Is there a session for scheduledTransfer?
-				- Yes: get the permission id
-				- No: create a new session
-			- No: Install the module and enable it
-
-		Is ScheduledTransfers installed?
-			- Yes: add execution for addOrder
-			- No: Install and enable it
-	*/
-
-	const executions: Execution[] = []
-
-	if (!permissionId) {
-		const { session, permissionId: newPermissionId } = createScheduledTransferSession()
-		permissionId = newPermissionId
-
-		const sessions: SessionStruct[] = [session]
-
-		if (isSmartSessionInstalled) {
-			if (!isSessionExist) {
-				// create a new session
-				executions.push({
-					to: ADDRESS.SmartSession,
-					value: 0n,
-					data: INTERFACES.SmartSession.encodeFunctionData('enableSessions', [sessions]),
-				})
-				console.log('SmartSession installed, but no session for scheduledTransfer, create a new session')
-			}
-		} else {
-			// install smart session module and enable the session
-			const encodedSessions = getEncodedFunctionParams(
-				INTERFACES.SmartSession.encodeFunctionData('enableSessions', [sessions]),
-			)
-			const smartSessionInitData = concat([SMART_SESSIONS_ENABLE_MODE, encodedSessions])
-
-			executions.push({
-				to: selectedAccount.value.address,
-				value: 0n,
-				data: getEncodedInstallSmartSession(selectedAccount.value.accountId, smartSessionInitData),
-			})
-			console.log('SmartSession not installed, install and enable the session')
-		}
-	}
-
-	// Is ScheduledTransfers installed?
-
-	const scheduledTransfersInitData = createScheduledTransfersInitData(scheduledTransfer.value)
-
-	if (isScheduledTransfersInstalled) {
-		// add a order
-		executions.push({
-			to: ADDRESS.ScheduledTransfers,
-			value: 0n,
-			data: INTERFACES.ScheduledTransfers.encodeFunctionData('addOrder', [scheduledTransfersInitData]),
-		})
-		console.log('ScheduledTransfers installed, add a order')
-	} else {
-		// install scheduled transfers module and create a job
-		executions.push({
-			to: selectedAccount.value.address,
-			value: 0n,
-			data: getEncodedInstallScheduledTransfers(selectedAccount.value.accountId, scheduledTransfersInitData),
-		})
-		console.log('ScheduledTransfers not installed, install and add a order')
-	}
-
-	// only for kernel account
-	if (!isRhinestoneAttesterTrusted) {
-		executions.unshift({
-			to: ADDRESS.Registry,
-			value: 0n,
-			data: TRegistry__factory.createInterface().encodeFunctionData('trustAttesters', [
-				1,
-				[RHINESTONE_ATTESTER_ADDRESS],
-			]),
-		})
-		console.log('Rhinestone Attester not trusted, trust it')
-	}
-
-	// Get the job id for this scheduled transfer
-	const scheduledTransfers = TScheduledTransfers__factory.connect(ADDRESS.ScheduledTransfers, client.value)
-	const jobCount = await scheduledTransfers.accountJobCount(selectedAccount.value.address)
-	const jobId = jobCount + 1n
-
-	useTxModal().openModal({
-		executions,
-		async onSuccess() {
-			const { bundler } = useBlockchain()
-
-			if (!selectedAccount.value) {
-				throw new Error('No account selected')
-			}
-
-			try {
-				await registerJob({
-					accountId: selectedAccount.value.accountId,
-					accountAddress: selectedAccount.value.address,
-					permissionId,
-					jobId,
-					client: client.value,
-					bundler: bundler.value,
-				})
-			} catch (e: unknown) {
-				const msg = 'Register job failed: ' + (e instanceof Error ? e.message : String(e))
-				console.error(msg)
-				throw new Error(msg)
-			}
-		},
-	})
-}
 </script>
 
 <template>

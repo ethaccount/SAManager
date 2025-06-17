@@ -1,5 +1,4 @@
 import { CHAIN_ID, TESTNET_CHAIN_ID } from '@/stores/blockchain/blockchain'
-import { DateValue } from '@internationalized/date'
 import { getAddress } from 'ethers'
 
 export type Token = {
@@ -14,12 +13,6 @@ export type TokenTransfer = {
 	recipient: string
 	amount: string
 	tokenAddress: string
-}
-
-export type ScheduleTransfer = TokenTransfer & {
-	frequency: string
-	times: number
-	startDate: DateValue
 }
 
 export const NATIVE_TOKEN_ADDRESS = getAddress('0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE')
