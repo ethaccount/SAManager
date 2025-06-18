@@ -1,39 +1,24 @@
 import { AccountId, SUPPORTED_ACCOUNTS } from '@/stores/account/account'
-import { Contract, hexlify, JsonRpcProvider, parseUnits, randomBytes } from 'ethers'
+import { hexlify, JsonRpcProvider, randomBytes } from 'ethers'
 import {
 	ADDRESS,
 	Bundler,
 	createUserOp,
 	ERC7579Validator,
+	Execution,
 	formatUserOpToHex,
 	getSmartSessionUseModeSignature,
 	INTERFACES,
-	isSameAddress,
 	KernelV3Account,
 	KernelValidationType,
-	OperationGetter,
 	NexusAccount,
+	OperationGetter,
 	Safe7579Account,
 	zeroBytes,
-	Execution,
 } from 'sendop'
-import { calculateSwapParams } from './swap-utils'
-import { getTokenAddress } from '@/lib/token'
-import { CHAIN_ID } from '@/stores/blockchain/blockchain'
+import { getSwapParameters, SwapParameters } from './swap-utils'
 
 export type JobType = 'transfer' | 'swap'
-
-export type SwapJobParams = {
-	tokenIn: string
-	tokenOut: string
-	amountIn: bigint
-	pool?: string
-	token0Decimals?: number
-	token1Decimals?: number
-	zeroForOne?: boolean
-	slippageTolerance?: number
-	fee?: bigint
-}
 
 export async function registerJob({
 	accountId,
@@ -52,7 +37,7 @@ export async function registerJob({
 	client: JsonRpcProvider
 	bundler: Bundler
 	jobType?: JobType
-	swapParams?: SwapJobParams
+	swapParams?: SwapParameters
 }) {
 	const validator: ERC7579Validator = {
 		address: () => ADDRESS.SmartSession,
@@ -170,72 +155,6 @@ export async function registerJob({
 	console.log('Job registered successfully:', result.data)
 
 	return result.data
-}
-
-// Pool ABI for getting slot0 data
-const POOL_ABI = [
-	'function slot0() external view returns (uint160 sqrtPriceX96, int24 tick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext, uint8 feeProtocol, bool unlocked)',
-]
-
-async function getSwapParameters(
-	client: JsonRpcProvider,
-	swapParams: SwapJobParams,
-): Promise<{ sqrtPriceLimitX96: bigint; amountOutMinimum: bigint; fee: bigint }> {
-	// Default values
-	const defaultPool = '0x3289680dD4d6C10bb19b899729cda5eEF58AEfF1' // USDC-WETH pool with 500 fee
-	const defaultToken0Decimals = 6 // USDC
-	const defaultToken1Decimals = 18 // WETH
-	const defaultSlippageTolerance = 0.005 // 0.5%
-	const defaultFee = 500n
-
-	// Use provided values or defaults
-	const pool = swapParams.pool || defaultPool
-	const token0Decimals = swapParams.token0Decimals || defaultToken0Decimals
-	const token1Decimals = swapParams.token1Decimals || defaultToken1Decimals
-	const slippageTolerance = swapParams.slippageTolerance || defaultSlippageTolerance
-	const fee = swapParams.fee || defaultFee
-
-	// Get chain ID to determine USDC address
-	const network = await client.getNetwork()
-	const chainId = network.chainId.toString() as CHAIN_ID
-	const usdcAddress = getTokenAddress(chainId, 'USDC')
-
-	// Calculate zeroForOne dynamically based on whether tokenIn is USDC
-	// If tokenIn is USDC (token0), then zeroForOne = true (USDC -> WETH)
-	// If tokenIn is WETH (token1), then zeroForOne = false (WETH -> USDC)
-	const zeroForOne =
-		swapParams.zeroForOne !== undefined
-			? swapParams.zeroForOne
-			: usdcAddress
-			? isSameAddress(swapParams.tokenIn, usdcAddress)
-			: false // Default to false if USDC address not found
-
-	// Get current pool state
-	const poolContract = new Contract(pool, POOL_ABI, client)
-	const slot0 = await poolContract.slot0()
-	const currentSqrtPriceX96 = slot0.sqrtPriceX96
-
-	console.log(`Current sqrtPriceX96: ${currentSqrtPriceX96}`)
-
-	// Calculate swap parameters using the utility function
-	const { sqrtPriceLimitX96, amountOutMinimum } = calculateSwapParams({
-		currentSqrtPriceX96,
-		slippageTolerance,
-		amountIn: swapParams.amountIn,
-		token0Decimals,
-		token1Decimals,
-		zeroForOne,
-	})
-
-	console.log(`Amount in: ${swapParams.amountIn}`)
-	console.log(`Amount out minimum: ${amountOutMinimum}`)
-	console.log(`Sqrt price limit X96: ${sqrtPriceLimitX96}`)
-
-	return {
-		sqrtPriceLimitX96,
-		amountOutMinimum,
-		fee,
-	}
 }
 
 function getModularAccountInstance({

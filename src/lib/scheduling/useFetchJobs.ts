@@ -2,7 +2,7 @@ import { NATIVE_TOKEN_ADDRESS, Token, getToken } from '@/lib/token'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import type { CHAIN_ID } from '@/stores/blockchain/blockchain'
-import { JsonRpcProvider } from 'ethers'
+import { JsonRpcProvider, ZeroAddress } from 'ethers'
 import {
 	ADDRESS,
 	isSameAddress,
@@ -253,7 +253,18 @@ export async function fetchSwapJobs(client: JsonRpcProvider, accountAddress: str
 	const executionLogs = await fetchExecutionLogs(scheduledOrders, accountAddress, Number(jobCount))
 
 	// Decode all execution data and collect unique token addresses
-	const decodedExecutionDataList = executionLogs.map(job => decodeSwapExecutionData(job.executionData))
+	const decodedExecutionDataList = executionLogs.map(job => {
+		try {
+			return decodeSwapExecutionData(job.executionData)
+		} catch {
+			console.error('Failed to decode swap execution data:', job)
+			return {
+				tokenIn: ZeroAddress,
+				tokenOut: ZeroAddress,
+				amountIn: 0n,
+			}
+		}
+	})
 
 	const uniqueTokenAddresses = extractUniqueTokenAddresses(decodedExecutionDataList, data => [
 		data.tokenIn,

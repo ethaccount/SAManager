@@ -12,7 +12,11 @@ export function decodeTransferExecutionData(data: string) {
 	}
 }
 
-export function decodeSwapExecutionData(data: string) {
+export function decodeSwapExecutionData(data: string): {
+	tokenIn: string
+	tokenOut: string
+	amountIn: bigint
+} {
 	const abiCoder = new AbiCoder()
 	const [tokenIn, tokenOut, amountIn] = abiCoder.decode(['address', 'address', 'uint256'], data)
 

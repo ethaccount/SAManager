@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import { IS_DEV } from '@/config'
-import { getFrequencyOptions, useReviewButton, validateAmount, validateTimes } from '@/lib/scheduling/common'
+import { getFrequencyOptions, validateAmount, validateTimes } from '@/lib/scheduling/common'
+import { DEFAULT_FEE, DEFAULT_SLIPPAGE, getSwapParameters, SwapParameters } from '@/lib/scheduling/swap-utils'
 import { ScheduleSwap, useScheduleSwap } from '@/lib/scheduling/useScheduleSwap'
 import { getToken, getTokens, NATIVE_TOKEN_ADDRESS } from '@/lib/token'
+import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
+import { useBackend } from '@/stores/useBackend'
 import { DateFormatter, getLocalTimeZone, today, type DateValue } from '@internationalized/date'
-import { ArrowUpDown, CalendarIcon } from 'lucide-vue-next'
+import { formatUnits, parseUnits } from 'ethers'
+import { AlertTriangle, ArrowUpDown, CalendarIcon, Loader2 } from 'lucide-vue-next'
 
-const { selectedChainId } = useBlockchain()
+const { selectedChainId, client } = useBlockchain()
 
 const dateFormatter = new DateFormatter('en-US', {
 	dateStyle: 'long',
@@ -47,25 +51,70 @@ const scheduledSwapInput = ref<ScheduleSwap>(getDefaultSwap())
 
 const frequencies = getFrequencyOptions()
 
-// Calculate estimated output amount (simplified calculation for demo)
-const amountOut = computed(() => {
-	const amountIn = Number(scheduledSwapInput.value.amountIn)
-	if (!amountIn || amountIn <= 0) return '0'
+// State for swap parameters
+const minAmountOut = ref<string>('0')
+const isLoadingSwapParams = ref(false)
+const swapParamsError = ref<string | null>(null)
 
-	// Simple mock calculation - in real app, this would call a pricing API
-	const mockRate = 1850 // ETH to USDC rate for example
-	const tokenIn = getToken(selectedChainId.value, scheduledSwapInput.value.tokenIn)
-	const tokenOut = getToken(selectedChainId.value, scheduledSwapInput.value.tokenOut)
+// Fetch swap parameters and calculate minimum amount out
+async function fetchSwapParameters() {
+	const tokenIn = scheduledSwapInput.value.tokenIn
+	const tokenOut = scheduledSwapInput.value.tokenOut
+	const amountIn = scheduledSwapInput.value.amountIn
 
-	if (tokenIn?.symbol === 'ETH' && tokenOut?.symbol === 'USDC') {
-		return (amountIn * mockRate).toFixed(2)
-	} else if (tokenIn?.symbol === 'USDC' && tokenOut?.symbol === 'ETH') {
-		return (amountIn / mockRate).toFixed(6)
+	// Reset state
+	minAmountOut.value = '0'
+	swapParamsError.value = null
+
+	// Skip if invalid inputs
+	if (!tokenIn || !tokenOut || tokenIn === tokenOut || !amountIn || Number(amountIn) <= 0) {
+		swapParamsError.value = 'Invalid swap parameters'
+		return
 	}
 
-	// Default 1:1 rate for other pairs
-	return amountIn.toString()
-})
+	const tokenInInfo = getToken(selectedChainId.value, tokenIn)
+	const tokenOutInfo = getToken(selectedChainId.value, tokenOut)
+
+	if (!tokenInInfo || !tokenOutInfo) {
+		swapParamsError.value = 'Token information not found'
+		return
+	}
+
+	try {
+		isLoadingSwapParams.value = true
+
+		const swapParams: SwapParameters = {
+			tokenIn,
+			tokenOut,
+			amountIn: parseUnits(amountIn, tokenInInfo.decimals),
+			slippageTolerance: DEFAULT_SLIPPAGE,
+			fee: DEFAULT_FEE,
+		}
+
+		const { amountOutMinimum } = await getSwapParameters(client.value, swapParams)
+		minAmountOut.value = formatUnits(amountOutMinimum, tokenOutInfo.decimals)
+	} catch (error: unknown) {
+		console.error('Failed to fetch minimum amount out:', error)
+		swapParamsError.value = 'Failed to fetch minimum amount out'
+		minAmountOut.value = '0'
+	} finally {
+		isLoadingSwapParams.value = false
+	}
+}
+
+// Watch for changes in swap inputs and refetch parameters
+watchImmediate(
+	[
+		() => scheduledSwapInput.value.tokenIn,
+		() => scheduledSwapInput.value.tokenOut,
+		() => scheduledSwapInput.value.amountIn,
+		() => selectedChainId.value,
+	],
+	async () => {
+		console.log('scheduledSwapInput.value', scheduledSwapInput.value)
+		await fetchSwapParameters()
+	},
+)
 
 const isValidSwap = computed(() => {
 	const tokenIn = scheduledSwapInput.value.tokenIn
@@ -83,7 +132,20 @@ const isValidSwap = computed(() => {
 
 const { isLoadingReview, errorReview, reviewScheduleSwap } = useScheduleSwap()
 
-const { reviewDisabled, reviewButtonText } = useReviewButton(isValidSwap, errorReview, isLoadingReview, 'swap')
+const { isAccountConnected } = useAccount()
+const { isBackendHealthy } = useBackend()
+const reviewButtonText = computed(() => {
+	if (!isBackendHealthy.value) return 'Backend service is unavailable'
+	if (swapParamsError.value) return swapParamsError.value
+	if (!isAccountConnected.value) return 'Connect your account to review'
+	if (!isValidSwap.value) return `Invalid scheduled swap`
+	if (errorReview.value) return errorReview.value
+	return `Review schedule swap`
+})
+
+const reviewDisabled = computed(() => {
+	return !isAccountConnected.value || !isValidSwap.value || !isBackendHealthy.value || swapParamsError.value
+})
 
 async function onClickReview() {
 	await reviewScheduleSwap({
@@ -188,11 +250,20 @@ function switchTokens() {
 						class="relative p-4 rounded-xl bg-muted/30 border border-border/50 backdrop-blur-sm transition-all duration-200 hover:border-border"
 					>
 						<div class="flex justify-between items-center mb-2">
-							<h3 class="text-sm font-medium text-muted-foreground">You receive</h3>
+							<h3 class="text-sm font-medium text-muted-foreground">Minimum amount out</h3>
+							<div v-if="isLoadingSwapParams" class="text-xs text-muted-foreground">
+								<Loader2 class="h-3 w-3 animate-spin" />
+							</div>
+							<div v-else-if="swapParamsError" class="text-xs text-destructive">
+								<AlertTriangle class="h-3 w-3" />
+							</div>
 						</div>
 						<div class="flex items-center justify-between">
-							<div class="text-2xl font-semibold text-muted-foreground">
-								{{ amountOut }}
+							<div
+								class="text-2xl font-semibold"
+								:class="swapParamsError ? 'text-destructive' : 'text-muted-foreground'"
+							>
+								{{ swapParamsError ? '0' : minAmountOut }}
 							</div>
 							<Select v-model="scheduledSwapInput.tokenOut">
 								<SelectTrigger class="w-auto border-none bg-muted/50 h-auto px-3 py-2 rounded-full">

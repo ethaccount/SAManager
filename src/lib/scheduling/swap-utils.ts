@@ -1,6 +1,118 @@
-// Uniswap v3 constants
+import { Contract, getAddress, Interface, JsonRpcProvider } from 'ethers'
+import { getToken, Token } from '../token'
+import { CHAIN_ID } from '@/stores/blockchain/blockchain'
+import { isSameAddress } from 'sendop'
+
+export const SWAP_ROUTER = '0x65669fE35312947050C450Bd5d36e6361F85eC12'
+export const UNISWAP_V3_FACTORY = '0x0227628f3F023bb0B980b67D528571c95c6DaC1c'
 export const MIN_SQRT_RATIO = 4295128739n // TickMath.MIN_SQRT_RATIO
 export const MAX_SQRT_RATIO = 1461446703485210103287273052203988822378723970342n // TickMath.MAX_SQRT_RATIO
+export const DEFAULT_FEE = 500
+export const DEFAULT_SLIPPAGE = 0.005
+
+export type SwapParameters = {
+	tokenIn: string
+	tokenOut: string
+	amountIn: bigint
+	slippageTolerance: number
+	fee: number
+}
+
+export async function getSwapParameters(
+	client: JsonRpcProvider,
+	swapParams: SwapParameters,
+): Promise<{ sqrtPriceLimitX96: bigint; amountOutMinimum: bigint; fee: bigint }> {
+	const poolAddress = await getPool(client, swapParams.tokenIn, swapParams.tokenOut, DEFAULT_FEE)
+
+	if (!getAddress(poolAddress)) {
+		throw new Error('Pool address not found')
+	}
+
+	const poolData = await getPoolData(client, poolAddress)
+
+	// Calculate zeroForOne dynamically based on whether tokenIn is token0 or token1
+	// If tokenIn is token0, then zeroForOne = true (token0 -> token1)
+	// If tokenIn is token1, then zeroForOne = false (token1 -> token0)
+	const zeroForOne = isSameAddress(swapParams.tokenIn, poolData.token0.address)
+
+	// Calculate swap parameters using the utility function
+	const { sqrtPriceLimitX96, amountOutMinimum } = calculateSwapParams({
+		currentSqrtPriceX96: poolData.sqrtPriceX96,
+		slippageTolerance: swapParams.slippageTolerance,
+		amountIn: swapParams.amountIn,
+		token0Decimals: poolData.token0.decimals,
+		token1Decimals: poolData.token1.decimals,
+		zeroForOne,
+	})
+
+	return {
+		sqrtPriceLimitX96,
+		amountOutMinimum,
+		fee: poolData.fee,
+	}
+}
+
+export const FACTORY_INTERFACE = new Interface([
+	'function getPool(address tokenA, address tokenB, uint24 fee) external view returns (address pool)',
+])
+
+export async function getPool(
+	client: JsonRpcProvider,
+	tokenA: string,
+	tokenB: string,
+	fee: number = DEFAULT_FEE,
+): Promise<string> {
+	const factoryContract = new Contract(UNISWAP_V3_FACTORY, FACTORY_INTERFACE, client)
+	const poolAddress = await factoryContract.getPool(tokenA, tokenB, fee)
+	return poolAddress
+}
+
+export const POOL_INTERFACE = new Interface([
+	'function fee() external view returns (uint24)',
+	'function slot0() external view returns (uint160 sqrtPriceX96, int24 tick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext, uint8 feeProtocol, bool unlocked)',
+	'function token0() external view returns (address)',
+	'function token1() external view returns (address)',
+])
+
+export async function getPoolData(
+	client: JsonRpcProvider,
+	poolAddress: string,
+): Promise<{
+	fee: bigint
+	sqrtPriceX96: bigint
+	token0: Token
+	token1: Token
+}> {
+	const poolContract = new Contract(poolAddress, POOL_INTERFACE, client)
+
+	const [fee, slot0, token0Address, token1Address] = await Promise.all([
+		poolContract.fee(),
+		poolContract.slot0(),
+		poolContract.token0(),
+		poolContract.token1(),
+	])
+
+	const network = await client.getNetwork()
+	const chainId = network.chainId.toString() as CHAIN_ID
+
+	const token0 = getToken(chainId, token0Address)
+	const token1 = getToken(chainId, token1Address)
+
+	if (!token0) {
+		throw new Error(`Token ${token0Address} not found locally`)
+	}
+
+	if (!token1) {
+		throw new Error(`Token ${token1Address} not found locally`)
+	}
+
+	return {
+		fee,
+		sqrtPriceX96: slot0[0] as bigint,
+		token0,
+		token1,
+	}
+}
 
 /**
  * Calculate swap parameters for Uniswap v3 swaps

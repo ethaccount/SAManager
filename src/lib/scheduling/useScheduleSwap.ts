@@ -28,8 +28,7 @@ import {
 	zeroPadLeft,
 } from 'sendop'
 import { SessionStruct } from 'sendop/dist/src/contract-types/TSmartSession'
-
-const SWAP_ROUTER = '0x65669fE35312947050C450Bd5d36e6361F85eC12'
+import { DEFAULT_FEE, DEFAULT_SLIPPAGE, SWAP_ROUTER } from './swap-utils'
 
 export type ScheduleSwap = {
 	tokenIn: string
@@ -274,12 +273,8 @@ export function useScheduleSwap() {
 								tokenIn: config.tokenIn,
 								tokenOut: config.tokenOut,
 								amountIn: config.amountIn,
-								// You can customize these parameters based on your requirements
-								token0Decimals: 6, // USDC decimals
-								token1Decimals: 18, // WETH decimals
-								// zeroForOne will be calculated dynamically based on tokenIn address
-								slippageTolerance: 0.005, // 0.5%
-								fee: 500n, // Pool fee
+								slippageTolerance: DEFAULT_SLIPPAGE,
+								fee: DEFAULT_FEE,
 							},
 						})
 					} catch (e: unknown) {
