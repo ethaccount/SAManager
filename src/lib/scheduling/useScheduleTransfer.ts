@@ -53,7 +53,7 @@ export function useScheduleTransfer() {
 	const isLoadingReview = ref(false)
 	const errorReview = ref<string | null>(null)
 
-	function createScheduledTransfersInitData({
+	function createScheduledTransfersOrderData({
 		executeInterval,
 		numOfExecutions,
 		startDate,
@@ -162,7 +162,7 @@ export function useScheduleTransfer() {
 	function buildScheduledTransfersExecutions(
 		moduleStatus: ModuleStatus,
 		accountId: AccountId,
-		scheduledTransfersInitData: string,
+		scheduledTransfersOrderData: string,
 	): TxModalExecution[] {
 		const executions: TxModalExecution[] = []
 
@@ -171,7 +171,7 @@ export function useScheduleTransfer() {
 			executions.push({
 				to: ADDRESS.ScheduledTransfers,
 				value: 0n,
-				data: INTERFACES.ScheduledTransfers.encodeFunctionData('addOrder', [scheduledTransfersInitData]),
+				data: INTERFACES.ScheduledTransfers.encodeFunctionData('addOrder', [scheduledTransfersOrderData]),
 				description: 'Add a order to ScheduledTransfers',
 			})
 		} else {
@@ -179,7 +179,7 @@ export function useScheduleTransfer() {
 			executions.push({
 				to: useAccount().selectedAccount.value!.address,
 				value: 0n,
-				data: getEncodedInstallScheduledTransfers(accountId, scheduledTransfersInitData),
+				data: getEncodedInstallScheduledTransfers(accountId, scheduledTransfersOrderData),
 				description: 'Install ScheduledTransfers and add a order',
 			})
 		}
@@ -231,13 +231,13 @@ export function useScheduleTransfer() {
 
 			// Step 4: Create schedule transfer configuration
 			const config = createScheduleTransferConfig(scheduledTransfer)
-			const scheduledTransfersInitData = createScheduledTransfersInitData(config)
+			const scheduledTransfersOrderData = createScheduledTransfersOrderData(config)
 
 			// Step 5: Build ScheduledTransfers executions
 			const scheduledTransfersExecutions = buildScheduledTransfersExecutions(
 				moduleStatus,
 				selectedAccount.accountId,
-				scheduledTransfersInitData,
+				scheduledTransfersOrderData,
 			)
 
 			// Step 6: Build Rhinestone Attester executions (for Kernel accounts)

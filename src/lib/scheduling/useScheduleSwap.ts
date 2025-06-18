@@ -56,7 +56,7 @@ export function useScheduleSwap() {
 	const isLoadingReview = ref(false)
 	const errorReview = ref<string | null>(null)
 
-	function createScheduledOrdersInitData({
+	function createScheduledOrdersOrderData({
 		executeInterval,
 		numOfExecutions,
 		startDate,
@@ -64,9 +64,8 @@ export function useScheduleSwap() {
 		tokenOut,
 		amountIn,
 	}: ScheduleSwapConfig) {
-		// initData: SWAP_ROUTER (20) ++ executeInterval (6) ++ numOfExecutions (2) ++ startDate (6) ++ executionData
+		// orderData: executeInterval (6) ++ numOfExecutions (2) ++ startDate (6) ++ executionData
 		return concat([
-			SWAP_ROUTER,
 			zeroPadLeft(toBeHex(executeInterval), 6),
 			zeroPadLeft(toBeHex(numOfExecutions), 2),
 			zeroPadLeft(toBeHex(startDate), 6),
@@ -159,7 +158,7 @@ export function useScheduleSwap() {
 	function buildScheduledOrdersExecutions(
 		moduleStatus: ModuleStatus,
 		accountId: AccountId,
-		scheduledOrdersInitData: string,
+		scheduledOrdersOrderData: string,
 	): TxModalExecution[] {
 		const executions: TxModalExecution[] = []
 
@@ -168,7 +167,7 @@ export function useScheduleSwap() {
 			executions.push({
 				to: ADDRESS.ScheduledOrders,
 				value: 0n,
-				data: INTERFACES.ScheduledOrders.encodeFunctionData('addOrder', [scheduledOrdersInitData]),
+				data: INTERFACES.ScheduledOrders.encodeFunctionData('addOrder', [scheduledOrdersOrderData]),
 				description: 'Add a order to ScheduledOrders',
 			})
 		} else {
@@ -176,7 +175,8 @@ export function useScheduleSwap() {
 			executions.push({
 				to: useAccount().selectedAccount.value!.address,
 				value: 0n,
-				data: getEncodedInstallScheduledOrders(accountId, scheduledOrdersInitData),
+				// Note that the order data should be prefixed with the SWAP_ROUTER address when installing the module
+				data: getEncodedInstallScheduledOrders(accountId, concat([SWAP_ROUTER, scheduledOrdersOrderData])),
 				description: 'Install ScheduledOrders and add a order',
 			})
 		}
@@ -229,13 +229,13 @@ export function useScheduleSwap() {
 
 			// Step 4: Create schedule swap configuration
 			const config = createScheduleSwapConfig(scheduledSwap)
-			const scheduledOrdersInitData = createScheduledOrdersInitData(config)
+			const scheduledOrdersOrderData = createScheduledOrdersOrderData(config)
 
 			// Step 5: Build ScheduledOrders executions
 			const scheduledOrdersExecutions = buildScheduledOrdersExecutions(
 				moduleStatus,
 				selectedAccount.accountId,
-				scheduledOrdersInitData,
+				scheduledOrdersOrderData,
 			)
 
 			// Step 6: Build Rhinestone Attester executions (for Kernel accounts)
