@@ -9,18 +9,18 @@ import { displayChainName } from '@/stores/blockchain/blockchain'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
-import { TransactionStatus, useTxModal } from '@/stores/useTxModal'
+import { TransactionStatus, TxModalExecution, useTxModal } from '@/stores/useTxModal'
 import { useSigner } from '@/stores/validation/useSigner'
 import { shortenAddress } from '@vue-dapp/core'
 import { formatEther } from 'ethers'
 import { CircleDot, ExternalLink, Loader2, X } from 'lucide-vue-next'
-import { Execution, isSameAddress } from 'sendop'
+import { isSameAddress } from 'sendop'
 import { VueFinalModal } from 'vue-final-modal'
 import { toast } from 'vue-sonner'
 
 const props = withDefaults(
 	defineProps<{
-		executions?: Execution[]
+		executions?: TxModalExecution[]
 	}>(),
 	{
 		executions: () => [],
@@ -370,17 +370,27 @@ const showPasskeyValidationMethod = computed(() => {
 							:key="index"
 							class="p-4 bg-muted/30 border border-border/50 rounded-lg space-y-2"
 						>
+							<!-- Description -->
+							<div v-if="execution.description" class="flex flex-col text-sm">
+								<div class="text-sm">{{ execution.description }}</div>
+							</div>
+
+							<!-- To -->
 							<div class="flex items-center justify-between text-sm">
 								<div class="text-muted-foreground">To</div>
-								<div class="flex gap-2">
-									<div class="font-mono">{{ shortenAddress(execution.to) }}</div>
+								<div class="flex gap-2 items-center">
+									<div class="font-mono text-xs">{{ shortenAddress(execution.to) }}</div>
 									<CopyButton :address="execution.to" />
 								</div>
 							</div>
+
+							<!-- Value -->
 							<div class="flex items-center justify-between text-sm">
 								<div class="text-muted-foreground">Value</div>
-								<div>{{ formatEther(execution.value) }} ETH</div>
+								<div class="text-xs">{{ formatEther(execution.value) }} ETH</div>
 							</div>
+
+							<!-- Data -->
 							<div class="flex flex-col text-sm">
 								<div class="text-muted-foreground">Data</div>
 								<div class="font-mono text-xs break-all">{{ execution.data }}</div>

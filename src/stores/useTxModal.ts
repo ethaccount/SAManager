@@ -28,6 +28,10 @@ export enum TransactionStatus {
 	Failed = 'Failed',
 }
 
+export type TxModalExecution = Execution & {
+	description?: string
+}
+
 export const useTxModalStore = defineStore('useTxModalStore', () => {
 	const defaultProps: InstanceType<typeof TxModal>['$props'] = {
 		executions: [],

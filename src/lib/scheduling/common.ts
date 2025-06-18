@@ -1,6 +1,7 @@
 import { IS_DEV } from '@/config'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBackend } from '@/stores/useBackend'
+import { TxModalExecution } from '@/stores/useTxModal'
 import { JsonRpcApiProvider } from 'ethers'
 import {
 	ADDRESS,
@@ -122,7 +123,7 @@ export async function checkBaseModuleStatus(
 	}
 }
 
-export function buildRhinestoneAttesterExecutions(isRhinestoneAttesterTrusted: boolean): Execution[] {
+export function buildRhinestoneAttesterExecutions(isRhinestoneAttesterTrusted: boolean): TxModalExecution[] {
 	if (isRhinestoneAttesterTrusted) {
 		return []
 	}
@@ -136,6 +137,7 @@ export function buildRhinestoneAttesterExecutions(isRhinestoneAttesterTrusted: b
 				1,
 				[RHINESTONE_ATTESTER_ADDRESS],
 			]),
+			description: 'Trust Rhinestone Attester',
 		},
 	]
 }

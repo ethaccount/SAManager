@@ -13,14 +13,13 @@ import { getToken, NATIVE_TOKEN_ADDRESS, TokenTransfer } from '@/lib/token'
 import { AccountId } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { useTxModal } from '@/stores/useTxModal'
+import { TxModalExecution, useTxModal } from '@/stores/useTxModal'
 import { DateValue, getLocalTimeZone } from '@internationalized/date'
 import { concat, parseEther, toBeHex, ZeroAddress } from 'ethers'
 import {
 	abiEncode,
 	ADDRESS,
 	ERC7579_MODULE_TYPE,
-	Execution,
 	getEncodedFunctionParams,
 	INTERFACES,
 	isSameAddress,
@@ -121,8 +120,8 @@ export function useScheduleTransfer() {
 	function buildSmartSessionExecutions(
 		moduleStatus: ModuleStatus,
 		accountId: AccountId,
-	): { executions: Execution[]; permissionId: string } {
-		const executions: Execution[] = []
+	): { executions: TxModalExecution[]; permissionId: string } {
+		const executions: TxModalExecution[] = []
 		let permissionId = moduleStatus.permissionId
 
 		if (!permissionId) {
@@ -138,6 +137,7 @@ export function useScheduleTransfer() {
 						to: ADDRESS.SmartSession,
 						value: 0n,
 						data: INTERFACES.SmartSession.encodeFunctionData('enableSessions', [sessions]),
+						description: 'Enable the session for scheduled transfers',
 					})
 					console.log('SmartSession installed, but no session for scheduledTransfer, create a new session')
 				}
@@ -152,6 +152,7 @@ export function useScheduleTransfer() {
 					to: useAccount().selectedAccount.value!.address,
 					value: 0n,
 					data: getEncodedInstallSmartSession(accountId, smartSessionInitData),
+					description: 'Install SmartSession module and enable the session',
 				})
 				console.log('SmartSession not installed, install and enable the session')
 			}
@@ -164,8 +165,8 @@ export function useScheduleTransfer() {
 		moduleStatus: ModuleStatus,
 		accountId: AccountId,
 		scheduledTransfersInitData: string,
-	): Execution[] {
-		const executions: Execution[] = []
+	): TxModalExecution[] {
+		const executions: TxModalExecution[] = []
 
 		if (moduleStatus.isScheduledTransfersInstalled) {
 			// Add a order
@@ -173,6 +174,7 @@ export function useScheduleTransfer() {
 				to: ADDRESS.ScheduledTransfers,
 				value: 0n,
 				data: INTERFACES.ScheduledTransfers.encodeFunctionData('addOrder', [scheduledTransfersInitData]),
+				description: 'Add a order to ScheduledTransfers',
 			})
 			console.log('ScheduledTransfers installed, add a order')
 		} else {
@@ -181,6 +183,7 @@ export function useScheduleTransfer() {
 				to: useAccount().selectedAccount.value!.address,
 				value: 0n,
 				data: getEncodedInstallScheduledTransfers(accountId, scheduledTransfersInitData),
+				description: 'Install ScheduledTransfers and add a order',
 			})
 			console.log('ScheduledTransfers not installed, install and add a order')
 		}
@@ -241,7 +244,7 @@ export function useScheduleTransfer() {
 			const rhinestoneExecutions = buildRhinestoneAttesterExecutions(moduleStatus.isRhinestoneAttesterTrusted)
 
 			// Step 7: Combine all executions
-			const executions: Execution[] = [
+			const executions: TxModalExecution[] = [
 				...rhinestoneExecutions,
 				...smartSessionExecutions,
 				...scheduledTransfersExecutions,

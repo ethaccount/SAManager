@@ -13,14 +13,13 @@ import { getToken } from '@/lib/token'
 import { AccountId } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { useTxModal } from '@/stores/useTxModal'
+import { TxModalExecution, useTxModal } from '@/stores/useTxModal'
 import { DateValue, getLocalTimeZone } from '@internationalized/date'
 import { concat, parseEther, toBeHex } from 'ethers'
 import {
 	abiEncode,
 	ADDRESS,
 	ERC7579_MODULE_TYPE,
-	Execution,
 	getEncodedFunctionParams,
 	INTERFACES,
 	SMART_SESSIONS_ENABLE_MODE,
@@ -119,8 +118,8 @@ export function useScheduleSwap() {
 	function buildSmartSessionExecutions(
 		moduleStatus: ModuleStatus,
 		accountId: AccountId,
-	): { executions: Execution[]; permissionId: string } {
-		const executions: Execution[] = []
+	): { executions: TxModalExecution[]; permissionId: string } {
+		const executions: TxModalExecution[] = []
 		let permissionId = moduleStatus.permissionId
 
 		if (!permissionId) {
@@ -136,6 +135,7 @@ export function useScheduleSwap() {
 						to: ADDRESS.SmartSession,
 						value: 0n,
 						data: INTERFACES.SmartSession.encodeFunctionData('enableSessions', [sessions]),
+						description: 'Enable the session for scheduled swaps',
 					})
 					console.log('SmartSession installed, but no session for scheduledSwap, create a new session')
 				}
@@ -150,6 +150,7 @@ export function useScheduleSwap() {
 					to: useAccount().selectedAccount.value!.address,
 					value: 0n,
 					data: getEncodedInstallSmartSession(accountId, smartSessionInitData),
+					description: 'Install SmartSession module and enable the session',
 				})
 				console.log('SmartSession not installed, install and enable the session')
 			}
@@ -162,8 +163,8 @@ export function useScheduleSwap() {
 		moduleStatus: ModuleStatus,
 		accountId: AccountId,
 		scheduledOrdersInitData: string,
-	): Execution[] {
-		const executions: Execution[] = []
+	): TxModalExecution[] {
+		const executions: TxModalExecution[] = []
 
 		if (moduleStatus.isScheduledOrdersInstalled) {
 			// Add a order
@@ -171,6 +172,7 @@ export function useScheduleSwap() {
 				to: ADDRESS.ScheduledOrders,
 				value: 0n,
 				data: INTERFACES.ScheduledOrders.encodeFunctionData('addOrder', [scheduledOrdersInitData]),
+				description: 'Add a order to ScheduledOrders',
 			})
 			console.log('ScheduledOrders installed, add a order')
 		} else {
@@ -179,6 +181,7 @@ export function useScheduleSwap() {
 				to: useAccount().selectedAccount.value!.address,
 				value: 0n,
 				data: getEncodedInstallScheduledOrders(accountId, scheduledOrdersInitData),
+				description: 'Install ScheduledOrders and add a order',
 			})
 			console.log('ScheduledOrders not installed, install and add a order')
 		}
@@ -240,7 +243,7 @@ export function useScheduleSwap() {
 			const rhinestoneExecutions = buildRhinestoneAttesterExecutions(moduleStatus.isRhinestoneAttesterTrusted)
 
 			// Step 7: Combine all executions
-			const executions: Execution[] = [
+			const executions: TxModalExecution[] = [
 				...rhinestoneExecutions,
 				...smartSessionExecutions,
 				...scheduledOrdersExecutions,
