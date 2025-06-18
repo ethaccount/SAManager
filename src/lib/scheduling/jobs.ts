@@ -1,7 +1,7 @@
 import { AbiCoder } from 'ethers'
 import { Job } from './useFetchJobs'
 
-export function decodeExecutionData(data: string) {
+export function decodeTransferExecutionData(data: string) {
 	const abiCoder = new AbiCoder()
 	const [recipient, tokenAddress, amount] = abiCoder.decode(['address', 'address', 'uint256'], data)
 
@@ -9,6 +9,17 @@ export function decodeExecutionData(data: string) {
 		recipient,
 		tokenAddress,
 		amount,
+	}
+}
+
+export function decodeSwapExecutionData(data: string) {
+	const abiCoder = new AbiCoder()
+	const [tokenIn, tokenOut, amountIn] = abiCoder.decode(['address', 'address', 'uint256'], data)
+
+	return {
+		tokenIn,
+		tokenOut,
+		amountIn,
 	}
 }
 

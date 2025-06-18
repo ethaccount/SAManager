@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { toRoute } from '@/lib/router'
 import { formatDate, formatInterval, formatNextExecution, isJobCompleted, isJobOverdue } from '@/lib/scheduling/jobs'
-import { useFetchJobs } from '@/lib/scheduling/useFetchJobs'
+import { SwapJobDetails, TransferJobDetails, useFetchJobs, type Job } from '@/lib/scheduling/useFetchJobs'
+import type { Token } from '@/lib/token'
 import { useAccount } from '@/stores/account/useAccount'
 import { useTxModal } from '@/stores/useTxModal'
 import { shortenAddress } from '@vue-dapp/core'
@@ -67,9 +68,36 @@ function displayLastExecutionTime(lastExecutionTime: bigint) {
 	return formatDate(lastExecutionTime)
 }
 
-// sort by job id in descending order
+// Helper functions for type-safe access to job details
+function isTransferJob(job: Job): job is Job & { details: TransferJobDetails } {
+	return job.type === 'transfer'
+}
+
+function isSwapJob(job: Job): job is Job & { details: SwapJobDetails } {
+	return job.type === 'swap'
+}
+
+function getJobTitle(job: Job): string {
+	if (isTransferJob(job)) {
+		return `Send ${job.details.tokenSymbol}`
+	} else if (isSwapJob(job)) {
+		return `Swap ${job.details.tokenInInfo.symbol} for ${job.details.tokenOutInfo.symbol}`
+	}
+	return 'Unknown job type'
+}
+
 const displayJobs = computed(() => {
-	return jobs.value.slice().sort((a, b) => Number(b.id - a.id))
+	return jobs.value.slice().sort((a, b) => {
+		// Primary sort: startDate in descending order (most recent first)
+		if (a.startDate > b.startDate) return -1
+		if (a.startDate < b.startDate) return 1
+
+		// Secondary sort: job id in descending order
+		if (a.id > b.id) return -1
+		if (a.id < b.id) return 1
+
+		return 0
+	})
 })
 </script>
 
@@ -114,41 +142,28 @@ const displayJobs = computed(() => {
 						class="group relative p-6 rounded-xl bg-muted/30 border border-border/40"
 					>
 						<div class="flex items-start justify-between">
-							<!-- Job title and status -->
-							<div class="flex items-center space-x-3">
-								<div class="flex items-center space-x-2">
-									<!-- Job status -->
-									<div
-										v-if="!isJobCompleted(job)"
-										:class="[
-											'w-2 h-2 rounded-full',
-											job.isEnabled ? 'bg-green-500 animate-pulse' : 'bg-gray-400',
-										]"
-									></div>
-									<h3 class="text-lg font-semibold text-foreground">
-										Send {{ formatUnits(job.amount, job.tokenDecimals) }} {{ job.tokenSymbol }}
-									</h3>
-									<span class="text-xs text-muted-foreground font-mono bg-muted/50 px-2 py-1 rounded">
-										#{{ job.id }}
-									</span>
-								</div>
-								<div class="flex items-center space-x-2">
-									<Badge
-										v-if="isJobCompleted(job)"
-										variant="outline"
-										class="bg-green-500/30 border-green-500/50"
-									>
-										Completed
-									</Badge>
-									<Badge v-else-if="!job.isEnabled" variant="outline"> Disabled </Badge>
-									<Badge v-else-if="isJobOverdue(job)" variant="destructive"> Overdue </Badge>
-								</div>
+							<!-- Job title -->
+							<div class="flex items-center space-x-2">
+								<!-- Job status -->
+								<div
+									v-if="!isJobCompleted(job)"
+									:class="[
+										'w-2 h-2 rounded-full',
+										job.isEnabled ? 'bg-green-500 animate-pulse' : 'bg-gray-400',
+									]"
+								></div>
+								<h3 class="text-lg font-semibold text-foreground">
+									{{ getJobTitle(job) }}
+								</h3>
+								<span class="text-xs text-muted-foreground font-mono bg-muted/50 px-2 py-1 rounded">
+									#{{ job.id }}
+								</span>
 							</div>
 
 							<!-- Enable/Disable and Execute buttons -->
 							<div v-if="!isJobCompleted(job)" class="flex items-center space-x-1">
 								<Button
-									v-if="job.isEnabled && isJobOverdue(job)"
+									v-if="job.isEnabled && isJobOverdue(job) && isTransferJob(job)"
 									variant="ghost"
 									size="sm"
 									class="h-9 w-9 p-0 hover:bg-orange-500/10 text-orange-600 hover:text-orange-700"
@@ -170,15 +185,63 @@ const displayJobs = computed(() => {
 							</div>
 						</div>
 
+						<!-- Job status badges -->
+						<div class="flex items-center space-x-2 mt-2">
+							<Badge
+								v-if="isJobCompleted(job)"
+								variant="outline"
+								class="bg-green-500/30 border-green-500/50"
+							>
+								Completed
+							</Badge>
+							<Badge v-else-if="!job.isEnabled" variant="outline"> Disabled </Badge>
+							<Badge v-else-if="isJobOverdue(job)" variant="destructive"> Overdue </Badge>
+						</div>
+
 						<!-- Destination -->
-						<div class="flex items-center space-x-2 mb-2">
+						<div v-if="isTransferJob(job)" class="flex items-center space-x-2 mb-2">
 							<span class="text-sm text-muted-foreground">To:</span>
 							<div class="flex items-center space-x-1">
 								<code class="px-2 py-1 bg-muted/50 rounded-md text-sm font-mono">
-									{{ shortenAddress(job.recipient) }}
+									{{ shortenAddress(job.details.recipient) }}
 								</code>
-								<CopyButton :address="job.recipient" />
+								<CopyButton :address="job.details.recipient" />
 							</div>
+						</div>
+						<div v-else-if="isSwapJob(job)" class="flex items-center space-x-2 mb-2">
+							<span class="text-sm text-muted-foreground">Swap:</span>
+							<div class="flex items-center space-x-2">
+								<div class="flex items-center">
+									<code class="px-2 py-1 bg-muted/50 rounded-md text-sm font-mono">
+										{{ shortenAddress(job.details.tokenIn) }}
+									</code>
+									<CopyButton :address="job.details.tokenIn" />
+								</div>
+
+								<span class="text-xs text-muted-foreground">→</span>
+
+								<div class="flex items-center">
+									<code class="px-2 py-1 bg-muted/50 rounded-md text-sm font-mono">
+										{{ shortenAddress(job.details.tokenOut) }}
+									</code>
+									<CopyButton :address="job.details.tokenOut" />
+								</div>
+							</div>
+						</div>
+
+						<!-- Amount -->
+						<div class="flex items-center space-x-2 mb-2">
+							<span class="text-sm text-muted-foreground">Amount:</span>
+							<span class="text-sm font-medium">
+								<template v-if="isTransferJob(job)">
+									{{ formatUnits(job.details.amount, job.details.tokenDecimals) }}
+									{{ job.details.tokenSymbol }}
+								</template>
+								<template v-else-if="isSwapJob(job)">
+									{{ formatUnits(job.details.amountIn, job.details.tokenInInfo.decimals) }}
+									{{ job.details.tokenInInfo.symbol }}
+								</template>
+							</span>
 						</div>
 
 						<!-- Schedule Info -->
