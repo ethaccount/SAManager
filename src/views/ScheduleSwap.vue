@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { IS_DEV } from '@/config'
-import { useFrequencies, useReviewButton, validateAmount, validateTimes } from '@/lib/scheduling/common'
+import { getFrequencyOptions, useReviewButton, validateAmount, validateTimes } from '@/lib/scheduling/common'
 import { ScheduleSwap, useScheduleSwap } from '@/lib/scheduling/useScheduleSwap'
 import { getToken, getTokens, NATIVE_TOKEN_ADDRESS } from '@/lib/token'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
@@ -45,7 +45,7 @@ function getDefaultSwap(): ScheduleSwap {
 
 const scheduledSwapInput = ref<ScheduleSwap>(getDefaultSwap())
 
-const { frequencies } = useFrequencies()
+const frequencies = getFrequencyOptions()
 
 // Calculate estimated output amount (simplified calculation for demo)
 const amountOut = computed(() => {
@@ -108,7 +108,20 @@ function switchTokens() {
 <template>
 	<Card class="w-full bg-background/50 backdrop-blur-sm border-none shadow-none">
 		<CardContent class="pt-4">
-			<div class="space-y-4">
+			<!-- Review Button -->
+			<div>
+				<Button
+					class="w-full bg-primary/90 hover:bg-primary disabled:opacity-50"
+					size="lg"
+					@click="onClickReview"
+					:disabled="reviewDisabled"
+					:loading="isLoadingReview"
+				>
+					{{ reviewButtonText }}
+				</Button>
+			</div>
+
+			<div class="mt-4 space-y-4">
 				<!-- Token Swap Section -->
 				<div class="relative">
 					<!-- From Token -->
@@ -277,19 +290,6 @@ function switchTokens() {
 							<Calendar v-model="scheduledSwapInput.startDate as DateValue" />
 						</PopoverContent>
 					</Popover>
-				</div>
-
-				<!-- Review Button -->
-				<div class="mt-4">
-					<Button
-						class="w-full bg-primary/90 hover:bg-primary disabled:opacity-50"
-						size="lg"
-						@click="onClickReview"
-						:disabled="reviewDisabled"
-						:loading="isLoadingReview"
-					>
-						{{ reviewButtonText }}
-					</Button>
 				</div>
 			</div>
 		</CardContent>

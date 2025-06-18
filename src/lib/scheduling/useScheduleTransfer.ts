@@ -267,6 +267,7 @@ export function useScheduleTransfer() {
 							jobId,
 							client: client.value,
 							bundler: bundler.value,
+							jobType: 'transfer',
 						})
 					} catch (e: unknown) {
 						const msg = 'Register job failed: ' + (e instanceof Error ? e.message : String(e))

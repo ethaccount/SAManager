@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { IS_DEV } from '@/config'
-import { useFrequencies, useReviewButton, validateAmount, validateTimes } from '@/lib/scheduling/common'
+import { getFrequencyOptions, useReviewButton, validateAmount, validateTimes } from '@/lib/scheduling/common'
 import { ScheduleTransfer, useScheduleTransfer } from '@/lib/scheduling/useScheduleTransfer'
 import { getToken, getTokens, NATIVE_TOKEN_ADDRESS } from '@/lib/token'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
@@ -39,7 +39,7 @@ function getDefaultTransfer(): ScheduleTransfer {
 
 const scheduledTransferInput = ref<ScheduleTransfer>(getDefaultTransfer())
 
-const { frequencies } = useFrequencies()
+const frequencies = getFrequencyOptions()
 
 const isValidTransfers = computed(() => {
 	const recipient = scheduledTransferInput.value.recipient
@@ -68,7 +68,8 @@ async function onClickReview() {
 <template>
 	<Card class="w-full bg-background/50 backdrop-blur-sm border-none shadow-none">
 		<CardContent class="pt-4">
-			<div class="mb-4">
+			<!-- Review Button -->
+			<div>
 				<Button
 					class="w-full bg-primary/90 hover:bg-primary disabled:opacity-50"
 					size="lg"
@@ -80,7 +81,7 @@ async function onClickReview() {
 				</Button>
 			</div>
 
-			<div class="space-y-3">
+			<div class="mt-4 space-y-3">
 				<div
 					class="relative p-4 rounded-xl bg-muted/30 border border-border/50 backdrop-blur-sm transition-all duration-200 hover:border-border"
 				>

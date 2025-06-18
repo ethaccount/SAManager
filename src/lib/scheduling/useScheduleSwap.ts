@@ -266,6 +266,18 @@ export function useScheduleSwap() {
 							jobId,
 							client: client.value,
 							bundler: bundler.value,
+							jobType: 'swap',
+							swapParams: {
+								tokenIn: config.tokenIn,
+								tokenOut: config.tokenOut,
+								amountIn: config.amountIn,
+								// You can customize these parameters based on your requirements
+								token0Decimals: 6, // USDC decimals
+								token1Decimals: 18, // WETH decimals
+								// zeroForOne will be calculated dynamically based on tokenIn address
+								slippageTolerance: 0.005, // 0.5%
+								fee: 500n, // Pool fee
+							},
 						})
 					} catch (e: unknown) {
 						const msg = 'Register job failed: ' + (e instanceof Error ? e.message : String(e))

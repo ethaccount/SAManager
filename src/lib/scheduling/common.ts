@@ -54,12 +54,6 @@ export function getFrequencyOptions(): FrequencyOption[] {
 	]
 }
 
-// Vue Composables
-export function useFrequencies() {
-	const frequencies = computed(() => getFrequencyOptions())
-	return { frequencies }
-}
-
 export function useReviewButton(
 	isValid: ComputedRef<boolean>,
 	errorReview: Ref<string | null>,
@@ -78,7 +72,7 @@ export function useReviewButton(
 		if (!isAccountConnected.value) return 'Connect your account to review'
 		if (!isValid.value) return `Invalid scheduled ${actionType}`
 		if (errorReview.value) return errorReview.value
-		return `Review scheduled ${actionType}`
+		return `Review schedule ${actionType}`
 	})
 
 	return {
