@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import { IS_DEV } from '@/config'
-import { getFrequencyOptions, validateAmount, validateTimes } from '@/lib/scheduling/common'
+import { getFrequencyOptions, useReviewButton, validateAmount, validateTimes } from '@/lib/scheduling/common'
 import { DEFAULT_FEE, DEFAULT_SLIPPAGE, getSwapParameters, SwapParameters } from '@/lib/scheduling/swap-utils'
 import { ScheduleSwap, useScheduleSwap } from '@/lib/scheduling/useScheduleSwap'
 import { getToken, getTokens, NATIVE_TOKEN_ADDRESS } from '@/lib/token'
-import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { useBackend } from '@/stores/useBackend'
 import { DateFormatter, getLocalTimeZone, today, type DateValue } from '@internationalized/date'
 import { formatUnits, parseUnits } from 'ethers'
 import { AlertTriangle, ArrowUpDown, CalendarIcon, Loader2 } from 'lucide-vue-next'
@@ -111,7 +109,6 @@ watchImmediate(
 		() => selectedChainId.value,
 	],
 	async () => {
-		console.log('scheduledSwapInput.value', scheduledSwapInput.value)
 		await fetchSwapParameters()
 	},
 )
@@ -126,26 +123,14 @@ const isValidSwap = computed(() => {
 	if (tokenIn === tokenOut) return false
 	if (!validateAmount(amountIn)) return false
 	if (!validateTimes(times)) return false
+	if (swapParamsError.value) return false
 
 	return true
 })
 
 const { isLoadingReview, errorReview, reviewScheduleSwap } = useScheduleSwap()
 
-const { isAccountConnected } = useAccount()
-const { isBackendHealthy } = useBackend()
-const reviewButtonText = computed(() => {
-	if (!isBackendHealthy.value) return 'Backend service is unavailable'
-	if (swapParamsError.value) return swapParamsError.value
-	if (!isAccountConnected.value) return 'Connect your account to review'
-	if (!isValidSwap.value) return `Invalid scheduled swap`
-	if (errorReview.value) return errorReview.value
-	return `Review schedule swap`
-})
-
-const reviewDisabled = computed(() => {
-	return !isAccountConnected.value || !isValidSwap.value || !isBackendHealthy.value || swapParamsError.value
-})
+const { reviewDisabled, reviewButtonText } = useReviewButton(isValidSwap, errorReview, isLoadingReview, 'swap')
 
 async function onClickReview() {
 	await reviewScheduleSwap({

@@ -128,7 +128,6 @@ export function buildRhinestoneAttesterExecutions(isRhinestoneAttesterTrusted: b
 		return []
 	}
 
-	console.log('Rhinestone Attester not trusted, trust it')
 	return [
 		{
 			to: ADDRESS.Registry,

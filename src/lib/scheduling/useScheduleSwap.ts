@@ -15,7 +15,7 @@ import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { TxModalExecution, useTxModal } from '@/stores/useTxModal'
 import { DateValue, getLocalTimeZone } from '@internationalized/date'
-import { concat, parseEther, toBeHex } from 'ethers'
+import { concat, parseEther, parseUnits, toBeHex } from 'ethers'
 import {
 	abiEncode,
 	ADDRESS,
@@ -136,7 +136,6 @@ export function useScheduleSwap() {
 						data: INTERFACES.SmartSession.encodeFunctionData('enableSessions', [sessions]),
 						description: 'Enable the session for scheduled swaps',
 					})
-					console.log('SmartSession installed, but no session for scheduledSwap, create a new session')
 				}
 			} else {
 				// Install smart session module and enable the session
@@ -151,7 +150,6 @@ export function useScheduleSwap() {
 					data: getEncodedInstallSmartSession(accountId, smartSessionInitData),
 					description: 'Install SmartSession module and enable the session',
 				})
-				console.log('SmartSession not installed, install and enable the session')
 			}
 		}
 
@@ -173,7 +171,6 @@ export function useScheduleSwap() {
 				data: INTERFACES.ScheduledOrders.encodeFunctionData('addOrder', [scheduledOrdersInitData]),
 				description: 'Add a order to ScheduledOrders',
 			})
-			console.log('ScheduledOrders installed, add a order')
 		} else {
 			// Install scheduled orders module and create a job
 			executions.push({
@@ -182,7 +179,6 @@ export function useScheduleSwap() {
 				data: getEncodedInstallScheduledOrders(accountId, scheduledOrdersInitData),
 				description: 'Install ScheduledOrders and add a order',
 			})
-			console.log('ScheduledOrders not installed, install and add a order')
 		}
 
 		return executions
@@ -193,10 +189,14 @@ export function useScheduleSwap() {
 		const tokenIn = getToken(selectedChainId.value, scheduledSwap.tokenIn)
 		const tokenOut = getToken(selectedChainId.value, scheduledSwap.tokenOut)
 
+		if (!tokenIn || !tokenOut) {
+			throw new Error('createScheduleSwapConfig: Token information not found')
+		}
+
 		return {
-			tokenIn: tokenIn?.address || '',
-			tokenOut: tokenOut?.address || '',
-			amountIn: parseEther(scheduledSwap.amountIn),
+			tokenIn: tokenIn.address,
+			tokenOut: tokenOut.address,
+			amountIn: parseUnits(scheduledSwap.amountIn, tokenIn.decimals),
 			executeInterval: frequencyToSeconds[scheduledSwap.frequency] || 0,
 			numOfExecutions: scheduledSwap.times,
 			startDate: Math.floor(scheduledSwap.startDate.toDate(getLocalTimeZone()).getTime() / 1000),

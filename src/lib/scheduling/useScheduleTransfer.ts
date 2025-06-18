@@ -15,7 +15,7 @@ import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { TxModalExecution, useTxModal } from '@/stores/useTxModal'
 import { DateValue, getLocalTimeZone } from '@internationalized/date'
-import { concat, parseEther, toBeHex, ZeroAddress } from 'ethers'
+import { concat, parseUnits, toBeHex, ZeroAddress } from 'ethers'
 import {
 	abiEncode,
 	ADDRESS,
@@ -139,7 +139,6 @@ export function useScheduleTransfer() {
 						data: INTERFACES.SmartSession.encodeFunctionData('enableSessions', [sessions]),
 						description: 'Enable the session for scheduled transfers',
 					})
-					console.log('SmartSession installed, but no session for scheduledTransfer, create a new session')
 				}
 			} else {
 				// Install smart session module and enable the session
@@ -154,7 +153,6 @@ export function useScheduleTransfer() {
 					data: getEncodedInstallSmartSession(accountId, smartSessionInitData),
 					description: 'Install SmartSession module and enable the session',
 				})
-				console.log('SmartSession not installed, install and enable the session')
 			}
 		}
 
@@ -176,7 +174,6 @@ export function useScheduleTransfer() {
 				data: INTERFACES.ScheduledTransfers.encodeFunctionData('addOrder', [scheduledTransfersInitData]),
 				description: 'Add a order to ScheduledTransfers',
 			})
-			console.log('ScheduledTransfers installed, add a order')
 		} else {
 			// Install scheduled transfers module and create a job
 			executions.push({
@@ -185,7 +182,6 @@ export function useScheduleTransfer() {
 				data: getEncodedInstallScheduledTransfers(accountId, scheduledTransfersInitData),
 				description: 'Install ScheduledTransfers and add a order',
 			})
-			console.log('ScheduledTransfers not installed, install and add a order')
 		}
 
 		return executions
@@ -195,10 +191,14 @@ export function useScheduleTransfer() {
 		const { selectedChainId } = useBlockchain()
 		const token = getToken(selectedChainId.value, scheduledTransfer.tokenAddress)
 
+		if (!token) {
+			throw new Error('createScheduleTransferConfig: Token information not found')
+		}
+
 		return {
 			recipient: scheduledTransfer.recipient,
-			amount: parseEther(scheduledTransfer.amount),
-			tokenAddress: token?.address || '',
+			amount: parseUnits(scheduledTransfer.amount, token.decimals),
+			tokenAddress: token.address,
 			executeInterval: frequencyToSeconds[scheduledTransfer.frequency] || 0,
 			numOfExecutions: scheduledTransfer.times,
 			startDate: Math.floor(scheduledTransfer.startDate.toDate(getLocalTimeZone()).getTime() / 1000),
