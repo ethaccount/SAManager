@@ -10,6 +10,7 @@ export type SessionData = {
 	sessionValidatorData: string
 	enabledActions: string[]
 	actionDetails: {
+		description?: string
 		actionId: string // keccak256(target address ++ functionSelector)
 		isEnabled: boolean
 		actionPolicies: string[] // policy address list

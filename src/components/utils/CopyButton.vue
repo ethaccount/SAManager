@@ -31,7 +31,7 @@ function onClickCopyAddress(event: Event) {
 const SIZES = {
 	xs: {
 		button: 'w-4 h-4',
-		icon: 'w-2.5',
+		icon: 'w-2',
 	},
 	sm: {
 		button: 'w-5 h-5',

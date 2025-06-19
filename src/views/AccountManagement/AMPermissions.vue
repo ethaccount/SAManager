@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { removeSessionExecution } from '@/api/smartsession/removeSession'
-import { isScheduledSwapSession, isScheduledTransferSession, SessionData } from '@/lib/permissions/session'
 import { useSessionList } from '@/lib/permissions/useSessionList'
 import { ImportedAccount } from '@/stores/account/account'
 import { useTxModal } from '@/stores/useTxModal'
 import { shortenAddress } from '@vue-dapp/core'
-import { Eye, EyeOff, Loader2, Trash2 } from 'lucide-vue-next'
+import { Loader2, Trash2 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 
 const props = defineProps<{
@@ -55,17 +54,8 @@ async function onClickRemoveSession(permissionId: string) {
 	}
 }
 
-function getSessionDisplayName(session: SessionData): string | undefined {
-	if (isScheduledTransferSession(session)) return 'Scheduled Transfer'
-	if (isScheduledSwapSession(session)) return 'Scheduled Swap'
-	return undefined
-}
-
 const displaySessionList = computed(() => {
-	return sessions.value.map(session => ({
-		...session,
-		sessionName: getSessionDisplayName(session),
-	}))
+	return sessions.value
 })
 </script>
 
@@ -90,34 +80,23 @@ const displaySessionList = computed(() => {
 						@click="toggleSessionExpansion(session.permissionId)"
 					>
 						<div class="flex items-center gap-3">
-							<div class="flex items-center gap-2">
-								<Eye v-if="expandedSessions.has(session.permissionId)" class="w-4 h-4" />
-								<EyeOff v-else class="w-4 h-4" />
-							</div>
 							<div>
-								<div class="flex items-center gap-2">
-									<div class="font-medium">{{ shortenAddress(session.permissionId) }}</div>
-									<CopyButton :address="session.permissionId" />
-									<div v-if="session.sessionName" class="text-sm text-muted-foreground">
-										({{ session.sessionName }})
-									</div>
-								</div>
+								<div class="flex flex-col">
+									<div class="text-xs text-muted-foreground">Permission ID:</div>
+									<div class="flex items-center gap-2">
+										<div class="font-medium text-sm">
+											{{ shortenAddress(session.permissionId) }}
+										</div>
+										<CopyButton :address="session.permissionId" size="xs" />
 
-								<div class="text-sm text-muted-foreground">
-									{{ session.enabledActions.length }} action(s)
+										<div class="text-xs text-muted-foreground">
+											{{ session.enabledActions.length }} action(s)
+										</div>
+									</div>
 								</div>
 							</div>
 						</div>
 						<div class="flex items-center gap-2">
-							<div
-								class="text-xs rounded-full px-2.5 py-0.5"
-								:class="
-									session.isEnabled ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
-								"
-							>
-								{{ session.isEnabled ? 'Enabled' : 'Disabled' }}
-							</div>
-
 							<Button
 								variant="ghost"
 								size="sm"
@@ -134,60 +113,61 @@ const displaySessionList = computed(() => {
 						<div class="p-4 space-y-4">
 							<!-- Session Validator -->
 							<div>
-								<div class="text-sm font-medium mb-2">Session Validator</div>
-								<div class="flex items-center gap-2 text-sm font-mono bg-card p-2 rounded border">
-									<span>{{ shortenAddress(session.sessionValidator) }}</span>
-									<CopyButton :address="session.sessionValidator" />
+								<div class="text-xs text-muted-foreground">Session Validator</div>
+								<div
+									class="mt-1 flex items-center gap-2 text-xs font-mono bg-muted/50 p-1.5 rounded border"
+								>
+									<span class="text-xs font-mono">
+										{{ shortenAddress(session.sessionValidator) }}
+									</span>
+									<CopyButton :address="session.sessionValidator" size="xs" />
 								</div>
 							</div>
 
 							<!-- Session Validator Data -->
 							<div v-if="session.sessionValidatorData !== '0x'">
-								<div class="text-sm font-medium mb-2">Validator Data</div>
-								<div class="text-xs font-mono bg-card p-2 rounded border break-all">
+								<div class="text-xs text-muted-foreground">Validator Data</div>
+								<div class="mt-1 text-xs font-mono bg-muted/50 p-2 rounded border break-all">
 									{{ session.sessionValidatorData }}
 								</div>
 							</div>
 
 							<!-- Enabled Actions -->
 							<div v-if="session.actionDetails.length > 0">
-								<div class="text-sm font-medium mb-2">Enabled Actions</div>
-								<div class="space-y-2">
+								<div class="text-sm font-medium">Enabled Actions</div>
+								<div class="mt-2 space-y-2">
 									<div
 										v-for="action in session.actionDetails"
 										:key="action.actionId"
 										class="bg-card p-3 rounded border"
 									>
 										<div class="flex items-center justify-between mb-2">
-											<div class="flex items-center gap-2">
-												<span class="text-sm font-mono">
-													{{ shortenAddress(action.actionId) }}
-												</span>
-												<CopyButton :address="action.actionId" />
+											<!-- action description -->
+											<div v-if="action.description" class="text-sm font-medium">
+												{{ action.description }}
 											</div>
-											<div
-												class="text-xs rounded-full px-2 py-0.5"
-												:class="
-													action.isEnabled
-														? 'bg-green-500/10 text-green-500'
-														: 'bg-red-500/10 text-red-500'
-												"
-											>
-												{{ action.isEnabled ? 'Enabled' : 'Disabled' }}
-											</div>
+										</div>
+
+										<!-- Action ID -->
+										<div class="flex items-center gap-2">
+											<div class="text-xs font-medium mb-1 text-muted-foreground">Action ID:</div>
+											<span class="text-xs font-mono">
+												{{ shortenAddress(action.actionId) }}
+											</span>
+											<CopyButton :address="action.actionId" size="xs" />
 										</div>
 
 										<!-- Action Policies -->
 										<div v-if="action.actionPolicies.length > 0">
-											<div class="text-xs font-medium mb-1 text-muted-foreground">Policies:</div>
-											<div class="space-y-1">
+											<div class="text-xs font-medium text-muted-foreground">Policies:</div>
+											<div class="mt-1 space-y-1">
 												<div
 													v-for="(policy, index) in action.actionPolicies"
 													:key="index"
-													class="flex items-center gap-2 text-xs font-mono bg-muted/50 p-1.5 rounded"
+													class="flex items-center gap-2 text-xs font-mono bg-muted/50 p-1.5 rounded border"
 												>
 													<span>{{ shortenAddress(policy) }}</span>
-													<CopyButton :address="policy" />
+													<CopyButton :address="policy" size="xs" />
 												</div>
 											</div>
 										</div>
