@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { IS_DEV } from '@/config'
 import { getFrequencyOptions, useReviewButton, validateAmount, validateTimes } from '@/lib/scheduling/common'
 import { DEFAULT_FEE, DEFAULT_SLIPPAGE, getSwapParameters, SwapParameters } from '@/lib/scheduling/swap-utils'
 import { ScheduleSwap, useScheduleSwap } from '@/lib/scheduling/useScheduleSwap'
@@ -25,21 +24,11 @@ function getDefaultSwap(): ScheduleSwap {
 	const wethToken = availableTokens.value.find(token => token.symbol === 'WETH')
 	const usdcToken = availableTokens.value.find(token => token.symbol === 'USDC')
 
-	if (IS_DEV) {
-		return {
-			tokenIn: wethToken?.address || availableTokens.value[0]?.address || NATIVE_TOKEN_ADDRESS,
-			tokenOut: usdcToken?.address || availableTokens.value[1]?.address || NATIVE_TOKEN_ADDRESS,
-			amountIn: '0.0001',
-			frequency: '3min',
-			times: 3,
-			startDate: today(getLocalTimeZone()),
-		}
-	}
 	return {
 		tokenIn: wethToken?.address || availableTokens.value[0]?.address || NATIVE_TOKEN_ADDRESS,
 		tokenOut: usdcToken?.address || availableTokens.value[1]?.address || NATIVE_TOKEN_ADDRESS,
-		amountIn: '0',
-		frequency: 'weekly',
+		amountIn: '0.0001',
+		frequency: '10sec',
 		times: 3,
 		startDate: today(getLocalTimeZone()),
 	}

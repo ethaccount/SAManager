@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { IS_DEV } from '@/config'
 import { getFrequencyOptions, useReviewButton, validateAmount, validateTimes } from '@/lib/scheduling/common'
 import { ScheduleTransfer, useScheduleTransfer } from '@/lib/scheduling/useScheduleTransfer'
-import { getToken, getTokens, NATIVE_TOKEN_ADDRESS } from '@/lib/token'
+import { getToken, getTokenAddress, getTokens } from '@/lib/token'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { DateFormatter, getLocalTimeZone, today, type DateValue } from '@internationalized/date'
 import { isAddress } from 'ethers'
@@ -17,21 +16,11 @@ const dateFormatter = new DateFormatter('en-US', {
 const availableTokens = computed(() => getTokens(selectedChainId.value))
 
 function getDefaultTransfer(): ScheduleTransfer {
-	if (IS_DEV) {
-		return {
-			recipient: '0xd78B5013757Ea4A7841811eF770711e6248dC282',
-			amount: '0.0001',
-			tokenAddress: NATIVE_TOKEN_ADDRESS,
-			frequency: '3min',
-			times: 3,
-			startDate: today(getLocalTimeZone()),
-		}
-	}
 	return {
-		recipient: '',
-		amount: '0',
-		tokenAddress: NATIVE_TOKEN_ADDRESS,
-		frequency: 'weekly',
+		recipient: '0xd78B5013757Ea4A7841811eF770711e6248dC282',
+		amount: '0.0001',
+		tokenAddress: getTokenAddress(selectedChainId.value, 'WETH') || '',
+		frequency: '10sec',
 		times: 3,
 		startDate: today(getLocalTimeZone()),
 	}

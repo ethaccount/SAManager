@@ -1,4 +1,3 @@
-import { IS_DEV } from '@/config'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBackend } from '@/stores/useBackend'
 import { TxModalExecution } from '@/stores/useTxModal'
@@ -12,10 +11,37 @@ import {
 } from 'sendop'
 
 export const frequencyToSeconds: Record<string, number> = {
+	'10sec': 10,
+	'30sec': 30,
+	'1min': 60,
 	'3min': 3 * 60,
+	'10min': 10 * 60,
+	'30min': 30 * 60,
+	'1hr': 60 * 60,
+	'3hr': 3 * 60 * 60,
+	'6hr': 6 * 60 * 60,
+	'12hr': 12 * 60 * 60,
 	daily: 24 * 60 * 60,
 	weekly: 7 * 24 * 60 * 60,
 	monthly: 30 * 24 * 60 * 60,
+}
+
+export function getFrequencyOptions(): FrequencyOption[] {
+	return [
+		{ id: '10sec', label: '10 seconds' },
+		{ id: '30sec', label: '30 seconds' },
+		{ id: '1min', label: '1 minute' },
+		{ id: '3min', label: '3 minutes' },
+		{ id: '10min', label: '10 minutes' },
+		{ id: '30min', label: '30 minutes' },
+		{ id: '1hr', label: '1 hour' },
+		{ id: '3hr', label: '3 hours' },
+		{ id: '6hr', label: '6 hours' },
+		{ id: '12hr', label: '12 hours' },
+		{ id: 'daily', label: 'Daily' },
+		{ id: 'weekly', label: 'Weekly' },
+		{ id: 'monthly', label: 'Monthly' },
+	]
 }
 
 export type BaseModuleStatus = {
@@ -43,15 +69,6 @@ export function validateAmount(amount: string): boolean {
 	if (!Number.isFinite(Number(amount))) return false
 	if (Number(amount) <= 0) return false
 	return true
-}
-
-export function getFrequencyOptions(): FrequencyOption[] {
-	return [
-		...(IS_DEV ? [{ id: '3min', label: '3 min' }] : []),
-		{ id: 'daily', label: 'Daily' },
-		{ id: 'weekly', label: 'Weekly' },
-		{ id: 'monthly', label: 'Monthly' },
-	]
 }
 
 export function useReviewButton(

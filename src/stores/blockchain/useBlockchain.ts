@@ -12,7 +12,7 @@ import { publicNode, PublicNodeChain } from 'evm-providers'
 import { defineStore } from 'pinia'
 import { ADDRESS, AlchemyBundler, Bundler, EntryPointVersion, PimlicoBundler, PublicPaymaster } from 'sendop'
 
-export const DEFAULT_CHAIN_ID = IS_DEV ? TESTNET_CHAIN_ID.LOCAL : TESTNET_CHAIN_ID.SEPOLIA
+export const DEFAULT_CHAIN_ID = TESTNET_CHAIN_ID.SEPOLIA
 export const DEFAULT_ENTRY_POINT_VERSION: EntryPointVersion = 'v0.7'
 export const DEFAULT_NODE = SUPPORTED_NODE.ALCHEMY
 export const DEFAULT_BUNDLER = SUPPORTED_BUNDLER.PIMLICO
