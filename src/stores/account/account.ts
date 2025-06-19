@@ -1,4 +1,4 @@
-import { CHAIN_ID } from '@/stores/blockchain/blockchain'
+import { CHAIN_ID, getEntryPointAddress } from '@/stores/blockchain/blockchain'
 import { ValidationOption } from '@/stores/validation/validation'
 import { EntryPointVersion, isSameAddress } from 'sendop'
 
@@ -69,4 +69,8 @@ export function displayAccountName(accountId: AccountId) {
 
 export function isSameAccount(a: ImportedAccount, b: ImportedAccount) {
 	return isSameAddress(a.address, b.address) && a.chainId === b.chainId
+}
+
+export function getAccountEntryPointAddress(accountId: AccountId): string {
+	return getEntryPointAddress(SUPPORTED_ACCOUNTS[accountId].entryPointVersion)
 }

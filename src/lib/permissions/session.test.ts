@@ -1,8 +1,8 @@
-import { getScheduledTransferSessionStatus } from './session'
+import { fetchSessions } from '@/api/smartsession/fetchSessions'
 import { JsonRpcProvider } from 'ethers'
 import { tenderly, TenderlyChain } from 'evm-providers'
 import { ADDRESS, TSmartSession, TSmartSession__factory } from 'sendop'
-import { fetchSessions } from './session'
+import { getScheduledTransferSessionStatus } from './session'
 
 /*
 

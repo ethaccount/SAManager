@@ -222,6 +222,7 @@ export function useScheduleTransfer() {
 
 			// Step 2: Check module and session status
 			const moduleStatus = await checkModuleStatus(selectedAccount.address)
+			console.log('moduleStatus', moduleStatus)
 
 			// Step 3: Build SmartSession executions
 			const { executions: smartSessionExecutions, permissionId } = buildSmartSessionExecutions(

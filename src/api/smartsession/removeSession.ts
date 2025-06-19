@@ -1,5 +1,9 @@
-import { INTERFACES } from 'sendop'
+import { ADDRESS, Execution, INTERFACES } from 'sendop'
 
-export async function removeSessionCalldata(permissionId: string) {
-	return INTERFACES.SmartSession.encodeFunctionData('removeSession', [permissionId])
+export function removeSessionExecution(permissionId: string): Execution {
+	return {
+		to: ADDRESS.SmartSession,
+		value: 0n,
+		data: INTERFACES.SmartSession.encodeFunctionData('removeSession', [permissionId]),
+	}
 }

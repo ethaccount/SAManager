@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { isScheduledTransferSession } from '@/lib/permissions/session'
+import { removeSessionExecution } from '@/api/smartsession/removeSession'
+import { isScheduledSwapSession, isScheduledTransferSession, SessionData } from '@/lib/permissions/session'
 import { useSessionList } from '@/lib/permissions/useSessionList'
 import { ImportedAccount } from '@/stores/account/account'
+import { useTxModal } from '@/stores/useTxModal'
 import { shortenAddress } from '@vue-dapp/core'
-import { Eye, EyeOff, Loader2 } from 'lucide-vue-next'
+import { Eye, EyeOff, Loader2, Trash2 } from 'lucide-vue-next'
+import { toast } from 'vue-sonner'
 
 const props = defineProps<{
 	selectedAccount: ImportedAccount
@@ -27,13 +30,42 @@ function toggleSessionExpansion(permissionId: string) {
 	}
 }
 
+async function onClickRemoveSession(permissionId: string) {
+	if (!props.selectedAccount) {
+		throw new Error('No account selected')
+	}
+
+	try {
+		useTxModal().openModal({
+			executions: [
+				{
+					description: `Remove session by permissionId ${shortenAddress(permissionId)}`,
+					...removeSessionExecution(permissionId),
+				},
+			],
+			onSuccess: async () => {
+				toast.success('Session removed successfully')
+				// Reload sessions to update the UI
+				await loadSessions(props.selectedAccount.address)
+			},
+		})
+	} catch (error) {
+		console.error('Failed to remove session:', error)
+		toast.error('Failed to remove session')
+	}
+}
+
+function getSessionDisplayName(session: SessionData): string | undefined {
+	if (isScheduledTransferSession(session)) return 'Scheduled Transfer'
+	if (isScheduledSwapSession(session)) return 'Scheduled Swap'
+	return undefined
+}
+
 const displaySessionList = computed(() => {
-	return sessions.value.map(session => {
-		return {
-			...session,
-			sessionName: isScheduledTransferSession(session) ? 'Scheduled Transfer' : undefined,
-		}
-	})
+	return sessions.value.map(session => ({
+		...session,
+		sessionName: getSessionDisplayName(session),
+	}))
 })
 </script>
 
@@ -65,6 +97,7 @@ const displaySessionList = computed(() => {
 							<div>
 								<div class="flex items-center gap-2">
 									<div class="font-medium">{{ shortenAddress(session.permissionId) }}</div>
+									<CopyButton :address="session.permissionId" />
 									<div v-if="session.sessionName" class="text-sm text-muted-foreground">
 										({{ session.sessionName }})
 									</div>
@@ -84,7 +117,15 @@ const displaySessionList = computed(() => {
 							>
 								{{ session.isEnabled ? 'Enabled' : 'Disabled' }}
 							</div>
-							<CopyButton :address="session.permissionId" />
+
+							<Button
+								variant="ghost"
+								size="sm"
+								@click.stop="onClickRemoveSession(session.permissionId)"
+								class="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+							>
+								<Trash2 class="w-4 h-4" />
+							</Button>
 						</div>
 					</div>
 

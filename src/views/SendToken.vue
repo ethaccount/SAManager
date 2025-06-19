@@ -69,25 +69,17 @@ const onClickClearInputs = (index: number) => {
 const onClickReview = () => {
 	useTxModal().openModal({
 		executions: transfers.value.map(t => {
-			if (t.tokenAddress === NATIVE_TOKEN_ADDRESS) {
-				return {
-					to: t.recipient,
-					value: parseUnits(t.amount, 18),
-					data: '0x',
-				}
-			} else {
-				const token = getToken(selectedChainId.value, t.tokenAddress)
-				if (!token) {
-					throw new Error(`Token ${t.tokenAddress} not found`)
-				}
-				return {
-					to: token.address,
-					value: 0n,
-					data: INTERFACES.IERC20.encodeFunctionData('transfer', [
-						t.recipient,
-						parseUnits(t.amount, token.decimals),
-					]),
-				}
+			const token = getToken(selectedChainId.value, t.tokenAddress)
+			if (!token) {
+				throw new Error(`Token ${t.tokenAddress} not found`)
+			}
+			return {
+				to: token.address,
+				value: 0n,
+				data: INTERFACES.IERC20.encodeFunctionData('transfer', [
+					t.recipient,
+					parseUnits(t.amount, token.decimals),
+				]),
 			}
 		}),
 	})

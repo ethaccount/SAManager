@@ -1,6 +1,7 @@
+import { fetchSessions } from '@/api/smartsession/fetchSessions'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { ADDRESS, TSmartSession__factory } from 'sendop'
-import { fetchSessions, SessionData } from './session'
+import { SessionData } from './session'
 
 export function useSessionList() {
 	const { tenderlyClient } = useBlockchain()

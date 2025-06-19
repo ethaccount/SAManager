@@ -1,5 +1,5 @@
 import { apiRegisterJob } from '@/api/backend/registerJob'
-import { AccountId, SUPPORTED_ACCOUNTS } from '@/stores/account/account'
+import { AccountId, getAccountEntryPointAddress } from '@/stores/account/account'
 import { CHAIN_ID } from '@/stores/blockchain/blockchain'
 import { hexlify, JsonRpcProvider, randomBytes } from 'ethers'
 import {
@@ -99,26 +99,14 @@ export async function registerJob({
 
 	userOp.signature = getSmartSessionUseModeSignature(permissionId, '0x')
 
-	console.log('jobId', jobId)
-	console.log('permissionId', permissionId)
-
-	const entryPointVersion = SUPPORTED_ACCOUNTS[accountId].entryPointVersion
-	console.log('entrypoint version', entryPointVersion)
-
-	let epAddress = ''
-
-	switch (entryPointVersion) {
-		case 'v0.7':
-			epAddress = ADDRESS.EntryPointV07
-			break
-		case 'v0.8':
-			epAddress = ADDRESS.EntryPointV08
-			break
-		default:
-			throw new Error(`Unsupported entrypoint version: ${entryPointVersion}`)
-	}
-
-	return await apiRegisterJob(accountAddress, Number(chainId), jobId, epAddress, userOp, jobType)
+	return await apiRegisterJob(
+		accountAddress,
+		Number(chainId),
+		jobId,
+		getAccountEntryPointAddress(accountId),
+		userOp,
+		jobType,
+	)
 }
 
 function getModularAccountInstance({

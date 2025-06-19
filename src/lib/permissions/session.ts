@@ -1,7 +1,7 @@
 import { env } from '@/app/useSetupEnv'
 import { SESSION_SIGNER_ADDRESS } from '@/config'
 import { abiEncode, ADDRESS, getPermissionId, INTERFACES, isSameAddress } from 'sendop'
-import { SessionStruct, TSmartSession } from 'sendop/dist/src/contract-types/TSmartSession'
+import { SessionStruct } from 'sendop/dist/src/contract-types/TSmartSession'
 
 export type SessionData = {
 	permissionId: string
@@ -170,55 +170,4 @@ export function getScheduledSwapSessionStatus(session: SessionData): {
 	})
 
 	return { isPermissionEnabled, isActionEnabled }
-}
-
-export async function fetchSessions(accountAddress: string, smartsession: TSmartSession): Promise<SessionData[]> {
-	const sessionCreatedEvents = await smartsession.queryFilter(smartsession.filters.SessionCreated())
-
-	const sessions: SessionData[] = []
-
-	for (const event of sessionCreatedEvents) {
-		if (event.args.account === accountAddress) {
-			const permissionId = event.args.permissionId
-
-			// Get basic session info
-			const isPermissionEnabled = await smartsession.isPermissionEnabled(permissionId, accountAddress)
-
-			const [sessionValidator, sessionValidatorData] = await smartsession.getSessionValidatorAndConfig(
-				accountAddress,
-				permissionId,
-			)
-
-			const enabledActions = await smartsession.getEnabledActions(accountAddress, permissionId)
-
-			// Get action details
-			const actionDetails: Array<{
-				actionId: string
-				isEnabled: boolean
-				actionPolicies: string[]
-			}> = []
-			for (const actionId of enabledActions) {
-				const isActionIdEnabled = await smartsession.isActionIdEnabled(accountAddress, permissionId, actionId)
-
-				const actionPolicies = await smartsession.getActionPolicies(accountAddress, permissionId, actionId)
-
-				actionDetails.push({
-					actionId,
-					isEnabled: isActionIdEnabled,
-					actionPolicies,
-				})
-			}
-
-			sessions.push({
-				permissionId,
-				isEnabled: isPermissionEnabled,
-				sessionValidator,
-				sessionValidatorData,
-				enabledActions,
-				actionDetails,
-			})
-		}
-	}
-
-	return sessions
 }

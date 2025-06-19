@@ -1,4 +1,4 @@
-import { EntryPointVersion } from 'sendop'
+import { ADDRESS, EntryPointVersion } from 'sendop'
 
 export type CHAIN_ID = MAINNET_CHAIN_ID | TESTNET_CHAIN_ID
 
@@ -75,4 +75,15 @@ export function displayChainName(chainId: string | number | bigint): string {
 
 export function isTestnet(chainId: string): boolean {
 	return Object.values(TESTNET_CHAIN_ID).includes(chainId as TESTNET_CHAIN_ID)
+}
+
+export function getEntryPointAddress(version: EntryPointVersion): string {
+	switch (version) {
+		case 'v0.7':
+			return ADDRESS.EntryPointV07
+		case 'v0.8':
+			return ADDRESS.EntryPointV08
+		default:
+			throw new Error(`Unsupported entrypoint version: ${version}`)
+	}
 }
