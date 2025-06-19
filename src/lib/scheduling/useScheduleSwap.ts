@@ -53,6 +53,8 @@ type ScheduleSwapConfig = {
 }
 
 export function useScheduleSwap() {
+	const { client, selectedChainId } = useBlockchain()
+
 	const isLoadingReview = ref(false)
 	const errorReview = ref<string | null>(null)
 
@@ -74,8 +76,6 @@ export function useScheduleSwap() {
 	}
 
 	async function checkModuleStatus(accountAddress: string): Promise<ModuleStatus> {
-		const { client } = useBlockchain()
-
 		const baseStatus = await checkBaseModuleStatus(client.value, accountAddress)
 
 		const account = TIERC7579Account__factory.connect(accountAddress, client.value)
@@ -262,6 +262,7 @@ export function useScheduleSwap() {
 
 					try {
 						await registerJob({
+							chainId: selectedChainId.value,
 							accountId: selectedAccount.accountId,
 							accountAddress: selectedAccount.address,
 							permissionId,

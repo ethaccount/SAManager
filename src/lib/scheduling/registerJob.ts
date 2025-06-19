@@ -1,4 +1,6 @@
+import { apiRegisterJob } from '@/api/backend/registerJob'
 import { AccountId, SUPPORTED_ACCOUNTS } from '@/stores/account/account'
+import { CHAIN_ID } from '@/stores/blockchain/blockchain'
 import { hexlify, JsonRpcProvider, randomBytes } from 'ethers'
 import {
 	ADDRESS,
@@ -6,7 +8,6 @@ import {
 	createUserOp,
 	ERC7579Validator,
 	Execution,
-	formatUserOpToHex,
 	getSmartSessionUseModeSignature,
 	INTERFACES,
 	KernelV3Account,
@@ -21,6 +22,7 @@ import { getSwapParameters, SwapParameters } from './swap-utils'
 export type JobType = 'transfer' | 'swap'
 
 export async function registerJob({
+	chainId,
 	accountId,
 	permissionId,
 	accountAddress,
@@ -30,6 +32,7 @@ export async function registerJob({
 	jobType = 'transfer',
 	swapParams,
 }: {
+	chainId: CHAIN_ID
 	accountId: AccountId
 	permissionId: string
 	accountAddress: string
@@ -115,46 +118,7 @@ export async function registerJob({
 			throw new Error(`Unsupported entrypoint version: ${entryPointVersion}`)
 	}
 
-	console.log('entrypoint address', epAddress)
-
-	console.log('Permissioned user op', formatUserOpToHex(userOp))
-
-	// Get chain ID from the client
-	const network = await client.getNetwork()
-	const chainId = Number(network.chainId)
-
-	const formattedUserOp = formatUserOpToHex(userOp)
-
-	// Register the job with the API
-	const response = await fetch('/backend/jobs', {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-		},
-		body: JSON.stringify({
-			accountAddress,
-			chainId,
-			jobId: Number(jobId),
-			entryPoint: epAddress,
-			userOperation: formattedUserOp,
-			jobType,
-		}),
-	})
-
-	if (!response.ok) {
-		throw new Error(`HTTP error: ${response.status} ${response.statusText}`)
-	}
-
-	const result = await response.json()
-
-	// Check API response format
-	if (result.code !== 0) {
-		throw new Error(`API error: ${result.message}${result.error ? ` - ${JSON.stringify(result.error)}` : ''}`)
-	}
-
-	console.log('Job registered successfully:', result.data)
-
-	return result.data
+	return await apiRegisterJob(accountAddress, Number(chainId), jobId, epAddress, userOp, jobType)
 }
 
 function getModularAccountInstance({
