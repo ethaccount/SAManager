@@ -62,6 +62,17 @@ const closeSheet = () => {
 			</SheetHeader>
 			<nav class="flex flex-col gap-4 mt-4">
 				<RouterLink
+					:to="toRoute('home')"
+					class="transition-colors hover:text-foreground/80 text-foreground/60"
+					:class="{
+						'text-foreground/80': route.name === 'home',
+					}"
+					@click="closeSheet"
+				>
+					Home
+				</RouterLink>
+
+				<RouterLink
 					:to="toRoute('create')"
 					class="transition-colors hover:text-foreground/80 text-foreground/60"
 					:class="{
@@ -103,7 +114,19 @@ const closeSheet = () => {
 					}"
 					@click="closeSheet"
 				>
-					Schedule Transfer
+					Schedule Transfers
+				</RouterLink>
+
+				<RouterLink
+					v-if="!DISABLE_SCHEDULING"
+					:to="toRoute('scheduling-swap')"
+					class="transition-colors hover:text-foreground/80 text-foreground/60"
+					:class="{
+						'text-foreground/80': route.name === 'scheduling-swap',
+					}"
+					@click="closeSheet"
+				>
+					Schedule Swaps
 				</RouterLink>
 
 				<RouterLink

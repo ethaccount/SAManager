@@ -88,17 +88,6 @@ const router = createRouter({
 							name: 'scheduling-jobs',
 							component: () => import('@/views/ScheduledJobs.vue'),
 						},
-						// Recovery
-						{
-							path: '/:chainId/recovery/setup',
-							name: 'recovery-setup',
-							component: () => import('@/views/UnderConstruction.vue'),
-						},
-						{
-							path: '/:chainId/recovery/recover',
-							name: 'recovery-recover',
-							component: () => import('@/views/UnderConstruction.vue'),
-						},
 					],
 				},
 			],

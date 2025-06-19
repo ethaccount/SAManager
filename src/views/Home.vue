@@ -38,21 +38,22 @@ async function onClickImportAccount() {
 			</RouterLink>
 		</div>
 
-		<div class="grid gap-2 sm:gap-6 grid-cols-1 sm:grid-cols-3 w-full max-w-3xl">
+		<div class="grid gap-2 sm:gap-6 grid-cols-1 sm:grid-cols-2 w-full max-w-2xl">
 			<Card class="flex flex-col">
 				<CardHeader class="pb-1 sm:pb-6 pt-3 sm:pt-6">
 					<CardTitle class="text-xl mb-1">Send</CardTitle>
-					<CardDescription class="text-base leading-relaxed" style="text-wrap: balance"
-						>Send tokens or execute transactions with your account.</CardDescription
-					>
+					<CardDescription class="text-base leading-relaxed" style="text-wrap: balance">
+						Send tokens or execute transactions with your account.
+					</CardDescription>
 				</CardHeader>
-				<CardFooter class="mt-auto pt-1 sm:pt-4 pb-3 sm:pb-6 flex justify-end">
+				<CardFooter class="mt-auto pt-1 sm:pt-0 pb-3 sm:pb-6 flex justify-start">
 					<RouterLink :to="toRoute('send-token')">
 						<Button
 							variant="outline"
 							class="px-6 h-9 sm:h-10 text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200"
-							>Get Started</Button
 						>
+							Get Started
+						</Button>
 					</RouterLink>
 				</CardFooter>
 			</Card>
@@ -60,37 +61,22 @@ async function onClickImportAccount() {
 			<Card class="flex flex-col">
 				<CardHeader class="pb-1 sm:pb-6 pt-3 sm:pt-6">
 					<CardTitle class="text-xl mb-1">Scheduling</CardTitle>
-					<CardDescription class="text-base leading-relaxed" style="text-wrap: balance"
-						>Schedule recurring transfers and manage automated tasks.</CardDescription
-					>
+					<CardDescription class="text-base leading-relaxed" style="text-wrap: balance">
+						Schedule recurring transfers and manage automated tasks.
+					</CardDescription>
 				</CardHeader>
-				<CardFooter class="mt-auto pt-1 sm:pt-4 pb-3 sm:pb-6 flex justify-end">
+				<CardFooter class="mt-auto pt-1 sm:pt-0 pb-3 sm:pb-6 flex justify-start">
 					<RouterLink v-if="!DISABLE_SCHEDULING" :to="toRoute('scheduling-transfer')">
 						<Button
 							variant="outline"
 							class="px-6 h-9 sm:h-10 text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200"
-							>Get Started</Button
 						>
+							Get Started
+						</Button>
 					</RouterLink>
 					<Button v-else variant="outline" disabled class="px-6 h-9 sm:h-10 text-sm font-medium"
 						>Coming Soon</Button
 					>
-				</CardFooter>
-			</Card>
-
-			<Card class="flex flex-col">
-				<CardHeader class="pb-1 sm:pb-6 pt-3 sm:pt-6">
-					<CardTitle class="text-xl mb-1">Recovery</CardTitle>
-					<CardDescription class="text-base leading-relaxed" style="text-wrap: balance"
-						>Set up recovery mechanisms to secure your account.</CardDescription
-					>
-				</CardHeader>
-				<CardFooter class="mt-auto pt-1 sm:pt-4 pb-3 sm:pb-6 flex justify-end">
-					<RouterLink to="">
-						<Button variant="outline" disabled class="px-6 h-9 sm:h-10 text-sm font-medium"
-							>Coming Soon</Button
-						>
-					</RouterLink>
 				</CardFooter>
 			</Card>
 		</div>

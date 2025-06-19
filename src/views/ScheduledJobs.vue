@@ -2,6 +2,7 @@
 import { toRoute } from '@/lib/router'
 import { formatDate, formatInterval, formatNextExecution, isJobCompleted, isJobOverdue } from '@/lib/scheduling/jobs'
 import { SwapJobDetails, TransferJobDetails, useFetchJobs, type Job } from '@/lib/scheduling/useFetchJobs'
+import { getToken } from '@/lib/token'
 import { useAccount } from '@/stores/account/useAccount'
 import { useTxModal } from '@/stores/useTxModal'
 import { shortenAddress } from '@vue-dapp/core'
@@ -159,22 +160,23 @@ const displayJobs = computed(() => {
 								</span>
 							</div>
 
-							<!-- Enable/Disable and Execute buttons -->
-							<div v-if="!isJobCompleted(job)" class="flex items-center space-x-1">
+							<div v-if="!isJobCompleted(job)" class="flex items-center space-x-2">
+								<!-- Execute button -->
 								<Button
 									v-if="job.isEnabled && isJobOverdue(job) && isTransferJob(job)"
 									variant="ghost"
 									size="sm"
-									class="h-9 w-9 p-0 hover:bg-orange-500/10 text-orange-600 hover:text-orange-700"
+									class="h-7 w-7 p-0 hover:bg-orange-500/10 text-orange-600 hover:text-orange-700"
 									@click="onClickExecute(job.id)"
 									title="Execute now"
 								>
 									<Zap class="w-4 h-4" />
 								</Button>
+								<!-- Enable/Disable button -->
 								<Button
 									variant="ghost"
 									size="sm"
-									class="h-9 w-9 p-0 hover:bg-muted/60"
+									class="h-7 w-7 p-0 hover:bg-muted-foreground/10"
 									@click="onClickJobAction(job.id, job.isEnabled ? 'disable' : 'enable')"
 									:title="job.isEnabled ? 'Disable' : 'Enable'"
 								>
@@ -185,7 +187,7 @@ const displayJobs = computed(() => {
 						</div>
 
 						<!-- Job status badges -->
-						<div class="flex items-center space-x-2 mt-2">
+						<div class="flex items-center space-x-2 mt-2 mb-2">
 							<Badge
 								v-if="isJobCompleted(job)"
 								variant="outline"
@@ -207,19 +209,24 @@ const displayJobs = computed(() => {
 								<CopyButton :address="job.details.recipient" />
 							</div>
 						</div>
-						<div v-else-if="isSwapJob(job)" class="flex items-center space-x-2 mb-2">
-							<span class="text-sm text-muted-foreground">Swap:</span>
-							<div class="flex items-center space-x-2">
-								<div class="flex items-center">
+						<div v-else-if="isSwapJob(job)" class="mb-2">
+							<span class="text-sm text-muted-foreground mb-2 block">Swap:</span>
+							<div class="flex flex-col">
+								<div class="flex items-center space-x-1">
+									<div class="text-sm font-medium">
+										{{ job.details.tokenInInfo.symbol }}
+									</div>
 									<code class="px-2 py-1 bg-muted/50 rounded-md text-sm font-mono">
 										{{ shortenAddress(job.details.tokenIn) }}
 									</code>
 									<CopyButton :address="job.details.tokenIn" />
 								</div>
 
-								<span class="text-xs text-muted-foreground">→</span>
-
-								<div class="flex items-center">
+								<div class="flex items-center space-x-1">
+									<span class="text-xs text-muted-foreground sm:self-center">→</span>
+									<div class="text-sm font-medium">
+										{{ job.details.tokenOutInfo.symbol }}
+									</div>
 									<code class="px-2 py-1 bg-muted/50 rounded-md text-sm font-mono">
 										{{ shortenAddress(job.details.tokenOut) }}
 									</code>
