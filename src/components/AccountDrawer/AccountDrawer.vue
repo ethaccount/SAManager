@@ -130,7 +130,7 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 		:content-transition="'account-drawer-slide'"
 		:click-to-close="true"
 		:esc-to-close="true"
-		:lock-scroll="false"
+		:lock-scroll="xlAndLarger ? false : true"
 	>
 		<div class="account-drawer-visual-container">
 			<!-- Selected Account -->

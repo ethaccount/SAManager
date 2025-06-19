@@ -37,6 +37,20 @@ export const SUPPORTED_MODULES = {
 		address: ADDRESS.SmartSession,
 		disabled: true,
 	},
+	ScheduledTransfers: {
+		name: 'Scheduled Transfers',
+		description: 'Scheduled transfers module for your account',
+		type: ERC7579_MODULE_TYPE.EXECUTOR,
+		address: ADDRESS.ScheduledTransfers,
+		disabled: false,
+	},
+	ScheduledOrders: {
+		name: 'Scheduled Orders',
+		description: 'Scheduled orders module for your account',
+		type: ERC7579_MODULE_TYPE.EXECUTOR,
+		address: ADDRESS.ScheduledOrders,
+		disabled: false,
+	},
 } as const
 
 export type ModuleType = keyof typeof SUPPORTED_MODULES
