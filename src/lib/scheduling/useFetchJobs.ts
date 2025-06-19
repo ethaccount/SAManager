@@ -1,8 +1,8 @@
-import { NATIVE_TOKEN_ADDRESS, Token, getToken } from '@/lib/token'
+import { getToken, NATIVE_TOKEN_ADDRESS, Token } from '@/lib/token'
 import { useAccount } from '@/stores/account/useAccount'
-import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import type { CHAIN_ID } from '@/stores/blockchain/blockchain'
-import { JsonRpcProvider, ZeroAddress } from 'ethers'
+import { useBlockchain } from '@/stores/blockchain/useBlockchain'
+import { JsonRpcProvider } from 'ethers'
 import {
 	ADDRESS,
 	isSameAddress,
@@ -10,7 +10,7 @@ import {
 	TScheduledOrders__factory,
 	TScheduledTransfers__factory,
 } from 'sendop'
-import { decodeTransferExecutionData, decodeSwapExecutionData } from './jobs'
+import { decodeSwapExecutionData, decodeTransferExecutionData } from './jobs'
 
 export type TransferJobDetails = {
 	recipient: string
@@ -252,19 +252,24 @@ export async function fetchSwapJobs(client: JsonRpcProvider, accountAddress: str
 	// Batch fetch all execution logs
 	const executionLogs = await fetchExecutionLogs(scheduledOrders, accountAddress, Number(jobCount))
 
-	// Decode all execution data and collect unique token addresses
-	const decodedExecutionDataList = executionLogs.map(job => {
+	// Decode all execution data and filter out failed decodes while maintaining mapping
+	const validJobsData: Array<{
+		job: (typeof executionLogs)[0]
+		decodedData: ReturnType<typeof decodeSwapExecutionData>
+		originalJobId: number
+	}> = []
+
+	for (let i = 0; i < executionLogs.length; i++) {
+		const job = executionLogs[i]
 		try {
-			return decodeSwapExecutionData(job.executionData)
+			const decodedData = decodeSwapExecutionData(job.executionData)
+			validJobsData.push({ job, decodedData, originalJobId: i + 1 })
 		} catch {
-			console.error('Failed to decode swap execution data:', job)
-			return {
-				tokenIn: ZeroAddress,
-				tokenOut: ZeroAddress,
-				amountIn: 0n,
-			}
+			console.log('Failed to decode swap execution data, filtering out job id:', i + 1)
 		}
-	})
+	}
+
+	const decodedExecutionDataList = validJobsData.map(item => item.decodedData)
 
 	const uniqueTokenAddresses = extractUniqueTokenAddresses(decodedExecutionDataList, data => [
 		data.tokenIn,
@@ -276,9 +281,8 @@ export async function fetchSwapJobs(client: JsonRpcProvider, accountAddress: str
 
 	// Build final jobs array
 	const jobs: Job[] = []
-	for (let i = 0; i < executionLogs.length; i++) {
-		const job = executionLogs[i]
-		const decodedExecutionData = decodedExecutionDataList[i]
+	for (let i = 0; i < validJobsData.length; i++) {
+		const { job, decodedData: decodedExecutionData, originalJobId } = validJobsData[i]
 
 		// Get token info for tokenIn
 		const nativeTokenInfo = getNativeTokenInfo()
@@ -334,7 +338,7 @@ export async function fetchSwapJobs(client: JsonRpcProvider, accountAddress: str
 		}
 
 		jobs.push({
-			id: i + 1,
+			id: originalJobId,
 			executeInterval: job.executeInterval,
 			numberOfExecutions: job.numberOfExecutions,
 			numberOfExecutionsCompleted: job.numberOfExecutionsCompleted,

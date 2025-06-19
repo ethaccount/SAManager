@@ -2,7 +2,6 @@
 import { toRoute } from '@/lib/router'
 import { formatDate, formatInterval, formatNextExecution, isJobCompleted, isJobOverdue } from '@/lib/scheduling/jobs'
 import { SwapJobDetails, TransferJobDetails, useFetchJobs, type Job } from '@/lib/scheduling/useFetchJobs'
-import type { Token } from '@/lib/token'
 import { useAccount } from '@/stores/account/useAccount'
 import { useTxModal } from '@/stores/useTxModal'
 import { shortenAddress } from '@vue-dapp/core'

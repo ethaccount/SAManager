@@ -1,21 +1,21 @@
 import { getEncodedInstallScheduledOrders, getEncodedInstallSmartSession } from '@/lib/module-management/module'
 import { createScheduledSwapSession, getScheduledSwapSessionStatus } from '@/lib/permissions/session'
 import { useSessionList } from '@/lib/permissions/useSessionList'
-import { registerJob } from '@/lib/scheduling/registerJob'
 import {
-	validateAccount,
-	checkBaseModuleStatus,
-	buildRhinestoneAttesterExecutions,
-	frequencyToSeconds,
 	BaseModuleStatus,
+	buildRhinestoneAttesterExecutions,
+	checkBaseModuleStatus,
+	frequencyToSeconds,
+	validateAccount,
 } from '@/lib/scheduling/common'
+import { registerJob } from '@/lib/scheduling/registerJob'
 import { getToken } from '@/lib/token'
 import { AccountId } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { TxModalExecution, useTxModal } from '@/stores/useTxModal'
 import { DateValue, getLocalTimeZone } from '@internationalized/date'
-import { concat, parseEther, parseUnits, toBeHex } from 'ethers'
+import { concat, parseUnits, toBeHex } from 'ethers'
 import {
 	abiEncode,
 	ADDRESS,

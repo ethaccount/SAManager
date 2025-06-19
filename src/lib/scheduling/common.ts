@@ -6,7 +6,6 @@ import { JsonRpcApiProvider } from 'ethers'
 import {
 	ADDRESS,
 	ERC7579_MODULE_TYPE,
-	Execution,
 	RHINESTONE_ATTESTER_ADDRESS,
 	TIERC7579Account__factory,
 	TRegistry__factory,
