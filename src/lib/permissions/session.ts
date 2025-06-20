@@ -22,12 +22,14 @@ export const SCHEDULED_TRANSFER_ACTION_ID = '0x40e16a6d796f8e99d12e7a1dd44c00475
 // keccak (0x40dc90D670C89F322fa8b9f685770296428DCb6b ++ cast sig "executeOrder(uint256 jobId,uint160 sqrtPriceLimitX96,uint256 amountOutMinimum,uint24 fee)")
 export const SCHEDULED_SWAP_ACTION_ID = '0xf16c27867fa317a4f55353ecd45c47adc3fb2baff9551fa397457de390962073'
 
-export const APP_SESSION_VALIDATOR_INIT_DATA = abiEncode(['uint256', 'address[]'], [1, [env.SESSION_SIGNER_ADDRESS]]) // threshold, signers
+export function getAppSessionValidatorInitData() {
+	return abiEncode(['uint256', 'address[]'], [1, [env.SESSION_SIGNER_ADDRESS]]) // threshold, signers
+}
 
 export function createScheduledTransferSession() {
 	const session: SessionStruct = {
 		sessionValidator: ADDRESS.OwnableValidator,
-		sessionValidatorInitData: APP_SESSION_VALIDATOR_INIT_DATA,
+		sessionValidatorInitData: getAppSessionValidatorInitData(),
 		salt: env.APP_SALT,
 		userOpPolicies: [
 			{
@@ -64,7 +66,7 @@ export function createScheduledTransferSession() {
 export function createScheduledSwapSession() {
 	const session: SessionStruct = {
 		sessionValidator: ADDRESS.OwnableValidator,
-		sessionValidatorInitData: APP_SESSION_VALIDATOR_INIT_DATA,
+		sessionValidatorInitData: getAppSessionValidatorInitData(),
 		salt: env.APP_SALT,
 		userOpPolicies: [
 			{
@@ -104,7 +106,7 @@ export function isScheduledTransferSession(session: SessionData) {
 			action.actionId === SCHEDULED_TRANSFER_ACTION_ID &&
 			action.actionPolicies.some(policy => isSameAddress(policy, ADDRESS.SudoPolicy)) &&
 			isSameAddress(session.sessionValidator, ADDRESS.OwnableValidator) &&
-			session.sessionValidatorData === APP_SESSION_VALIDATOR_INIT_DATA
+			session.sessionValidatorData === getAppSessionValidatorInitData()
 		) {
 			return true
 		}
@@ -117,7 +119,7 @@ export function isScheduledSwapSession(session: SessionData) {
 			action.actionId === SCHEDULED_SWAP_ACTION_ID &&
 			action.actionPolicies.some(policy => isSameAddress(policy, ADDRESS.SudoPolicy)) &&
 			isSameAddress(session.sessionValidator, ADDRESS.OwnableValidator) &&
-			session.sessionValidatorData === APP_SESSION_VALIDATOR_INIT_DATA
+			session.sessionValidatorData === getAppSessionValidatorInitData()
 		) {
 			return true
 		}
