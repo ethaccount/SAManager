@@ -35,6 +35,10 @@ const emit = defineEmits<{
 }>()
 
 function onClickClose() {
+	// Prevent closing when transaction is being sent or pending
+	if (status.value === TransactionStatus.Sending || status.value === TransactionStatus.Pending) {
+		return
+	}
 	emit('close')
 }
 
@@ -195,6 +199,11 @@ const showPasskeyValidationMethod = computed(() => {
 	if (!isLogin.value) return false
 	return selectedAccount.value.vOptions.some(v => v.type === 'Passkey')
 })
+
+// Computed property to determine if modal can be closed
+const canClose = computed(() => {
+	return status.value !== TransactionStatus.Sending && status.value !== TransactionStatus.Pending
+})
 </script>
 
 <template>
@@ -203,15 +212,15 @@ const showPasskeyValidationMethod = computed(() => {
 		content-class="transaction-modal-content"
 		overlay-transition="vfm-fade"
 		content-transition="vfm-fade"
-		:click-to-close="true"
-		:esc-to-close="true"
+		:click-to-close="canClose"
+		:esc-to-close="canClose"
 	>
 		<div class="flex flex-col h-full">
 			<!-- Header -->
 			<div class="flex justify-between items-center">
 				<div class="w-9"></div>
 				<div class="font-medium">Transaction</div>
-				<Button variant="ghost" size="icon" @click="onClickClose">
+				<Button variant="ghost" size="icon" :disabled="!canClose" @click="onClickClose">
 					<X class="w-4 h-4" />
 				</Button>
 			</div>
