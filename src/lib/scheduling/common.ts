@@ -1,5 +1,5 @@
 import { findTrustedAttesters } from '@/api/registry'
-import { ImportedAccount } from '@/stores/account/account'
+import { AccountId, ImportedAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBackend } from '@/stores/useBackend'
 import { TxModalExecution } from '@/stores/useTxModal'
@@ -129,7 +129,7 @@ export async function checkBaseModuleStatus(
 	}
 
 	// Check if Rhinestone Attester is trusted (for Kernel accounts)
-	const isRhinestoneAttesterTrusted = await checkRhinestoneAttesterTrusted(client, importedAccount.address)
+	const isRhinestoneAttesterTrusted = await checkRhinestoneAttesterTrusted(client, importedAccount)
 
 	return {
 		isSmartSessionInstalled,
@@ -141,10 +141,14 @@ export async function checkBaseModuleStatus(
 
 export async function checkRhinestoneAttesterTrusted(
 	client: JsonRpcProvider,
-	accountAddress: string,
+	importedAccount: ImportedAccount,
 ): Promise<boolean> {
-	const attesters = await findTrustedAttesters(client, accountAddress)
-	return attesters.includes(RHINESTONE_ATTESTER_ADDRESS)
+	// Only check for Kernel accounts because Nexus and Safe7579 will trust Rhinestone Attester when deployed
+	if (importedAccount.accountId === AccountId['kernel.advanced.v0.3.1']) {
+		const attesters = await findTrustedAttesters(client, importedAccount.address)
+		return attesters.includes(RHINESTONE_ATTESTER_ADDRESS)
+	}
+	return true
 }
 
 export function buildRhinestoneAttesterExecutions(isRhinestoneAttesterTrusted: boolean): TxModalExecution[] {
