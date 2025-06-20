@@ -117,9 +117,9 @@ const isValidSwap = computed(() => {
 	return true
 })
 
-const { isLoadingReview, errorReview, reviewScheduleSwap } = useScheduleSwap()
+const { isLoadingReview, reviewScheduleSwap } = useScheduleSwap()
 
-const { reviewDisabled, reviewButtonText } = useReviewButton(isValidSwap, errorReview, isLoadingReview, 'swap')
+const { reviewDisabled, reviewButtonText } = useReviewButton(isValidSwap, isLoadingReview, 'swap')
 
 async function onClickReview() {
 	await reviewScheduleSwap({

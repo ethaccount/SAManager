@@ -281,8 +281,9 @@ export function useScheduleTransfer() {
 					}
 				},
 			})
-		} catch (error) {
+		} catch (error: unknown) {
 			errorReview.value = error instanceof Error ? error.message : String(error)
+			throw error
 		} finally {
 			isLoadingReview.value = false
 		}

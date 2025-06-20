@@ -42,9 +42,9 @@ const isValidTransfers = computed(() => {
 	return true
 })
 
-const { isLoadingReview, errorReview, reviewScheduleTransfer } = useScheduleTransfer()
+const { isLoadingReview, reviewScheduleTransfer } = useScheduleTransfer()
 
-const { reviewDisabled, reviewButtonText } = useReviewButton(isValidTransfers, errorReview, isLoadingReview, 'transfer')
+const { reviewDisabled, reviewButtonText } = useReviewButton(isValidTransfers, isLoadingReview, 'transfer')
 
 async function onClickReview() {
 	await reviewScheduleTransfer({

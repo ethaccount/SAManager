@@ -73,7 +73,6 @@ export function validateAmount(amount: string): boolean {
 
 export function useReviewButton(
 	isValid: ComputedRef<boolean>,
-	errorReview: Ref<string | null>,
 	isLoading: Ref<boolean>,
 	actionType: 'transfer' | 'swap',
 ) {
@@ -88,7 +87,6 @@ export function useReviewButton(
 		if (!isBackendHealthy.value) return 'Backend service is unavailable'
 		if (!isAccountConnected.value) return 'Connect your account to review'
 		if (!isValid.value) return `Invalid scheduled ${actionType}`
-		if (errorReview.value) return errorReview.value
 		return `Review schedule ${actionType}`
 	})
 
