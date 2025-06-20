@@ -15,6 +15,7 @@ import {
 export const DEFAULT_FREQUENCY = '3min'
 
 export const frequencyToSeconds: Record<string, number> = {
+	'1sec': 1,
 	'3min': 3 * 60,
 	'10min': 10 * 60,
 	'30min': 30 * 60,
@@ -29,6 +30,7 @@ export const frequencyToSeconds: Record<string, number> = {
 
 export function getFrequencyOptions(): FrequencyOption[] {
 	return [
+		{ id: '1sec', label: '1 second' },
 		{ id: '3min', label: '3 minutes' },
 		{ id: '10min', label: '10 minutes' },
 		{ id: '30min', label: '30 minutes' },
