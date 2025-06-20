@@ -1,8 +1,9 @@
+import { findTrustedAttesters } from '@/api/registry'
 import { ImportedAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBackend } from '@/stores/useBackend'
 import { TxModalExecution } from '@/stores/useTxModal'
-import { JsonRpcApiProvider } from 'ethers'
+import { JsonRpcProvider } from 'ethers'
 import {
 	ADDRESS,
 	ERC7579_MODULE_TYPE,
@@ -110,7 +111,7 @@ export async function validateAccount() {
 }
 
 export async function checkBaseModuleStatus(
-	client: JsonRpcApiProvider,
+	client: JsonRpcProvider,
 	importedAccount: ImportedAccount,
 	isDeployed: boolean,
 ): Promise<BaseModuleStatus> {
@@ -128,7 +129,7 @@ export async function checkBaseModuleStatus(
 	}
 
 	// Check if Rhinestone Attester is trusted (for Kernel accounts)
-	const isRhinestoneAttesterTrusted = importedAccount.accountId !== 'kernel.advanced.v0.3.1'
+	const isRhinestoneAttesterTrusted = await checkRhinestoneAttesterTrusted(client, importedAccount.address)
 
 	return {
 		isSmartSessionInstalled,
@@ -136,6 +137,14 @@ export async function checkBaseModuleStatus(
 		isRhinestoneAttesterTrusted,
 		permissionId: null, // To be determined by specific implementations
 	}
+}
+
+export async function checkRhinestoneAttesterTrusted(
+	client: JsonRpcProvider,
+	accountAddress: string,
+): Promise<boolean> {
+	const attesters = await findTrustedAttesters(client, accountAddress)
+	return attesters.includes(RHINESTONE_ATTESTER_ADDRESS)
 }
 
 export function buildRhinestoneAttesterExecutions(isRhinestoneAttesterTrusted: boolean): TxModalExecution[] {
