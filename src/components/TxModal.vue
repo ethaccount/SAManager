@@ -88,6 +88,17 @@ onUnmounted(() => {
 
 const error = ref<string | null>(null)
 
+// Expansion state for executions
+const expandedExecutions = ref(new Set<number>())
+
+function toggleExecutionExpansion(index: number) {
+	if (expandedExecutions.value.has(index)) {
+		expandedExecutions.value.delete(index)
+	} else {
+		expandedExecutions.value.add(index)
+	}
+}
+
 async function onClickEstimate() {
 	try {
 		error.value = null
@@ -368,32 +379,42 @@ const showPasskeyValidationMethod = computed(() => {
 						<div
 							v-for="(execution, index) in executions"
 							:key="index"
-							class="p-4 bg-muted/30 border border-border/50 rounded-lg space-y-2"
+							class="border border-border/50 rounded-lg"
 						>
-							<!-- Description -->
-							<div v-if="execution.description" class="flex flex-col text-sm">
-								<div class="text-sm">{{ execution.description }}</div>
-							</div>
-
-							<!-- To -->
-							<div class="flex items-center justify-between text-sm">
-								<div class="text-muted-foreground">To</div>
-								<div class="flex gap-2 items-center">
-									<div class="font-mono text-xs">{{ shortenAddress(execution.to) }}</div>
-									<CopyButton :address="execution.to" />
+							<!-- Execution Header -->
+							<div
+								class="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50"
+								@click="toggleExecutionExpansion(index)"
+							>
+								<div class="text-sm">
+									{{ execution.description || 'Unknown' }}
 								</div>
 							</div>
 
-							<!-- Value -->
-							<div class="flex items-center justify-between text-sm">
-								<div class="text-muted-foreground">Value</div>
-								<div class="text-xs">{{ formatEther(execution.value) }} ETH</div>
-							</div>
+							<!-- Execution Details -->
+							<div v-if="expandedExecutions.has(index)" class="border-t bg-muted/20">
+								<div class="p-4 space-y-2">
+									<!-- To -->
+									<div class="flex items-center justify-between text-sm">
+										<div class="text-muted-foreground">To</div>
+										<div class="flex gap-2 items-center">
+											<div class="font-mono text-xs">{{ shortenAddress(execution.to) }}</div>
+											<CopyButton :address="execution.to" />
+										</div>
+									</div>
 
-							<!-- Data -->
-							<div class="flex flex-col text-sm">
-								<div class="text-muted-foreground">Data</div>
-								<div class="font-mono text-xs break-all">{{ execution.data }}</div>
+									<!-- Value -->
+									<div class="flex items-center justify-between text-sm">
+										<div class="text-muted-foreground">Value</div>
+										<div class="text-xs">{{ formatEther(execution.value) }} ETH</div>
+									</div>
+
+									<!-- Data -->
+									<div class="flex flex-col text-sm">
+										<div class="text-muted-foreground">Data</div>
+										<div class="font-mono text-xs break-all">{{ execution.data }}</div>
+									</div>
+								</div>
 							</div>
 						</div>
 					</div>
