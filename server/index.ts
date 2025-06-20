@@ -12,6 +12,7 @@ export interface Env {
 	BACKEND_URL: string
 	API_SECRET: string
 	CLOUDFLARE_ANALYTICS_TOKEN: string
+	SESSION_SIGNER_ADDRESS: string
 }
 
 let envValidated = false
@@ -28,6 +29,7 @@ function validateEnv(env: Env) {
 	if (!env.BACKEND_URL) throw new Error('Missing BACKEND_URL')
 	if (!env.API_SECRET) throw new Error('Missing API_SECRET')
 	if (!env.CLOUDFLARE_ANALYTICS_TOKEN) throw new Error('Missing CLOUDFLARE_ANALYTICS_TOKEN')
+	if (!env.SESSION_SIGNER_ADDRESS) throw new Error('Missing SESSION_SIGNER_ADDRESS')
 }
 
 function getTenderlyApiKey(chainId: number, env: Env): string | null {
