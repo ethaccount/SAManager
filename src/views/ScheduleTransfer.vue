@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { getFrequencyOptions, useReviewButton, validateAmount, validateTimes } from '@/lib/scheduling/common'
+import {
+	DEFAULT_FREQUENCY,
+	getFrequencyOptions,
+	useReviewButton,
+	validateAmount,
+	validateTimes,
+} from '@/lib/scheduling/common'
 import { ScheduleTransfer, useScheduleTransfer } from '@/lib/scheduling/useScheduleTransfer'
 import { getToken, getTokenAddress, getTokens } from '@/lib/token'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
@@ -20,7 +26,7 @@ function getDefaultTransfer(): ScheduleTransfer {
 		recipient: '0xd78B5013757Ea4A7841811eF770711e6248dC282',
 		amount: '0.0001',
 		tokenAddress: getTokenAddress(selectedChainId.value, 'WETH') || '',
-		frequency: '10sec',
+		frequency: DEFAULT_FREQUENCY,
 		times: 3,
 		startDate: today(getLocalTimeZone()),
 	}

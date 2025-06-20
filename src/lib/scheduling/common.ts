@@ -11,10 +11,9 @@ import {
 	TRegistry__factory,
 } from 'sendop'
 
+export const DEFAULT_FREQUENCY = '3min'
+
 export const frequencyToSeconds: Record<string, number> = {
-	'10sec': 10,
-	'30sec': 30,
-	'1min': 60,
 	'3min': 3 * 60,
 	'10min': 10 * 60,
 	'30min': 30 * 60,
@@ -29,9 +28,6 @@ export const frequencyToSeconds: Record<string, number> = {
 
 export function getFrequencyOptions(): FrequencyOption[] {
 	return [
-		{ id: '10sec', label: '10 seconds' },
-		{ id: '30sec', label: '30 seconds' },
-		{ id: '1min', label: '1 minute' },
 		{ id: '3min', label: '3 minutes' },
 		{ id: '10min', label: '10 minutes' },
 		{ id: '30min', label: '30 minutes' },

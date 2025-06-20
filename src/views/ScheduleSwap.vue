@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { getFrequencyOptions, useReviewButton, validateAmount, validateTimes } from '@/lib/scheduling/common'
+import {
+	DEFAULT_FREQUENCY,
+	getFrequencyOptions,
+	useReviewButton,
+	validateAmount,
+	validateTimes,
+} from '@/lib/scheduling/common'
 import { DEFAULT_FEE, DEFAULT_SLIPPAGE, getSwapParameters, SwapParameters } from '@/lib/scheduling/swap-utils'
 import { ScheduleSwap, useScheduleSwap } from '@/lib/scheduling/useScheduleSwap'
 import { getToken, getTokens, NATIVE_TOKEN_ADDRESS } from '@/lib/token'
@@ -28,7 +34,7 @@ function getDefaultSwap(): ScheduleSwap {
 		tokenIn: wethToken?.address || availableTokens.value[0]?.address || NATIVE_TOKEN_ADDRESS,
 		tokenOut: usdcToken?.address || availableTokens.value[1]?.address || NATIVE_TOKEN_ADDRESS,
 		amountIn: '0.0001',
-		frequency: '10sec',
+		frequency: DEFAULT_FREQUENCY,
 		times: 3,
 		startDate: today(getLocalTimeZone()),
 	}
