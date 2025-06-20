@@ -10,7 +10,16 @@ export interface Env {
 	TENDERLY_API_KEY_BASE_SEPOLIA: string
 	TENDERLY_API_KEY_POLYGON_AMOY: string
 	BACKEND_URL: string
+
+	// Frontend env usage
 	API_SECRET: string
+	CLOUDFLARE_ANALYTICS_TOKEN: string
+	SESSION_SIGNER_ADDRESS: string
+}
+
+// Frontend env usage
+export type EnvResponse = {
+	APP_SALT: string
 	CLOUDFLARE_ANALYTICS_TOKEN: string
 	SESSION_SIGNER_ADDRESS: string
 }
@@ -27,6 +36,8 @@ function validateEnv(env: Env) {
 	if (!env.TENDERLY_API_KEY_BASE_SEPOLIA) throw new Error('Missing TENDERLY_API_KEY_BASE_SEPOLIA')
 	if (!env.TENDERLY_API_KEY_POLYGON_AMOY) throw new Error('Missing TENDERLY_API_KEY_POLYGON_AMOY')
 	if (!env.BACKEND_URL) throw new Error('Missing BACKEND_URL')
+
+	// Frontend env usage
 	if (!env.API_SECRET) throw new Error('Missing API_SECRET')
 	if (!env.CLOUDFLARE_ANALYTICS_TOKEN) throw new Error('Missing CLOUDFLARE_ANALYTICS_TOKEN')
 	if (!env.SESSION_SIGNER_ADDRESS) throw new Error('Missing SESSION_SIGNER_ADDRESS')
@@ -63,10 +74,13 @@ export default {
 		const url = new URL(request.url)
 
 		if (url.pathname === '/env.json') {
-			return Response.json({
+			// Frontend env usage
+			const envResponse: EnvResponse = {
 				APP_SALT: env.APP_SALT,
 				CLOUDFLARE_ANALYTICS_TOKEN: env.CLOUDFLARE_ANALYTICS_TOKEN,
-			})
+				SESSION_SIGNER_ADDRESS: env.SESSION_SIGNER_ADDRESS,
+			}
+			return Response.json(envResponse)
 		}
 
 		if (url.pathname.startsWith('/backend')) {

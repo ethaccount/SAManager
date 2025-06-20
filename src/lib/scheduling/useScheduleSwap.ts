@@ -10,7 +10,7 @@ import {
 } from '@/lib/scheduling/common'
 import { registerJob } from '@/lib/scheduling/registerJob'
 import { getToken } from '@/lib/token'
-import { AccountId } from '@/stores/account/account'
+import { AccountId, ImportedAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { TxModalExecution, useTxModal } from '@/stores/useTxModal'
@@ -29,6 +29,7 @@ import {
 } from 'sendop'
 import { SessionStruct } from 'sendop/dist/src/contract-types/TSmartSession'
 import { DEFAULT_FEE, DEFAULT_SLIPPAGE, SWAP_ROUTER } from './swap-utils'
+import { useGetCode } from '@/lib/useGetCode'
 
 export type ScheduleSwap = {
 	tokenIn: string
@@ -75,32 +76,39 @@ export function useScheduleSwap() {
 		])
 	}
 
-	async function checkModuleStatus(accountAddress: string): Promise<ModuleStatus> {
-		const baseStatus = await checkBaseModuleStatus(client.value, accountAddress)
+	async function checkModuleStatus(importedAccount: ImportedAccount): Promise<ModuleStatus> {
+		const { isDeployed, getCode } = useGetCode()
 
-		const account = TIERC7579Account__factory.connect(accountAddress, client.value)
+		await getCode(importedAccount.address)
 
-		// Check if ScheduledOrders module is installed
-		const isScheduledOrdersInstalled = await account.isModuleInstalled(
-			ERC7579_MODULE_TYPE.EXECUTOR,
-			ADDRESS.ScheduledOrders,
-			'0x',
-		)
+		const baseStatus = await checkBaseModuleStatus(client.value, importedAccount, isDeployed.value)
 
-		// Check if session exists for scheduled swaps
+		let isScheduledOrdersInstalled = false
 		let isSessionExist = false
 		let permissionId: string | null = null
 
-		if (baseStatus.isSmartSessionInstalled) {
-			const { sessions, loadSessions } = useSessionList()
-			await loadSessions(accountAddress)
+		if (isDeployed.value) {
+			const account = TIERC7579Account__factory.connect(importedAccount.address, client.value)
 
-			for (const session of sessions.value) {
-				const status = getScheduledSwapSessionStatus(session)
-				if (status.isActionEnabled && status.isPermissionEnabled) {
-					isSessionExist = true
-					permissionId = session.permissionId
-					break
+			// Check if ScheduledOrders module is installed
+			isScheduledOrdersInstalled = await account.isModuleInstalled(
+				ERC7579_MODULE_TYPE.EXECUTOR,
+				ADDRESS.ScheduledOrders,
+				'0x',
+			)
+
+			// Check if session exists for scheduled swaps
+			if (baseStatus.isSmartSessionInstalled) {
+				const { sessions, loadSessions } = useSessionList()
+				await loadSessions(importedAccount.address)
+
+				for (const session of sessions.value) {
+					const status = getScheduledSwapSessionStatus(session)
+					if (status.isActionEnabled && status.isPermissionEnabled) {
+						isSessionExist = true
+						permissionId = session.permissionId
+						break
+					}
 				}
 			}
 		}
@@ -115,7 +123,7 @@ export function useScheduleSwap() {
 
 	function buildSmartSessionExecutions(
 		moduleStatus: ModuleStatus,
-		accountId: AccountId,
+		importedAccount: ImportedAccount,
 	): { executions: TxModalExecution[]; permissionId: string } {
 		const executions: TxModalExecution[] = []
 		let permissionId = moduleStatus.permissionId
@@ -144,9 +152,9 @@ export function useScheduleSwap() {
 				const smartSessionInitData = concat([SMART_SESSIONS_ENABLE_MODE, encodedSessions])
 
 				executions.push({
-					to: useAccount().selectedAccount.value!.address,
+					to: importedAccount.address,
 					value: 0n,
-					data: getEncodedInstallSmartSession(accountId, smartSessionInitData),
+					data: getEncodedInstallSmartSession(importedAccount.accountId, smartSessionInitData),
 					description: 'Install SmartSession module and enable the session',
 				})
 			}
@@ -219,12 +227,12 @@ export function useScheduleSwap() {
 			const selectedAccount = await validateAccount()
 
 			// Step 2: Check module and session status
-			const moduleStatus = await checkModuleStatus(selectedAccount.address)
+			const moduleStatus = await checkModuleStatus(selectedAccount)
 
 			// Step 3: Build SmartSession executions
 			const { executions: smartSessionExecutions, permissionId } = buildSmartSessionExecutions(
 				moduleStatus,
-				selectedAccount.accountId,
+				selectedAccount,
 			)
 
 			// Step 4: Create schedule swap configuration

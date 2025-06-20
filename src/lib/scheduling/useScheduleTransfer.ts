@@ -10,7 +10,7 @@ import {
 } from '@/lib/scheduling/common'
 import { registerJob } from '@/lib/scheduling/registerJob'
 import { getToken, NATIVE_TOKEN_ADDRESS, TokenTransfer } from '@/lib/token'
-import { AccountId } from '@/stores/account/account'
+import { AccountId, ImportedAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { TxModalExecution, useTxModal } from '@/stores/useTxModal'
@@ -29,6 +29,7 @@ import {
 	zeroPadLeft,
 } from 'sendop'
 import { SessionStruct } from 'sendop/dist/src/contract-types/TSmartSession'
+import { useGetCode } from '@/lib/useGetCode'
 
 export type ScheduleTransfer = TokenTransfer & {
 	frequency: string
@@ -79,32 +80,39 @@ export function useScheduleTransfer() {
 		])
 	}
 
-	async function checkModuleStatus(accountAddress: string): Promise<ModuleStatus> {
-		const baseStatus = await checkBaseModuleStatus(client.value, accountAddress)
+	async function checkModuleStatus(importedAccount: ImportedAccount): Promise<ModuleStatus> {
+		const { isDeployed, getCode } = useGetCode()
 
-		const account = TIERC7579Account__factory.connect(accountAddress, client.value)
+		await getCode(importedAccount.address)
 
-		// Check if ScheduledTransfers module is installed
-		const isScheduledTransfersInstalled = await account.isModuleInstalled(
-			ERC7579_MODULE_TYPE.EXECUTOR,
-			ADDRESS.ScheduledTransfers,
-			'0x',
-		)
+		const baseStatus = await checkBaseModuleStatus(client.value, importedAccount, isDeployed.value)
 
-		// Check if session exists for scheduled transfers
+		let isScheduledTransfersInstalled = false
 		let isSessionExist = false
 		let permissionId: string | null = null
 
-		if (baseStatus.isSmartSessionInstalled) {
-			const { sessions, loadSessions } = useSessionList()
-			await loadSessions(accountAddress)
+		if (isDeployed.value) {
+			const account = TIERC7579Account__factory.connect(importedAccount.address, client.value)
 
-			for (const session of sessions.value) {
-				const status = getScheduledTransferSessionStatus(session)
-				if (status.isActionEnabled && status.isPermissionEnabled) {
-					isSessionExist = true
-					permissionId = session.permissionId
-					break
+			// Check if ScheduledTransfers module is installed
+			isScheduledTransfersInstalled = await account.isModuleInstalled(
+				ERC7579_MODULE_TYPE.EXECUTOR,
+				ADDRESS.ScheduledTransfers,
+				'0x',
+			)
+
+			// Check if session exists for scheduled transfers
+			if (baseStatus.isSmartSessionInstalled) {
+				const { sessions, loadSessions } = useSessionList()
+				await loadSessions(importedAccount.address)
+
+				for (const session of sessions.value) {
+					const status = getScheduledTransferSessionStatus(session)
+					if (status.isActionEnabled && status.isPermissionEnabled) {
+						isSessionExist = true
+						permissionId = session.permissionId
+						break
+					}
 				}
 			}
 		}
@@ -119,7 +127,7 @@ export function useScheduleTransfer() {
 
 	function buildSmartSessionExecutions(
 		moduleStatus: ModuleStatus,
-		accountId: AccountId,
+		importedAccount: ImportedAccount,
 	): { executions: TxModalExecution[]; permissionId: string } {
 		const executions: TxModalExecution[] = []
 		let permissionId = moduleStatus.permissionId
@@ -148,9 +156,9 @@ export function useScheduleTransfer() {
 				const smartSessionInitData = concat([SMART_SESSIONS_ENABLE_MODE, encodedSessions])
 
 				executions.push({
-					to: useAccount().selectedAccount.value!.address,
+					to: importedAccount.address,
 					value: 0n,
-					data: getEncodedInstallSmartSession(accountId, smartSessionInitData),
+					data: getEncodedInstallSmartSession(importedAccount.accountId, smartSessionInitData),
 					description: 'Install SmartSession module and enable the session',
 				})
 			}
@@ -175,9 +183,10 @@ export function useScheduleTransfer() {
 				description: 'Add a order to ScheduledTransfers',
 			})
 		} else {
+			const { selectedAccount } = useAccount()
 			// Install scheduled transfers module and create a job
 			executions.push({
-				to: useAccount().selectedAccount.value!.address,
+				to: selectedAccount.value!.address,
 				value: 0n,
 				data: getEncodedInstallScheduledTransfers(accountId, scheduledTransfersOrderData),
 				description: 'Install ScheduledTransfers and add a order',
@@ -221,13 +230,12 @@ export function useScheduleTransfer() {
 			const selectedAccount = await validateAccount()
 
 			// Step 2: Check module and session status
-			const moduleStatus = await checkModuleStatus(selectedAccount.address)
-			console.log('moduleStatus', moduleStatus)
+			const moduleStatus = await checkModuleStatus(selectedAccount)
 
 			// Step 3: Build SmartSession executions
 			const { executions: smartSessionExecutions, permissionId } = buildSmartSessionExecutions(
 				moduleStatus,
-				selectedAccount.accountId,
+				selectedAccount,
 			)
 
 			// Step 4: Create schedule transfer configuration

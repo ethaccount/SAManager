@@ -27,6 +27,7 @@ export function getAppSessionValidatorInitData() {
 }
 
 export function createScheduledTransferSession() {
+	console.log(env.APP_SALT)
 	const session: SessionStruct = {
 		sessionValidator: ADDRESS.OwnableValidator,
 		sessionValidatorInitData: getAppSessionValidatorInitData(),

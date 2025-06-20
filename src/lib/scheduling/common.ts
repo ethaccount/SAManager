@@ -1,3 +1,4 @@
+import { ImportedAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBackend } from '@/stores/useBackend'
 import { TxModalExecution } from '@/stores/useTxModal'
@@ -114,20 +115,24 @@ export async function validateAccount() {
 
 export async function checkBaseModuleStatus(
 	client: JsonRpcApiProvider,
-	accountAddress: string,
+	importedAccount: ImportedAccount,
+	isDeployed: boolean,
 ): Promise<BaseModuleStatus> {
-	const account = TIERC7579Account__factory.connect(accountAddress, client)
+	let isSmartSessionInstalled = false
 
-	// Check if SmartSession module is installed
-	const isSmartSessionInstalled = await account.isModuleInstalled(
-		ERC7579_MODULE_TYPE.VALIDATOR,
-		ADDRESS.SmartSession,
-		'0x',
-	)
+	if (isDeployed) {
+		const account = TIERC7579Account__factory.connect(importedAccount.address, client)
+
+		// Check if SmartSession module is installed
+		isSmartSessionInstalled = await account.isModuleInstalled(
+			ERC7579_MODULE_TYPE.VALIDATOR,
+			ADDRESS.SmartSession,
+			'0x',
+		)
+	}
 
 	// Check if Rhinestone Attester is trusted (for Kernel accounts)
-	const { selectedAccount } = useAccount()
-	const isRhinestoneAttesterTrusted = selectedAccount.value?.accountId !== 'kernel.advanced.v0.3.1'
+	const isRhinestoneAttesterTrusted = importedAccount.accountId !== 'kernel.advanced.v0.3.1'
 
 	return {
 		isSmartSessionInstalled,

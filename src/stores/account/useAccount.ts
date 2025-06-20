@@ -59,9 +59,6 @@ export const useAccountStore = defineStore(
 			return hasInitCode(account.address)
 		}
 
-		if (isCrossChain.value) {
-		}
-
 		const selectedAccountInitCodeData = computed<InitCodeData | null>(() => {
 			const account = selectedAccount.value
 			if (!account) return null
@@ -161,6 +158,7 @@ export const useAccountStore = defineStore(
 			isModular,
 			isSmartEOA,
 			isChainIdMatching,
+			checkIsCrossChain,
 		}
 	},
 	{
