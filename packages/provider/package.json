@@ -1,0 +1,20 @@
+{
+	"name": "samanager-provider",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"repository": "https://github.com/ethaccount/SAManager",
+	"homepage": "https://samanager.johnson86tw.workers.dev",
+	"author": "Johnson Chen <https://x.com/johnson86tw>",
+	"license": "AGPL-3.0-only",
+	"description": "",
+	"keywords": [
+		"ERC-4337",
+		"smart accounts",
+		"web3",
+		"blockchain",
+		"wallet",
+		"ethereum"
+	],
+	"scripts": {}
+}
