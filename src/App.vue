@@ -12,6 +12,8 @@ import { ModalsContainer } from 'vue-final-modal'
 import { Toaster } from 'vue-sonner'
 import { useBackend } from './stores/useBackend'
 
+const route = useRoute()
+
 const { isEOAWalletConnected } = useEOAWallet()
 const { isLogin } = usePasskey()
 const { selectSigner } = useSigner()
@@ -50,7 +52,7 @@ const mode = useColorMode()
 	<Header />
 	<MainLayout />
 
-	<AppHelp class="fixed bottom-4 left-4" />
+	<AppHelp v-if="route.name !== 'browser'" class="fixed bottom-4 left-4" />
 
 	<VueDappModal :dark="mode === 'dark'" autoConnect />
 	<ModalsContainer />

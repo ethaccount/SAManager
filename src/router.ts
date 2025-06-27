@@ -88,6 +88,12 @@ const router = createRouter({
 							name: 'scheduling-jobs',
 							component: () => import('@/views/ScheduledJobs.vue'),
 						},
+						// Browser
+						{
+							path: '/:chainId/browser',
+							name: 'browser',
+							component: () => import('@/views/DappBrowser.vue'),
+						},
 					],
 				},
 			],

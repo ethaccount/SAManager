@@ -1,0 +1,14 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Vue Guild
+
+- Functions should use function keyword.
+- Button handlers should start with onClick, such as onClickCancel.
+- Import icons from lucide-vue-next.
+- The order in the script should be: state > lifecycle hooks/watchers > functions (important first, utilities last).
+- Use "vueuse" utility functions, such as watchImmediate.
+- There's no need to import functions from the following packages manually: ['vue', 'vue-router', 'pinia', '@vueuse/core', 'vitest'].
+- There's no need to import components from @/components manually.
