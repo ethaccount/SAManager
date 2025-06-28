@@ -33,33 +33,27 @@ export const SUPPORTED_ACCOUNTS: Record<
 	{
 		entryPointVersion: EntryPointVersion
 		isModular: boolean
-		onlySmartEOA: boolean
 	}
 > = {
 	[AccountId['kernel.advanced.v0.3.1']]: {
 		entryPointVersion: 'v0.7',
 		isModular: true,
-		onlySmartEOA: false,
 	},
 	[AccountId['biconomy.nexus.1.0.2']]: {
 		entryPointVersion: 'v0.7',
 		isModular: true,
-		onlySmartEOA: false,
 	},
 	[AccountId['rhinestone.safe7579.v1.0.0']]: {
 		entryPointVersion: 'v0.7',
 		isModular: true,
-		onlySmartEOA: false,
 	},
 	[AccountId['infinitism.SimpleAccount.0.8.0']]: {
 		entryPointVersion: 'v0.8',
 		isModular: false,
-		onlySmartEOA: false,
 	},
 	[AccountId['infinitism.Simple7702Account.0.8.0']]: {
 		entryPointVersion: 'v0.8',
 		isModular: false,
-		onlySmartEOA: true,
 	},
 }
 
