@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { Eip1193Provider, Eip6963ProviderInfo } from 'ethers'
 import { ArrowLeft, ArrowRight, Loader2, RotateCcw } from 'lucide-vue-next'
+import { v4 as uuidv4 } from 'uuid'
 
 // State
 const route = useRoute()
@@ -16,10 +18,48 @@ const isLoading = ref(false)
 const canGoBack = computed(() => historyIndex.value > 0)
 const canGoForward = computed(() => historyIndex.value < history.value.length - 1)
 
-// Lifecycle hooks
 onMounted(() => {
 	initializeFromRoute()
+
+	announceEip6963Provider()
 })
+
+function announceEip6963Provider() {
+	const event = new CustomEvent<{
+		info: Eip6963ProviderInfo
+		provider: Eip1193Provider
+	}>('eip6963:announceProvider', {
+		detail: Object.freeze({
+			info: {
+				uuid: uuidv4(),
+				name: 'SAManager',
+				icon: `${window.location.origin}/favicon_io/favicon.ico`,
+				rdns: 'xyz.samanager',
+			},
+			provider: {
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				request(request: { method: string; params?: Array<any> | Record<string, any> }): Promise<any> {
+					console.log('request', request)
+					switch (request.method) {
+						case 'eth_requestAccounts':
+							return Promise.resolve(['0xd78B5013757Ea4A7841811eF770711e6248dC282'])
+						case 'eth_chainId':
+							return Promise.resolve('0x1')
+						case 'eth_accounts':
+							return Promise.resolve(['0xd78B5013757Ea4A7841811eF770711e6248dC282'])
+						default:
+							return Promise.resolve()
+					}
+				},
+				on: event => {
+					console.log('provider on', event)
+				},
+			},
+		}),
+	})
+
+	window.dispatchEvent(event)
+}
 
 // Watchers
 watchImmediate(
