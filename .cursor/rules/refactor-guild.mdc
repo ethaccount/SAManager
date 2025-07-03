@@ -1,0 +1,88 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Refactor Guild
+
+## From sendop to UserOpBuilder
+
+Deprecated
+
+```ts
+const creationOptions = {
+	salt: randomBytes32(),
+	validatorAddress: ADDRESS.OwnableValidator,
+	validatorInitData: OwnableValidator.getInitData([signer.address], 1),
+}
+
+logger.info(`salt: ${creationOptions.salt}`)
+
+const computedAddress = await KernelV3Account.computeAccountAddress(client, creationOptions)
+logger.info('computedAddress:', computedAddress)
+
+const op = await sendop({
+	bundler,
+	executions: [],
+	opGetter: new KernelV3Account({
+		address: computedAddress,
+		client,
+		bundler,
+		validator: new OwnableValidator({
+			signers: [signer],
+		}),
+	}),
+	initCode: KernelV3Account.getInitCode(creationOptions),
+	pmGetter: new PublicPaymaster(ADDRESS.PublicPaymaster),
+})
+
+logger.info(`hash: ${op.hash}`)
+
+await op.wait()
+logger.info('deployed address:', computedAddress)
+```
+
+New
+
+```ts
+const { accountAddress, factory, factoryData } = await Kernel.getDeployment({
+	client,
+	validatorAddress: getECDSAValidator({ ownerAddress: dev7702 }).address,
+	validatorData: getECDSAValidator({ ownerAddress: dev7702 }).initData,
+	salt: toBytes32(2n),
+})
+
+console.log('accountAddress', accountAddress)
+
+const userop = await new KernelUserOpBuilder({
+	chainId: CHAIN_ID,
+	bundler,
+	client,
+	accountAddress,
+	validator: new ECDSAValidator(getECDSAValidator({ ownerAddress: dev7702 })),
+}).buildExecutions([
+	{
+		to: ADDRESS.Counter,
+		value: 0n,
+		data: INTERFACES.Counter.encodeFunctionData('increment'),
+	},
+])
+
+userop
+	.setFactory({ factory, factoryData })
+	.setPaymaster({
+		paymaster: PUBLIC_PAYMASTER_ADDRESS,
+	})
+	.setGasPrice(await fetchGasPriceAlchemy(rpcUrl))
+	.setSignature(DUMMY_ECDSA_SIGNATURE)
+
+await userop.estimateGas()
+await userop.signUserOpHash(userOpHash => wallet.signMessage(userOpHash))
+
+const hash = await userop.send()
+console.log('sent', hash)
+
+const receipt = await userop.wait()
+console.log('success', receipt.success)
+```
+

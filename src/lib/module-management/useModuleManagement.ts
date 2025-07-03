@@ -7,24 +7,10 @@ import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useTxModal } from '@/stores/useTxModal'
 import { createEOAOwnedValidation, createPasskeyValidation } from '@/stores/validation/validation'
 import { BytesLike, hexlify, JsonRpcProvider } from 'ethers'
-import {
-	EOAValidator,
-	ERC7579_MODULE_TYPE,
-	Execution,
-	findPrevious,
-	KernelV3Account,
-	NexusAccount,
-	Safe7579Account,
-	SimpleInstallModuleConfig,
-	SimpleUninstallModuleConfig,
-	TISafe7579__factory,
-	TNexus__factory,
-	ValidatorKernelInstallModuleConfig,
-	WebAuthnValidator,
-	zeroPadLeft,
-} from 'sendop'
+import { EOAValidator, ERC7579_MODULE_TYPE, Execution, WebAuthnValidator } from 'sendop'
 import { toast } from 'vue-sonner'
 import { useConnectSignerModal } from '../useConnectSignerModal'
+import { getInstallModuleData, getUninstallModuleData } from './calldata'
 import { ModuleType, SUPPORTED_MODULES } from './module-constants'
 
 export function useModuleManagement() {
@@ -68,7 +54,7 @@ export function useModuleManagement() {
 
 						execution = {
 							to: selectedAccount.value.address,
-							data: await getModuleOperationCallData('install', selectedAccount.value.accountId, {
+							data: await getValidatorOperationData('install', selectedAccount.value.accountId, {
 								moduleType,
 								ownerAddress: wallet.address,
 							}),
@@ -92,7 +78,7 @@ export function useModuleManagement() {
 					} else {
 						execution = {
 							to: selectedAccount.value.address,
-							data: await getModuleOperationCallData('uninstall', selectedAccount.value.accountId, {
+							data: await getValidatorOperationData('uninstall', selectedAccount.value.accountId, {
 								moduleType,
 								ownerAddress: wallet.address || '',
 								accountAddress: selectedAccount.value.address,
@@ -132,7 +118,7 @@ export function useModuleManagement() {
 
 						execution = {
 							to: selectedAccount.value.address,
-							data: await getModuleOperationCallData('install', selectedAccount.value.accountId, {
+							data: await getValidatorOperationData('install', selectedAccount.value.accountId, {
 								moduleType,
 								webauthnData: {
 									pubKeyX: BigInt(hexlify(selectedCredential.value.pubKeyX)),
@@ -166,7 +152,7 @@ export function useModuleManagement() {
 
 						execution = {
 							to: selectedAccount.value.address,
-							data: await getModuleOperationCallData('uninstall', selectedAccount.value.accountId, {
+							data: await getValidatorOperationData('uninstall', selectedAccount.value.accountId, {
 								moduleType,
 								webauthnData: {
 									pubKeyX: BigInt(hexlify(selectedCredential.value.pubKeyX)),
@@ -225,83 +211,28 @@ type ValidatorConfig =
 			client?: JsonRpcProvider
 	  }
 
-export async function getModuleOperationCallData(
+async function getValidatorOperationData(
 	operation: 'install' | 'uninstall',
 	accountId: AccountId,
 	config: ValidatorConfig,
 ) {
-	const moduleAddress = getModuleAddress(config.moduleType)
-	const moduleConfig = {
-		moduleType: ERC7579_MODULE_TYPE.VALIDATOR as const,
-		moduleAddress,
+	const module = {
+		type: ERC7579_MODULE_TYPE.VALIDATOR,
+		address: getModuleAddress(config.moduleType),
+		initData: getModuleInitData(config),
+		deInitData: getModuleDeInitData(config.moduleType),
 	}
-
-	// =============================== Install ===============================
 
 	if (operation === 'install') {
-		const initData = getModuleInitData(config)
-		const installConfig:
-			| ValidatorKernelInstallModuleConfig
-			| SimpleInstallModuleConfig<ERC7579_MODULE_TYPE.VALIDATOR> = {
-			...moduleConfig,
-			initData,
+		return getInstallModuleData(accountId, module)
+	} else {
+		if (!config.accountAddress) {
+			throw new Error('accountAddress is required for uninstall')
 		}
-
-		switch (accountId) {
-			case AccountId['kernel.advanced.v0.3.1']:
-				return KernelV3Account.encodeInstallModule(installConfig)
-			case AccountId['biconomy.nexus.1.0.2']:
-				return NexusAccount.encodeInstallModule(installConfig)
-			case AccountId['rhinestone.safe7579.v1.0.0']:
-				return Safe7579Account.encodeInstallModule(installConfig)
-			default:
-				throw new Error(`manageValidator: Unsupported account for install: ${accountId}`)
+		if (!config.client) {
+			throw new Error('client is required for uninstall')
 		}
-	}
-
-	// =============================== Uninstall ===============================
-
-	const deInitData = getModuleDeInitData(config.moduleType)
-	const uninstallConfig: SimpleUninstallModuleConfig<ERC7579_MODULE_TYPE.VALIDATOR> = {
-		...moduleConfig,
-		deInitData,
-	}
-
-	switch (accountId) {
-		case AccountId['kernel.advanced.v0.3.1']:
-			return KernelV3Account.encodeUninstallModule(uninstallConfig)
-		case AccountId['biconomy.nexus.1.0.2']: {
-			if (!config.accountAddress || !config.client) {
-				throw new Error(
-					'manageValidator: accountAddress and client are required for uninstall operations: ' + accountId,
-				)
-			}
-
-			const nexus = TNexus__factory.connect(config.accountAddress, config.client)
-			const validators = await nexus.getValidatorsPaginated(zeroPadLeft('0x01', 20), 10)
-			const prev = findPrevious(validators.array, getModuleAddress(config.moduleType))
-			return NexusAccount.encodeUninstallModule({
-				...uninstallConfig,
-				prev,
-			})
-		}
-		case AccountId['rhinestone.safe7579.v1.0.0']: {
-			if (!config.accountAddress || !config.client) {
-				throw new Error(
-					'manageValidator: accountAddress and client are required for uninstall operations: ' + accountId,
-				)
-			}
-
-			const safe = TISafe7579__factory.connect(config.accountAddress, config.client)
-			const validators = await safe.getValidatorsPaginated(zeroPadLeft('0x01', 20), 10)
-			const prev = findPrevious(validators.array, getModuleAddress(config.moduleType))
-			return Safe7579Account.encodeUninstallModule({
-				...uninstallConfig,
-				prev,
-			})
-		}
-		default:
-			throw new Error(`manageValidator: Unsupported account for uninstall: ${accountId}`)
+		return getUninstallModuleData(accountId, module, config.accountAddress, config.client)
 	}
 }
 

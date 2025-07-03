@@ -1,4 +1,4 @@
-import { getEncodedInstallScheduledOrders, getEncodedInstallSmartSession } from '@/lib/module-management/module'
+import { getInstallModuleData } from '@/lib/module-management/calldata'
 import { createScheduledSwapSession, getScheduledSwapSessionStatus } from '@/lib/permissions/session'
 import { useSessionList } from '@/lib/permissions/useSessionList'
 import {
@@ -10,6 +10,7 @@ import {
 } from '@/lib/scheduling/common'
 import { registerJob } from '@/lib/scheduling/registerJob'
 import { getToken } from '@/lib/token'
+import { useGetCode } from '@/lib/useGetCode'
 import { AccountId, ImportedAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
@@ -20,6 +21,7 @@ import {
 	abiEncode,
 	ADDRESS,
 	ERC7579_MODULE_TYPE,
+	ERC7579Module,
 	getEncodedFunctionParams,
 	INTERFACES,
 	SMART_SESSIONS_ENABLE_MODE,
@@ -29,7 +31,6 @@ import {
 } from 'sendop'
 import { SessionStruct } from 'sendop/dist/src/contract-types/TSmartSession'
 import { DEFAULT_FEE, DEFAULT_SLIPPAGE, SWAP_ROUTER } from './swap-utils'
-import { useGetCode } from '@/lib/useGetCode'
 
 export type ScheduleSwap = {
 	tokenIn: string
@@ -151,10 +152,17 @@ export function useScheduleSwap() {
 				)
 				const smartSessionInitData = concat([SMART_SESSIONS_ENABLE_MODE, encodedSessions])
 
+				const smartSession: ERC7579Module = {
+					type: ERC7579_MODULE_TYPE.VALIDATOR,
+					address: ADDRESS.SmartSession,
+					initData: smartSessionInitData,
+					deInitData: '0x',
+				}
+
 				executions.push({
 					to: importedAccount.address,
 					value: 0n,
-					data: getEncodedInstallSmartSession(importedAccount.accountId, smartSessionInitData),
+					data: getInstallModuleData(importedAccount.accountId, smartSession),
 					description: 'Install SmartSession module and enable the session',
 				})
 			}
@@ -180,11 +188,18 @@ export function useScheduleSwap() {
 			})
 		} else {
 			// Install scheduled orders module and create a job
+			const scheduledOrders: ERC7579Module = {
+				type: ERC7579_MODULE_TYPE.EXECUTOR,
+				address: ADDRESS.ScheduledOrders,
+				// Note that the order data should be prefixed with the SWAP_ROUTER address when installing the module
+				initData: concat([SWAP_ROUTER, scheduledOrdersOrderData]),
+				deInitData: '0x',
+			}
+
 			executions.push({
 				to: useAccount().selectedAccount.value!.address,
 				value: 0n,
-				// Note that the order data should be prefixed with the SWAP_ROUTER address when installing the module
-				data: getEncodedInstallScheduledOrders(accountId, concat([SWAP_ROUTER, scheduledOrdersOrderData])),
+				data: getInstallModuleData(accountId, scheduledOrders),
 				description: 'Install ScheduledOrders and add a order',
 			})
 		}

@@ -20,6 +20,10 @@ export enum AccountId {
 	'infinitism.SimpleAccount.0.8.0' = 'infinitism.SimpleAccount.0.8.0',
 }
 
+export type ModularAccountId = {
+	[K in AccountId]: (typeof SUPPORTED_ACCOUNTS)[K]['isModular'] extends true ? K : never
+}[AccountId]
+
 export const ACCOUNT_ID_TO_NAME: Record<AccountId, string> = {
 	[AccountId['kernel.advanced.v0.3.1']]: 'Kernel',
 	[AccountId['biconomy.nexus.1.0.2']]: 'Nexus',

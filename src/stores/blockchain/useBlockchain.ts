@@ -10,7 +10,7 @@ import {
 import { JsonRpcProvider } from 'ethers'
 import { publicNode, PublicNodeChain } from 'evm-providers'
 import { defineStore } from 'pinia'
-import { ADDRESS, AlchemyBundler, Bundler, EntryPointVersion, PimlicoBundler, PublicPaymaster } from 'sendop'
+import { ADDRESS, AlchemyBundler, Bundler, DeprecatedPublicPaymaster, EntryPointVersion, PimlicoBundler } from 'sendop'
 
 export const DEFAULT_CHAIN_ID = TESTNET_CHAIN_ID.SEPOLIA
 export const DEFAULT_ENTRY_POINT_VERSION: EntryPointVersion = 'v0.7'
@@ -118,7 +118,7 @@ export const useBlockchainStore = defineStore(
 			}
 		})
 
-		const pmGetter = computed(() => new PublicPaymaster(ADDRESS.PublicPaymaster))
+		const pmGetter = computed(() => new DeprecatedPublicPaymaster(ADDRESS.PublicPaymaster))
 
 		function switchChain(chainId: CHAIN_ID) {
 			selectedChainId.value = chainId

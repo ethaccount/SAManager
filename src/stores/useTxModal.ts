@@ -5,10 +5,10 @@ import { defineStore, storeToRefs } from 'pinia'
 import {
 	ADDRESS,
 	createUserOp,
+	DeprecatedPublicPaymaster,
 	estimateUserOp,
 	Execution,
 	getPaymasterData,
-	PublicPaymaster,
 	sendUserOp,
 	signUserOp,
 	UserOp,
@@ -91,7 +91,7 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 	const pmGetter = computed(() => {
 		switch (selectedPaymaster.value) {
 			case 'public':
-				return new PublicPaymaster(ADDRESS.PublicPaymaster)
+				return new DeprecatedPublicPaymaster(ADDRESS.PublicPaymaster)
 			default:
 				return undefined
 		}

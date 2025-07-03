@@ -1,4 +1,4 @@
-import { getEncodedInstallScheduledTransfers, getEncodedInstallSmartSession } from '@/lib/module-management/module'
+import { getInstallModuleData } from '@/lib/module-management/calldata'
 import { createScheduledTransferSession, getScheduledTransferSessionStatus } from '@/lib/permissions/session'
 import { useSessionList } from '@/lib/permissions/useSessionList'
 import {
@@ -10,6 +10,7 @@ import {
 } from '@/lib/scheduling/common'
 import { registerJob } from '@/lib/scheduling/registerJob'
 import { getToken, NATIVE_TOKEN_ADDRESS, TokenTransfer } from '@/lib/token'
+import { useGetCode } from '@/lib/useGetCode'
 import { AccountId, ImportedAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
@@ -20,6 +21,7 @@ import {
 	abiEncode,
 	ADDRESS,
 	ERC7579_MODULE_TYPE,
+	ERC7579Module,
 	getEncodedFunctionParams,
 	INTERFACES,
 	isSameAddress,
@@ -29,7 +31,6 @@ import {
 	zeroPadLeft,
 } from 'sendop'
 import { SessionStruct } from 'sendop/dist/src/contract-types/TSmartSession'
-import { useGetCode } from '@/lib/useGetCode'
 
 export type ScheduleTransfer = TokenTransfer & {
 	frequency: string
@@ -155,10 +156,17 @@ export function useScheduleTransfer() {
 				)
 				const smartSessionInitData = concat([SMART_SESSIONS_ENABLE_MODE, encodedSessions])
 
+				const smartSession: ERC7579Module = {
+					type: ERC7579_MODULE_TYPE.VALIDATOR,
+					address: ADDRESS.SmartSession,
+					initData: smartSessionInitData,
+					deInitData: '0x',
+				}
+
 				executions.push({
 					to: importedAccount.address,
 					value: 0n,
-					data: getEncodedInstallSmartSession(importedAccount.accountId, smartSessionInitData),
+					data: getInstallModuleData(importedAccount.accountId, smartSession),
 					description: 'Install SmartSession module and enable the session',
 				})
 			}
@@ -184,11 +192,19 @@ export function useScheduleTransfer() {
 			})
 		} else {
 			const { selectedAccount } = useAccount()
+
+			const scheduledTransfers: ERC7579Module = {
+				type: ERC7579_MODULE_TYPE.EXECUTOR,
+				address: ADDRESS.ScheduledTransfers,
+				initData: scheduledTransfersOrderData,
+				deInitData: '0x',
+			}
+
 			// Install scheduled transfers module and create a job
 			executions.push({
 				to: selectedAccount.value!.address,
 				value: 0n,
-				data: getEncodedInstallScheduledTransfers(accountId, scheduledTransfersOrderData),
+				data: getInstallModuleData(accountId, scheduledTransfers),
 				description: 'Install ScheduledTransfers and add a order',
 			})
 		}
