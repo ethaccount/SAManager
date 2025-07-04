@@ -46,11 +46,11 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       ethers:
-        specifier: ^6.13.5
-        version: 6.13.5
+        specifier: ^6.15.0
+        version: 6.15.0
       ethers-erc4337:
-        specifier: file:~/sendop/ethers-erc4337
-        version: file:../sendop/ethers-erc4337(ethers@6.13.5)
+        specifier: file:../sendop/ethers-erc4337
+        version: file:../sendop/ethers-erc4337(ethers@6.15.0)
       evm-providers:
         specifier: ^0.5.7
         version: 0.5.7
@@ -69,9 +69,6 @@ importers:
       reka-ui:
         specifier: ^2.2.0
         version: 2.2.0(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2))
-      sendop:
-        specifier: file:~/sendop
-        version: file:../sendop(ethers-erc4337@file:../sendop/ethers-erc4337(ethers@6.13.5))(ethers@6.13.5)
       tailwind-merge:
         specifier: ^2.6.0
         version: 2.6.0
@@ -2278,10 +2275,10 @@ packages:
   ethers-erc4337@file:../sendop/ethers-erc4337:
     resolution: {directory: ../sendop/ethers-erc4337, type: directory}
     peerDependencies:
-      ethers: ^6.14.4
+      ethers: ^6.15.0
 
-  ethers@6.13.5:
-    resolution: {integrity: sha512-+knKNieu5EKRThQJWwqaJ10a6HE9sSehGeqWN65//wE7j47ZpFhKAnHB/JJFibwwg61I/koxaPsXbXpD/skNOQ==}
+  ethers@6.15.0:
+    resolution: {integrity: sha512-Kf/3ZW54L4UT0pZtsY/rf+EkBU7Qi5nnhonjUb8yTXcxH3cdcWrV2cRyk0Xk/4jK6OoHhxxZHriyhje20If2hQ==}
     engines: {node: '>=14.0.0'}
 
   eventemitter3@5.0.1:
@@ -3353,13 +3350,6 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  sendop@file:../sendop:
-    resolution: {directory: ../sendop, type: directory}
-    engines: {bun: '>=1.1.0'}
-    peerDependencies:
-      ethers: ^6.14.4
-      ethers-erc4337: workspace:*
-
   set-function-length@1.2.2:
     resolution: {integrity: sha512-pgRc4hJ4/sNjWCSS9AmnS40x3bNMDTknHgL5UaMBTMyJnU90EgWh1Rz+MC9eFu4BuN/UwZjKQuY/1v3rM7HMfg==}
     engines: {node: '>= 0.4'}
@@ -4076,9 +4066,6 @@ packages:
 
   zod@3.24.1:
     resolution: {integrity: sha512-muH7gBL9sI1nciMZV67X5fTKKBLtwpZ5VBp1vsOQzj1MhrBZ4wlVCm3gedKZWLp0Oyel8sIGfeiz54Su+OVT+A==}
-
-  zod@3.24.3:
-    resolution: {integrity: sha512-HhY1oqzWCQWuUqvBFnsyrtZRhyPeR7SUGv+C4+MsisMuVfSPx8HpwWqH8tRahSlt6M3PiFAcoeFhZAqIXTxoSg==}
 
 snapshots:
 
@@ -6277,11 +6264,11 @@ snapshots:
 
   esutils@2.0.3: {}
 
-  ethers-erc4337@file:../sendop/ethers-erc4337(ethers@6.13.5):
+  ethers-erc4337@file:../sendop/ethers-erc4337(ethers@6.15.0):
     dependencies:
-      ethers: 6.13.5
+      ethers: 6.15.0
 
-  ethers@6.13.5:
+  ethers@6.15.0:
     dependencies:
       '@adraffy/ens-normalize': 1.10.1
       '@noble/curves': 1.2.0
@@ -6727,7 +6714,7 @@ snapshots:
       whatwg-encoding: 3.1.1
       whatwg-mimetype: 4.0.0
       whatwg-url: 14.2.0
-      ws: 8.18.0
+      ws: 8.18.2
       xml-name-validator: 5.0.0
     transitivePeerDependencies:
       - bufferutil
@@ -7405,12 +7392,6 @@ snapshots:
   semver@6.3.1: {}
 
   semver@7.6.3: {}
-
-  sendop@file:../sendop(ethers-erc4337@file:../sendop/ethers-erc4337(ethers@6.13.5))(ethers@6.13.5):
-    dependencies:
-      ethers: 6.13.5
-      ethers-erc4337: file:../sendop/ethers-erc4337(ethers@6.13.5)
-      zod: 3.24.3
 
   set-function-length@1.2.2:
     dependencies:
@@ -8313,5 +8294,3 @@ snapshots:
   zod@3.22.3: {}
 
   zod@3.24.1: {}
-
-  zod@3.24.3: {}

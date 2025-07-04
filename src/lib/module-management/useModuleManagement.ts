@@ -1,3 +1,4 @@
+import { getInstallModuleData, getUninstallModuleData } from '@/lib/account-specific'
 import { AccountId } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
@@ -10,7 +11,6 @@ import { BytesLike, hexlify, JsonRpcProvider } from 'ethers'
 import { EOAValidator, ERC7579_MODULE_TYPE, Execution, WebAuthnValidator } from 'sendop'
 import { toast } from 'vue-sonner'
 import { useConnectSignerModal } from '../useConnectSignerModal'
-import { getInstallModuleData, getUninstallModuleData } from './calldata'
 import { ModuleType, SUPPORTED_MODULES } from './module-constants'
 
 export function useModuleManagement() {
