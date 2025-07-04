@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { ADDRESS, getSmartEOADelegateAddress, isSameAddress } from 'sendop'
-import { ref, onMounted } from 'vue'
-import { useImportAccountModal } from '@/stores/useImportAccountModal'
-import { AccountId } from '@/stores/account/account'
 import { Button } from '@/components/ui/button'
-import { Loader2, CheckCircle2, XCircle, ArrowLeft } from 'lucide-vue-next'
+import { AccountId } from '@/stores/account/account'
+import { useBlockchain } from '@/stores/blockchain/useBlockchain'
+import { useImportAccountModal } from '@/stores/useImportAccountModal'
+import { ArrowLeft, CheckCircle2, Loader2, XCircle } from 'lucide-vue-next'
+import { ADDRESS, getSmartEOADelegateAddress, isSameAddress } from 'sendop'
+import { onMounted, ref } from 'vue'
 
 const props = defineProps<{
 	address: () => string

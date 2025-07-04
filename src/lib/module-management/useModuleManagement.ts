@@ -7,7 +7,7 @@ import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useTxModal } from '@/stores/useTxModal'
 import { BytesLike, hexlify, JsonRpcProvider } from 'ethers'
-import { EOAValidator, ERC7579_MODULE_TYPE, Execution, WebAuthnValidator } from 'sendop'
+import { ERC7579_MODULE_TYPE, Execution, getECDSAValidator, getWebAuthnValidator } from 'sendop'
 import { toast } from 'vue-sonner'
 import { useConnectSignerModal } from '../useConnectSignerModal'
 import { ECDSAValidatorVMethod, serializeValidationMethod, WebAuthnValidatorVMethod } from '../validation-methods'
@@ -221,7 +221,7 @@ async function getValidatorOperationData(
 		type: ERC7579_MODULE_TYPE.VALIDATOR,
 		address: getModuleAddress(config.moduleType),
 		initData: getModuleInitData(config),
-		deInitData: getModuleDeInitData(config.moduleType),
+		deInitData: getModuleDeInitData(config),
 	}
 
 	if (operation === 'install') {
@@ -243,14 +243,22 @@ function getModuleAddress(moduleType: ModuleType): string {
 
 function getModuleInitData(config: ValidatorConfig) {
 	if (config.moduleType === 'ECDSAValidator') {
-		return EOAValidator.getInitData(config.ownerAddress)
+		return getECDSAValidator({ ownerAddress: config.ownerAddress }).initData
 	}
-	return WebAuthnValidator.getInitData(config.webauthnData)
+	return getWebAuthnValidator({
+		pubKeyX: config.webauthnData.pubKeyX,
+		pubKeyY: config.webauthnData.pubKeyY,
+		authenticatorIdHash: config.webauthnData.authenticatorIdHash,
+	}).initData
 }
 
-function getModuleDeInitData(moduleType: 'ECDSAValidator' | 'WebAuthnValidator') {
-	if (moduleType === 'ECDSAValidator') {
-		return EOAValidator.getDeInitData()
+function getModuleDeInitData(config) {
+	if (config.moduleType === 'ECDSAValidator') {
+		return getECDSAValidator({ ownerAddress: config.ownerAddress }).deInitData
 	}
-	return WebAuthnValidator.getDeInitData()
+	return getWebAuthnValidator({
+		pubKeyX: config.webauthnData.pubKeyX,
+		pubKeyY: config.webauthnData.pubKeyY,
+		authenticatorIdHash: config.webauthnData.authenticatorIdHash,
+	}).deInitData
 }

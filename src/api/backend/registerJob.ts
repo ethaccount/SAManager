@@ -1,25 +1,23 @@
-import { formatUserOpToHex, UserOp } from 'sendop'
+import { UserOperationHex } from 'ethers-erc4337'
 
 export async function apiRegisterJob(
 	accountAddress: string,
 	chainId: number,
 	jobId: bigint,
 	entryPointAddress: string,
-	userOp: UserOp,
 	jobType: string,
+	userOperationHex: UserOperationHex,
 ): Promise<{
 	id: string
 	accountAddress: string
 	chainId: number
 	onChainJobId: number
 	jobType: string
-	userOperation: string
+	userOperationHex: UserOperationHex
 	entryPointAddress: string
 	createdAt: string
 	updatedAt: string
 }> {
-	const formattedUserOp = formatUserOpToHex(userOp)
-
 	const response = await fetch('/backend/jobs', {
 		method: 'POST',
 		headers: {
@@ -30,7 +28,7 @@ export async function apiRegisterJob(
 			chainId,
 			jobId: Number(jobId),
 			entryPoint: entryPointAddress,
-			userOperation: formattedUserOp,
+			userOperation: userOperationHex,
 			jobType,
 		}),
 	})

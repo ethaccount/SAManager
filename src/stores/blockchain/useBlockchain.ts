@@ -11,7 +11,7 @@ import { JsonRpcProvider } from 'ethers'
 import { ERC4337Bundler } from 'ethers-erc4337'
 import { publicNode, PublicNodeChain } from 'evm-providers'
 import { defineStore } from 'pinia'
-import { ADDRESS, AlchemyBundler, Bundler, DeprecatedPublicPaymaster, EntryPointVersion, PimlicoBundler } from 'sendop'
+import { EntryPointVersion } from 'sendop'
 
 export const DEFAULT_CHAIN_ID = TESTNET_CHAIN_ID.SEPOLIA
 export const DEFAULT_ENTRY_POINT_VERSION: EntryPointVersion = 'v0.7'
@@ -107,8 +107,6 @@ export const useBlockchainStore = defineStore(
 			return new ERC4337Bundler(bundlerUrl.value)
 		})
 
-		const pmGetter = computed(() => new DeprecatedPublicPaymaster(ADDRESS.PublicPaymaster))
-
 		function switchChain(chainId: CHAIN_ID) {
 			selectedChainId.value = chainId
 		}
@@ -126,7 +124,6 @@ export const useBlockchainStore = defineStore(
 			selectedEntryPoint,
 			selectedBundler,
 			selectedNode,
-			pmGetter,
 			supportedNodes,
 			supportedEntryPoints,
 			chainIdBigInt,

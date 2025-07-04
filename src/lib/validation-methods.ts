@@ -6,11 +6,11 @@ import {
 	ERC7579_MODULE_TYPE,
 	ERC7579Module,
 	getECDSAValidator,
+	getWebAuthnValidator,
 	Simple7702AccountAPI,
 	SingleEOAValidation,
 	ValidationAPI,
 	WebAuthnValidation,
-	WebAuthnValidator,
 } from 'sendop'
 
 export interface ValidationMethod {
@@ -118,15 +118,16 @@ export class WebAuthnValidatorVMethod implements ValidationMethod {
 			credentialId: string
 		},
 	) {
+		const webAuthnValidator = getWebAuthnValidator({
+			pubKeyX: BigInt(this.credential.pubKeyX),
+			pubKeyY: BigInt(this.credential.pubKeyY),
+			authenticatorIdHash: getAuthenticatorIdHash(this.credential.credentialId),
+		})
 		this.module = {
 			address: ADDRESS.WebAuthnValidator,
 			type: ERC7579_MODULE_TYPE.VALIDATOR,
-			initData: WebAuthnValidator.getInitData({
-				pubKeyX: BigInt(this.credential.pubKeyX),
-				pubKeyY: BigInt(this.credential.pubKeyY),
-				authenticatorIdHash: getAuthenticatorIdHash(this.credential.credentialId),
-			}),
-			deInitData: WebAuthnValidator.getDeInitData(),
+			initData: webAuthnValidator.initData,
+			deInitData: webAuthnValidator.deInitData,
 		}
 	}
 

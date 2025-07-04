@@ -5,7 +5,7 @@ import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { ENTRY_POINT_V07_ADDRESS, UserOpBuilder, UserOperationReceipt } from 'ethers-erc4337'
 import { defineStore, storeToRefs } from 'pinia'
-import { ADDRESS, DeprecatedPublicPaymaster, Execution } from 'sendop'
+import { Execution } from 'sendop'
 import { useModal } from 'vue-final-modal'
 import { signMessageUsingPasskey } from './passkey/signMessageUsingPasskey'
 import { useEOAWallet } from './useEOAWallet'
@@ -82,15 +82,6 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 	const userOp = ref<UserOpBuilder | null>(null)
 	const opHash = ref<string | null>(null)
 	const opReceipt = ref<UserOperationReceipt | null>(null)
-
-	const pmGetter = computed(() => {
-		switch (selectedPaymaster.value) {
-			case 'public':
-				return new DeprecatedPublicPaymaster(ADDRESS.PublicPaymaster)
-			default:
-				return undefined
-		}
-	})
 
 	async function handleEstimate(executions: Execution[], initCode?: string) {
 		if (!selectedAccount.value) {
