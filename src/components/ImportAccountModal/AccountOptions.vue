@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import { fetchECDSAValidatorRegisteredEvent, fetchWebAuthnRegisteredEvent } from '@/api/registered-events'
+import { ValidationMethodData } from '@/lib/validation-methods'
 import { AccountId } from '@/stores/account/account'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
-import { SUPPORTED_VALIDATION_OPTIONS, ValidationOption } from '@/stores/validation/validation'
+import { SUPPORTED_VALIDATION_OPTIONS } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
 import { getAddress, JsonRpcProvider } from 'ethers'
 import { ChevronRight, Loader2 } from 'lucide-vue-next'
@@ -10,7 +12,7 @@ import { ERC7579_MODULE_TYPE, TIERC7579Account__factory } from 'sendop'
 import { toast } from 'vue-sonner'
 
 const props = defineProps<{
-	vOption: () => ValidationOption
+	vMethod: () => ValidationMethodData
 }>()
 
 const emit = defineEmits<{
@@ -40,9 +42,9 @@ onMounted(async () => {
 
 		let addresses: string[] = []
 
-		const vType = props.vOption().type
+		const vType = props.vMethod().signerType
 
-		if (vType !== 'EOA-Owned' && vType !== 'Passkey') {
+		if (vType !== 'EOAWallet' && vType !== 'Passkey') {
 			throw new Error('Unsupported validation type')
 		}
 
@@ -53,11 +55,8 @@ onMounted(async () => {
 		}
 
 		switch (vType) {
-			case 'EOA-Owned':
-				addresses = await SUPPORTED_VALIDATION_OPTIONS['EOA-Owned'].getAccounts(
-					tenderlyClient.value, // use tenderly client for event logs
-					props.vOption().identifier,
-				)
+			case 'EOAWallet':
+				addresses = await fetchECDSAValidatorRegisteredEvent(tenderlyClient.value, props.vMethod().identifier)
 
 				// Specially check if the module is installed because the ECDSAValidator doesn't emit event when uninstalled
 				const filteredAddresses: string[] = []
@@ -77,12 +76,12 @@ onMounted(async () => {
 				addresses = addresses.filter(a => !filteredAddresses.includes(getAddress(a)))
 				break
 			case 'Passkey':
-				const credentialId = props.vOption().identifier
+				const credentialId = props.vMethod().identifier
 				if (!credentialId) {
 					throw new Error('AccountOptions(onMounted): Passkey credential ID not found')
 				}
-				addresses = await SUPPORTED_VALIDATION_OPTIONS['Passkey'].getAccounts(
-					tenderlyClient.value, // use tenderly client for event logs
+				addresses = await fetchWebAuthnRegisteredEvent(
+					tenderlyClient.value,
 					getAuthenticatorIdHash(credentialId),
 				)
 				break

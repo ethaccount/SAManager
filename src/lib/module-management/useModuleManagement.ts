@@ -6,11 +6,11 @@ import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useTxModal } from '@/stores/useTxModal'
-import { createEOAOwnedValidation, createPasskeyValidation } from '@/stores/validation/validation'
 import { BytesLike, hexlify, JsonRpcProvider } from 'ethers'
 import { EOAValidator, ERC7579_MODULE_TYPE, Execution, WebAuthnValidator } from 'sendop'
 import { toast } from 'vue-sonner'
 import { useConnectSignerModal } from '../useConnectSignerModal'
+import { ECDSAValidatorVMethod, serializeValidationMethod, WebAuthnValidatorVMethod } from '../validation-methods'
 import { ModuleType, SUPPORTED_MODULES } from './module-constants'
 
 export function useModuleManagement() {
@@ -71,7 +71,8 @@ export function useModuleManagement() {
 									throw new Error('No account selected')
 								}
 								// add the vOption
-								selectedAccount.value.vOptions.push(createEOAOwnedValidation(wallet.address))
+								const vMethod = new ECDSAValidatorVMethod(wallet.address)
+								selectedAccount.value.vMethods.push(serializeValidationMethod(vMethod))
 								await onSuccess?.()
 							},
 						})
@@ -94,8 +95,9 @@ export function useModuleManagement() {
 									throw new Error('No account selected')
 								}
 								// remove the vOption
-								selectedAccount.value.vOptions = selectedAccount.value.vOptions.filter(
-									v => v.type !== 'EOA-Owned',
+								// TODO: this will cause problems
+								selectedAccount.value.vMethods = selectedAccount.value.vMethods.filter(
+									v => v.name !== 'ECDSAValidator',
 								)
 								await onSuccess?.()
 							},
@@ -139,9 +141,8 @@ export function useModuleManagement() {
 									throw new Error('No account selected')
 								}
 								// add the vOption
-								selectedAccount.value.vOptions.push(
-									createPasskeyValidation(selectedCredential.value.credentialId),
-								)
+								const vMethod = new WebAuthnValidatorVMethod(selectedCredential.value)
+								selectedAccount.value.vMethods.push(serializeValidationMethod(vMethod))
 								await onSuccess?.()
 							},
 						})
@@ -172,8 +173,8 @@ export function useModuleManagement() {
 									throw new Error('No account selected')
 								}
 								// remove the vOption
-								selectedAccount.value.vOptions = selectedAccount.value.vOptions.filter(
-									v => v.type !== 'Passkey',
+								selectedAccount.value.vMethods = selectedAccount.value.vMethods.filter(
+									v => v.name !== 'WebAuthnValidator',
 								)
 								await onSuccess?.()
 							},

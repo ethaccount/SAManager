@@ -2,25 +2,31 @@ import { AccountId } from '@/stores/account/account'
 import { JsonRpcProvider } from 'ethers'
 import { UserOpBuilder } from 'ethers-erc4337'
 import { Execution } from 'sendop'
-import { AppValidation, getExecutionAccountAPI, getSmartSessionExecutionAccountAPI } from './accounts/account-specific'
+import { getExecutionAccountAPI, getSmartSessionExecutionAccountAPI } from './accounts/account-specific'
+import { ValidationMethod } from './validation-methods'
 
 export async function buildAccountExecutions({
 	op,
 	accountId,
-	validation,
+	validationMethod,
 	accountAddress,
 	client,
 	executions,
 }: {
 	op: UserOpBuilder
 	accountId: AccountId
-	validation: AppValidation
+	validationMethod: ValidationMethod
 	accountAddress: string
 	client: JsonRpcProvider
 	executions: Execution[]
 }) {
-	const accountAPI = getExecutionAccountAPI(accountId, validation)
+	const accountAPI = getExecutionAccountAPI(
+		accountId,
+		validationMethod.validationAPI,
+		validationMethod.module?.address,
+	)
 	return op
+		.setEntryPoint(accountAPI.entryPointAddress)
 		.setSender(accountAddress)
 		.setCallData(await accountAPI.getCallData(executions))
 		.setNonce(await accountAPI.getNonce(client, accountAddress))
@@ -44,6 +50,7 @@ export async function buildSmartSessionExecutions({
 }) {
 	const accountAPI = getSmartSessionExecutionAccountAPI(accountId, permissionId)
 	return op
+		.setEntryPoint(accountAPI.entryPointAddress)
 		.setSender(accountAddress)
 		.setCallData(await accountAPI.getCallData(executions))
 		.setNonce(await accountAPI.getNonce(client, accountAddress))

@@ -180,7 +180,8 @@ watch(status, (newStatus, oldStatus) => {
  */
 const txLink = computed(() => {
 	if (!userOp.value || !opReceipt.value) return null
-	const sender = userOp.value.sender
+	const op = userOp.value
+	const sender = op.preview().sender
 	const foundLog = opReceipt.value.logs.find(log => isSameAddress(log.address, sender))
 	if (!foundLog) {
 		return `${explorerUrl.value}/tx/${opReceipt.value.receipt.transactionHash}`
@@ -191,13 +192,13 @@ const txLink = computed(() => {
 const showEOAWalletValidationMethod = computed(() => {
 	if (!selectedAccount.value) return false
 	if (!isConnected.value) return false
-	return selectedAccount.value.vOptions.some(v => v.type === 'EOA-Owned' || v.type === 'SmartEOA')
+	return selectedAccount.value.vMethods.some(v => v.signerType === 'EOAWallet')
 })
 
 const showPasskeyValidationMethod = computed(() => {
 	if (!selectedAccount.value) return false
 	if (!isLogin.value) return false
-	return selectedAccount.value.vOptions.some(v => v.type === 'Passkey')
+	return selectedAccount.value.vMethods.some(v => v.signerType === 'Passkey')
 })
 
 // Computed property to determine if modal can be closed
@@ -512,7 +513,7 @@ const canClose = computed(() => {
 						<!-- Send Button -->
 						<Button
 							v-if="
-								(userOp?.signature && status === TransactionStatus.Send) ||
+								status === TransactionStatus.Send ||
 								status === TransactionStatus.Sending ||
 								status === TransactionStatus.Pending
 							"
@@ -526,8 +527,8 @@ const canClose = computed(() => {
 								status === TransactionStatus.Sending
 									? 'Sending...'
 									: status === TransactionStatus.Pending
-									? 'Pending...'
-									: 'Send Transaction'
+										? 'Pending...'
+										: 'Send Transaction'
 							}}
 						</Button>
 					</div>

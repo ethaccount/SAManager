@@ -5,7 +5,6 @@ import { displayAccountName } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { displayChainName } from '@/stores/blockchain/blockchain'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { displayValidationIdentifier } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
 import { ArrowLeft, Loader2 } from 'lucide-vue-next'
 
@@ -136,17 +135,17 @@ const showSwitchToCorrectChain = computed(() => {
 					<div class="text-sm font-medium">Validation Options</div>
 					<div class="grid gap-1">
 						<div
-							v-for="(vOption, index) in selectedAccount.vOptions"
+							v-for="(vOption, index) in selectedAccount.vMethods"
 							:key="index"
 							class="group flex items-center justify-between py-2 px-3 bg-card border border-border/40 rounded-lg"
 						>
 							<div class="w-full flex items-center justify-between gap-3">
 								<div class="text-xs font-medium px-2.5 py-1 rounded-full bg-muted">
-									{{ vOption.type }}
+									{{ vOption.name }}
 								</div>
 								<div class="font-mono text-xs text-muted-foreground flex items-center gap-2">
-									<span>{{ shortenAddress(displayValidationIdentifier(vOption)) }}</span>
-									<CopyButton :address="displayValidationIdentifier(vOption)" />
+									<span>{{ shortenAddress(vOption.identifier) }}</span>
+									<CopyButton :address="vOption.identifier" />
 								</div>
 							</div>
 						</div>

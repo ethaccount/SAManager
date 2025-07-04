@@ -8,6 +8,15 @@ import { Deployment, getDeployment } from '@/lib/accounts/getDeployment'
 import { toRoute } from '@/lib/router'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
 import { useGetCode } from '@/lib/useGetCode'
+import {
+	ECDSAValidatorVMethod,
+	OwnableValidatorSingleVMethod,
+	serializeValidationMethod,
+	Simple7702ValidatorVMethod,
+	ValidationMethod,
+	ValidationMethodName,
+	WebAuthnValidatorVMethod,
+} from '@/lib/validation-methods'
 import { ACCOUNT_ID_TO_NAME, AccountId, displayAccountName, SUPPORTED_ACCOUNTS } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useAccounts } from '@/stores/account/useAccounts'
@@ -17,14 +26,6 @@ import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useTxModal } from '@/stores/useTxModal'
 import { useSigner } from '@/stores/validation/useSigner'
-import {
-	createEOAOwnedValidation,
-	createPasskeyValidation,
-	displayValidationName,
-	SUPPORTED_VALIDATION_OPTIONS,
-	ValidationOption,
-	ValidationType,
-} from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
 import { concat, isAddress } from 'ethers'
 import { AlertCircle, ChevronRight, Power } from 'lucide-vue-next'
@@ -53,25 +54,31 @@ const supportedAccounts = Object.entries(SUPPORTED_ACCOUNTS)
 		description: `Supports EntryPoint ${SUPPORTED_ACCOUNTS[id as AccountId].entryPointVersion}`,
 	}))
 
-const CREATE_ACCOUNT_VALIDATION_RULES: Record<AccountId, ValidationType[]> = {
-	[AccountId['kernel.advanced.v0.3.1']]: ['EOA-Owned', 'Passkey'],
-	[AccountId['biconomy.nexus.1.0.2']]: ['EOA-Owned', 'Passkey'],
-	[AccountId['rhinestone.safe7579.v1.0.0']]: ['EOA-Owned'],
-	[AccountId['infinitism.SimpleAccount.0.8.0']]: [],
+const ACCOUNT_SUPPORTED_INITIAL_VALIDATION_METHOD: Record<AccountId, ValidationMethodName[]> = {
+	[AccountId['kernel.advanced.v0.3.1']]: ['ECDSAValidator', 'WebAuthnValidator'],
+	[AccountId['biconomy.nexus.1.0.2']]: ['OwnableValidator', 'WebAuthnValidator'],
+	[AccountId['rhinestone.safe7579.v1.0.0']]: ['OwnableValidator'],
 	[AccountId['infinitism.Simple7702Account.0.8.0']]: [],
 } as const
 
-const supportedValidationOptions = computed(() => {
+const VALIDATION_METHOD_DISPLAY = {
+	ECDSAValidator: { name: ECDSAValidatorVMethod.name, description: ECDSAValidatorVMethod.description },
+	WebAuthnValidator: { name: WebAuthnValidatorVMethod.name, description: WebAuthnValidatorVMethod.description },
+	OwnableValidator: {
+		name: OwnableValidatorSingleVMethod.name,
+		description: OwnableValidatorSingleVMethod.description,
+	},
+} as const
+
+const supportedValidationMethods = computed(() => {
 	if (!selectedAccountType.value) return []
 
-	const allowedValidations = CREATE_ACCOUNT_VALIDATION_RULES[selectedAccountType.value]
-	return Object.entries(SUPPORTED_VALIDATION_OPTIONS)
-		.filter(([key]) => allowedValidations.includes(key as ValidationType))
-		.map(([key, data]) => ({
-			type: key as ValidationType,
-			name: data.name,
-			description: data.description,
-		}))
+	const allowedValidations = ACCOUNT_SUPPORTED_INITIAL_VALIDATION_METHOD[selectedAccountType.value]
+	return allowedValidations.map(methodName => ({
+		type: methodName,
+		name: VALIDATION_METHOD_DISPLAY[methodName].name,
+		description: VALIDATION_METHOD_DISPLAY[methodName].description,
+	}))
 })
 
 const selectedAccountType = ref<AccountId | undefined>(undefined)
@@ -83,7 +90,7 @@ watch(selectedAccountType, newAccountType => {
 		return
 	}
 
-	const allowedValidations = CREATE_ACCOUNT_VALIDATION_RULES[newAccountType]
+	const allowedValidations = ACCOUNT_SUPPORTED_INITIAL_VALIDATION_METHOD[newAccountType]
 	if (selectedValidationType.value && !allowedValidations.includes(selectedValidationType.value)) {
 		selectedValidationType.value = undefined
 	}
@@ -100,21 +107,35 @@ onBeforeRouteLeave(() => {
 	}
 })
 
-const selectedValidationType = ref<ValidationType | undefined>(undefined)
+const selectedValidationType = ref<ValidationMethodName | undefined>(undefined)
 const isComputingAddress = ref(false)
 const showMoreOptions = ref(false)
 
-const selectedValidation = computed<ValidationOption | null>(() => {
+const selectedValidation = computed<ValidationMethod | null>(() => {
 	if (!selectedValidationType.value) return null
 
+	const { signer } = useEOAWallet()
+
 	switch (selectedValidationType.value) {
-		case 'EOA-Owned':
-			const { signer } = useEOAWallet()
-			if (!signer.value) return null
-			return createEOAOwnedValidation(signer.value.address)
-		case 'Passkey':
+		case 'ECDSAValidator':
+			if (!signer.value) {
+				throw new Error('[selectedValidation] signer is null')
+			}
+			return new ECDSAValidatorVMethod(signer.value.address)
+		case 'OwnableValidator':
+			if (!signer.value) {
+				throw new Error('[selectedValidation] signer is null')
+			}
+			return new OwnableValidatorSingleVMethod(signer.value.address)
+		case 'Simple7702Account':
+			if (!signer.value) {
+				throw new Error('[selectedValidation] signer is null')
+			}
+			return new Simple7702ValidatorVMethod(signer.value.address)
+		case 'WebAuthnValidator':
 			if (!selectedCredential.value) return null
-			return createPasskeyValidation(selectedCredential.value.credentialId)
+			return new WebAuthnValidatorVMethod(selectedCredential.value)
+
 		default:
 			return null
 	}
@@ -122,9 +143,16 @@ const selectedValidation = computed<ValidationOption | null>(() => {
 
 // Auto select the signer when the selectedValidation is updated
 watchImmediate(selectedValidationType, () => {
-	if (selectedValidation.value) {
+	if (selectedValidationType.value) {
 		const { selectSigner } = useSigner()
-		selectSigner(SUPPORTED_VALIDATION_OPTIONS[selectedValidation.value.type].signerType)
+		// Map validation method to signer type
+		const signerTypeMap = {
+			ECDSAValidator: 'EOAWallet',
+			OwnableValidator: 'EOAWallet',
+			WebAuthnValidator: 'Passkey',
+			Simple7702Account: 'EOAWallet',
+		} as const
+		selectSigner(signerTypeMap[selectedValidationType.value])
 	}
 })
 
@@ -139,7 +167,18 @@ const computedSalt = computed(() => {
  */
 const isValidationAvailable = computed(() => {
 	if (!selectedValidation.value) return false
-	return useSigner().isSignerEligibleForValidation([selectedValidation.value])
+
+	// Check if the required signer is connected
+	switch (selectedValidationType.value) {
+		case 'ECDSAValidator':
+		case 'OwnableValidator':
+		case 'Simple7702Account':
+			return isEOAWalletConnected.value
+		case 'WebAuthnValidator':
+			return isLogin.value && isFullCredential.value
+		default:
+			return false
+	}
 })
 
 const deployment = ref<Deployment | null>(null)
@@ -183,7 +222,7 @@ watchImmediate([isValidationAvailable, selectedValidation, isLogin, selectedAcco
 			isComputingAddress.value = false
 		}
 	} else if (!selectedValidation.value) {
-		if (selectedValidationType.value === 'Passkey' && isLogin.value && !isFullCredential.value) {
+		if (selectedValidationType.value === 'WebAuthnValidator' && isLogin.value && !isFullCredential.value) {
 			errMsg.value =
 				"This passkey's public key is not stored in the frontend, so it can only be used for signing but not for installing a new webauthn validator. To use a passkey with a public key, please create a new one."
 		}
@@ -214,7 +253,7 @@ function onClickImport() {
 				category: 'Smart Account',
 				address: computedAddress.value,
 				chainId: selectedChainId.value,
-				vOptions: [selectedValidation.value],
+				vMethods: [serializeValidationMethod(selectedValidation.value)],
 			},
 			initCode.value,
 		)
@@ -248,7 +287,7 @@ function onClickDeploy() {
 			category: 'Smart Account',
 			address: computedAddress.value,
 			chainId: selectedChainId.value,
-			vOptions: [selectedValidation.value],
+			vMethods: [serializeValidationMethod(selectedValidation.value)],
 		},
 		initCode.value,
 	)
@@ -331,7 +370,7 @@ function onClickPasskeyLogout() {
 							<div class="flex items-center justify-between w-full gap-2">
 								{{
 									selectedValidationType
-										? displayValidationName(selectedValidationType)
+										? VALIDATION_METHOD_DISPLAY[selectedValidationType].name
 										: 'Select Validation Type'
 								}}
 							</div>
@@ -340,17 +379,17 @@ function onClickPasskeyLogout() {
 
 					<SelectContent>
 						<SelectItem
-							v-for="validationOption in supportedValidationOptions"
-							:key="validationOption.type"
-							:value="validationOption.type"
+							v-for="vMethod in supportedValidationMethods"
+							:key="vMethod.type"
+							:value="vMethod.type"
 							class="cursor-pointer"
 						>
 							<div class="flex flex-col py-1">
 								<div class="flex items-center justify-between w-full gap-2">
-									<div class="font-medium">{{ validationOption.name }}</div>
+									<div class="font-medium">{{ vMethod.name }}</div>
 								</div>
 								<div class="text-xs text-muted-foreground mt-0.5">
-									{{ validationOption.description }}
+									{{ vMethod.description }}
 								</div>
 							</div>
 						</SelectItem>
@@ -358,7 +397,13 @@ function onClickPasskeyLogout() {
 				</Select>
 
 				<!-- Signer connection -->
-				<div v-if="selectedValidationType === 'EOA-Owned'">
+				<div
+					v-if="
+						selectedValidationType === 'ECDSAValidator' ||
+						selectedValidationType === 'OwnableValidator' ||
+						selectedValidationType === 'Simple7702Account'
+					"
+				>
 					<div
 						v-if="isEOAWalletSupported"
 						class="flex flex-col p-3 border rounded-lg bg-muted/30"
@@ -393,7 +438,7 @@ function onClickPasskeyLogout() {
 					</div>
 				</div>
 
-				<div v-if="selectedValidationType === 'Passkey'">
+				<div v-if="selectedValidationType === 'WebAuthnValidator'">
 					<div
 						v-if="isPasskeySupported"
 						class="flex flex-col p-3 border rounded-lg"

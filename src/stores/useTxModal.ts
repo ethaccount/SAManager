@@ -1,20 +1,15 @@
 import TxModal from '@/components/TxModal.vue'
+import { buildAccountExecutions } from '@/lib/userop-builder'
+import { deserializeValidationMethod } from '@/lib/validation-methods'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
+import { ENTRY_POINT_V07_ADDRESS, UserOpBuilder, UserOperationReceipt } from 'ethers-erc4337'
 import { defineStore, storeToRefs } from 'pinia'
-import {
-	ADDRESS,
-	createUserOp,
-	DeprecatedPublicPaymaster,
-	estimateUserOp,
-	Execution,
-	getPaymasterData,
-	sendUserOp,
-	signUserOp,
-	UserOp,
-	UserOpReceipt,
-} from 'sendop'
+import { ADDRESS, DeprecatedPublicPaymaster, Execution } from 'sendop'
 import { useModal } from 'vue-final-modal'
+import { signMessageUsingPasskey } from './passkey/signMessageUsingPasskey'
+import { useEOAWallet } from './useEOAWallet'
+import { useSigner } from './validation/useSigner'
 
 export enum TransactionStatus {
 	Estimation = 'Estimation',
@@ -56,8 +51,8 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 		open()
 	}
 
-	const { bundler } = useBlockchain()
-	const { selectedAccount, opGetter } = useAccount()
+	const { bundler, selectedChainId, client } = useBlockchain()
+	const { selectedAccount } = useAccount()
 
 	const paymasters = [
 		{ id: 'none', name: 'No Paymaster', description: 'Pay gas fees with native tokens' },
@@ -76,17 +71,17 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 
 	const canSign = computed(() => {
 		if (status.value !== TransactionStatus.Sign) return false
-		return userOp.value !== null
+		return true
 	})
 
 	const canSend = computed(() => {
 		if (status.value !== TransactionStatus.Send) return false
-		return userOp.value !== null && userOp.value.signature !== undefined
+		return true
 	})
 
-	const userOp = ref<UserOp | null>(null)
+	const userOp = ref<UserOpBuilder | null>(null)
 	const opHash = ref<string | null>(null)
-	const opReceipt = ref<UserOpReceipt | null>(null)
+	const opReceipt = ref<UserOperationReceipt | null>(null)
 
 	const pmGetter = computed(() => {
 		switch (selectedPaymaster.value) {
@@ -98,48 +93,82 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 	})
 
 	async function handleEstimate(executions: Execution[], initCode?: string) {
-		if (!opGetter.value || !selectedAccount.value) {
-			throw new Error('handleEstimate: Account not selected')
+		if (!selectedAccount.value) {
+			throw new Error('[handleEstimate] Account not selected')
 		}
 
 		if (executions.length === 0 && !initCode) {
-			throw new Error('handleEstimate: No executions and no init code provided')
+			throw new Error('[handleEstimate] No executions and no init code provided')
 		}
 
-		let _userOp: UserOp | null = null
+		const op = new UserOpBuilder(bundler.value, ENTRY_POINT_V07_ADDRESS, Number(selectedChainId.value))
+		const { selectedSignerType } = useSigner()
 
-		try {
-			_userOp = await createUserOp(bundler.value, executions, opGetter.value, initCode)
-		} catch (e: unknown) {
-			throw new Error('handleEstimate: Failed to create user operation', { cause: e })
+		// find validation method by signer type
+		const vMethod = selectedAccount.value.vMethods.find(vMethod => vMethod.signerType === selectedSignerType.value)
+
+		if (!vMethod) {
+			throw new Error('[handleEstimate] vMethod not found')
 		}
 
-		const estimation = await estimateUserOp(_userOp, bundler.value, opGetter.value, pmGetter.value)
+		await buildAccountExecutions({
+			op,
+			accountId: selectedAccount.value.accountId,
+			validationMethod: deserializeValidationMethod(vMethod),
+			accountAddress: selectedAccount.value.address,
+			client: client.value,
+			executions,
+		})
 
-		_userOp = estimation.userOp
-		if (!estimation.pmIsFinal && pmGetter.value) {
-			_userOp = await getPaymasterData(_userOp, pmGetter.value)
-		}
-
-		userOp.value = _userOp
+		userOp.value = op
 	}
 
 	async function handleSign() {
-		if (!userOp.value || !opGetter.value || !selectedAccount.value) {
-			throw new Error('handleSign: Transaction not prepared')
+		if (!userOp.value) {
+			throw new Error('[handleSign] User operation not built')
 		}
-		userOp.value = await signUserOp(userOp.value, bundler.value, opGetter.value)
+
+		const op = userOp.value
+
+		const { selectedSigner, selectedSignerType } = useSigner()
+
+		if (!selectedSigner) {
+			throw new Error('[handleSign] No signer selected')
+		}
+
+		const entryPointAddress = op.entryPointAddress
+
+		let signature: string
+
+		if (selectedSignerType.value === 'EOAWallet') {
+			const { signer } = useEOAWallet()
+			if (!signer.value) {
+				throw new Error('[handleSign] No signer selected')
+			}
+
+			// Use different signing methods based on entry point version
+			if (entryPointAddress === ENTRY_POINT_V07_ADDRESS) {
+				signature = await signer.value.signMessage(op.hash())
+			} else {
+				// for entrypoint v0.8
+				signature = await signer.value.signTypedData(...op.typedData())
+			}
+		} else {
+			// Passkey signing is the same for both entry point versions
+			signature = await signMessageUsingPasskey(op.hash())
+		}
+
+		op.setSignature(signature)
+		// Notice to formate signature if needed
 	}
 
 	async function handleSend() {
 		if (!userOp.value) {
-			throw new Error('handleSend: Transaction not signed')
+			throw new Error('[handleSend] User operation not built')
 		}
+		const op = userOp.value
 
-		// Send the user operation
-		const op = await sendUserOp(bundler.value, userOp.value)
-
-		opHash.value = op.hash
+		await op.send()
 
 		// Wait for the transaction to be mined
 		status.value = TransactionStatus.Pending

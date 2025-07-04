@@ -1,6 +1,7 @@
+import { ValidationMethodData } from '@/lib/validation-methods'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
-import { SUPPORTED_VALIDATION_OPTIONS, ValidationOption } from '@/stores/validation/validation'
+import { SUPPORTED_VALIDATION_OPTIONS } from '@/stores/validation/validation'
 import { isSameAddress } from 'sendop'
 
 export type SUPPORTED_SIGNER_TYPE = 'EOAWallet' | 'Passkey'
@@ -61,24 +62,22 @@ export const useSignerStore = defineStore('useSignerStore', () => {
 		}
 	}
 
-	function isSignerEligibleForValidation(vOptions: ValidationOption[]): boolean {
+	function isSignerEligibleForValidation(vMethods: ValidationMethodData[]): boolean {
 		const { selectedSigner } = useSigner()
 		if (!selectedSigner.value) return false
 
-		// console.log('checkValidationAvailability: selectedSigner', selectedSigner.value)
-
-		for (const vOption of vOptions) {
-			const vOptionSignerType = SUPPORTED_VALIDATION_OPTIONS[vOption.type].signerType
+		for (const vMethod of vMethods) {
+			const vOptionSignerType = SUPPORTED_VALIDATION_OPTIONS[vMethod.name].signerType
 
 			if (vOptionSignerType === selectedSigner.value.type) {
 				if (vOptionSignerType === 'EOAWallet') {
-					if (isSameAddress(selectedSigner.value.identifier, vOption.identifier)) {
+					if (isSameAddress(selectedSigner.value.identifier, vMethod.identifier)) {
 						return true
 					}
 				}
 
 				if (vOptionSignerType === 'Passkey') {
-					if (selectedSigner.value.identifier === vOption.identifier) {
+					if (selectedSigner.value.identifier === vMethod.identifier) {
 						return true
 					}
 				}

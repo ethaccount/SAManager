@@ -8,6 +8,7 @@ import {
 	TESTNET_CHAIN_ID,
 } from '@/stores/blockchain/blockchain'
 import { JsonRpcProvider } from 'ethers'
+import { ERC4337Bundler } from 'ethers-erc4337'
 import { publicNode, PublicNodeChain } from 'evm-providers'
 import { defineStore } from 'pinia'
 import { ADDRESS, AlchemyBundler, Bundler, DeprecatedPublicPaymaster, EntryPointVersion, PimlicoBundler } from 'sendop'
@@ -102,20 +103,8 @@ export const useBlockchainStore = defineStore(
 			})
 		})
 
-		const bundler = computed<Bundler>(() => {
-			const bundlerOptions = {
-				parseError: true,
-				entryPointVersion: selectedEntryPoint.value,
-			}
-
-			switch (selectedBundler.value) {
-				case SUPPORTED_BUNDLER.PIMLICO:
-					return new PimlicoBundler(chainIdBigInt.value, bundlerUrl.value, bundlerOptions)
-				case SUPPORTED_BUNDLER.ALCHEMY:
-					return new AlchemyBundler(chainIdBigInt.value, bundlerUrl.value, bundlerOptions)
-				default:
-					return new AlchemyBundler(chainIdBigInt.value, bundlerUrl.value, bundlerOptions)
-			}
+		const bundler = computed<ERC4337Bundler>(() => {
+			return new ERC4337Bundler(bundlerUrl.value)
 		})
 
 		const pmGetter = computed(() => new DeprecatedPublicPaymaster(ADDRESS.PublicPaymaster))

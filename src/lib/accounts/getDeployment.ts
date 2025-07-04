@@ -1,19 +1,15 @@
 import { AccountId } from '@/stores/account/account'
-import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
-import { usePasskey } from '@/stores/passkey/usePasskey'
-import { SUPPORTED_VALIDATION_OPTIONS, ValidationOption } from '@/stores/validation/validation'
 import { JsonRpcProvider } from 'ethers'
 import {
 	ADDRESS,
 	BICONOMY_ATTESTER_ADDRESS,
 	DEV_ATTESTER_ADDRESS,
-	EOAValidator,
 	Kernel,
 	Nexus,
 	RHINESTONE_ATTESTER_ADDRESS,
 	Safe7579,
-	WebAuthnValidator,
 } from 'sendop'
+import { ValidationMethod } from '../validation-methods'
 
 export type Deployment = {
 	accountAddress: string
@@ -24,39 +20,15 @@ export type Deployment = {
 export async function getDeployment(
 	client: JsonRpcProvider,
 	accountId: AccountId,
-	validation: ValidationOption,
+	validation: ValidationMethod,
 	salt: string,
 ): Promise<Deployment> {
-	let validatorAddress: string
-	let validatorInitData: string
-
-	switch (validation.type) {
-		case 'EOA-Owned':
-			validatorAddress = SUPPORTED_VALIDATION_OPTIONS['EOA-Owned'].validatorAddress
-			validatorInitData = EOAValidator.getInitData(validation.identifier)
-			break
-		case 'Passkey':
-			const { selectedCredential, isFullCredential } = usePasskey()
-			if (!isFullCredential.value || !selectedCredential.value) {
-				throw new Error('getDeployment: selectedCredential is invalid')
-			}
-			validatorAddress = SUPPORTED_VALIDATION_OPTIONS['Passkey'].validatorAddress
-
-			try {
-				validatorInitData = WebAuthnValidator.getInitData({
-					pubKeyX: BigInt(selectedCredential.value.pubKeyX),
-					pubKeyY: BigInt(selectedCredential.value.pubKeyY),
-					authenticatorIdHash: getAuthenticatorIdHash(selectedCredential.value.credentialId),
-				})
-			} catch (e: unknown) {
-				throw new Error('getDeployment: WebAuthnValidator.getInitData', {
-					cause: e,
-				})
-			}
-			break
-		default:
-			throw new Error(`getDeployment: Unsupported validation type: ${validation.type}`)
+	if (!validation.module) {
+		throw new Error('getDeployment: validation.module is undefined')
 	}
+
+	const validatorAddress = validation.module.address
+	const validatorInitData = validation.module.initData
 
 	let deployment: {
 		accountAddress: string

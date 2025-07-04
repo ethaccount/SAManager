@@ -22,19 +22,36 @@ import {
 	zeroPadLeft,
 } from 'sendop'
 
-export interface AppValidation {
-	validation: ValidationAPI
-	validatorAddress: string
-}
-
-export function getExecutionAccountAPI(accountId: AccountId, validation: AppValidation): AccountAPI {
+export function getExecutionAccountAPI(
+	accountId: AccountId,
+	validationAPI: ValidationAPI,
+	validatorAddress?: string,
+): AccountAPI {
 	switch (accountId) {
 		case AccountId['kernel.advanced.v0.3.1']:
-			return new KernelAccountAPI(validation)
+			if (!validatorAddress) {
+				throw new Error('[getExecutionAccountAPI] validatorAddress is required')
+			}
+			return new KernelAccountAPI({
+				validation: validationAPI,
+				validatorAddress,
+			})
 		case AccountId['biconomy.nexus.1.0.2']:
-			return new NexusAccountAPI(validation)
+			if (!validatorAddress) {
+				throw new Error('[getExecutionAccountAPI] validatorAddress is required')
+			}
+			return new NexusAccountAPI({
+				validation: validationAPI,
+				validatorAddress,
+			})
 		case AccountId['rhinestone.safe7579.v1.0.0']:
-			return new Safe7579AccountAPI(validation)
+			if (!validatorAddress) {
+				throw new Error('[getExecutionAccountAPI] validatorAddress is required')
+			}
+			return new Safe7579AccountAPI({
+				validation: validationAPI,
+				validatorAddress,
+			})
 		case AccountId['infinitism.Simple7702Account.0.8.0']:
 			return new Simple7702AccountAPI()
 		default:

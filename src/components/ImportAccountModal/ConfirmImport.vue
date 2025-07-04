@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import { ValidationMethodData } from '@/lib/validation-methods'
 import { displayAccountName, ImportedAccount } from '@/stores/account/account'
 import { useAccounts } from '@/stores/account/useAccounts'
 import { CHAIN_NAME } from '@/stores/blockchain/blockchain'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
-import { ValidationOption } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
 import { CheckCircle2 } from 'lucide-vue-next'
 
@@ -21,15 +21,15 @@ const onClickConfirm = () => {
 	importAccount({
 		address: props.accountData().address,
 		accountId: props.accountData().accountId,
-		vOptions: props.accountData().vOptions,
+		vMethods: props.accountData().vMethods,
 		category: props.accountData().category,
 		chainId: selectedChainId.value,
 	})
 	isSuccess.value = true
 }
 
-function displayValidationOptions(vOptions: ValidationOption[]) {
-	return vOptions.map(v => v.type).join(', ')
+function displayValidationOptions(vMethods: ValidationMethodData[]) {
+	return vMethods.map(v => v.name).join(', ')
 }
 </script>
 
@@ -68,7 +68,7 @@ function displayValidationOptions(vOptions: ValidationOption[]) {
 			<div class="flex justify-between items-center">
 				<span class="text-sm text-muted-foreground">Validation Options</span>
 				<span class="font-medium text-foreground">
-					{{ displayValidationOptions(accountData().vOptions) }}
+					{{ displayValidationOptions(accountData().vMethods) }}
 				</span>
 			</div>
 		</div>

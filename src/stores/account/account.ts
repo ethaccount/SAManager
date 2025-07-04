@@ -1,5 +1,5 @@
 import { CHAIN_ID, getEntryPointAddress } from '@/stores/blockchain/blockchain'
-import { ValidationOption } from '@/stores/validation/validation'
+import { ValidationMethodData } from '@/lib/validation-methods'
 import { EntryPointVersion, isSameAddress } from 'sendop'
 
 export type ImportedAccount = {
@@ -7,7 +7,7 @@ export type ImportedAccount = {
 	category: AccountCategory
 	address: string
 	chainId: CHAIN_ID
-	vOptions: ValidationOption[]
+	vMethods: ValidationMethodData[]
 }
 
 export type AccountCategory = 'Smart Account' | 'Smart EOA'
@@ -17,7 +17,6 @@ export enum AccountId {
 	'biconomy.nexus.1.0.2' = 'biconomy.nexus.1.0.2',
 	'rhinestone.safe7579.v1.0.0' = 'rhinestone.safe7579.v1.0.0',
 	'infinitism.Simple7702Account.0.8.0' = 'infinitism.Simple7702Account.0.8.0',
-	'infinitism.SimpleAccount.0.8.0' = 'infinitism.SimpleAccount.0.8.0',
 }
 
 export type ModularAccountId = {
@@ -29,7 +28,6 @@ export const ACCOUNT_ID_TO_NAME: Record<AccountId, string> = {
 	[AccountId['biconomy.nexus.1.0.2']]: 'Nexus',
 	[AccountId['rhinestone.safe7579.v1.0.0']]: 'Safe7579',
 	[AccountId['infinitism.Simple7702Account.0.8.0']]: 'Simple7702Account',
-	[AccountId['infinitism.SimpleAccount.0.8.0']]: 'SimpleAccount',
 }
 
 export const SUPPORTED_ACCOUNTS: Record<
@@ -50,10 +48,6 @@ export const SUPPORTED_ACCOUNTS: Record<
 	[AccountId['rhinestone.safe7579.v1.0.0']]: {
 		entryPointVersion: 'v0.7',
 		isModular: true,
-	},
-	[AccountId['infinitism.SimpleAccount.0.8.0']]: {
-		entryPointVersion: 'v0.8',
-		isModular: false,
 	},
 	[AccountId['infinitism.Simple7702Account.0.8.0']]: {
 		entryPointVersion: 'v0.8',

@@ -19,9 +19,9 @@ export const useAccountsStore = defineStore(
 				throw new Error(`importAccount: Invalid values: ${JSON.stringify(account)}`)
 			}
 
-			// should have at least one vOption
-			if (!account.vOptions || account.vOptions.length === 0) {
-				throw new Error(`importAccount: No validation options`)
+			// should have at least one vMethod
+			if (!account.vMethods || account.vMethods.length === 0) {
+				throw new Error(`importAccount: No validation methods`)
 			}
 
 			if (accounts.value.some(a => isSameAccount(a, account))) {
@@ -34,13 +34,13 @@ export const useAccountsStore = defineStore(
 			})
 
 			if (initCode) {
-				if (account.vOptions.length > 1) {
-					throw new Error(`importAccount: Multiple vOptions are not supported with init code`)
+				if (account.vMethods.length > 1) {
+					throw new Error(`importAccount: Multiple vMethods are not supported with init code`)
 				}
 				addInitCode({
 					address: account.address,
 					initCode,
-					vOption: account.vOptions[0],
+					vMethod: account.vMethods[0],
 				})
 			}
 
