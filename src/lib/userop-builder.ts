@@ -2,7 +2,7 @@ import { AccountId } from '@/stores/account/account'
 import { JsonRpcProvider } from 'ethers'
 import { UserOpBuilder } from 'ethers-erc4337'
 import { Execution } from 'sendop'
-import { AppValidation, getExecutionAccountAPI, getSmartSessionExecutionAccountAPI } from './account-specific'
+import { AppValidation, getExecutionAccountAPI, getSmartSessionExecutionAccountAPI } from './accounts/account-specific'
 
 export async function buildAccountExecutions({
 	op,

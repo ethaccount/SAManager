@@ -1,4 +1,4 @@
-import { getInstallModuleData } from '@/lib/module-management/calldata'
+import { getInstallModuleData } from '@/lib/accounts/account-specific'
 import { createScheduledTransferSession, getScheduledTransferSessionStatus } from '@/lib/permissions/session'
 import { useSessionList } from '@/lib/permissions/useSessionList'
 import {

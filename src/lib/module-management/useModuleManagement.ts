@@ -1,4 +1,4 @@
-import { getInstallModuleData, getUninstallModuleData } from '@/lib/account-specific'
+import { getInstallModuleData, getUninstallModuleData } from '@/lib/accounts/account-specific'
 import { AccountId } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'

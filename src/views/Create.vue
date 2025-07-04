@@ -1,13 +1,15 @@
 <script setup lang="ts">
+import { env } from '@/app/useSetupEnv'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { env } from '@/app/useSetupEnv'
+import { Deployment, getDeployment } from '@/lib/accounts/getDeployment'
 import { toRoute } from '@/lib/router'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
+import { useGetCode } from '@/lib/useGetCode'
 import { ACCOUNT_ID_TO_NAME, AccountId, displayAccountName, SUPPORTED_ACCOUNTS } from '@/stores/account/account'
-import { checkIfAccountIsDeployed, getComputedAddressAndInitCode } from '@/stores/account/create'
+import { useAccount } from '@/stores/account/useAccount'
 import { useAccounts } from '@/stores/account/useAccounts'
 import { displayChainName } from '@/stores/blockchain/blockchain'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
@@ -15,7 +17,6 @@ import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useTxModal } from '@/stores/useTxModal'
 import { useSigner } from '@/stores/validation/useSigner'
-import { useAccount } from '@/stores/account/useAccount'
 import {
 	createEOAOwnedValidation,
 	createPasskeyValidation,
@@ -25,8 +26,8 @@ import {
 	ValidationType,
 } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
-import { isAddress } from 'ethers'
-import { ChevronRight, Power, AlertCircle } from 'lucide-vue-next'
+import { concat, isAddress } from 'ethers'
+import { AlertCircle, ChevronRight, Power } from 'lucide-vue-next'
 import { toBytes32 } from 'sendop'
 
 const router = useRouter()
@@ -141,34 +142,41 @@ const isValidationAvailable = computed(() => {
 	return useSigner().isSignerEligibleForValidation([selectedValidation.value])
 })
 
-const computedAddress = ref<string>('')
-const initCode = ref<string>('')
+const deployment = ref<Deployment | null>(null)
 const isDeployed = ref(false)
 
+const computedAddress = computed(() => {
+	return deployment.value?.accountAddress
+})
+
+const initCode = computed(() => {
+	if (!deployment.value) return null
+	return concat([deployment.value.factory, deployment.value.factoryData])
+})
+
 const isImported = computed(() => {
-	return isAccountImported(computedAddress.value, selectedChainId.value)
+	return deployment.value && isAccountImported(deployment.value.accountAddress, selectedChainId.value)
 })
 
 const errMsg = ref<string | null>(null)
 
 watchImmediate([isValidationAvailable, selectedValidation, isLogin, selectedAccountType, computedSalt], async () => {
-	computedAddress.value = ''
-	initCode.value = ''
+	deployment.value = null
 	isDeployed.value = false
 	errMsg.value = null
 
 	if (isValidationAvailable.value && selectedValidation.value && selectedAccountType.value && computedSalt.value) {
 		isComputingAddress.value = true
 		try {
-			const res = await getComputedAddressAndInitCode(
+			deployment.value = await getDeployment(
 				client.value,
 				selectedAccountType.value,
 				selectedValidation.value,
 				computedSalt.value,
 			)
-			computedAddress.value = res.computedAddress
-			initCode.value = res.initCode
-			isDeployed.value = await checkIfAccountIsDeployed(client.value, computedAddress.value)
+			const { getCode, isDeployed: isAccountDeployed } = useGetCode()
+			await getCode(deployment.value.accountAddress)
+			isDeployed.value = isAccountDeployed.value
 		} catch (error) {
 			throw error
 		} finally {
@@ -251,7 +259,12 @@ function onClickDeploy() {
 		// Update the deployed status when the transaction status changes
 		// When users has deployed and closed the modal, they can't click the deploy button again
 		onSuccess: async () => {
-			isDeployed.value = await checkIfAccountIsDeployed(client.value, computedAddress.value)
+			if (!computedAddress.value) {
+				throw new Error('[onClickDeploy] computedAddress is falsy')
+			}
+			const { getCode, isDeployed: isAccountDeployed } = useGetCode()
+			await getCode(computedAddress.value)
+			isDeployed.value = isAccountDeployed.value
 		},
 	})
 }
