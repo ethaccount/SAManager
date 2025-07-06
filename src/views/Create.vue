@@ -142,17 +142,10 @@ const selectedValidation = computed<ValidationMethod | null>(() => {
 })
 
 // Auto select the signer when the selectedValidation is updated
-watchImmediate(selectedValidationType, () => {
-	if (selectedValidationType.value) {
+watchImmediate(selectedValidation, () => {
+	if (selectedValidation.value) {
 		const { selectSigner } = useSigner()
-		// Map validation method to signer type
-		const signerTypeMap = {
-			ECDSAValidator: 'EOAWallet',
-			OwnableValidator: 'EOAWallet',
-			WebAuthnValidator: 'Passkey',
-			Simple7702Account: 'EOAWallet',
-		} as const
-		selectSigner(signerTypeMap[selectedValidationType.value])
+		selectSigner(selectedValidation.value.signerType)
 	}
 })
 

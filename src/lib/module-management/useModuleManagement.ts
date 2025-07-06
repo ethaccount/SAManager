@@ -47,7 +47,6 @@ export function useModuleManagement() {
 				case 'ECDSAValidator':
 					if (operation === 'install') {
 						if (!wallet.address) {
-							toast.info('Connect EOA wallet to install validator')
 							openConnectEOAWallet()
 							return
 						}
