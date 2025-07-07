@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { addressToName } from '@/lib/addressToName'
 import { getErrMsg } from '@/lib/error'
 import { useGetCode } from '@/lib/useGetCode'
+import { deserializeValidationMethod } from '@/lib/validations'
 import { displayAccountName } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { displayChainName } from '@/stores/blockchain/blockchain'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
-import { TransactionStatus, TxModalExecution, useTxModal } from '@/stores/useTxModal'
 import { useSigner } from '@/stores/useSigner'
+import { TransactionStatus, TxModalExecution, useTxModal } from '@/stores/useTxModal'
 import { shortenAddress } from '@vue-dapp/core'
 import { formatEther } from 'ethers'
 import { CircleDot, ExternalLink, Loader2, X } from 'lucide-vue-next'
@@ -43,7 +45,7 @@ function onClickClose() {
 }
 
 const { wallet, isConnected } = useEOAWallet()
-const { selectedChainId, explorerUrl, selectedEntryPoint } = useBlockchain()
+const { selectedChainId, explorerUrl } = useBlockchain()
 const { selectedAccount, selectedAccountInitCodeData, isAccountConnected } = useAccount()
 const { selectSigner, selectedSigner } = useSigner()
 const { selectedCredentialDisplay, isLogin } = usePasskey()
@@ -192,13 +194,13 @@ const txLink = computed(() => {
 const showEOAWalletValidationMethod = computed(() => {
 	if (!selectedAccount.value) return false
 	if (!isConnected.value) return false
-	return selectedAccount.value.vMethods.some(v => v.signerType === 'EOAWallet')
+	return selectedAccount.value.vMethods.some(v => deserializeValidationMethod(v).signerType === 'EOAWallet')
 })
 
 const showPasskeyValidationMethod = computed(() => {
 	if (!selectedAccount.value) return false
 	if (!isLogin.value) return false
-	return selectedAccount.value.vMethods.some(v => v.signerType === 'Passkey')
+	return selectedAccount.value.vMethods.some(v => deserializeValidationMethod(v).signerType === 'Passkey')
 })
 
 // Computed property to determine if modal can be closed
@@ -359,8 +361,8 @@ const canClose = computed(() => {
 
 						<!-- Entry Point Version -->
 						<div class="flex items-center justify-between text-sm">
-							<span class="text-muted-foreground">EntryPoint Version</span>
-							<span class="text-sm">{{ selectedEntryPoint }}</span>
+							<span class="text-muted-foreground">EntryPoint</span>
+							<span class="text-sm">{{ addressToName(userOp?.entryPointAddress || '') }}</span>
 						</div>
 
 						<!-- Deployment Status -->

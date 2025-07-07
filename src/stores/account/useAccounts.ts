@@ -1,3 +1,4 @@
+import { ValidationMethodName } from '@/lib/validations'
 import { ImportedAccount, isSameAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useInitCode } from '@/stores/account/useInitCode'
@@ -11,6 +12,30 @@ export const useAccountsStore = defineStore(
 		const { selectedAccount } = useAccount()
 
 		const accounts = ref<ImportedAccount[]>([])
+
+		// migrate vOptions to vMethods
+		watchImmediate(accounts, accounts => {
+			const vOptionsToVMethods: Record<string, ValidationMethodName> = {
+				'EOA-Ownable': 'ECDSAValidator',
+				Passkey: 'WebAuthnValidator',
+			}
+			accounts.forEach(account => {
+				if (account.vOptions) {
+					for (const vOption of account.vOptions) {
+						// add vMethods field if it doesn't exist
+						if (!account.vMethods) {
+							account.vMethods = []
+						}
+						account.vMethods.push({
+							name: vOptionsToVMethods[vOption.type],
+							identifier: vOption.identifier,
+						})
+					}
+					delete account.vOptions
+					console.log('migrated account', account.address)
+				}
+			})
+		})
 
 		const hasAccounts = computed(() => accounts.value.length > 0)
 

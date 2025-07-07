@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { fetchECDSAValidatorRegisteredEvent, fetchWebAuthnRegisteredEvent } from '@/api/registered-events'
+import { deserializeValidationMethod } from '@/lib/validations'
 import { ValidationMethodData } from '@/lib/validations/ValidationMethod'
 import { AccountId } from '@/stores/account/account'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
-import { SUPPORTED_VALIDATION_OPTIONS } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
 import { getAddress, JsonRpcProvider } from 'ethers'
 import { ChevronRight, Loader2 } from 'lucide-vue-next'
-import { ERC7579_MODULE_TYPE, TIERC7579Account__factory } from 'sendop'
+import { ADDRESS, ERC7579_MODULE_TYPE, TIERC7579Account__factory } from 'sendop'
 import { toast } from 'vue-sonner'
 
 const props = defineProps<{
@@ -42,7 +42,7 @@ onMounted(async () => {
 
 		let addresses: string[] = []
 
-		const vType = props.vMethod().signerType
+		const vType = deserializeValidationMethod(props.vMethod()).signerType
 
 		if (vType !== 'EOAWallet' && vType !== 'Passkey') {
 			throw new Error('Unsupported validation type')
@@ -64,7 +64,7 @@ onMounted(async () => {
 					const account = TIERC7579Account__factory.connect(address, client.value) // use client for batch RPC
 					const isInstalled = await account.isModuleInstalled(
 						ERC7579_MODULE_TYPE.VALIDATOR,
-						SUPPORTED_VALIDATION_OPTIONS['EOA-Owned'].validatorAddress,
+						ADDRESS.ECDSAValidator,
 						'0x',
 					)
 

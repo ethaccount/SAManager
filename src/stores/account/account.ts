@@ -8,6 +8,12 @@ export type ImportedAccount = {
 	address: string
 	chainId: CHAIN_ID
 	vMethods: ValidationMethodData[]
+
+	// deprecated
+	vOptions?: {
+		type: 'EOA-Ownable' | 'Passkey'
+		identifier: string
+	}[]
 }
 
 export type AccountCategory = 'Smart Account' | 'Smart EOA'

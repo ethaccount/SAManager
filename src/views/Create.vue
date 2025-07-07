@@ -62,14 +62,14 @@ const ACCOUNT_SUPPORTED_INITIAL_VALIDATION: Partial<
 	>
 > = {
 	[AccountId['kernel.advanced.v0.3.1']]: [
-		{ type: 'EOA_SINGLE', name: 'ECDSAValidator' },
+		{ type: 'EOA-Owned', name: 'ECDSAValidator' },
 		{ type: 'PASSKEY', name: 'WebAuthnValidator' },
 	],
 	[AccountId['biconomy.nexus.1.0.2']]: [
-		{ type: 'EOA_SINGLE', name: 'OwnableValidator' },
+		{ type: 'EOA-Owned', name: 'OwnableValidator' },
 		{ type: 'PASSKEY', name: 'WebAuthnValidator' },
 	],
-	[AccountId['rhinestone.safe7579.v1.0.0']]: [{ type: 'EOA_SINGLE', name: 'OwnableValidator' }],
+	[AccountId['rhinestone.safe7579.v1.0.0']]: [{ type: 'EOA-Owned', name: 'OwnableValidator' }],
 } as const
 
 const supportedValidationTypes = computed(() => {
@@ -97,14 +97,13 @@ watch(selectedAccountType, newAccountType => {
 })
 
 const selectedValidationMethod = computed<ValidationMethod | null>(() => {
+	// Return null instead of throwing error in this computed property
 	if (!selectedAccountType.value) return null
 	if (!selectedValidationType.value) return null
 
 	switch (selectedValidationType.value) {
-		case 'EOA_SINGLE': {
-			if (!signer.value) {
-				throw new Error('[selectedValidationMethod] signer is null')
-			}
+		case 'EOA-Owned': {
+			if (!signer.value) return null
 			const identifier = signer.value.address
 
 			// get account supported validation method name
@@ -372,7 +371,7 @@ function onClickPasskeyLogout() {
 				</Select>
 
 				<!-- Signer connection -->
-				<div v-if="selectedValidationType === 'EOA_SINGLE' || selectedValidationType === 'PASSKEY'">
+				<div v-if="selectedValidationType === 'EOA-Owned' || selectedValidationType === 'PASSKEY'">
 					<div
 						v-if="isEOAWalletSupported"
 						class="flex flex-col p-3 border rounded-lg bg-muted/30"

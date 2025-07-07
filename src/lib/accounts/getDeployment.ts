@@ -1,15 +1,20 @@
+import { ValidationMethod } from '@/lib/validations'
 import { AccountId } from '@/stores/account/account'
 import { JsonRpcProvider } from 'ethers'
 import {
 	ADDRESS,
 	BICONOMY_ATTESTER_ADDRESS,
 	DEV_ATTESTER_ADDRESS,
+	ERC7579_MODULE_TYPE,
+	ERC7579Module,
+	getECDSAValidator,
+	getWebAuthnValidator,
 	Kernel,
 	Nexus,
 	RHINESTONE_ATTESTER_ADDRESS,
 	Safe7579,
 } from 'sendop'
-import { ValidationMethod } from '../validations/ValidationMethod'
+import { getOwnableValidator } from '@rhinestone/module-sdk'
 
 export type Deployment = {
 	accountAddress: string
@@ -23,12 +28,45 @@ export async function getDeployment(
 	validation: ValidationMethod,
 	salt: string,
 ): Promise<Deployment> {
-	if (!validation.module) {
-		throw new Error('getDeployment: validation.module is undefined')
+	if (!validation.isModule) {
+		throw new Error('getDeployment: Validation method is not a module')
 	}
 
-	const validatorAddress = validation.module.address
-	const validatorInitData = validation.module.initData
+	let module: ERC7579Module
+
+	switch (validation.name) {
+		case 'ECDSAValidator': {
+			module = getECDSAValidator({
+				ownerAddress: validation.identifier,
+			})
+			break
+		}
+		case 'WebAuthnValidator': {
+			module = getWebAuthnValidator({
+				// TODO: get pubKeyX and pubKeyY from the validation method
+				pubKeyX: BigInt(validation.identifier),
+				pubKeyY: BigInt(validation.identifier),
+				authenticatorIdHash: validation.identifier,
+			})
+			break
+		}
+		case 'OwnableValidator': {
+			const m = getOwnableValidator({
+				owners: [validation.identifier as `0x${string}`],
+				threshold: 1,
+			})
+			module = {
+				address: m.address,
+				type: ERC7579_MODULE_TYPE.VALIDATOR,
+				initData: m.initData,
+				deInitData: m.deInitData,
+			}
+			break
+		}
+		default: {
+			throw new Error(`getDeployment: Unsupported validation method: ${validation.name}`)
+		}
+	}
 
 	let deployment: {
 		accountAddress: string
@@ -41,8 +79,8 @@ export async function getDeployment(
 			{
 				deployment = await Kernel.getDeployment({
 					client,
-					validatorAddress,
-					validatorData: validatorInitData,
+					validatorAddress: module.address,
+					validatorData: module.initData,
 					salt,
 				})
 			}
@@ -53,8 +91,8 @@ export async function getDeployment(
 					client,
 					salt,
 					creationOptions: {
-						validatorAddress,
-						validatorInitData,
+						validatorAddress: module.address,
+						validatorInitData: module.initData,
 						bootstrap: 'initNexusWithSingleValidator',
 						registryAddress: ADDRESS.Registry,
 						attesters: [RHINESTONE_ATTESTER_ADDRESS, BICONOMY_ATTESTER_ADDRESS, DEV_ATTESTER_ADDRESS],
@@ -69,8 +107,8 @@ export async function getDeployment(
 					client,
 					salt,
 					creationOptions: {
-						validatorAddress,
-						validatorInitData,
+						validatorAddress: module.address,
+						validatorInitData: module.initData,
 						owners: [validation.identifier],
 						ownersThreshold: 1,
 						attesters: [RHINESTONE_ATTESTER_ADDRESS, BICONOMY_ATTESTER_ADDRESS, DEV_ATTESTER_ADDRESS],

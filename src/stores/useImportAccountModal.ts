@@ -6,12 +6,12 @@ import ValidateSmartEOA from '@/components/ImportAccountModal/ValidateSmartEOA.v
 import ConnectEOAWallet from '@/components/signer/ConnectEOAWallet.vue'
 import ConnectPasskey from '@/components/signer/ConnectPasskey.vue'
 import {
+	deserializeValidationMethod,
 	ECDSAValidatorVMethod,
-	serializeValidationMethod,
-	Simple7702ValidatorVMethod,
-	ValidationMethodData,
+	Simple7702AccountVMethod,
 	WebAuthnValidatorVMethod,
-} from '@/lib/validations/ValidationMethod'
+} from '@/lib/validations'
+import { ValidationMethodData } from '@/lib/validations/ValidationMethod'
 import { AccountCategory, AccountId } from '@/stores/account/account'
 import { defineStore, storeToRefs } from 'pinia'
 import { useModal } from 'vue-final-modal'
@@ -86,14 +86,10 @@ const IAM_CONFIG: Record<IAMStageKey, IAMStage<Component>> = {
 				if (!selectedCredentialId.value) {
 					throw new Error('IAMStageKey.CONNECT_PASSKEY: No selectedCredentialId')
 				}
-				const vMethod = new WebAuthnValidatorVMethod({
-					pubKeyX: '',
-					pubKeyY: '',
-					credentialId: selectedCredentialId.value,
-				})
+				const vMethod = new WebAuthnValidatorVMethod(selectedCredentialId.value)
 				useImportAccountModal().updateFormData({
 					category: 'Smart Account',
-					vMethods: [serializeValidationMethod(vMethod)],
+					vMethods: [vMethod.serialize()],
 				})
 				useImportAccountModal().goNextStage(IAMStageKey.PASSKEY_ACCOUNT_OPTIONS)
 			},
@@ -107,7 +103,9 @@ const IAM_CONFIG: Record<IAMStageKey, IAMStage<Component>> = {
 		title: 'Select an Account',
 		attrs: {
 			vMethod: () => {
-				const vMethod = useImportAccountModalStore().formData.vMethods?.find(v => v.signerType === 'Passkey')
+				const vMethod = useImportAccountModalStore().formData.vMethods?.find(
+					vMethod => deserializeValidationMethod(vMethod).signerType === 'Passkey',
+				)
 				if (!vMethod) throw new Error('PASSKEY_ACCOUNT_OPTIONS: No passkey authenticatorIdHash found')
 				return vMethod
 			},
@@ -157,7 +155,7 @@ const IAM_CONFIG: Record<IAMStageKey, IAMStage<Component>> = {
 				const vMethod = new ECDSAValidatorVMethod(address)
 				useImportAccountModal().updateFormData({
 					category: 'Smart Account',
-					vMethods: [serializeValidationMethod(vMethod)],
+					vMethods: [vMethod.serialize()],
 				})
 				useImportAccountModal().goNextStage(IAMStageKey.EOA_ACCOUNT_OPTIONS)
 			},
@@ -171,7 +169,9 @@ const IAM_CONFIG: Record<IAMStageKey, IAMStage<Component>> = {
 		title: 'Select an Account',
 		attrs: {
 			vMethod: () => {
-				const vMethod = useImportAccountModalStore().formData.vMethods?.find(v => v.signerType === 'EOAWallet')
+				const vMethod = useImportAccountModalStore().formData.vMethods?.find(
+					vMethod => deserializeValidationMethod(vMethod).signerType === 'EOAWallet',
+				)
 				if (!vMethod) throw new Error('EOA_ACCOUNT_OPTIONS: No EOA address found')
 				return vMethod
 			},
@@ -218,11 +218,11 @@ const IAM_CONFIG: Record<IAMStageKey, IAMStage<Component>> = {
 		title: 'Connect Smart EOA',
 		attrs: {
 			onConfirm: (address: string) => {
-				const vMethod = new Simple7702ValidatorVMethod(address)
+				const vMethod = new Simple7702AccountVMethod(address)
 				useImportAccountModal().updateFormData({
 					address,
 					category: 'Smart EOA',
-					vMethods: [serializeValidationMethod(vMethod)],
+					vMethods: [vMethod.serialize()],
 				})
 				useImportAccountModal().goNextStage(IAMStageKey.VALIDATE_SMART_EOA)
 			},

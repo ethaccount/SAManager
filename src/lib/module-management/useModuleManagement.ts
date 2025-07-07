@@ -1,4 +1,5 @@
 import { getInstallModuleData, getUninstallModuleData } from '@/lib/accounts/account-specific'
+import { ECDSAValidatorVMethod, WebAuthnValidatorVMethod } from '@/lib/validations'
 import { AccountId } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
@@ -10,11 +11,6 @@ import { BytesLike, hexlify, JsonRpcProvider } from 'ethers'
 import { ERC7579_MODULE_TYPE, Execution, getECDSAValidator, getWebAuthnValidator } from 'sendop'
 import { toast } from 'vue-sonner'
 import { useConnectSignerModal } from '../useConnectSignerModal'
-import {
-	ECDSAValidatorVMethod,
-	serializeValidationMethod,
-	WebAuthnValidatorVMethod,
-} from '../validations/ValidationMethod'
 import { ModuleType, SUPPORTED_MODULES } from './module-constants'
 
 export function useModuleManagement() {
@@ -75,7 +71,7 @@ export function useModuleManagement() {
 								}
 								// add the vOption
 								const vMethod = new ECDSAValidatorVMethod(wallet.address)
-								selectedAccount.value.vMethods.push(serializeValidationMethod(vMethod))
+								selectedAccount.value.vMethods.push(vMethod.serialize())
 								await onSuccess?.()
 							},
 						})
@@ -144,8 +140,8 @@ export function useModuleManagement() {
 									throw new Error('No account selected')
 								}
 								// add the vOption
-								const vMethod = new WebAuthnValidatorVMethod(selectedCredential.value)
-								selectedAccount.value.vMethods.push(serializeValidationMethod(vMethod))
+								const vMethod = new WebAuthnValidatorVMethod(selectedCredential.value.credentialId)
+								selectedAccount.value.vMethods.push(vMethod.serialize())
 								await onSuccess?.()
 							},
 						})

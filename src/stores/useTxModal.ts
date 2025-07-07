@@ -1,6 +1,6 @@
 import TxModal from '@/components/TxModal.vue'
 import { buildAccountExecutions } from '@/lib/userop-builder'
-import { deserializeValidationMethod } from '@/lib/validations/ValidationMethod'
+import { deserializeValidationMethod } from '@/lib/validations'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { ENTRY_POINT_V07_ADDRESS, UserOpBuilder, UserOperationReceipt } from 'ethers-erc4337'
@@ -96,7 +96,9 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 		const { selectedSignerType } = useSigner()
 
 		// find validation method by signer type
-		const vMethod = selectedAccount.value.vMethods.find(vMethod => vMethod.signerType === selectedSignerType.value)
+		const vMethod = selectedAccount.value.vMethods.find(
+			vMethod => deserializeValidationMethod(vMethod).signerType === selectedSignerType.value,
+		)
 
 		if (!vMethod) {
 			throw new Error('[handleEstimate] vMethod not found')

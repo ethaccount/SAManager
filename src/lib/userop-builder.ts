@@ -23,7 +23,7 @@ export async function buildAccountExecutions({
 	const accountAPI = getExecutionAccountAPI(
 		accountId,
 		validationMethod.validationAPI,
-		validationMethod.module?.address,
+		validationMethod.validatorAddress,
 	)
 	return op
 		.setEntryPoint(accountAPI.entryPointAddress)
