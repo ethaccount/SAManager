@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { fetchECDSAValidatorRegisteredEvent, fetchWebAuthnRegisteredEvent } from '@/api/registered-events'
+import { AccountId } from '@/lib/accounts'
 import { deserializeValidationMethod } from '@/lib/validations'
 import { ValidationMethodData } from '@/lib/validations/ValidationMethod'
-import { AccountId } from '@/stores/account/account'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
 import { shortenAddress } from '@vue-dapp/core'

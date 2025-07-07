@@ -1,5 +1,6 @@
+import { isModularAccount } from '@/lib/accounts'
 import { deserializeValidationMethod } from '@/lib/validations/helpers'
-import { ImportedAccount, SUPPORTED_ACCOUNTS } from '@/stores/account/account'
+import { ImportedAccount } from '@/stores/account/account'
 import { InitCodeData, useInitCode } from '@/stores/account/useInitCode'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { useSigner } from '@/stores/useSigner'
@@ -32,7 +33,7 @@ export const useAccountStore = defineStore(
 
 		const isModular = computed(() => {
 			if (!selectedAccount.value) return false
-			return SUPPORTED_ACCOUNTS[selectedAccount.value.accountId].isModular
+			return isModularAccount(selectedAccount.value.accountId)
 		})
 
 		const isSmartEOA = computed(() => {

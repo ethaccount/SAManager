@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import { displayAccountName } from '@/lib/accounts'
 import { toRoute } from '@/lib/router'
 import { useGetCode } from '@/lib/useGetCode'
-import { displayAccountName } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { displayChainName } from '@/stores/blockchain/blockchain'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'

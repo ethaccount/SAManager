@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Deployment, getDeployment } from '@/lib/accounts/getDeployment'
+import { AccountId, AccountRegistry, Deployment, getDeployment } from '@/lib/accounts'
+import { displayAccountName } from '@/lib/accounts/helpers'
 import { toRoute } from '@/lib/router'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
 import { useGetCode } from '@/lib/useGetCode'
@@ -16,7 +17,6 @@ import {
 	ValidationType,
 	WebAuthnValidatorVMethod,
 } from '@/lib/validations'
-import { ACCOUNT_ID_TO_NAME, AccountId, displayAccountName, SUPPORTED_ACCOUNTS } from '@/stores/account/account'
 import { useAccounts } from '@/stores/account/useAccounts'
 import { displayChainName } from '@/stores/blockchain/blockchain'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
@@ -44,13 +44,7 @@ const {
 const { importAccount, selectAccount, isAccountImported } = useAccounts()
 const { canSign } = useSigner()
 
-const supportedAccounts = Object.entries(SUPPORTED_ACCOUNTS)
-	.filter(([_, data]) => data.isModular)
-	.map(([id]) => ({
-		id: id as AccountId,
-		name: ACCOUNT_ID_TO_NAME[id as AccountId],
-		description: `Supports EntryPoint ${SUPPORTED_ACCOUNTS[id as AccountId].entryPointVersion}`,
-	}))
+const supportedAccounts = AccountRegistry.getSupportedAccountsForCreation()
 
 const ACCOUNT_SUPPORTED_INITIAL_VALIDATION: Partial<
 	Record<
@@ -323,19 +317,21 @@ function onClickPasskeyLogout() {
 
 					<SelectContent>
 						<SelectItem
-							v-for="supportedAccount in supportedAccounts"
-							:key="supportedAccount.id"
-							:value="supportedAccount.id"
+							v-for="supportedAccountId in supportedAccounts"
+							:key="supportedAccountId"
+							:value="supportedAccountId"
 							class="cursor-pointer"
 						>
 							<div class="flex flex-col py-1 w-full">
 								<div class="flex items-center justify-between w-full">
-									<div class="font-medium">{{ supportedAccount.name }}</div>
+									<div class="font-medium">{{ displayAccountName(supportedAccountId) }}</div>
 									<div class="text-xs text-muted-foreground rounded-full bg-muted px-2.5 py-0.5">
-										EntryPoint {{ SUPPORTED_ACCOUNTS[supportedAccount.id].entryPointVersion }}
+										EntryPoint {{ AccountRegistry.getEntryPointVersion(supportedAccountId) }}
 									</div>
 								</div>
-								<div class="text-xs text-muted-foreground mt-0.5">{{ supportedAccount.id }}</div>
+								<div class="text-xs text-muted-foreground mt-0.5">
+									{{ supportedAccountId }}
+								</div>
 							</div>
 						</SelectItem>
 					</SelectContent>

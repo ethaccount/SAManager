@@ -7,8 +7,6 @@ import { ENTRY_POINT_V07_ADDRESS, UserOpBuilder, UserOperationReceipt } from 'et
 import { defineStore, storeToRefs } from 'pinia'
 import { Execution } from 'sendop'
 import { useModal } from 'vue-final-modal'
-import { signMessageUsingPasskey } from './passkey/signMessageUsingPasskey'
-import { useEOAWallet } from './useEOAWallet'
 import { useSigner } from './useSigner'
 
 export enum TransactionStatus {
@@ -121,37 +119,14 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 			throw new Error('[handleSign] User operation not built')
 		}
 
-		const op = userOp.value
+		const { selectedSigner } = useSigner()
 
-		const { selectedSigner, selectedSignerType } = useSigner()
-
-		if (!selectedSigner) {
+		if (!selectedSigner.value) {
 			throw new Error('[handleSign] No signer selected')
 		}
 
-		const entryPointAddress = op.entryPointAddress
-
-		let signature: string
-
-		if (selectedSignerType.value === 'EOAWallet') {
-			const { signer } = useEOAWallet()
-			if (!signer.value) {
-				throw new Error('[handleSign] No signer selected')
-			}
-
-			// Use different signing methods based on entry point version
-			if (entryPointAddress === ENTRY_POINT_V07_ADDRESS) {
-				signature = await signer.value.signMessage(op.hash())
-			} else {
-				// for entrypoint v0.8
-				signature = await signer.value.signTypedData(...op.typedData())
-			}
-		} else {
-			// Passkey signing is the same for both entry point versions
-			signature = await signMessageUsingPasskey(op.hash())
-		}
-
-		op.setSignature(signature)
+		const signature = await selectedSigner.value.sign(userOp.value as UserOpBuilder)
+		userOp.value.setSignature(signature)
 		// Notice to formate signature if needed
 	}
 

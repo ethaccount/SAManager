@@ -1,4 +1,4 @@
-import { AccountId } from '@/stores/account/account'
+import { AccountId } from '@/lib/accounts'
 import { JsonRpcProvider } from 'ethers'
 import { UserOpBuilder } from 'ethers-erc4337'
 import { Execution } from 'sendop'

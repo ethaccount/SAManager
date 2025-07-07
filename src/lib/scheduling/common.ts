@@ -1,5 +1,6 @@
 import { findTrustedAttesters } from '@/api/registry'
-import { AccountId, ImportedAccount } from '@/stores/account/account'
+import { AccountId } from '@/lib/accounts'
+import { ImportedAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBackend } from '@/stores/useBackend'
 import { TxModalExecution } from '@/stores/useTxModal'

@@ -1,5 +1,5 @@
 import { apiRegisterJob } from '@/api/backend/registerJob'
-import { AccountId, getAccountEntryPointAddress } from '@/stores/account/account'
+import { AccountId } from '@/lib/accounts'
 import { CHAIN_ID } from '@/stores/blockchain/blockchain'
 import { JsonRpcProvider } from 'ethers'
 import { ENTRY_POINT_V07_ADDRESS, ERC4337Bundler, UserOpBuilder } from 'ethers-erc4337'
@@ -73,12 +73,5 @@ export async function registerJob({
 		executions: [execution],
 	})
 
-	return await apiRegisterJob(
-		accountAddress,
-		Number(chainId),
-		jobId,
-		getAccountEntryPointAddress(accountId),
-		jobType,
-		op.hex(),
-	)
+	return await apiRegisterJob(accountAddress, Number(chainId), jobId, op.entryPointAddress, jobType, op.hex())
 }

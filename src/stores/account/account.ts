@@ -1,6 +1,7 @@
-import { CHAIN_ID, getEntryPointAddress } from '@/stores/blockchain/blockchain'
+import { AccountId } from '@/lib/accounts'
 import { ValidationMethodData } from '@/lib/validations/ValidationMethod'
-import { EntryPointVersion, isSameAddress } from 'sendop'
+import { CHAIN_ID } from '@/stores/blockchain/blockchain'
+import { isSameAddress } from 'sendop'
 
 export type ImportedAccount = {
 	accountId: AccountId
@@ -18,57 +19,6 @@ export type ImportedAccount = {
 
 export type AccountCategory = 'Smart Account' | 'Smart EOA'
 
-export enum AccountId {
-	'kernel.advanced.v0.3.1' = 'kernel.advanced.v0.3.1',
-	'biconomy.nexus.1.0.2' = 'biconomy.nexus.1.0.2',
-	'rhinestone.safe7579.v1.0.0' = 'rhinestone.safe7579.v1.0.0',
-	'infinitism.Simple7702Account.0.8.0' = 'infinitism.Simple7702Account.0.8.0',
-}
-
-export type ModularAccountId = {
-	[K in AccountId]: (typeof SUPPORTED_ACCOUNTS)[K]['isModular'] extends true ? K : never
-}[AccountId]
-
-export const ACCOUNT_ID_TO_NAME: Record<AccountId, string> = {
-	[AccountId['kernel.advanced.v0.3.1']]: 'Kernel',
-	[AccountId['biconomy.nexus.1.0.2']]: 'Nexus',
-	[AccountId['rhinestone.safe7579.v1.0.0']]: 'Safe7579',
-	[AccountId['infinitism.Simple7702Account.0.8.0']]: 'Simple7702Account',
-}
-
-export const SUPPORTED_ACCOUNTS: Record<
-	AccountId,
-	{
-		entryPointVersion: EntryPointVersion
-		isModular: boolean
-	}
-> = {
-	[AccountId['kernel.advanced.v0.3.1']]: {
-		entryPointVersion: 'v0.7',
-		isModular: true,
-	},
-	[AccountId['biconomy.nexus.1.0.2']]: {
-		entryPointVersion: 'v0.7',
-		isModular: true,
-	},
-	[AccountId['rhinestone.safe7579.v1.0.0']]: {
-		entryPointVersion: 'v0.7',
-		isModular: true,
-	},
-	[AccountId['infinitism.Simple7702Account.0.8.0']]: {
-		entryPointVersion: 'v0.8',
-		isModular: false,
-	},
-}
-
-export function displayAccountName(accountId: AccountId) {
-	return ACCOUNT_ID_TO_NAME[accountId]
-}
-
 export function isSameAccount(a: ImportedAccount, b: ImportedAccount) {
 	return isSameAddress(a.address, b.address) && a.chainId === b.chainId
-}
-
-export function getAccountEntryPointAddress(accountId: AccountId): string {
-	return getEntryPointAddress(SUPPORTED_ACCOUNTS[accountId].entryPointVersion)
 }

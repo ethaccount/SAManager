@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { displayAccountName } from '@/lib/accounts/helpers'
 import { ValidationMethodData } from '@/lib/validations/ValidationMethod'
-import { displayAccountName, ImportedAccount } from '@/stores/account/account'
+import { ImportedAccount } from '@/stores/account/account'
 import { useAccounts } from '@/stores/account/useAccounts'
 import { CHAIN_NAME } from '@/stores/blockchain/blockchain'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'

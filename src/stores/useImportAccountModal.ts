@@ -12,7 +12,8 @@ import {
 	WebAuthnValidatorVMethod,
 } from '@/lib/validations'
 import { ValidationMethodData } from '@/lib/validations/ValidationMethod'
-import { AccountCategory, AccountId } from '@/stores/account/account'
+import { AccountCategory } from '@/stores/account/account'
+import { AccountId } from '@/lib/accounts'
 import { defineStore, storeToRefs } from 'pinia'
 import { useModal } from 'vue-final-modal'
 import { usePasskey } from './passkey/usePasskey'

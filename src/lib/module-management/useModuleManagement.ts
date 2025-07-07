@@ -1,6 +1,6 @@
+import { AccountId } from '@/lib/accounts'
 import { getInstallModuleData, getUninstallModuleData } from '@/lib/accounts/account-specific'
 import { ECDSAValidatorVMethod, WebAuthnValidatorVMethod } from '@/lib/validations'
-import { AccountId } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'

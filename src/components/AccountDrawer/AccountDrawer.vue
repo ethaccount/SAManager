@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { displayAccountName } from '@/lib/accounts/helpers'
 import { toRoute } from '@/lib/router'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
-import { displayAccountName, ImportedAccount } from '@/stores/account/account'
+import { ImportedAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useAccounts } from '@/stores/account/useAccounts'
 import { useInitCode } from '@/stores/account/useInitCode'
