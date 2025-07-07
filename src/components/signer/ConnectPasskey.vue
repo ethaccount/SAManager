@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { usePasskey } from '@/stores/passkey/usePasskey'
-import { useSigner } from '@/stores/validation/useSigner'
+import { useSigner } from '@/stores/useSigner'
 import { CheckCircle, Loader2 } from 'lucide-vue-next'
 import { adjectives, animals, uniqueNamesGenerator } from 'unique-names-generator'
 

@@ -10,7 +10,11 @@ import { BytesLike, hexlify, JsonRpcProvider } from 'ethers'
 import { ERC7579_MODULE_TYPE, Execution, getECDSAValidator, getWebAuthnValidator } from 'sendop'
 import { toast } from 'vue-sonner'
 import { useConnectSignerModal } from '../useConnectSignerModal'
-import { ECDSAValidatorVMethod, serializeValidationMethod, WebAuthnValidatorVMethod } from '../validation-methods'
+import {
+	ECDSAValidatorVMethod,
+	serializeValidationMethod,
+	WebAuthnValidatorVMethod,
+} from '../validations/ValidationMethod'
 import { ModuleType, SUPPORTED_MODULES } from './module-constants'
 
 export function useModuleManagement() {

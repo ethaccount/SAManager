@@ -1,4 +1,4 @@
-import { ValidationMethodData } from '@/lib/validation-methods'
+import { ValidationMethodData } from '@/lib/validations/ValidationMethod'
 import { defineStore, storeToRefs } from 'pinia'
 import { isSameAddress } from 'sendop'
 

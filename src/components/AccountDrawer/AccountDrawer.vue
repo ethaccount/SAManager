@@ -12,7 +12,7 @@ import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
-import { useSigner } from '@/stores/validation/useSigner'
+import { useSigner } from '@/stores/useSigner'
 import { shortenAddress } from '@vue-dapp/core'
 import { breakpointsTailwind } from '@vueuse/core'
 import { AlertCircle, ArrowRight, CheckCircle, CircleDot, Download, Plus, Power, X } from 'lucide-vue-next'
@@ -38,18 +38,21 @@ const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 const { selectSigner, selectedSigner } = useSigner()
 
 const accountList = computed(() =>
-	accounts.value.reduce((acc, cur) => {
-		const account = {
-			...cur,
-			isCrossChain: cur.category === 'Smart Account' && hasInitCode(cur.address),
-		}
+	accounts.value.reduce(
+		(acc, cur) => {
+			const account = {
+				...cur,
+				isCrossChain: cur.category === 'Smart Account' && hasInitCode(cur.address),
+			}
 
-		if (!acc.some(a => isSameAddress(a.address, account.address))) {
-			acc.push(account)
-		}
+			if (!acc.some(a => isSameAddress(a.address, account.address))) {
+				acc.push(account)
+			}
 
-		return acc
-	}, [] as (ImportedAccount & { isCrossChain: boolean })[]),
+			return acc
+		},
+		[] as (ImportedAccount & { isCrossChain: boolean })[],
+	),
 )
 
 function onClickSelectAccount(account: ImportedAccount & { isCrossChain: boolean }) {

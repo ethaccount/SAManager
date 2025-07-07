@@ -9,7 +9,7 @@ import {
 	RHINESTONE_ATTESTER_ADDRESS,
 	Safe7579,
 } from 'sendop'
-import { ValidationMethod } from '../validation-methods'
+import { ValidationMethod } from '../validations/ValidationMethod'
 
 export type Deployment = {
 	accountAddress: string

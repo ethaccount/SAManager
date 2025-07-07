@@ -1,5 +1,5 @@
 import { CHAIN_ID, getEntryPointAddress } from '@/stores/blockchain/blockchain'
-import { ValidationMethodData } from '@/lib/validation-methods'
+import { ValidationMethodData } from '@/lib/validations/ValidationMethod'
 import { EntryPointVersion, isSameAddress } from 'sendop'
 
 export type ImportedAccount = {

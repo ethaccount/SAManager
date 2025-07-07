@@ -1,6 +1,6 @@
 import TxModal from '@/components/TxModal.vue'
 import { buildAccountExecutions } from '@/lib/userop-builder'
-import { deserializeValidationMethod } from '@/lib/validation-methods'
+import { deserializeValidationMethod } from '@/lib/validations/ValidationMethod'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { ENTRY_POINT_V07_ADDRESS, UserOpBuilder, UserOperationReceipt } from 'ethers-erc4337'
@@ -9,7 +9,7 @@ import { Execution } from 'sendop'
 import { useModal } from 'vue-final-modal'
 import { signMessageUsingPasskey } from './passkey/signMessageUsingPasskey'
 import { useEOAWallet } from './useEOAWallet'
-import { useSigner } from './validation/useSigner'
+import { useSigner } from './useSigner'
 
 export enum TransactionStatus {
 	Estimation = 'Estimation',

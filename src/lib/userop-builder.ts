@@ -3,7 +3,7 @@ import { JsonRpcProvider } from 'ethers'
 import { UserOpBuilder } from 'ethers-erc4337'
 import { Execution } from 'sendop'
 import { getExecutionAccountAPI, getSmartSessionExecutionAccountAPI } from './accounts/account-specific'
-import { ValidationMethod } from './validation-methods'
+import { ValidationMethod } from './validations/ValidationMethod'
 
 export async function buildAccountExecutions({
 	op,

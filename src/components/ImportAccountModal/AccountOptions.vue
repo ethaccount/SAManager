@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { fetchECDSAValidatorRegisteredEvent, fetchWebAuthnRegisteredEvent } from '@/api/registered-events'
-import { ValidationMethodData } from '@/lib/validation-methods'
+import { ValidationMethodData } from '@/lib/validations/ValidationMethod'
 import { AccountId } from '@/stores/account/account'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'

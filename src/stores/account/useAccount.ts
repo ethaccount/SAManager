@@ -1,7 +1,7 @@
 import { ImportedAccount, SUPPORTED_ACCOUNTS } from '@/stores/account/account'
 import { InitCodeData, useInitCode } from '@/stores/account/useInitCode'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { useSigner } from '@/stores/validation/useSigner'
+import { useSigner } from '@/stores/useSigner'
 import { isSameAddress } from 'sendop'
 
 export const useAccountStore = defineStore(
@@ -21,6 +21,8 @@ export const useAccountStore = defineStore(
 			// check if the chainId of the selected account is the same as the selected chainId
 			const { selectedChainId } = useBlockchain()
 			if (selectedAccount.value.chainId !== selectedChainId.value) return false
+
+			console.log('selectedAccount.value.vMethods', selectedAccount.value.vMethods)
 
 			return useSigner().isSignerEligibleForValidation(selectedAccount.value.vMethods)
 		})

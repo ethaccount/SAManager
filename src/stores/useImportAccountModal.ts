@@ -11,7 +11,7 @@ import {
 	Simple7702ValidatorVMethod,
 	ValidationMethodData,
 	WebAuthnValidatorVMethod,
-} from '@/lib/validation-methods'
+} from '@/lib/validations/ValidationMethod'
 import { AccountCategory, AccountId } from '@/stores/account/account'
 import { defineStore, storeToRefs } from 'pinia'
 import { useModal } from 'vue-final-modal'

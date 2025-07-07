@@ -65,12 +65,6 @@ export const useBlockchainStore = defineStore(
 			return ['v0.7', 'v0.8']
 		})
 
-		const selectedEntryPoint = ref<EntryPointVersion>(DEFAULT_ENTRY_POINT_VERSION)
-
-		function switchEntryPoint(entryPoint: EntryPointVersion) {
-			selectedEntryPoint.value = entryPoint
-		}
-
 		const supportedBundlers = computed<SUPPORTED_BUNDLER[]>(() => {
 			return Object.values(SUPPORTED_BUNDLER)
 		})
@@ -121,14 +115,12 @@ export const useBlockchainStore = defineStore(
 			bundlerUrl,
 			bundler,
 			supportedBundlers,
-			selectedEntryPoint,
 			selectedBundler,
 			selectedNode,
 			supportedNodes,
 			supportedEntryPoints,
 			chainIdBigInt,
 			tenderlyClient,
-			switchEntryPoint,
 			switchChain,
 		}
 	},
