@@ -1,6 +1,9 @@
 import { ValidationMethod } from '@/lib/validations'
 import { AccountId } from '@/stores/account/account'
-import { JsonRpcProvider } from 'ethers'
+import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
+import { usePasskey } from '@/stores/passkey/usePasskey'
+import { getOwnableValidator } from '@rhinestone/module-sdk'
+import { hexlify, JsonRpcProvider } from 'ethers'
 import {
 	ADDRESS,
 	BICONOMY_ATTESTER_ADDRESS,
@@ -14,7 +17,6 @@ import {
 	RHINESTONE_ATTESTER_ADDRESS,
 	Safe7579,
 } from 'sendop'
-import { getOwnableValidator } from '@rhinestone/module-sdk'
 
 export type Deployment = {
 	accountAddress: string
@@ -42,11 +44,16 @@ export async function getDeployment(
 			break
 		}
 		case 'WebAuthnValidator': {
+			const { isFullCredential, selectedCredential } = usePasskey()
+
+			if (!isFullCredential.value || !selectedCredential.value) {
+				throw new Error('[getDeployment] WebAuthnValidator: No full credential found')
+			}
+
 			module = getWebAuthnValidator({
-				// TODO: get pubKeyX and pubKeyY from the validation method
-				pubKeyX: BigInt(validation.identifier),
-				pubKeyY: BigInt(validation.identifier),
-				authenticatorIdHash: validation.identifier,
+				pubKeyX: BigInt(hexlify(selectedCredential.value.pubKeyX)),
+				pubKeyY: BigInt(hexlify(selectedCredential.value.pubKeyY)),
+				authenticatorIdHash: getAuthenticatorIdHash(validation.identifier),
 			})
 			break
 		}

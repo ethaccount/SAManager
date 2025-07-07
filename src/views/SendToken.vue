@@ -85,14 +85,14 @@ const onClickReview = () => {
 	})
 }
 
-const { isAccountConnected } = useAccount()
+const { isAccountAccessible } = useAccount()
 
 const reviewDisabled = computed(() => {
-	return !isAccountConnected.value || !isValidTransfers.value || transfers.value.length === 0
+	return !isAccountAccessible.value || !isValidTransfers.value || transfers.value.length === 0
 })
 
 const reviewButtonText = computed(() => {
-	if (!isAccountConnected.value) return 'Connect your account to review'
+	if (!isAccountAccessible.value) return 'Connect your account to review'
 	if (!isValidTransfers.value) return 'Invalid transfers'
 	return 'Review Transfers'
 })
@@ -185,7 +185,7 @@ const reviewButtonText = computed(() => {
 								size="sm"
 								@click="onClickSendTestToken(index)"
 								class="px-3 py-1 text-xs border-border/50 hover:border-primary hover:bg-primary/5"
-								:disabled="!isAccountConnected"
+								:disabled="!isAccountAccessible"
 							>
 								<Zap class="mr-1 h-3 w-3" />
 								Send Test Token

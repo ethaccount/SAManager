@@ -31,7 +31,7 @@ function onClickCloseSidebar() {
 
 const { accounts } = useAccounts()
 const { hasInitCode } = useInitCode()
-const { selectedAccount, isAccountConnected, isChainIdMatching, isCrossChain } = useAccount()
+const { selectedAccount, isAccountAccessible, isChainIdMatching, isCrossChain } = useAccount()
 const { wallet, address, isEOAWalletConnected, disconnect, isEOAWalletSupported } = useEOAWallet()
 const { isLogin, resetCredentialId, selectedCredentialDisplay, isPasskeySupported } = usePasskey()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
@@ -148,11 +148,11 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 											<TooltipTrigger asChild>
 												<CircleDot
 													class="w-3 h-3"
-													:class="isAccountConnected ? 'text-green-500' : 'text-red-500'"
+													:class="isAccountAccessible ? 'text-green-500' : 'text-red-500'"
 												/>
 											</TooltipTrigger>
 											<TooltipContent class="z-[1100]">
-												{{ isAccountConnected ? 'Connected' : 'Not Connected' }}
+												{{ isAccountAccessible ? 'Connected' : 'Not Connected' }}
 											</TooltipContent>
 										</Tooltip>
 									</TooltipProvider>

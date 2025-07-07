@@ -46,7 +46,7 @@ function onClickClose() {
 
 const { wallet, isConnected } = useEOAWallet()
 const { selectedChainId, explorerUrl } = useBlockchain()
-const { selectedAccount, selectedAccountInitCodeData, isAccountConnected } = useAccount()
+const { selectedAccount, selectedAccountInitCodeData, isAccountAccessible } = useAccount()
 const { selectSigner, selectedSigner } = useSigner()
 const { selectedCredentialDisplay, isLogin } = usePasskey()
 
@@ -68,7 +68,7 @@ const { isDeployed, getCode, loading: isLoadingCode } = useGetCode()
 
 onMounted(async () => {
 	// Check if account is connected
-	if (!isAccountConnected.value) {
+	if (!isAccountAccessible.value) {
 		emit('close')
 		toast.error('Account not connected')
 		return

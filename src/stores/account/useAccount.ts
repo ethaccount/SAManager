@@ -9,28 +9,25 @@ export const useAccountStore = defineStore(
 	'useAccountStore',
 	() => {
 		const { initCodeList, hasInitCode } = useInitCode()
+		const { canSign } = useSigner()
+		const { selectedChainId } = useBlockchain()
 
 		const selectedAccount = ref<ImportedAccount | null>(null)
 
 		const isChainIdMatching = computed(() => {
-			const { selectedChainId } = useBlockchain()
 			return selectedChainId.value === selectedAccount.value?.chainId
 		})
 
 		const accountVMethods = computed(() => {
 			if (!selectedAccount.value) return []
-			// TODO: remove this once vOptions is removed
 			if (!selectedAccount.value.vMethods) return []
 			return selectedAccount.value.vMethods.map(vMethod => deserializeValidationMethod(vMethod))
 		})
 
-		const isAccountConnected = computed(() => {
+		const isAccountAccessible = computed(() => {
 			if (!selectedAccount.value) return false
-			// check if the chainId of the selected account is the same as the selected chainId
-			const { selectedChainId } = useBlockchain()
 			if (selectedAccount.value.chainId !== selectedChainId.value) return false
-
-			return useSigner().isSignerEligibleForValidation(accountVMethods.value)
+			return accountVMethods.value.some(canSign)
 		})
 
 		const isModular = computed(() => {
@@ -64,7 +61,7 @@ export const useAccountStore = defineStore(
 			selectedAccount,
 			selectedAccountInitCodeData,
 			isCrossChain,
-			isAccountConnected,
+			isAccountAccessible,
 			isModular,
 			isSmartEOA,
 			isChainIdMatching,

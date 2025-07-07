@@ -1,12 +1,15 @@
+import { signMessageUsingPasskey } from '@/stores/passkey/signMessageUsingPasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
+import { getAddress } from 'ethers'
 import { ENTRY_POINT_V07_ADDRESS, ENTRY_POINT_V08_ADDRESS, UserOpBuilder } from 'ethers-erc4337'
 import { Signer, SignerType } from './Signer'
-import { signMessageUsingPasskey } from '@/stores/passkey/signMessageUsingPasskey'
 
 export class EOASigner implements Signer {
 	type: SignerType = 'EOAWallet'
 
-	constructor(public identifier: string) {}
+	constructor(public identifier: string) {
+		this.identifier = getAddress(identifier)
+	}
 
 	async sign(userop: UserOpBuilder): Promise<string> {
 		const { signer } = useEOAWallet()

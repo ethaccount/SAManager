@@ -8,7 +8,7 @@ import { useTxModal } from '@/stores/useTxModal'
 import { Interface, isAddress, parseEther } from 'ethers'
 import { Eraser, Plus, X, Zap } from 'lucide-vue-next'
 
-const { isAccountConnected, selectedAccount } = useAccount()
+const { isAccountAccessible, selectedAccount } = useAccount()
 
 type Execution = {
 	to: string
@@ -74,11 +74,11 @@ const isValidExecutions = computed(() => {
 })
 
 const reviewDisabled = computed(() => {
-	return !isAccountConnected.value || !isValidExecutions.value || executions.value.length === 0
+	return !isAccountAccessible.value || !isValidExecutions.value || executions.value.length === 0
 })
 
 const reviewButtonText = computed(() => {
-	return isAccountConnected.value ? 'Review Executions' : 'Connect your account to review'
+	return isAccountAccessible.value ? 'Review Executions' : 'Connect your account to review'
 })
 
 async function onClickSend() {
@@ -150,7 +150,7 @@ async function onClickSend() {
 								size="sm"
 								@click="onClickMintTestToken(index)"
 								class="px-3 py-1 text-xs border-border/50 hover:border-primary hover:bg-primary/5"
-								:disabled="!isAccountConnected"
+								:disabled="!isAccountAccessible"
 							>
 								<Zap class="mr-1 h-3 w-3" />
 								Mint Test Token

@@ -65,16 +65,11 @@ export const useSignerStore = defineStore('useSignerStore', () => {
 		)
 	}
 
-	function isSignerEligibleForValidation(vMethods: ValidationMethod[]): boolean {
-		return vMethods.some(canSign)
-	}
-
 	return {
 		connectedSigners,
 		selectedSigner,
 		selectedSignerType,
 		selectSigner,
-		isSignerEligibleForValidation,
 		canSign,
 	}
 })

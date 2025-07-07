@@ -5,7 +5,7 @@ import { useAccount } from '@/stores/account/useAccount'
 import { shortenAddress } from '@vue-dapp/core'
 import { Wallet } from 'lucide-vue-next'
 
-const { isAccountConnected, selectedAccount } = useAccount()
+const { isAccountAccessible, selectedAccount } = useAccount()
 
 function onClickAccountButton() {
 	const { openAccountDrawer } = useAccountDrawer()
@@ -16,11 +16,11 @@ function onClickAccountButton() {
 <template>
 	<div class="">
 		<Button
-			v-if="!isAccountConnected"
+			v-if="!isAccountAccessible"
 			variant="outline"
 			class="w-9 h-9 rounded-full ring-0"
 			:class="{
-				'ring-1 ring-green-500': isAccountConnected,
+				'ring-1 ring-green-500': isAccountAccessible,
 			}"
 			@click="onClickAccountButton"
 		>

@@ -1,3 +1,4 @@
+import { getAddress } from 'ethers'
 import { ADDRESS, Simple7702AccountAPI, SingleEOAValidation, WebAuthnValidation } from 'sendop'
 import { SignerType } from './Signer'
 import { ValidationMethodBase, ValidationMethodName, ValidationType } from './ValidationMethod'
@@ -10,7 +11,7 @@ export class ECDSAValidatorVMethod extends ValidationMethodBase {
 	validatorAddress = ADDRESS.ECDSAValidator
 
 	constructor(identifier: string) {
-		super(identifier)
+		super(getAddress(identifier))
 	}
 }
 
@@ -34,7 +35,7 @@ export class SingleOwnableValidatorVMethod extends ValidationMethodBase {
 	validatorAddress = ADDRESS.OwnableValidator
 
 	constructor(identifier: string) {
-		super(identifier)
+		super(getAddress(identifier))
 	}
 }
 
@@ -45,6 +46,6 @@ export class Simple7702AccountVMethod extends ValidationMethodBase {
 	validationAPI = new Simple7702AccountAPI()
 
 	constructor(identifier: string) {
-		super(identifier)
+		super(getAddress(identifier))
 	}
 }

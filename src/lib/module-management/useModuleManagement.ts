@@ -14,7 +14,7 @@ import { useConnectSignerModal } from '../useConnectSignerModal'
 import { ModuleType, SUPPORTED_MODULES } from './module-constants'
 
 export function useModuleManagement() {
-	const { selectedAccount, isAccountConnected } = useAccount()
+	const { selectedAccount, isAccountAccessible } = useAccount()
 	const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 	const { client } = useBlockchain()
 
@@ -29,7 +29,7 @@ export function useModuleManagement() {
 	) {
 		const { onSuccess } = options || {}
 
-		if (!isAccountConnected.value) {
+		if (!isAccountAccessible.value) {
 			toast.info('Connect your account to operate modules')
 			return
 		}
