@@ -136,51 +136,51 @@ const showSwitchToCorrectChain = computed(() => {
 			</div>
 
 			<div class="mt-4" v-else>
-				<!-- Validation Options -->
+				<!-- Validation Methods -->
 				<div class="space-y-4">
-					<div class="text-sm font-medium">Validation Options</div>
-					<div class="grid gap-1">
+					<div class="text-sm font-medium">Validation Methods</div>
+					<div class="grid gap-3">
 						<div
-							v-for="(vOption, index) in selectedAccount.vMethods"
+							v-for="(vMethod, index) in selectedAccount.vMethods"
 							:key="index"
-							class="group py-2 px-3 bg-card border border-border/40 rounded-lg"
+							class="group py-3 px-4 bg-card border border-border/40 rounded-lg hover:border-border/60 transition-colors"
 						>
-							<div class="w-full space-y-2">
+							<div class="w-full space-y-3">
 								<div class="flex items-center gap-2">
 									<div class="text-xs font-medium px-2.5 py-1 rounded-full bg-muted">
-										{{ getVMethodName(vOption) }}
+										{{ getVMethodName(vMethod) }}
 									</div>
 									<div
-										class="text-xs px-2.5 py-1 rounded-full"
+										class="text-xs px-2.5 py-1 rounded-full font-medium"
 										:class="
-											getVMethodType(vOption) === 'PASSKEY'
+											getVMethodType(vMethod) === 'PASSKEY'
 												? 'bg-blue-500/10 text-blue-500'
 												: 'bg-green-500/10 text-green-500'
 										"
 									>
-										{{ getVMethodType(vOption) }}
+										{{ getVMethodType(vMethod) }}
 									</div>
 								</div>
-								<div class="space-y-1">
+								<div class="space-y-2">
 									<div
-										v-if="getVMethodValidatorAddress(vOption)"
-										class="text-xs text-muted-foreground"
+										v-if="getVMethodValidatorAddress(vMethod)"
+										class="flex items-center gap-2 text-xs text-muted-foreground"
 									>
-										<span class="font-medium">Validator:</span>
-										<span class="font-mono ml-1">
-											{{ shortenAddress(getVMethodValidatorAddress(vOption)!) }}
+										<span class="font-medium min-w-0">Validator:</span>
+										<span class="font-mono flex-1 truncate">
+											{{ shortenAddress(getVMethodValidatorAddress(vMethod)!) }}
 										</span>
-										<CopyButton :address="getVMethodValidatorAddress(vOption)!" class="ml-1" />
+										<CopyButton :address="getVMethodValidatorAddress(vMethod)!" size="sm" />
 									</div>
 									<div
-										v-if="getVMethodType(vOption) === 'EOA-Owned'"
-										class="text-xs text-muted-foreground"
+										v-if="getVMethodType(vMethod) === 'EOA-Owned'"
+										class="flex items-center gap-2 text-xs text-muted-foreground"
 									>
-										<span class="font-medium">Address:</span>
-										<span class="font-mono ml-1">
-											{{ shortenAddress(getVMethodIdentifier(vOption)) }}
+										<span class="font-medium min-w-0">Owner:</span>
+										<span class="font-mono flex-1 truncate">
+											{{ shortenAddress(getVMethodIdentifier(vMethod)) }}
 										</span>
-										<CopyButton :address="getVMethodIdentifier(vOption)" class="ml-1" />
+										<CopyButton :address="getVMethodIdentifier(vMethod)" size="sm" />
 									</div>
 								</div>
 							</div>

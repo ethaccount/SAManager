@@ -49,7 +49,7 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 		open()
 	}
 
-	const { bundler, selectedChainId, client, alchemyUrl } = useBlockchain()
+	const { bundler, selectedChainId, client, fetchGasPrice } = useBlockchain()
 	const { selectedAccount } = useAccount()
 
 	const paymasters = [
@@ -130,12 +130,13 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 			})
 		}
 
-		const gasPrice = await fetchGasPriceAlchemy(alchemyUrl.value)
-		op.setGasPrice(gasPrice)
+		op.setGasPrice(await fetchGasPrice())
 
 		await op.estimateGas()
 
-		userOp.value = op
+		// Notice: markRaw is used to prevent TypeError: Cannot read from private field
+		// similar issue: https://github.com/vuejs/core/issues/8245
+		userOp.value = markRaw(op)
 	}
 
 	async function handleSign() {

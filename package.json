@@ -41,7 +41,7 @@
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
 		"ethers": "^6.15.0",
-		"ethers-erc4337": "0.0.4-beta.2",
+		"ethers-erc4337": "0.0.4-beta.3",
 		"evm-providers": "^0.5.7",
 		"lucide-vue-next": "^0.471.0",
 		"pinia": "^3.0.1",

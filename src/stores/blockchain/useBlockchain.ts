@@ -11,7 +11,7 @@ import { JsonRpcProvider } from 'ethers'
 import { ERC4337Bundler } from 'ethers-erc4337'
 import { publicNode, PublicNodeChain } from 'evm-providers'
 import { defineStore } from 'pinia'
-import { EntryPointVersion } from 'sendop'
+import { EntryPointVersion, fetchGasPriceAlchemy, fetchGasPricePimlico } from 'sendop'
 
 export const DEFAULT_CHAIN_ID = TESTNET_CHAIN_ID.SEPOLIA
 export const DEFAULT_ENTRY_POINT_VERSION: EntryPointVersion = 'v0.7'
@@ -57,10 +57,6 @@ export const useBlockchainStore = defineStore(
 				default:
 					return getAlchemyUrl(selectedChainId.value)
 			}
-		})
-
-		const alchemyUrl = computed(() => {
-			return getAlchemyUrl(selectedChainId.value)
 		})
 
 		const explorerUrl = computed(() => `${EXPLORER_URL[selectedChainId.value]}`)
@@ -109,6 +105,17 @@ export const useBlockchainStore = defineStore(
 			selectedChainId.value = chainId
 		}
 
+		async function fetchGasPrice() {
+			switch (selectedBundler.value) {
+				case SUPPORTED_BUNDLER.PIMLICO:
+					return await fetchGasPricePimlico(getPimlicoUrl(selectedChainId.value))
+				case SUPPORTED_BUNDLER.ALCHEMY:
+					return await fetchGasPriceAlchemy(getAlchemyUrl(selectedChainId.value))
+				default:
+					return await fetchGasPriceAlchemy(getAlchemyUrl(selectedChainId.value))
+			}
+		}
+
 		return {
 			selectedChainId,
 			supportedChainIds,
@@ -126,7 +133,7 @@ export const useBlockchainStore = defineStore(
 			chainIdBigInt,
 			tenderlyClient,
 			switchChain,
-			alchemyUrl,
+			fetchGasPrice,
 		}
 	},
 	{

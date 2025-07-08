@@ -53,7 +53,7 @@ importers:
         version: 6.15.0
       ethers-erc4337:
         specifier: latest
-        version: 0.0.4-beta.2(ethers@6.15.0)
+        version: 0.0.4-beta.3(ethers@6.15.0)
       evm-providers:
         specifier: ^0.5.7
         version: 0.5.7
@@ -74,7 +74,7 @@ importers:
         version: 2.2.0(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2))
       sendop:
         specifier: 0.5.0-beta.2
-        version: 0.5.0-beta.2(ethers-erc4337@0.0.4-beta.2(ethers@6.15.0))(ethers@6.15.0)
+        version: 0.5.0-beta.2(ethers-erc4337@0.0.4-beta.3(ethers@6.15.0))(ethers@6.15.0)
       tailwind-merge:
         specifier: ^2.6.0
         version: 2.6.0
@@ -2266,8 +2266,8 @@ packages:
     resolution: {integrity: sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==}
     engines: {node: '>=0.10.0'}
 
-  ethers-erc4337@0.0.4-beta.2:
-    resolution: {integrity: sha512-rug66MilIgG0PQM6yjjq4lv6vZ3h091tfFOGVmzewDCBovb+9FwKcFb0vpTjjkFF3qI8t/JWnCR21PErgqtA6w==}
+  ethers-erc4337@0.0.4-beta.3:
+    resolution: {integrity: sha512-Z2bszYFfv7eT66A1Y8SUpx9HuQiUeTCLGR0AR1PTgYmBU1kD9AYS1SrDN97IZdA7bOLErvP43X/HWSY8Lho3pQ==}
     peerDependencies:
       ethers: ^6.15.0
 
@@ -6247,7 +6247,7 @@ snapshots:
 
   esutils@2.0.3: {}
 
-  ethers-erc4337@0.0.4-beta.2(ethers@6.15.0):
+  ethers-erc4337@0.0.4-beta.3(ethers@6.15.0):
     dependencies:
       ethers: 6.15.0
 
@@ -7376,10 +7376,10 @@ snapshots:
 
   semver@7.6.3: {}
 
-  sendop@0.5.0-beta.2(ethers-erc4337@0.0.4-beta.2(ethers@6.15.0))(ethers@6.15.0):
+  sendop@0.5.0-beta.2(ethers-erc4337@0.0.4-beta.3(ethers@6.15.0))(ethers@6.15.0):
     dependencies:
       ethers: 6.15.0
-      ethers-erc4337: 0.0.4-beta.2(ethers@6.15.0)
+      ethers-erc4337: 0.0.4-beta.3(ethers@6.15.0)
       zod: 3.25.73
 
   set-function-length@1.2.2:
