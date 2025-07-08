@@ -30,7 +30,11 @@ export async function registerJob({
 	jobType?: JobType
 	swapParams?: SwapParameters
 }) {
-	const op = new UserOpBuilder(bundler, ENTRY_POINT_V07_ADDRESS, Number(chainId))
+	const op = new UserOpBuilder({
+		bundler,
+		entryPointAddress: ENTRY_POINT_V07_ADDRESS,
+		chainId,
+	})
 
 	// Get execution data based on job type
 	let execution: Execution
@@ -72,6 +76,10 @@ export async function registerJob({
 		client,
 		executions: [execution],
 	})
+
+	if (!op.entryPointAddress) {
+		throw new Error('[registerJob] Entry point address is not set')
+	}
 
 	return await apiRegisterJob(accountAddress, Number(chainId), jobId, op.entryPointAddress, jobType, op.hex())
 }

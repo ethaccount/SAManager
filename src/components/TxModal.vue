@@ -86,6 +86,9 @@ onMounted(async () => {
 			}
 		})
 	}
+
+	// auto click estimate
+	await onClickEstimate()
 })
 
 onUnmounted(() => {
@@ -206,6 +209,11 @@ const showPasskeyValidationMethod = computed(() => {
 // Computed property to determine if modal can be closed
 const canClose = computed(() => {
 	return status.value !== TransactionStatus.Sending && status.value !== TransactionStatus.Pending
+})
+
+const entryPointAddress = computed(() => {
+	if (!userOp.value) return null
+	return userOp.value.entryPointAddress
 })
 </script>
 
@@ -360,9 +368,9 @@ const canClose = computed(() => {
 						</div>
 
 						<!-- Entry Point Version -->
-						<div class="flex items-center justify-between text-sm">
+						<div v-if="entryPointAddress" class="flex items-center justify-between text-sm">
 							<span class="text-muted-foreground">EntryPoint</span>
-							<span class="text-sm">{{ addressToName(userOp?.entryPointAddress || '') }}</span>
+							<span class="text-sm">{{ addressToName(entryPointAddress) }}</span>
 						</div>
 
 						<!-- Deployment Status -->

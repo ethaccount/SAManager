@@ -8,6 +8,8 @@ overrides:
   '@babel/helpers': 7.27.1
   postcss: 8.5.3
   brace-expansion: 2.0.2
+  ethers-erc4337: latest
+  pinia: 3.0.1
 
 importers:
 
@@ -50,8 +52,8 @@ importers:
         specifier: ^6.15.0
         version: 6.15.0
       ethers-erc4337:
-        specifier: ^0.0.2
-        version: 0.0.2(ethers@6.15.0)
+        specifier: latest
+        version: 0.0.4-beta.2(ethers@6.15.0)
       evm-providers:
         specifier: ^0.5.7
         version: 0.5.7
@@ -59,7 +61,7 @@ importers:
         specifier: ^0.471.0
         version: 0.471.0(vue@3.5.13(typescript@5.7.2))
       pinia:
-        specifier: ^3.0.1
+        specifier: 3.0.1
         version: 3.0.1(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2))
       pinia-plugin-persistedstate:
         specifier: ^4.2.0
@@ -71,8 +73,8 @@ importers:
         specifier: ^2.2.0
         version: 2.2.0(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2))
       sendop:
-        specifier: 0.5.0-beta.1
-        version: 0.5.0-beta.1(ethers-erc4337@0.0.2(ethers@6.15.0))(ethers@6.15.0)
+        specifier: 0.5.0-beta.2
+        version: 0.5.0-beta.2(ethers-erc4337@0.0.4-beta.2(ethers@6.15.0))(ethers@6.15.0)
       tailwind-merge:
         specifier: ^2.6.0
         version: 2.6.0
@@ -186,7 +188,7 @@ importers:
   packages/demo:
     dependencies:
       pinia:
-        specifier: ^3.0.1
+        specifier: 3.0.1
         version: 3.0.1(typescript@5.8.3)(vue@3.5.13(typescript@5.8.3))
       vue:
         specifier: ^3.5.13
@@ -1478,14 +1480,14 @@ packages:
   '@vue-dapp/core@1.5.1':
     resolution: {integrity: sha512-ihbk2dsySKHoApna0jDkUg3+ac3G3Cdxl4Is0suMmXFsjnWrlTy4l6fBUAYGHn/B8fRpXs41l/aHuI53zrJ5Jg==}
     peerDependencies:
-      pinia: ^2.1.7
+      pinia: 3.0.1
       vue: ^3.3.7
 
   '@vue-dapp/modal@1.5.1':
     resolution: {integrity: sha512-ubPlDYjKSJaAjNQyCEsxOCN0c8jPlUFyGjYlU62J7gkx+hC1BjtmqqZFH+b6+68dQ06eJnCkqarjWC6joK1EKQ==}
     peerDependencies:
       '@vue-dapp/core': '*'
-      pinia: '>=2.1.7'
+      pinia: 3.0.1
       vue: '>=3.3.6'
 
   '@vue/babel-helper-vue-transform-on@1.4.0':
@@ -1536,17 +1538,11 @@ packages:
   '@vue/devtools-kit@7.7.0':
     resolution: {integrity: sha512-5cvZ+6SA88zKC8XiuxUfqpdTwVjJbvYnQZY5NReh7qlSGPvVDjjzyEtW+gdzLXNSd8tStgOjAdMCpvDQamUXtA==}
 
-  '@vue/devtools-kit@7.7.2':
-    resolution: {integrity: sha512-CY0I1JH3Z8PECbn6k3TqM1Bk9ASWxeMtTCvZr7vb+CHi+X/QwQm5F1/fPagraamKMAHVfuuCbdcnNg1A4CYVWQ==}
-
   '@vue/devtools-kit@7.7.7':
     resolution: {integrity: sha512-wgoZtxcTta65cnZ1Q6MbAfePVFxfM+gq0saaeytoph7nEa7yMXoi6sCPy4ufO111B9msnw0VOWjPEFCXuAKRHA==}
 
   '@vue/devtools-shared@7.7.0':
     resolution: {integrity: sha512-jtlQY26R5thQxW9YQTpXbI0HoK0Wf9Rd4ekidOkRvSy7ChfK0kIU6vvcBtjj87/EcpeOSK49fZAicaFNJcoTcQ==}
-
-  '@vue/devtools-shared@7.7.2':
-    resolution: {integrity: sha512-uBFxnp8gwW2vD6FrJB8JZLUzVb6PNRG0B0jBnHsOH8uKyva2qINY8PTF5Te4QlTbMDqU5K6qtJDr6cNsKWhbOA==}
 
   '@vue/devtools-shared@7.7.7':
     resolution: {integrity: sha512-+udSj47aRl5aKb0memBvcUG9koarqnxNM5yjuREvqwK6T3ap4mn3Zqqc17QrBFTqSMjr3HK1cvStEZpMDpfdyw==}
@@ -2270,8 +2266,8 @@ packages:
     resolution: {integrity: sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==}
     engines: {node: '>=0.10.0'}
 
-  ethers-erc4337@0.0.2:
-    resolution: {integrity: sha512-MvjeSm0l/xLZ/laJ+apv1127ET3zX3Cy7KS/4ZDeMDcybQamTF6/h791KMNYnMTyv2v2wo6kxN0B7m6Hw1gKgg==}
+  ethers-erc4337@0.0.4-beta.2:
+    resolution: {integrity: sha512-rug66MilIgG0PQM6yjjq4lv6vZ3h091tfFOGVmzewDCBovb+9FwKcFb0vpTjjkFF3qI8t/JWnCR21PErgqtA6w==}
     peerDependencies:
       ethers: ^6.15.0
 
@@ -3122,7 +3118,7 @@ packages:
     resolution: {integrity: sha512-3buhA7ac+ssbOIx3VRCC8oHkoFwhDM9oHRCjo7nj+O8WUqnW+jRqh7eYT5eS/DNa3H28zp3dYf/nd/Vc8zj8eQ==}
     peerDependencies:
       '@pinia/nuxt': '>=0.9.0'
-      pinia: '>=2.3.0'
+      pinia: 3.0.1
     peerDependenciesMeta:
       '@pinia/nuxt':
         optional: true
@@ -3348,12 +3344,12 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  sendop@0.5.0-beta.1:
-    resolution: {integrity: sha512-Ydv+yLkBZv7aigchFXUfTS6F8n1t+i0eGxdw9Dje6OTl6fWWJGUwHeRyaskmPEI8P7QJzR9kFa7mTOyVy7IVnw==}
+  sendop@0.5.0-beta.2:
+    resolution: {integrity: sha512-CfpvGMaOjpwEzbaPUn0lJTG1QsoHqfAvTa1NmCgu+wlNHMytsmnWCktrt4pt6pSHi3USf/fdtosflJfs2RcR4A==}
     engines: {bun: '>=1.1.0'}
     peerDependencies:
       ethers: ^6.15.0
-      ethers-erc4337: 0.0.1
+      ethers-erc4337: latest
 
   set-function-length@1.2.2:
     resolution: {integrity: sha512-pgRc4hJ4/sNjWCSS9AmnS40x3bNMDTknHgL5UaMBTMyJnU90EgWh1Rz+MC9eFu4BuN/UwZjKQuY/1v3rM7HMfg==}
@@ -5373,7 +5369,7 @@ snapshots:
 
   '@vue/devtools-api@7.7.2':
     dependencies:
-      '@vue/devtools-kit': 7.7.2
+      '@vue/devtools-kit': 7.7.7
 
   '@vue/devtools-core@7.7.7(vite@6.3.5(@types/node@22.15.32)(jiti@2.4.2)(yaml@2.6.1))(vue@3.5.13(typescript@5.8.3))':
     dependencies:
@@ -5397,16 +5393,6 @@ snapshots:
       speakingurl: 14.0.1
       superjson: 2.2.2
 
-  '@vue/devtools-kit@7.7.2':
-    dependencies:
-      '@vue/devtools-shared': 7.7.2
-      birpc: 0.2.19
-      hookable: 5.5.3
-      mitt: 3.0.1
-      perfect-debounce: 1.0.0
-      speakingurl: 14.0.1
-      superjson: 2.2.2
-
   '@vue/devtools-kit@7.7.7':
     dependencies:
       '@vue/devtools-shared': 7.7.7
@@ -5418,10 +5404,6 @@ snapshots:
       superjson: 2.2.2
 
   '@vue/devtools-shared@7.7.0':
-    dependencies:
-      rfdc: 1.4.1
-
-  '@vue/devtools-shared@7.7.2':
     dependencies:
       rfdc: 1.4.1
 
@@ -6265,7 +6247,7 @@ snapshots:
 
   esutils@2.0.3: {}
 
-  ethers-erc4337@0.0.2(ethers@6.15.0):
+  ethers-erc4337@0.0.4-beta.2(ethers@6.15.0):
     dependencies:
       ethers: 6.15.0
 
@@ -7394,10 +7376,10 @@ snapshots:
 
   semver@7.6.3: {}
 
-  sendop@0.5.0-beta.1(ethers-erc4337@0.0.2(ethers@6.15.0))(ethers@6.15.0):
+  sendop@0.5.0-beta.2(ethers-erc4337@0.0.4-beta.2(ethers@6.15.0))(ethers@6.15.0):
     dependencies:
       ethers: 6.15.0
-      ethers-erc4337: 0.0.2(ethers@6.15.0)
+      ethers-erc4337: 0.0.4-beta.2(ethers@6.15.0)
       zod: 3.25.73
 
   set-function-length@1.2.2:

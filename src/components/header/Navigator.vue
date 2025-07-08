@@ -14,7 +14,7 @@ const closeSheet = () => {
 
 <template>
 	<!-- Desktop Navigation -->
-	<nav class="hidden sm:flex items-center space-x-3 text-sm font-medium">
+	<nav class="hidden sm:flex items-center space-x-6 text-sm font-medium">
 		<RouterLink
 			:to="toRoute('create')"
 			class="transition-colors hover:text-foreground/80 text-foreground/60"

@@ -47,16 +47,13 @@ const { canSign } = useSigner()
 
 const supportedAccounts = AccountRegistry.getSupportedAccountsForCreation()
 
-const ACCOUNT_SUPPORTED_INITIAL_VALIDATION: Partial<
-	Record<
-		AccountId,
-		{
-			type: ValidationType
-			name: ValidationMethodName
-		}[]
-	>
-> = {
-	[AccountId['kernel.advanced.v0.3.1']]: [
+type ValidationTypeWithName = {
+	type: ValidationType
+	name: ValidationMethodName
+}
+
+const ACCOUNT_SUPPORTED_INITIAL_VALIDATION: Partial<Record<AccountId, ValidationTypeWithName[]>> = {
+	[AccountId['kernel.advanced.v0.3.3']]: [
 		{ type: 'EOA-Owned', name: 'ECDSAValidator' },
 		{ type: 'PASSKEY', name: 'WebAuthnValidator' },
 	],
@@ -67,26 +64,23 @@ const ACCOUNT_SUPPORTED_INITIAL_VALIDATION: Partial<
 	[AccountId['rhinestone.safe7579.v1.0.0']]: [{ type: 'EOA-Owned', name: 'OwnableValidator' }],
 } as const
 
-const supportedValidationTypes = computed(() => {
-	if (!selectedAccountType.value) return []
-	return ACCOUNT_SUPPORTED_INITIAL_VALIDATION[selectedAccountType.value]
-})
-
 const selectedAccountType = ref<AccountId | undefined>(undefined) // use undefined instead of null for v-model
 const selectedValidationType = ref<ValidationType | undefined>(undefined) // use undefined instead of null for v-model
+
+const supportedValidations = computed<ValidationTypeWithName[]>(() => {
+	if (!selectedAccountType.value) return []
+	return ACCOUNT_SUPPORTED_INITIAL_VALIDATION[selectedAccountType.value] || []
+})
 
 const isComputingAddress = ref(false)
 const showMoreOptions = ref(false)
 
-// Reset validation type if not supported by new account type
-watch(selectedAccountType, newAccountType => {
-	if (!newAccountType) {
-		selectedValidationType.value = undefined
-		return
-	}
-
-	const allowedValidationTypes = ACCOUNT_SUPPORTED_INITIAL_VALIDATION[newAccountType]
-	if (selectedValidationType.value && !allowedValidationTypes?.some(v => v.type === selectedValidationType.value)) {
+// Reset validation type when account type is changed
+watch(selectedAccountType, () => {
+	// if the supported validations only has one type, select it
+	if (supportedValidations.value && supportedValidations.value.length === 1) {
+		selectedValidationType.value = supportedValidations.value[0].type
+	} else {
 		selectedValidationType.value = undefined
 	}
 })
@@ -354,7 +348,7 @@ function onClickPasskeyLogout() {
 
 					<SelectContent>
 						<SelectItem
-							v-for="validationType in supportedValidationTypes"
+							v-for="validationType in supportedValidations"
 							:key="validationType.type"
 							:value="validationType.type"
 							class="cursor-pointer"

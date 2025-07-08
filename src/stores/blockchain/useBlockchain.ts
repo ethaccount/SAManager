@@ -59,6 +59,10 @@ export const useBlockchainStore = defineStore(
 			}
 		})
 
+		const alchemyUrl = computed(() => {
+			return getAlchemyUrl(selectedChainId.value)
+		})
+
 		const explorerUrl = computed(() => `${EXPLORER_URL[selectedChainId.value]}`)
 
 		const supportedEntryPoints = computed<SUPPORTED_ENTRY_POINT[]>(() => {
@@ -122,6 +126,7 @@ export const useBlockchainStore = defineStore(
 			chainIdBigInt,
 			tenderlyClient,
 			switchChain,
+			alchemyUrl,
 		}
 	},
 	{

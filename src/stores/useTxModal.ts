@@ -3,9 +3,9 @@ import { buildAccountExecutions } from '@/lib/userop-builder'
 import { deserializeValidationMethod } from '@/lib/validations'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { ENTRY_POINT_V07_ADDRESS, UserOpBuilder, UserOperationReceipt } from 'ethers-erc4337'
+import { UserOpBuilder, UserOperationReceipt } from 'ethers-erc4337'
 import { defineStore, storeToRefs } from 'pinia'
-import { Execution } from 'sendop'
+import { Execution, fetchGasPriceAlchemy, PublicPaymaster } from 'sendop'
 import { useModal } from 'vue-final-modal'
 import { useSigner } from './useSigner'
 
@@ -49,7 +49,7 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 		open()
 	}
 
-	const { bundler, selectedChainId, client } = useBlockchain()
+	const { bundler, selectedChainId, client, alchemyUrl } = useBlockchain()
 	const { selectedAccount } = useAccount()
 
 	const paymasters = [
@@ -90,7 +90,11 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 			throw new Error('[handleEstimate] No executions and no init code provided')
 		}
 
-		const op = new UserOpBuilder(bundler.value, ENTRY_POINT_V07_ADDRESS, Number(selectedChainId.value))
+		const op = new UserOpBuilder({
+			chainId: selectedChainId.value,
+			bundler: bundler.value,
+		})
+
 		const { selectedSignerType } = useSigner()
 
 		// find validation method by signer type
@@ -110,6 +114,26 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 			client: client.value,
 			executions,
 		})
+
+		if (initCode) {
+			op.setFactory({
+				factory: initCode.slice(0, 42),
+				factoryData: '0x' + initCode.slice(42),
+			})
+		}
+
+		if (selectedPaymaster.value === 'public') {
+			op.setPaymaster({
+				paymaster: await PublicPaymaster.getPaymaster(),
+				paymasterData: await PublicPaymaster.getPaymasterData(),
+				paymasterPostOpGasLimit: await PublicPaymaster.getPaymasterPostOpGasLimit(),
+			})
+		}
+
+		const gasPrice = await fetchGasPriceAlchemy(alchemyUrl.value)
+		op.setGasPrice(gasPrice)
+
+		await op.estimateGas()
 
 		userOp.value = op
 	}
@@ -135,6 +159,9 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 			throw new Error('[handleSend] User operation not built')
 		}
 		const op = userOp.value
+
+		console.log('op', op.preview())
+		console.log(op.entryPointAddress)
 
 		await op.send()
 

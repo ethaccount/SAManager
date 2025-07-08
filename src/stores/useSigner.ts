@@ -1,4 +1,4 @@
-import { EOASigner, PasskeySigner, Signer, SignerType, ValidationMethod } from '@/lib/validations'
+import { AppSigner, EOASigner, PasskeySigner, SignerType, ValidationMethod } from '@/lib/validations'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 
@@ -26,7 +26,7 @@ export const useSignerStore = defineStore('useSignerStore', () => {
 
 	const selectedSignerType = ref<SignerType | null>(null)
 
-	const selectedSigner = computed<Signer | null>(() => {
+	const selectedSigner = computed<AppSigner | null>(() => {
 		if (!selectedSignerType.value) return null
 		const identifier = connectedSigners.value[selectedSignerType.value].identifier
 		if (!identifier) {
@@ -36,7 +36,9 @@ export const useSignerStore = defineStore('useSignerStore', () => {
 		// Create actual Signer instances based on type
 		switch (selectedSignerType.value) {
 			case 'EOAWallet':
-				return new EOASigner(identifier)
+				const { signer } = useEOAWallet()
+				if (!signer.value) return null
+				return new EOASigner(identifier, signer.value)
 			case 'Passkey':
 				return new PasskeySigner(identifier)
 			default:
