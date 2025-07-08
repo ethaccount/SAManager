@@ -13,7 +13,7 @@ import {
 	ValidationAPI,
 } from 'sendop'
 import { AccountProvider, Deployment } from '../types'
-import { getValidationModule } from '../helpers'
+import { getModuleByValidationMethod } from '@/lib/validations'
 
 export class KernelAccountProvider implements AccountProvider {
 	getExecutionAccountAPI(validationAPI: ValidationAPI, validatorAddress?: string): AccountAPI {
@@ -74,7 +74,7 @@ export class KernelAccountProvider implements AccountProvider {
 			throw new Error('[KernelAccountProvider] Validation method is not a module')
 		}
 
-		const module = getValidationModule(validation)
+		const module = getModuleByValidationMethod(validation)
 		return await Kernel.getDeployment({
 			client,
 			validatorAddress: module.address,

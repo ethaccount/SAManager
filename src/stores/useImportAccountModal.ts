@@ -5,6 +5,7 @@ import ImportOptions from '@/components/ImportAccountModal/ImportOptions.vue'
 import ValidateSmartEOA from '@/components/ImportAccountModal/ValidateSmartEOA.vue'
 import ConnectEOAWallet from '@/components/signer/ConnectEOAWallet.vue'
 import ConnectPasskey from '@/components/signer/ConnectPasskey.vue'
+import { AccountId } from '@/lib/accounts'
 import {
 	deserializeValidationMethod,
 	ECDSAValidatorVMethod,
@@ -13,7 +14,7 @@ import {
 } from '@/lib/validations'
 import { ValidationMethodData } from '@/lib/validations/ValidationMethod'
 import { AccountCategory } from '@/stores/account/account'
-import { AccountId } from '@/lib/accounts'
+import { getBigInt, hexlify } from 'ethers'
 import { defineStore, storeToRefs } from 'pinia'
 import { useModal } from 'vue-final-modal'
 import { usePasskey } from './passkey/usePasskey'
@@ -83,11 +84,20 @@ const IAM_CONFIG: Record<IAMStageKey, IAMStage<Component>> = {
 			mode: 'login',
 			onConfirm: () => {
 				// For import, we only need the credentialId. The selectedCredential is not needed.
-				const { selectedCredentialId } = usePasskey()
+				const { selectedCredentialId, selectedCredential } = usePasskey()
 				if (!selectedCredentialId.value) {
 					throw new Error('IAMStageKey.CONNECT_PASSKEY: No selectedCredentialId')
 				}
-				const vMethod = new WebAuthnValidatorVMethod(selectedCredentialId.value)
+
+				if (!selectedCredential.value) {
+					throw new Error('IAMStageKey.CONNECT_PASSKEY: No selectedCredential')
+				}
+
+				const credential = selectedCredential.value
+				const pubKeyX = getBigInt(hexlify(credential.pubKeyX))
+				const pubKeyY = getBigInt(hexlify(credential.pubKeyY))
+				const vMethod = new WebAuthnValidatorVMethod(credential.credentialId, pubKeyX, pubKeyY)
+
 				useImportAccountModal().updateFormData({
 					category: 'Smart Account',
 					vMethods: [vMethod.serialize()],

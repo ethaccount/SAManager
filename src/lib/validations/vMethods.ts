@@ -1,7 +1,13 @@
 import { getAddress } from 'ethers'
 import { ADDRESS, Simple7702AccountAPI, SingleEOAValidation, WebAuthnValidation } from 'sendop'
 import { SignerType } from './Signer'
-import { ValidationMethodBase, ValidationMethodName, ValidationType } from './ValidationMethod'
+import {
+	ValidationMethodBase,
+	ValidationMethodName,
+	ValidationType,
+	EOAValidationMethodData,
+	WebAuthnValidationMethodData,
+} from './ValidationMethod'
 
 export class ECDSAValidatorVMethod extends ValidationMethodBase {
 	name: ValidationMethodName = 'ECDSAValidator'
@@ -13,6 +19,13 @@ export class ECDSAValidatorVMethod extends ValidationMethodBase {
 	constructor(identifier: string) {
 		super(getAddress(identifier))
 	}
+
+	serialize(): EOAValidationMethodData {
+		return {
+			name: 'ECDSAValidator',
+			address: this.identifier,
+		}
+	}
 }
 
 export class WebAuthnValidatorVMethod extends ValidationMethodBase {
@@ -22,8 +35,21 @@ export class WebAuthnValidatorVMethod extends ValidationMethodBase {
 	validationAPI = new WebAuthnValidation()
 	validatorAddress = ADDRESS.WebAuthnValidator
 
-	constructor(identifier: string) {
+	constructor(
+		identifier: string,
+		public pubKeyX?: bigint,
+		public pubKeyY?: bigint,
+	) {
 		super(identifier)
+	}
+
+	serialize(): WebAuthnValidationMethodData {
+		return {
+			name: 'WebAuthnValidator',
+			credentialId: this.identifier,
+			...(this.pubKeyX !== undefined && { pubKeyX: this.pubKeyX }),
+			...(this.pubKeyY !== undefined && { pubKeyY: this.pubKeyY }),
+		}
 	}
 }
 
@@ -37,6 +63,13 @@ export class SingleOwnableValidatorVMethod extends ValidationMethodBase {
 	constructor(identifier: string) {
 		super(getAddress(identifier))
 	}
+
+	serialize(): EOAValidationMethodData {
+		return {
+			name: 'OwnableValidator',
+			address: this.identifier,
+		}
+	}
 }
 
 export class Simple7702AccountVMethod extends ValidationMethodBase {
@@ -47,5 +80,12 @@ export class Simple7702AccountVMethod extends ValidationMethodBase {
 
 	constructor(identifier: string) {
 		super(getAddress(identifier))
+	}
+
+	serialize(): EOAValidationMethodData {
+		return {
+			name: 'Simple7702Account',
+			address: this.identifier,
+		}
 	}
 }

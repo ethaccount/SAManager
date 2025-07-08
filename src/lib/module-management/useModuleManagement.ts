@@ -7,7 +7,7 @@ import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useTxModal } from '@/stores/useTxModal'
-import { BytesLike, hexlify, JsonRpcProvider } from 'ethers'
+import { BytesLike, getBigInt, hexlify, JsonRpcProvider } from 'ethers'
 import { ERC7579_MODULE_TYPE, Execution, getECDSAValidator, getWebAuthnValidator } from 'sendop'
 import { toast } from 'vue-sonner'
 import { useConnectSignerModal } from '../useConnectSignerModal'
@@ -140,7 +140,12 @@ export function useModuleManagement() {
 									throw new Error('No account selected')
 								}
 								// add the vOption
-								const vMethod = new WebAuthnValidatorVMethod(selectedCredential.value.credentialId)
+								const credential = selectedCredential.value
+								const vMethod = new WebAuthnValidatorVMethod(
+									credential.credentialId,
+									getBigInt(hexlify(credential.pubKeyX)),
+									getBigInt(hexlify(credential.pubKeyY)),
+								)
 								selectedAccount.value.vMethods.push(vMethod.serialize())
 								await onSuccess?.()
 							},

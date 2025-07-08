@@ -2,7 +2,11 @@
 import { fetchECDSAValidatorRegisteredEvent, fetchWebAuthnRegisteredEvent } from '@/api/registered-events'
 import { AccountId } from '@/lib/accounts'
 import { deserializeValidationMethod } from '@/lib/validations'
-import { ValidationMethodData } from '@/lib/validations/ValidationMethod'
+import {
+	EOAValidationMethodData,
+	ValidationMethodData,
+	WebAuthnValidationMethodData,
+} from '@/lib/validations/ValidationMethod'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
 import { shortenAddress } from '@vue-dapp/core'
@@ -55,8 +59,9 @@ onMounted(async () => {
 		}
 
 		switch (vType) {
-			case 'EOAWallet':
-				addresses = await fetchECDSAValidatorRegisteredEvent(tenderlyClient.value, props.vMethod().identifier)
+			case 'EOAWallet': {
+				const vMethod = props.vMethod() as EOAValidationMethodData
+				addresses = await fetchECDSAValidatorRegisteredEvent(tenderlyClient.value, vMethod.address)
 
 				// Specially check if the module is installed because the ECDSAValidator doesn't emit event when uninstalled
 				const filteredAddresses: string[] = []
@@ -75,8 +80,10 @@ onMounted(async () => {
 
 				addresses = addresses.filter(a => !filteredAddresses.includes(getAddress(a)))
 				break
-			case 'Passkey':
-				const credentialId = props.vMethod().identifier
+			}
+			case 'Passkey': {
+				const vMethod = props.vMethod() as WebAuthnValidationMethodData
+				const credentialId = vMethod.credentialId
 				if (!credentialId) {
 					throw new Error('AccountOptions(onMounted): Passkey credential ID not found')
 				}
@@ -85,6 +92,7 @@ onMounted(async () => {
 					getAuthenticatorIdHash(credentialId),
 				)
 				break
+			}
 		}
 
 		accounts.value = addresses.map(address => ({

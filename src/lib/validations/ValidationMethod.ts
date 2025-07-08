@@ -4,6 +4,21 @@ import { SignerType } from './Signer'
 export type ValidationMethodName = 'ECDSAValidator' | 'OwnableValidator' | 'WebAuthnValidator' | 'Simple7702Account'
 export type ValidationType = 'EOA-Owned' | 'PASSKEY'
 
+// Discriminated union types for different validation method data
+export interface EOAValidationMethodData {
+	name: 'ECDSAValidator' | 'OwnableValidator' | 'Simple7702Account'
+	address: string
+}
+
+export interface WebAuthnValidationMethodData {
+	name: 'WebAuthnValidator'
+	credentialId: string
+	pubKeyX?: bigint
+	pubKeyY?: bigint
+}
+
+export type ValidationMethodData = EOAValidationMethodData | WebAuthnValidationMethodData
+
 export interface ValidationMethod {
 	name: ValidationMethodName
 	type: ValidationType
@@ -15,11 +30,6 @@ export interface ValidationMethod {
 	isModule: boolean
 
 	serialize(): ValidationMethodData
-}
-
-export interface ValidationMethodData {
-	name: ValidationMethodName
-	identifier: string
 }
 
 export abstract class ValidationMethodBase implements ValidationMethod {
@@ -36,10 +46,6 @@ export abstract class ValidationMethodBase implements ValidationMethod {
 
 	constructor(public identifier: string) {}
 
-	serialize(): ValidationMethodData {
-		return {
-			name: this.name,
-			identifier: this.identifier,
-		}
-	}
+	// This will be overridden by subclasses with specific return types
+	abstract serialize(): ValidationMethodData
 }

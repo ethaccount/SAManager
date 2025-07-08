@@ -2,6 +2,12 @@
 import { displayAccountName } from '@/lib/accounts'
 import { toRoute } from '@/lib/router'
 import { useGetCode } from '@/lib/useGetCode'
+import {
+	getVMethodIdentifier,
+	getVMethodName,
+	getVMethodType,
+	getVMethodValidatorAddress,
+} from '@/lib/validations/helpers'
 import { useAccount } from '@/stores/account/useAccount'
 import { displayChainName } from '@/stores/blockchain/blockchain'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
@@ -137,15 +143,45 @@ const showSwitchToCorrectChain = computed(() => {
 						<div
 							v-for="(vOption, index) in selectedAccount.vMethods"
 							:key="index"
-							class="group flex items-center justify-between py-2 px-3 bg-card border border-border/40 rounded-lg"
+							class="group py-2 px-3 bg-card border border-border/40 rounded-lg"
 						>
-							<div class="w-full flex items-center justify-between gap-3">
-								<div class="text-xs font-medium px-2.5 py-1 rounded-full bg-muted">
-									{{ vOption.name }}
+							<div class="w-full space-y-2">
+								<div class="flex items-center gap-2">
+									<div class="text-xs font-medium px-2.5 py-1 rounded-full bg-muted">
+										{{ getVMethodName(vOption) }}
+									</div>
+									<div
+										class="text-xs px-2.5 py-1 rounded-full"
+										:class="
+											getVMethodType(vOption) === 'PASSKEY'
+												? 'bg-blue-500/10 text-blue-500'
+												: 'bg-green-500/10 text-green-500'
+										"
+									>
+										{{ getVMethodType(vOption) }}
+									</div>
 								</div>
-								<div class="font-mono text-xs text-muted-foreground flex items-center gap-2">
-									<span>{{ shortenAddress(vOption.identifier) }}</span>
-									<CopyButton :address="vOption.identifier" />
+								<div class="space-y-1">
+									<div
+										v-if="getVMethodValidatorAddress(vOption)"
+										class="text-xs text-muted-foreground"
+									>
+										<span class="font-medium">Validator:</span>
+										<span class="font-mono ml-1">
+											{{ shortenAddress(getVMethodValidatorAddress(vOption)!) }}
+										</span>
+										<CopyButton :address="getVMethodValidatorAddress(vOption)!" class="ml-1" />
+									</div>
+									<div
+										v-if="getVMethodType(vOption) === 'EOA-Owned'"
+										class="text-xs text-muted-foreground"
+									>
+										<span class="font-medium">Address:</span>
+										<span class="font-mono ml-1">
+											{{ shortenAddress(getVMethodIdentifier(vOption)) }}
+										</span>
+										<CopyButton :address="getVMethodIdentifier(vOption)" class="ml-1" />
+									</div>
 								</div>
 							</div>
 						</div>

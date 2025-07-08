@@ -26,10 +26,18 @@ export const useAccountsStore = defineStore(
 						if (!account.vMethods) {
 							account.vMethods = []
 						}
-						account.vMethods.push({
-							name: vOptionsToVMethods[vOption.type],
-							identifier: vOption.identifier,
-						})
+						const vMethodName = vOptionsToVMethods[vOption.type]
+						if (vMethodName === 'WebAuthnValidator') {
+							account.vMethods.push({
+								name: vMethodName,
+								credentialId: vOption.identifier,
+							})
+						} else {
+							account.vMethods.push({
+								name: vMethodName,
+								address: vOption.identifier,
+							})
+						}
 					}
 					delete account.vOptions
 					console.log('migrated account', account.address)

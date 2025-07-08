@@ -25,7 +25,7 @@ import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useSigner } from '@/stores/useSigner'
 import { useTxModal } from '@/stores/useTxModal'
 import { shortenAddress } from '@vue-dapp/core'
-import { concat, isAddress } from 'ethers'
+import { concat, getBigInt, hexlify, isAddress } from 'ethers'
 import { AlertCircle, ChevronRight, Power } from 'lucide-vue-next'
 import { toBytes32 } from 'sendop'
 
@@ -39,6 +39,7 @@ const {
 	resetCredentialId,
 	isFullCredential,
 	selectedCredentialId,
+	selectedCredential,
 	isPasskeySupported,
 } = usePasskey()
 const { importAccount, selectAccount, isAccountImported } = useAccounts()
@@ -116,9 +117,13 @@ const selectedValidationMethod = computed<ValidationMethod | null>(() => {
 			}
 		}
 		case 'PASSKEY': {
-			if (!selectedCredentialId.value) return null
-			const identifier = selectedCredentialId.value
-			return new WebAuthnValidatorVMethod(identifier)
+			if (!selectedCredential.value) return null
+			const credential = selectedCredential.value
+			return new WebAuthnValidatorVMethod(
+				credential.credentialId,
+				getBigInt(hexlify(credential.pubKeyX)),
+				getBigInt(hexlify(credential.pubKeyY)),
+			)
 		}
 		default:
 			return null

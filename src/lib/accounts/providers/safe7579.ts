@@ -17,7 +17,7 @@ import {
 	zeroPadLeft,
 } from 'sendop'
 import { AccountProvider, Deployment } from '../types'
-import { getValidationModule } from '../helpers'
+import { getModuleByValidationMethod } from '@/lib/validations'
 
 export class Safe7579AccountProvider implements AccountProvider {
 	getExecutionAccountAPI(validationAPI: ValidationAPI, validatorAddress?: string): AccountAPI {
@@ -81,7 +81,7 @@ export class Safe7579AccountProvider implements AccountProvider {
 			throw new Error('[Safe7579AccountProvider] Validation method is not a module')
 		}
 
-		const module = getValidationModule(validation)
+		const module = getModuleByValidationMethod(validation)
 		return await Safe7579.getDeployment({
 			client,
 			salt,

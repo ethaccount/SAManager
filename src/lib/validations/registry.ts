@@ -32,17 +32,29 @@ export class ValidationMethodRegistry {
 
 // Auto-register all validation methods
 ValidationMethodRegistry.register('ECDSAValidator', {
-	create: data => new ECDSAValidatorVMethod(data.identifier),
+	create: data => {
+		if (data.name !== 'ECDSAValidator') throw new Error('Invalid data type for ECDSAValidator')
+		return new ECDSAValidatorVMethod(data.address)
+	},
 })
 
 ValidationMethodRegistry.register('WebAuthnValidator', {
-	create: data => new WebAuthnValidatorVMethod(data.identifier),
+	create: data => {
+		if (data.name !== 'WebAuthnValidator') throw new Error('Invalid data type for WebAuthnValidator')
+		return new WebAuthnValidatorVMethod(data.credentialId, data.pubKeyX, data.pubKeyY)
+	},
 })
 
 ValidationMethodRegistry.register('OwnableValidator', {
-	create: data => new SingleOwnableValidatorVMethod(data.identifier),
+	create: data => {
+		if (data.name !== 'OwnableValidator') throw new Error('Invalid data type for OwnableValidator')
+		return new SingleOwnableValidatorVMethod(data.address)
+	},
 })
 
 ValidationMethodRegistry.register('Simple7702Account', {
-	create: data => new Simple7702AccountVMethod(data.identifier),
+	create: data => {
+		if (data.name !== 'Simple7702Account') throw new Error('Invalid data type for Simple7702Account')
+		return new Simple7702AccountVMethod(data.address)
+	},
 })
