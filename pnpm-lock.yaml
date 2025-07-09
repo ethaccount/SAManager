@@ -72,8 +72,8 @@ importers:
         specifier: ^2.2.0
         version: 2.2.0(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2))
       sendop:
-        specifier: 0.5.0-beta.3
-        version: 0.5.0-beta.3(ethers@6.15.0)
+        specifier: 0.5.0-beta.5
+        version: 0.5.0-beta.5(ethers@6.15.0)
       tailwind-merge:
         specifier: ^2.6.0
         version: 2.6.0
@@ -3341,8 +3341,8 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  sendop@0.5.0-beta.3:
-    resolution: {integrity: sha512-WIDzmJoKvFFCGBMqs6OKJFiNPB88V/Dww0f03IMW476PlPUu87jNe3ckPYgt3Zjf8dzD2XBQxIsGprHuiEZyHw==}
+  sendop@0.5.0-beta.5:
+    resolution: {integrity: sha512-WNxef+LMADJFk41ATDgFxhBKmGt5b/jRj+k2B8aQ1oRsQTQXJXBPGtSXzPOaRQvXAJTLBokx4o/1nSUkzMapCw==}
     engines: {bun: '>=1.1.0'}
     peerDependencies:
       ethers: ^6.15.0
@@ -7367,7 +7367,7 @@ snapshots:
 
   semver@7.6.3: {}
 
-  sendop@0.5.0-beta.3(ethers@6.15.0):
+  sendop@0.5.0-beta.5(ethers@6.15.0):
     dependencies:
       ethers: 6.15.0
 
