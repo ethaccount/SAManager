@@ -1,5 +1,5 @@
 import TxModal from '@/components/TxModal.vue'
-import { buildAccountExecutions } from '@/lib/userop-builder'
+import { buildAccountExecutions, buildKernelNonRootExecutions } from '@/lib/userop-builder'
 import { deserializeValidationMethod } from '@/lib/validations'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
@@ -96,7 +96,7 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 
 		const { selectedSignerType } = useSigner()
 
-		// find validation method by signer type
+		// find validation method by selected signer type
 		const vMethod = selectedAccount.value.vMethods.find(
 			vMethod => deserializeValidationMethod(vMethod).signerType === selectedSignerType.value,
 		)
@@ -105,14 +105,30 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 			throw new Error('[handleEstimate] vMethod not found')
 		}
 
-		await buildAccountExecutions({
-			op,
-			accountId: selectedAccount.value.accountId,
-			validationMethod: deserializeValidationMethod(vMethod),
-			accountAddress: selectedAccount.value.address,
-			client: client.value,
-			executions,
-		})
+		// handle special case for kernel advanced v0.3.x
+		// If the vMethod is not the first method in the vMethods array,
+		// we need to use KernelValidationType.VALIDATOR for non-root validation
+		if (
+			selectedAccount.value.accountId.startsWith('kernel.advanced.v0.3') &&
+			selectedAccount.value.vMethods.indexOf(vMethod) !== 0
+		) {
+			await buildKernelNonRootExecutions({
+				op,
+				validationMethod: deserializeValidationMethod(vMethod),
+				accountAddress: selectedAccount.value.address,
+				client: client.value,
+				executions,
+			})
+		} else {
+			await buildAccountExecutions({
+				op,
+				accountId: selectedAccount.value.accountId,
+				validationMethod: deserializeValidationMethod(vMethod),
+				accountAddress: selectedAccount.value.address,
+				client: client.value,
+				executions,
+			})
+		}
 
 		if (initCode) {
 			op.setFactory({
@@ -159,9 +175,6 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 			throw new Error('[handleSend] User operation not built')
 		}
 		const op = userOp.value
-
-		console.log('op', op.preview())
-		console.log(op.entryPointAddress)
 
 		await op.send()
 
