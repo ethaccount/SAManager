@@ -1,10 +1,11 @@
-import { ValidationMethod, ValidationMethodName } from '@/lib/validations'
+import { deserializeValidationMethod, ValidationMethod, ValidationMethodName } from '@/lib/validations'
 import { ImportedAccount, isSameAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useInitCode } from '@/stores/account/useInitCode'
 import { CHAIN_ID } from '@/stores/blockchain/blockchain'
 import { JSONParse, JSONStringify } from 'json-with-bigint'
 import { isSameAddress } from 'sendop'
+import { useSigner } from '../useSigner'
 
 const ACCOUNTS_STORAGE_KEY = 'samanager-accounts'
 
@@ -147,6 +148,13 @@ export const useAccountsStore = defineStore('useAccountsStore', () => {
 		// if selected account is the one being updated, update the selected account
 		if (selectedAccount.value && isSameAccount(selectedAccount.value, acc)) {
 			selectedAccount.value = acc
+		}
+
+		// select the signer that's left if the signer is connected
+		const signerType = deserializeValidationMethod(acc.vMethods[0]).signerType
+		const { isSignerConnected, selectSigner } = useSigner()
+		if (isSignerConnected(signerType)) {
+			selectSigner(signerType)
 		}
 	}
 

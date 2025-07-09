@@ -24,6 +24,10 @@ export const useSignerStore = defineStore('useSignerStore', () => {
 		}
 	})
 
+	function isSignerConnected(signerType: SignerType) {
+		return connectedSigners.value[signerType].isConnected
+	}
+
 	const selectedSignerType = ref<SignerType | null>(null)
 
 	const selectedSigner = computed<AppSigner | null>(() => {
@@ -73,6 +77,7 @@ export const useSignerStore = defineStore('useSignerStore', () => {
 		selectedSignerType,
 		selectSigner,
 		canSign,
+		isSignerConnected,
 	}
 })
 
