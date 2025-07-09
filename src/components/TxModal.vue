@@ -16,7 +16,7 @@ import { TransactionStatus, TxModalExecution, useTxModal } from '@/stores/useTxM
 import { shortenAddress } from '@vue-dapp/core'
 import { formatEther } from 'ethers'
 import { CircleDot, ExternalLink, Loader2, X } from 'lucide-vue-next'
-import { isSameAddress } from 'sendop'
+import { extractHexString, isSameAddress, parseContractError, replaceHexString } from 'sendop'
 import { VueFinalModal } from 'vue-final-modal'
 import { toast } from 'vue-sonner'
 
@@ -108,6 +108,22 @@ function toggleExecutionExpansion(index: number) {
 	}
 }
 
+function handleError(e: unknown, prefix?: string) {
+	console.error(getErrorChainMessage(e, prefix))
+	if (isEthersError(e)) {
+		const err = getEthersErrorMsg(e, prefix)
+		const errHex = extractHexString(err)
+		if (errHex && parseContractError(errHex)) {
+			error.value = replaceHexString(err, parseContractError(errHex, true))
+		} else {
+			error.value = err
+		}
+		return
+	} else {
+		error.value = getErrorMsg(e, prefix)
+	}
+}
+
 async function onClickEstimate() {
 	try {
 		error.value = null
@@ -132,16 +148,6 @@ async function onClickEstimate() {
 	} catch (e: unknown) {
 		handleError(e, 'Failed to estimate gas')
 		status.value = TransactionStatus.Estimation
-	}
-}
-
-function handleError(e: unknown, prefix?: string) {
-	console.error(getErrorChainMessage(e, prefix))
-	if (isEthersError(e)) {
-		error.value = getEthersErrorMsg(e, prefix)
-		return
-	} else {
-		error.value = getErrorMsg(e, prefix)
 	}
 }
 
