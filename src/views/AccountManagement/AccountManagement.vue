@@ -161,26 +161,44 @@ const showSwitchToCorrectChain = computed(() => {
 										{{ getVMethodType(vMethod) }}
 									</div>
 								</div>
-								<div class="space-y-2">
+								<div class="space-y-1">
 									<div
 										v-if="getVMethodValidatorAddress(vMethod)"
 										class="flex items-center gap-2 text-xs text-muted-foreground"
 									>
 										<span class="font-medium min-w-0">Validator:</span>
-										<span class="font-mono flex-1 truncate">
-											{{ shortenAddress(getVMethodValidatorAddress(vMethod)!) }}
-										</span>
-										<CopyButton :address="getVMethodValidatorAddress(vMethod)!" size="sm" />
+										<div class="font-mono flex-1 truncate flex items-center gap-1">
+											<span>{{ shortenAddress(getVMethodValidatorAddress(vMethod)!) }}</span>
+											<CopyButton :address="getVMethodValidatorAddress(vMethod)" size="xs" />
+											<AddressLinkButton
+												:address="getVMethodValidatorAddress(vMethod)"
+												size="xs"
+											/>
+										</div>
 									</div>
 									<div
 										v-if="getVMethodType(vMethod) === 'EOA-Owned'"
 										class="flex items-center gap-2 text-xs text-muted-foreground"
 									>
 										<span class="font-medium min-w-0">Owner:</span>
-										<span class="font-mono flex-1 truncate">
-											{{ shortenAddress(getVMethodIdentifier(vMethod)) }}
+										<div class="font-mono flex-1 truncate flex items-center gap-1">
+											<span>{{ shortenAddress(getVMethodIdentifier(vMethod)) }}</span>
+											<CopyButton :address="getVMethodIdentifier(vMethod)" size="xs" />
+											<AddressLinkButton :address="getVMethodIdentifier(vMethod)" size="xs" />
+										</div>
+									</div>
+									<div
+										v-if="
+											getVMethodType(vMethod) === 'PASSKEY' &&
+											vMethod.name === 'WebAuthnValidator' &&
+											vMethod.username
+										"
+										class="flex items-center gap-2 text-xs text-muted-foreground"
+									>
+										<span class="font-medium min-w-0">Username:</span>
+										<span class="flex-1 truncate">
+											{{ vMethod.username }}
 										</span>
-										<CopyButton :address="getVMethodIdentifier(vMethod)" size="sm" />
 									</div>
 								</div>
 							</div>

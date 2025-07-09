@@ -96,7 +96,12 @@ const IAM_CONFIG: Record<IAMStageKey, IAMStage<Component>> = {
 				const credential = selectedCredential.value
 				const pubKeyX = getBigInt(hexlify(credential.pubKeyX))
 				const pubKeyY = getBigInt(hexlify(credential.pubKeyY))
-				const vMethod = new WebAuthnValidatorVMethod(credential.credentialId, pubKeyX, pubKeyY)
+				const vMethod = new WebAuthnValidatorVMethod(
+					credential.credentialId,
+					pubKeyX,
+					pubKeyY,
+					credential.username,
+				)
 
 				useImportAccountModal().updateFormData({
 					category: 'Smart Account',

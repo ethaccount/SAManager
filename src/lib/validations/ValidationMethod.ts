@@ -15,6 +15,7 @@ export interface WebAuthnValidationMethodData {
 	credentialId: string
 	pubKeyX?: bigint
 	pubKeyY?: bigint
+	username?: string
 }
 
 export type ValidationMethodData = EOAValidationMethodData | WebAuthnValidationMethodData

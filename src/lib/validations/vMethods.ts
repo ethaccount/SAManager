@@ -39,6 +39,7 @@ export class WebAuthnValidatorVMethod extends ValidationMethodBase {
 		identifier: string,
 		public pubKeyX?: bigint,
 		public pubKeyY?: bigint,
+		public username?: string,
 	) {
 		super(identifier)
 	}
@@ -49,6 +50,7 @@ export class WebAuthnValidatorVMethod extends ValidationMethodBase {
 			credentialId: this.identifier,
 			...(this.pubKeyX !== undefined && { pubKeyX: this.pubKeyX }),
 			...(this.pubKeyY !== undefined && { pubKeyY: this.pubKeyY }),
+			...(this.username !== undefined && { username: this.username }),
 		}
 	}
 }

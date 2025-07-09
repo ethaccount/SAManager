@@ -32,7 +32,7 @@ export function useModuleManagement() {
 		const { onSuccess } = options || {}
 
 		if (!isAccountAccessible.value) {
-			toast.info('Connect your account to operate modules')
+			toast.info('Please connect your account first')
 			return
 		}
 		if (!selectedAccount.value) {
@@ -148,6 +148,7 @@ export function useModuleManagement() {
 									credential.credentialId,
 									getBigInt(hexlify(credential.pubKeyX)),
 									getBigInt(hexlify(credential.pubKeyY)),
+									credential.username,
 								)
 								addValidationMethod(selectedAccount.value, vMethod)
 								await onSuccess?.()

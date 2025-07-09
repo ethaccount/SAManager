@@ -116,6 +116,7 @@ const selectedValidationMethod = computed<ValidationMethod | null>(() => {
 				credential.credentialId,
 				getBigInt(hexlify(credential.pubKeyX)),
 				getBigInt(hexlify(credential.pubKeyY)),
+				credential.username,
 			)
 		}
 		default:
