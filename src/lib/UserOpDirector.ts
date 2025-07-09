@@ -1,4 +1,4 @@
-import { AccountId } from '@/lib/accounts'
+import { AccountId, AccountRegistry } from '@/lib/accounts'
 import { JsonRpcProvider } from 'ethers'
 import { AccountAPI, Execution, KernelAccountAPI, KernelValidationType, UserOpBuilder } from 'sendop'
 import { getExecutionAccountAPI, getSmartSessionExecutionAccountAPI } from './accounts/account-specific'
@@ -34,7 +34,7 @@ export class UserOpDirector {
 		// Handle special case for kernel advanced v0.3.x
 		// If the vMethod is not the first method in the vMethods array,
 		// we need to use KernelValidationType.VALIDATOR for non-root validation
-		if (accountId.startsWith('kernel.advanced.v0.3') && vMethods.indexOf(vMethod) !== 0) {
+		if (AccountRegistry.getConfig(accountId).name === 'Kernel' && vMethods.indexOf(vMethod) !== 0) {
 			if (!vMethod.validatorAddress) {
 				throw new Error("[buildAccountExecutions] Kernel's validation method must have validatorAddress")
 			}

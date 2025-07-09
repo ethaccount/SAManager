@@ -1,17 +1,16 @@
 import { getInstallModuleData, getUninstallModuleData } from '@/lib/accounts/account-specific'
+import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
 import { ECDSAValidatorVMethod, SingleOwnableValidatorVMethod, WebAuthnValidatorVMethod } from '@/lib/validations'
+import { getModuleByValidationMethod } from '@/lib/validations/helpers'
 import { useAccount } from '@/stores/account/useAccount'
 import { useAccounts } from '@/stores/account/useAccounts'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { TxModalExecution, useTxModal } from '@/stores/useTxModal'
-import { getOwnableValidator } from '@rhinestone/module-sdk'
-import { BytesLike, getBigInt, hexlify } from 'ethers'
-import { ADDRESS, ERC7579_MODULE_TYPE, ERC7579Module, getECDSAValidator, getWebAuthnValidator } from 'sendop'
+import { getBigInt, hexlify } from 'ethers'
+import { ADDRESS, ERC7579_MODULE_TYPE, ERC7579Module } from 'sendop'
 import { toast } from 'vue-sonner'
-import { useConnectSignerModal } from '../useConnectSignerModal'
 
 export function useValidatorManagement() {
 	const { selectedAccount, isAccountAccessible } = useAccount()
@@ -33,38 +32,7 @@ export function useValidatorManagement() {
 		return true
 	}
 
-	// Helper functions to create validator modules
-	function createECDSAValidatorModule(ownerAddress: string): ERC7579Module {
-		return getECDSAValidator({ ownerAddress })
-	}
-
-	function createWebAuthnValidatorModule(config: {
-		pubKeyX: bigint
-		pubKeyY: bigint
-		authenticatorIdHash: BytesLike
-	}): ERC7579Module {
-		return getWebAuthnValidator({
-			pubKeyX: config.pubKeyX,
-			pubKeyY: config.pubKeyY,
-			authenticatorIdHash: config.authenticatorIdHash,
-		})
-	}
-
-	function createOwnableValidatorModule(ownerAddress: string): ERC7579Module {
-		const ownableModule = getOwnableValidator({
-			owners: [ownerAddress as `0x${string}`],
-			threshold: 1,
-		})
-		return {
-			address: ownableModule.address,
-			type: ERC7579_MODULE_TYPE.VALIDATOR,
-			initData: ownableModule.initData,
-			deInitData: ownableModule.deInitData,
-		}
-	}
-
-	async function installModule(
-		module: ERC7579Module,
+	async function installValidatorModule(
 		validationMethod: ECDSAValidatorVMethod | WebAuthnValidatorVMethod | SingleOwnableValidatorVMethod,
 		options?: {
 			description?: string
@@ -78,6 +46,8 @@ export function useValidatorManagement() {
 		isLoading.value = true
 
 		try {
+			const module = getModuleByValidationMethod(validationMethod)
+
 			const execution: TxModalExecution = {
 				description,
 				to: selectedAccount.value!.address,
@@ -103,7 +73,7 @@ export function useValidatorManagement() {
 		}
 	}
 
-	async function uninstallModule(
+	async function uninstallValidatorModule(
 		moduleAddress: string,
 		validationMethodName: 'ECDSAValidator' | 'WebAuthnValidator' | 'OwnableValidator',
 		options?: {
@@ -163,10 +133,9 @@ export function useValidatorManagement() {
 			return
 		}
 
-		const module = createECDSAValidatorModule(wallet.address)
 		const validationMethod = new ECDSAValidatorVMethod(wallet.address)
 
-		await installModule(module, validationMethod, {
+		await installValidatorModule(validationMethod, {
 			description: 'Install ECDSAValidator',
 			...options,
 		})
@@ -185,12 +154,6 @@ export function useValidatorManagement() {
 		}
 
 		const credential = selectedCredential.value
-		const module = createWebAuthnValidatorModule({
-			pubKeyX: BigInt(hexlify(credential.pubKeyX)),
-			pubKeyY: BigInt(hexlify(credential.pubKeyY)),
-			authenticatorIdHash: getAuthenticatorIdHash(credential.credentialId),
-		})
-
 		const validationMethod = new WebAuthnValidatorVMethod(
 			credential.credentialId,
 			getBigInt(hexlify(credential.pubKeyX)),
@@ -198,7 +161,7 @@ export function useValidatorManagement() {
 			credential.username,
 		)
 
-		await installModule(module, validationMethod, {
+		await installValidatorModule(validationMethod, {
 			description: 'Install WebAuthnValidator',
 			...options,
 		})
@@ -211,45 +174,39 @@ export function useValidatorManagement() {
 			return
 		}
 
-		const module = createOwnableValidatorModule(wallet.address)
 		const validationMethod = new SingleOwnableValidatorVMethod(wallet.address)
 
-		await installModule(module, validationMethod, {
+		await installValidatorModule(validationMethod, {
 			description: 'Install OwnableValidator',
 			...options,
 		})
 	}
 
 	async function uninstallECDSAValidator(options?: { onSuccess?: () => Promise<void> }) {
-		await uninstallModule(ADDRESS.ECDSAValidator, 'ECDSAValidator', {
+		await uninstallValidatorModule(ADDRESS.ECDSAValidator, 'ECDSAValidator', {
 			description: 'Uninstall ECDSAValidator',
 			...options,
 		})
 	}
 
 	async function uninstallWebAuthnValidator(options?: { onSuccess?: () => Promise<void> }) {
-		await uninstallModule(ADDRESS.WebAuthnValidator, 'WebAuthnValidator', {
+		await uninstallValidatorModule(ADDRESS.WebAuthnValidator, 'WebAuthnValidator', {
 			description: 'Uninstall WebAuthnValidator',
 			...options,
 		})
 	}
 
 	async function uninstallOwnableValidator(options?: { onSuccess?: () => Promise<void> }) {
-		await uninstallModule(ADDRESS.OwnableValidator, 'OwnableValidator', {
+		await uninstallValidatorModule(ADDRESS.OwnableValidator, 'OwnableValidator', {
 			description: 'Uninstall OwnableValidator',
 			...options,
 		})
 	}
 
 	return {
-		// Core functions that work with ERC7579Module directly
-		installModule,
-		uninstallModule,
-
-		// Helper functions to create modules
-		createECDSAValidatorModule,
-		createWebAuthnValidatorModule,
-		createOwnableValidatorModule,
+		// Core functions
+		installValidatorModule,
+		uninstallValidatorModule,
 
 		// Convenience functions for each validator type
 		installECDSAValidator,
