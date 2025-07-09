@@ -30,7 +30,7 @@ import {
 	ScheduledOrders__factory,
 	zeroPadLeft,
 } from 'sendop'
-import { SessionStruct } from 'sendop/src/contract-types/SmartSession'
+import { SessionStruct } from 'sendop/contract-types/SmartSession'
 import { DEFAULT_FEE, DEFAULT_SLIPPAGE, SWAP_ROUTER } from './swap-utils'
 
 export type ScheduleSwap = {

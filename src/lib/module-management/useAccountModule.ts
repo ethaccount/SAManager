@@ -1,5 +1,5 @@
 import { fetchModules } from '@/lib/module-management/fetch-modules'
-import { SUPPORTED_MODULES } from '@/lib/module-management/module-constants'
+import { SUPPORTED_MODULES } from '@/lib/module-management/supported-modules'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { ERC7579_MODULE_TYPE, isSameAddress, IERC7579Account__factory } from 'sendop'
@@ -33,6 +33,7 @@ export function useAccountModule() {
 	async function fetchAccountModules() {
 		loading.value = true
 		error.value = null
+		moduleRecord.value = getDefaultModules()
 
 		try {
 			// throw new Error('test')

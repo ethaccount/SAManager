@@ -2,19 +2,21 @@ import { AccountId } from '@/lib/accounts'
 import { getInstallModuleData, getUninstallModuleData } from '@/lib/accounts/account-specific'
 import { ECDSAValidatorVMethod, WebAuthnValidatorVMethod } from '@/lib/validations'
 import { useAccount } from '@/stores/account/useAccount'
+import { useAccounts } from '@/stores/account/useAccounts'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
-import { useTxModal } from '@/stores/useTxModal'
+import { TxModalExecution, useTxModal } from '@/stores/useTxModal'
 import { BytesLike, getBigInt, hexlify, JsonRpcProvider } from 'ethers'
-import { ERC7579_MODULE_TYPE, Execution, getECDSAValidator, getWebAuthnValidator } from 'sendop'
+import { ERC7579_MODULE_TYPE, getECDSAValidator, getWebAuthnValidator } from 'sendop'
 import { toast } from 'vue-sonner'
 import { useConnectSignerModal } from '../useConnectSignerModal'
-import { ModuleType, SUPPORTED_MODULES } from './module-constants'
+import { ModuleType, SUPPORTED_MODULES } from './supported-modules'
 
 export function useModuleManagement() {
 	const { selectedAccount, isAccountAccessible } = useAccount()
+	const { addValidationMethod, removeValidationMethod } = useAccounts()
 	const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 	const { client } = useBlockchain()
 
@@ -40,7 +42,7 @@ export function useModuleManagement() {
 		isLoading.value = true
 
 		try {
-			let execution: Execution
+			let execution: TxModalExecution
 			const { wallet } = useEOAWallet()
 
 			switch (moduleType) {
@@ -52,6 +54,7 @@ export function useModuleManagement() {
 						}
 
 						execution = {
+							description: 'Install ECDSAValidator',
 							to: selectedAccount.value.address,
 							data: await getValidatorOperationData('install', selectedAccount.value.accountId, {
 								moduleType,
@@ -71,12 +74,13 @@ export function useModuleManagement() {
 								}
 								// add the vOption
 								const vMethod = new ECDSAValidatorVMethod(wallet.address)
-								selectedAccount.value.vMethods.push(vMethod.serialize())
+								addValidationMethod(selectedAccount.value, vMethod)
 								await onSuccess?.()
 							},
 						})
 					} else {
 						execution = {
+							description: 'Uninstall ECDSAValidator',
 							to: selectedAccount.value.address,
 							data: await getValidatorOperationData('uninstall', selectedAccount.value.accountId, {
 								moduleType,
@@ -94,10 +98,7 @@ export function useModuleManagement() {
 									throw new Error('No account selected')
 								}
 								// remove the vOption
-								// TODO: this will cause problems
-								selectedAccount.value.vMethods = selectedAccount.value.vMethods.filter(
-									v => v.name !== 'ECDSAValidator',
-								)
+								removeValidationMethod(selectedAccount.value, 'ECDSAValidator')
 								await onSuccess?.()
 							},
 						})
@@ -118,6 +119,7 @@ export function useModuleManagement() {
 						}
 
 						execution = {
+							description: 'Install WebAuthnValidator',
 							to: selectedAccount.value.address,
 							data: await getValidatorOperationData('install', selectedAccount.value.accountId, {
 								moduleType,
@@ -139,23 +141,26 @@ export function useModuleManagement() {
 								if (!selectedAccount.value) {
 									throw new Error('No account selected')
 								}
-								// add the vOption
+
+								// add the vMethod to the account
 								const credential = selectedCredential.value
 								const vMethod = new WebAuthnValidatorVMethod(
 									credential.credentialId,
 									getBigInt(hexlify(credential.pubKeyX)),
 									getBigInt(hexlify(credential.pubKeyY)),
 								)
-								selectedAccount.value.vMethods.push(vMethod.serialize())
+								addValidationMethod(selectedAccount.value, vMethod)
 								await onSuccess?.()
 							},
 						})
 					} else {
+						// uninstall the validator
 						if (!selectedCredential.value) {
 							throw new Error('operateValidator: No credential found for uninstall')
 						}
 
 						execution = {
+							description: 'Uninstall WebAuthnValidator',
 							to: selectedAccount.value.address,
 							data: await getValidatorOperationData('uninstall', selectedAccount.value.accountId, {
 								moduleType,
@@ -176,10 +181,12 @@ export function useModuleManagement() {
 								if (!selectedAccount.value) {
 									throw new Error('No account selected')
 								}
-								// remove the vOption
-								selectedAccount.value.vMethods = selectedAccount.value.vMethods.filter(
-									v => v.name !== 'WebAuthnValidator',
-								)
+
+								if (!selectedCredential.value) {
+									throw new Error('No credential found')
+								}
+
+								removeValidationMethod(selectedAccount.value, 'WebAuthnValidator')
 								await onSuccess?.()
 							},
 						})

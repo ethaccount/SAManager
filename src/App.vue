@@ -11,6 +11,7 @@ import { VueDappModal } from '@vue-dapp/modal'
 import { ModalsContainer } from 'vue-final-modal'
 import { Toaster } from 'vue-sonner'
 import { useBackend } from './stores/useBackend'
+import { useAccount } from './stores/account/useAccount'
 
 const route = useRoute()
 
@@ -25,6 +26,7 @@ useSetupPasskey()
 useSetupEnv()
 
 const { checkBackendHealth } = useBackend()
+const { accountVMethods } = useAccount()
 
 onMounted(async () => {
 	await checkBackendHealth()
@@ -32,6 +34,16 @@ onMounted(async () => {
 
 // Auto-select signer when connected
 watchImmediate([isEOAWalletConnected, isLogin], ([eoaWalletConnected, passkeyConnected]) => {
+	// select the signer of the first vMethod for selected account
+	if (accountVMethods.value.length) {
+		const signerType = accountVMethods.value[0].signerType
+		if (signerType === 'EOAWallet' && eoaWalletConnected) {
+			selectSigner('EOAWallet')
+		} else if (signerType === 'Passkey' && passkeyConnected) {
+			selectSigner('Passkey')
+		}
+		return
+	}
 	if (eoaWalletConnected && !passkeyConnected) {
 		selectSigner('EOAWallet')
 	} else if (!eoaWalletConnected && passkeyConnected) {

@@ -31,7 +31,7 @@ import {
 	ScheduledTransfers__factory,
 	zeroPadLeft,
 } from 'sendop'
-import { SessionStruct } from 'sendop/src/contract-types/SmartSession'
+import { SessionStruct } from 'sendop/contract-types/SmartSession'
 
 export type ScheduleTransfer = TokenTransfer & {
 	frequency: string

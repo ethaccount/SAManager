@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { MODULE_TYPE_LABELS, ModuleType, SUPPORTED_MODULES } from '@/lib/module-management/module-constants'
+import { MODULE_TYPE_LABELS, ModuleType, SUPPORTED_MODULES } from '@/lib/module-management/supported-modules'
 import { ModuleRecordModule, useAccountModule } from '@/lib/module-management/useAccountModule'
 import { useModuleManagement } from '@/lib/module-management/useModuleManagement'
 import { ImportedAccount } from '@/stores/account/account'
@@ -45,6 +45,7 @@ const availableModules = computed(() => {
 		.filter(
 			([_, module]) =>
 				!module.disabled &&
+				module.canInstall &&
 				!moduleRecord.value[module.type].find(m => isSameAddress(m.address, module.address)),
 		)
 		.map(([key]) => key as ModuleType)

@@ -26,7 +26,8 @@
 		"deploy": "pnpm run build && wrangler deploy",
 		"cf-typegen": "wrangler types",
 		"lint": "eslint .",
-		"lint:fix": "eslint . --fix"
+		"lint:fix": "eslint . --fix",
+		"check": "pnpm typecheck && pnpm lint"
 	},
 	"dependencies": {
 		"@internationalized/date": "^3.7.0",
@@ -42,6 +43,7 @@
 		"clsx": "^2.1.1",
 		"ethers": "^6.15.0",
 		"evm-providers": "^0.5.7",
+		"json-with-bigint": "^3.4.4",
 		"lucide-vue-next": "^0.471.0",
 		"pinia": "^3.0.1",
 		"pinia-plugin-persistedstate": "^4.2.0",
