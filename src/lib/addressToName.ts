@@ -1,6 +1,6 @@
 import { shortenAddress } from '@vue-dapp/core'
 import { isAddress } from 'ethers'
-import { ENTRY_POINT_V07_ADDRESS, ENTRY_POINT_V08_ADDRESS } from 'ethers-erc4337'
+import { ENTRY_POINT_V07_ADDRESS, ENTRY_POINT_V08_ADDRESS } from 'sendop'
 
 const ADDRESS_TO_NAME: Record<string, string> = {
 	[ENTRY_POINT_V07_ADDRESS]: 'Entrypoint v0.7',

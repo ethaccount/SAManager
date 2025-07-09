@@ -6,7 +6,7 @@ import {
 	ERC7579_MODULE_TYPE,
 	ERC7579Module,
 	INTERFACES,
-	Kernel,
+	KernelAPI,
 	KernelAccountAPI,
 	KernelValidationType,
 	SimpleSmartSessionValidation,
@@ -52,12 +52,12 @@ export class KernelAccountProvider implements AccountProvider {
 			initData: module.initData,
 		}
 		if (module.type === ERC7579_MODULE_TYPE.VALIDATOR) {
-			return Kernel.encodeInstallModule({
+			return KernelAPI.encodeInstallModule({
 				...config,
 				selectorData: INTERFACES.KernelV3.getFunction('execute').selector,
 			})
 		}
-		return Kernel.encodeInstallModule(config)
+		return KernelAPI.encodeInstallModule(config)
 	}
 
 	async getUninstallModuleData(module: ERC7579Module): Promise<string> {
@@ -66,7 +66,7 @@ export class KernelAccountProvider implements AccountProvider {
 			moduleAddress: module.address,
 			deInitData: module.deInitData,
 		}
-		return Kernel.encodeUninstallModule(config)
+		return KernelAPI.encodeUninstallModule(config)
 	}
 
 	async getDeployment(client: JsonRpcProvider, validation: ValidationMethod, salt: string): Promise<Deployment> {
@@ -75,7 +75,7 @@ export class KernelAccountProvider implements AccountProvider {
 		}
 
 		const module = getModuleByValidationMethod(validation)
-		return await Kernel.getDeployment({
+		return await KernelAPI.getDeployment({
 			client,
 			validatorAddress: module.address,
 			validatorData: module.initData,

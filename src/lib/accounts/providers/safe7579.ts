@@ -9,10 +9,10 @@ import {
 	ERC7579Module,
 	findPrevious,
 	RHINESTONE_ATTESTER_ADDRESS,
-	Safe7579,
+	Safe7579API,
 	Safe7579AccountAPI,
 	SimpleSmartSessionValidation,
-	TISafe7579__factory,
+	ISafe7579__factory,
 	ValidationAPI,
 	zeroPadLeft,
 } from 'sendop'
@@ -54,7 +54,7 @@ export class Safe7579AccountProvider implements AccountProvider {
 			moduleAddress: module.address,
 			initData: module.initData,
 		}
-		return Safe7579.encodeInstallModule(config)
+		return Safe7579API.encodeInstallModule(config)
 	}
 
 	async getUninstallModuleData(
@@ -67,10 +67,10 @@ export class Safe7579AccountProvider implements AccountProvider {
 			moduleAddress: module.address,
 			deInitData: module.deInitData,
 		}
-		const safe = TISafe7579__factory.connect(accountAddress, client)
+		const safe = ISafe7579__factory.connect(accountAddress, client)
 		const validators = await safe.getValidatorsPaginated(zeroPadLeft('0x01', 20), 10)
 		const prev = findPrevious(validators.array, module.address)
-		return Safe7579.encodeUninstallModule({
+		return Safe7579API.encodeUninstallModule({
 			...config,
 			prev,
 		})
@@ -82,7 +82,7 @@ export class Safe7579AccountProvider implements AccountProvider {
 		}
 
 		const module = getModuleByValidationMethod(validation)
-		return await Safe7579.getDeployment({
+		return await Safe7579API.getDeployment({
 			client,
 			salt,
 			creationOptions: {

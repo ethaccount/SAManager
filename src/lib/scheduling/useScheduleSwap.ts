@@ -26,11 +26,11 @@ import {
 	getEncodedFunctionParams,
 	INTERFACES,
 	SMART_SESSIONS_ENABLE_MODE,
-	TIERC7579Account__factory,
-	TScheduledOrders__factory,
+	IERC7579Account__factory,
+	ScheduledOrders__factory,
 	zeroPadLeft,
 } from 'sendop'
-import { SessionStruct } from 'sendop/dist/src/contract-types/TSmartSession'
+import { SessionStruct } from 'sendop/src/contract-types/SmartSession'
 import { DEFAULT_FEE, DEFAULT_SLIPPAGE, SWAP_ROUTER } from './swap-utils'
 
 export type ScheduleSwap = {
@@ -90,7 +90,7 @@ export function useScheduleSwap() {
 		let permissionId: string | null = null
 
 		if (isDeployed.value) {
-			const account = TIERC7579Account__factory.connect(importedAccount.address, client.value)
+			const account = IERC7579Account__factory.connect(importedAccount.address, client.value)
 
 			// Check if ScheduledOrders module is installed
 			isScheduledOrdersInstalled = await account.isModuleInstalled(
@@ -229,7 +229,7 @@ export function useScheduleSwap() {
 
 	async function getJobId(accountAddress: string): Promise<bigint> {
 		const { client } = useBlockchain()
-		const scheduledOrders = TScheduledOrders__factory.connect(ADDRESS.ScheduledOrders, client.value)
+		const scheduledOrders = ScheduledOrders__factory.connect(ADDRESS.ScheduledOrders, client.value)
 		const jobCount = await scheduledOrders.accountJobCount(accountAddress)
 		return jobCount + 1n
 	}

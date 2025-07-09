@@ -8,7 +8,6 @@ overrides:
   '@babel/helpers': 7.27.1
   postcss: 8.5.3
   brace-expansion: 2.0.2
-  ethers-erc4337: latest
   pinia: 3.0.1
 
 importers:
@@ -51,9 +50,6 @@ importers:
       ethers:
         specifier: ^6.15.0
         version: 6.15.0
-      ethers-erc4337:
-        specifier: latest
-        version: 0.0.4-beta.3(ethers@6.15.0)
       evm-providers:
         specifier: ^0.5.7
         version: 0.5.7
@@ -73,8 +69,8 @@ importers:
         specifier: ^2.2.0
         version: 2.2.0(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2))
       sendop:
-        specifier: 0.5.0-beta.2
-        version: 0.5.0-beta.2(ethers-erc4337@0.0.4-beta.3(ethers@6.15.0))(ethers@6.15.0)
+        specifier: 0.5.0-beta.3
+        version: 0.5.0-beta.3(ethers@6.15.0)
       tailwind-merge:
         specifier: ^2.6.0
         version: 2.6.0
@@ -2266,11 +2262,6 @@ packages:
     resolution: {integrity: sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==}
     engines: {node: '>=0.10.0'}
 
-  ethers-erc4337@0.0.4-beta.3:
-    resolution: {integrity: sha512-Z2bszYFfv7eT66A1Y8SUpx9HuQiUeTCLGR0AR1PTgYmBU1kD9AYS1SrDN97IZdA7bOLErvP43X/HWSY8Lho3pQ==}
-    peerDependencies:
-      ethers: ^6.15.0
-
   ethers@6.15.0:
     resolution: {integrity: sha512-Kf/3ZW54L4UT0pZtsY/rf+EkBU7Qi5nnhonjUb8yTXcxH3cdcWrV2cRyk0Xk/4jK6OoHhxxZHriyhje20If2hQ==}
     engines: {node: '>=14.0.0'}
@@ -3344,12 +3335,11 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  sendop@0.5.0-beta.2:
-    resolution: {integrity: sha512-CfpvGMaOjpwEzbaPUn0lJTG1QsoHqfAvTa1NmCgu+wlNHMytsmnWCktrt4pt6pSHi3USf/fdtosflJfs2RcR4A==}
+  sendop@0.5.0-beta.3:
+    resolution: {integrity: sha512-WIDzmJoKvFFCGBMqs6OKJFiNPB88V/Dww0f03IMW476PlPUu87jNe3ckPYgt3Zjf8dzD2XBQxIsGprHuiEZyHw==}
     engines: {bun: '>=1.1.0'}
     peerDependencies:
       ethers: ^6.15.0
-      ethers-erc4337: latest
 
   set-function-length@1.2.2:
     resolution: {integrity: sha512-pgRc4hJ4/sNjWCSS9AmnS40x3bNMDTknHgL5UaMBTMyJnU90EgWh1Rz+MC9eFu4BuN/UwZjKQuY/1v3rM7HMfg==}
@@ -4067,9 +4057,6 @@ packages:
 
   zod@3.24.1:
     resolution: {integrity: sha512-muH7gBL9sI1nciMZV67X5fTKKBLtwpZ5VBp1vsOQzj1MhrBZ4wlVCm3gedKZWLp0Oyel8sIGfeiz54Su+OVT+A==}
-
-  zod@3.25.73:
-    resolution: {integrity: sha512-fuIKbQAWQl22Ba5d1quwEETQYjqnpKVyZIWAhbnnHgnDd3a+z4YgEfkI5SZ2xMELnLAXo/Flk2uXgysZNf0uaA==}
 
 snapshots:
 
@@ -6247,10 +6234,6 @@ snapshots:
 
   esutils@2.0.3: {}
 
-  ethers-erc4337@0.0.4-beta.3(ethers@6.15.0):
-    dependencies:
-      ethers: 6.15.0
-
   ethers@6.15.0:
     dependencies:
       '@adraffy/ens-normalize': 1.10.1
@@ -7376,11 +7359,9 @@ snapshots:
 
   semver@7.6.3: {}
 
-  sendop@0.5.0-beta.2(ethers-erc4337@0.0.4-beta.3(ethers@6.15.0))(ethers@6.15.0):
+  sendop@0.5.0-beta.3(ethers@6.15.0):
     dependencies:
       ethers: 6.15.0
-      ethers-erc4337: 0.0.4-beta.3(ethers@6.15.0)
-      zod: 3.25.73
 
   set-function-length@1.2.2:
     dependencies:
@@ -8283,5 +8264,3 @@ snapshots:
   zod@3.22.3: {}
 
   zod@3.24.1: {}
-
-  zod@3.25.73: {}

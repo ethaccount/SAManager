@@ -1,6 +1,6 @@
 import { AccountId } from '@/lib/accounts'
 import { JsonRpcProvider } from 'ethers'
-import { UserOpBuilder } from 'ethers-erc4337'
+import { UserOpBuilder } from 'sendop'
 import { Execution } from 'sendop'
 import { getExecutionAccountAPI, getSmartSessionExecutionAccountAPI } from './accounts/account-specific'
 import { ValidationMethod } from './validations/ValidationMethod'

@@ -9,8 +9,8 @@ import {
 	ADDRESS,
 	ERC7579_MODULE_TYPE,
 	RHINESTONE_ATTESTER_ADDRESS,
-	TIERC7579Account__factory,
-	TRegistry__factory,
+	IERC7579Account__factory,
+	Registry__factory,
 } from 'sendop'
 
 export const DEFAULT_FREQUENCY = '3min'
@@ -121,7 +121,7 @@ export async function checkBaseModuleStatus(
 	let isSmartSessionInstalled = false
 
 	if (isDeployed) {
-		const account = TIERC7579Account__factory.connect(importedAccount.address, client)
+		const account = IERC7579Account__factory.connect(importedAccount.address, client)
 
 		// Check if SmartSession module is installed
 		isSmartSessionInstalled = await account.isModuleInstalled(
@@ -163,7 +163,7 @@ export function buildRhinestoneAttesterExecutions(isRhinestoneAttesterTrusted: b
 		{
 			to: ADDRESS.Registry,
 			value: 0n,
-			data: TRegistry__factory.createInterface().encodeFunctionData('trustAttesters', [
+			data: Registry__factory.createInterface().encodeFunctionData('trustAttesters', [
 				1,
 				[RHINESTONE_ATTESTER_ADDRESS],
 			]),

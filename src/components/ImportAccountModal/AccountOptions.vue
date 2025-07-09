@@ -12,7 +12,7 @@ import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
 import { shortenAddress } from '@vue-dapp/core'
 import { getAddress, JsonRpcProvider } from 'ethers'
 import { ChevronRight, Loader2 } from 'lucide-vue-next'
-import { ADDRESS, ERC7579_MODULE_TYPE, TIERC7579Account__factory } from 'sendop'
+import { ADDRESS, ERC7579_MODULE_TYPE, IERC7579Account__factory } from 'sendop'
 import { toast } from 'vue-sonner'
 
 const props = defineProps<{
@@ -66,7 +66,7 @@ onMounted(async () => {
 				// Specially check if the module is installed because the ECDSAValidator doesn't emit event when uninstalled
 				const filteredAddresses: string[] = []
 				for (const address of addresses) {
-					const account = TIERC7579Account__factory.connect(address, client.value) // use client for batch RPC
+					const account = IERC7579Account__factory.connect(address, client.value) // use client for batch RPC
 					const isInstalled = await account.isModuleInstalled(
 						ERC7579_MODULE_TYPE.VALIDATOR,
 						ADDRESS.ECDSAValidator,
@@ -103,7 +103,7 @@ onMounted(async () => {
 		loadingAddresses.value = false
 
 		async function fetchAccountId(client: JsonRpcProvider, address: string) {
-			const account = TIERC7579Account__factory.connect(address, client)
+			const account = IERC7579Account__factory.connect(address, client)
 			return await account.accountId()
 		}
 

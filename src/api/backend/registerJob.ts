@@ -1,4 +1,4 @@
-import { UserOperationHex } from 'ethers-erc4337'
+import { UserOperationHex } from 'sendop'
 
 export async function apiRegisterJob(
 	accountAddress: string,

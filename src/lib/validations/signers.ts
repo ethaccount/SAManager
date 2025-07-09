@@ -1,6 +1,6 @@
 import { signMessageUsingPasskey } from '@/stores/passkey/signMessageUsingPasskey'
 import { getAddress, getBytes, Signer } from 'ethers'
-import { ENTRY_POINT_V07_ADDRESS, ENTRY_POINT_V08_ADDRESS, UserOpBuilder } from 'ethers-erc4337'
+import { ENTRY_POINT_V07_ADDRESS, ENTRY_POINT_V08_ADDRESS, UserOpBuilder } from 'sendop'
 import { AppSigner, SignerType } from './Signer'
 
 export class EOASigner implements AppSigner {

@@ -8,7 +8,7 @@ import {
 	TESTNET_CHAIN_ID,
 } from '@/stores/blockchain/blockchain'
 import { JsonRpcProvider } from 'ethers'
-import { ERC4337Bundler } from 'ethers-erc4337'
+import { ERC4337Bundler } from 'sendop'
 import { publicNode, PublicNodeChain } from 'evm-providers'
 import { defineStore } from 'pinia'
 import { EntryPointVersion, fetchGasPriceAlchemy, fetchGasPricePimlico } from 'sendop'

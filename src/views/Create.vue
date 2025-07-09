@@ -38,7 +38,6 @@ const {
 	isLogin,
 	resetCredentialId,
 	isFullCredential,
-	selectedCredentialId,
 	selectedCredential,
 	isPasskeySupported,
 } = usePasskey()

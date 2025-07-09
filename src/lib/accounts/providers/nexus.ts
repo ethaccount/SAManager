@@ -1,4 +1,4 @@
-import { ValidationMethod } from '@/lib/validations'
+import { getModuleByValidationMethod, ValidationMethod } from '@/lib/validations'
 import { hexlify, JsonRpcProvider, randomBytes } from 'ethers'
 import {
 	AccountAPI,
@@ -8,16 +8,15 @@ import {
 	ERC7579_MODULE_TYPE,
 	ERC7579Module,
 	findPrevious,
-	Nexus,
+	Nexus__factory,
 	NexusAccountAPI,
+	NexusAPI,
 	RHINESTONE_ATTESTER_ADDRESS,
 	SimpleSmartSessionValidation,
-	TNexus__factory,
 	ValidationAPI,
 	zeroPadLeft,
 } from 'sendop'
 import { AccountProvider, Deployment } from '../types'
-import { getModuleByValidationMethod } from '@/lib/validations'
 
 export class NexusAccountProvider implements AccountProvider {
 	getExecutionAccountAPI(validationAPI: ValidationAPI, validatorAddress?: string): AccountAPI {
@@ -54,7 +53,7 @@ export class NexusAccountProvider implements AccountProvider {
 			moduleAddress: module.address,
 			initData: module.initData,
 		}
-		return Nexus.encodeInstallModule(config)
+		return NexusAPI.encodeInstallModule(config)
 	}
 
 	async getUninstallModuleData(
@@ -67,10 +66,10 @@ export class NexusAccountProvider implements AccountProvider {
 			moduleAddress: module.address,
 			deInitData: module.deInitData,
 		}
-		const nexus = TNexus__factory.connect(accountAddress, client)
+		const nexus = Nexus__factory.connect(accountAddress, client)
 		const validators = await nexus.getValidatorsPaginated(zeroPadLeft('0x01', 20), 10)
 		const prev = findPrevious(validators.array, module.address)
-		return Nexus.encodeUninstallModule({
+		return NexusAPI.encodeUninstallModule({
 			...config,
 			prev,
 		})
@@ -82,7 +81,7 @@ export class NexusAccountProvider implements AccountProvider {
 		}
 
 		const module = getModuleByValidationMethod(validation)
-		return await Nexus.getDeployment({
+		return await NexusAPI.getDeployment({
 			client,
 			salt,
 			creationOptions: {

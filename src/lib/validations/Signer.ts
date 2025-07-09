@@ -1,4 +1,4 @@
-import { UserOpBuilder } from 'ethers-erc4337'
+import { UserOpBuilder } from 'sendop'
 
 export type SignerType = 'EOAWallet' | 'Passkey'
 

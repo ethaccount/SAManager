@@ -27,11 +27,11 @@ import {
 	INTERFACES,
 	isSameAddress,
 	SMART_SESSIONS_ENABLE_MODE,
-	TIERC7579Account__factory,
-	TScheduledTransfers__factory,
+	IERC7579Account__factory,
+	ScheduledTransfers__factory,
 	zeroPadLeft,
 } from 'sendop'
-import { SessionStruct } from 'sendop/dist/src/contract-types/TSmartSession'
+import { SessionStruct } from 'sendop/src/contract-types/SmartSession'
 
 export type ScheduleTransfer = TokenTransfer & {
 	frequency: string
@@ -94,7 +94,7 @@ export function useScheduleTransfer() {
 		let permissionId: string | null = null
 
 		if (isDeployed.value) {
-			const account = TIERC7579Account__factory.connect(importedAccount.address, client.value)
+			const account = IERC7579Account__factory.connect(importedAccount.address, client.value)
 
 			// Check if ScheduledTransfers module is installed
 			isScheduledTransfersInstalled = await account.isModuleInstalled(
@@ -233,7 +233,7 @@ export function useScheduleTransfer() {
 
 	async function getJobId(accountAddress: string): Promise<bigint> {
 		const { client } = useBlockchain()
-		const scheduledTransfers = TScheduledTransfers__factory.connect(ADDRESS.ScheduledTransfers, client.value)
+		const scheduledTransfers = ScheduledTransfers__factory.connect(ADDRESS.ScheduledTransfers, client.value)
 		const jobCount = await scheduledTransfers.accountJobCount(accountAddress)
 		return jobCount + 1n
 	}
