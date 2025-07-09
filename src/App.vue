@@ -34,15 +34,18 @@ onMounted(async () => {
 
 // Auto-select signer when connected
 watchImmediate([isEOAWalletConnected, isLogin], ([eoaWalletConnected, passkeyConnected]) => {
-	// select the signer of the first vMethod for selected account
+	// select the signer for selected account: passkey > eoa
 	if (accountVMethods.value.length) {
-		const signerType = accountVMethods.value[0].signerType
-		if (signerType === 'EOAWallet' && eoaWalletConnected) {
-			selectSigner('EOAWallet')
-		} else if (signerType === 'Passkey' && passkeyConnected) {
+		const passkeyMethod = accountVMethods.value.find(vMethod => vMethod.signerType === 'Passkey')
+		if (passkeyMethod && passkeyConnected) {
 			selectSigner('Passkey')
+			return
 		}
-		return
+		const eoaMethod = accountVMethods.value.find(vMethod => vMethod.signerType === 'EOAWallet')
+		if (eoaMethod && eoaWalletConnected) {
+			selectSigner('EOAWallet')
+			return
+		}
 	}
 	if (eoaWalletConnected && !passkeyConnected) {
 		selectSigner('EOAWallet')

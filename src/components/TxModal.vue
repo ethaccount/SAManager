@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { addressToName } from '@/lib/addressToName'
-import { getErrMsg } from '@/lib/error'
 import { displayAccountName } from '@/lib/accounts/helpers'
+import { addressToName } from '@/lib/addressToName'
+import { getErrorChainMessage, getErrorMsg, getEthersErrorMsg, isEthersError } from '@/lib/error'
 import { useGetCode } from '@/lib/useGetCode'
 import { deserializeValidationMethod } from '@/lib/validations'
 import { useAccount } from '@/stores/account/useAccount'
@@ -130,9 +130,18 @@ async function onClickEstimate() {
 		}
 		status.value = TransactionStatus.Sign
 	} catch (e: unknown) {
-		console.error(e)
-		error.value = getErrMsg(e, 'Failed to estimate gas')
+		handleError(e, 'Failed to estimate gas')
 		status.value = TransactionStatus.Estimation
+	}
+}
+
+function handleError(e: unknown, prefix?: string) {
+	console.error(getErrorChainMessage(e, prefix))
+	if (isEthersError(e)) {
+		error.value = getEthersErrorMsg(e, prefix)
+		return
+	} else {
+		error.value = getErrorMsg(e, prefix)
 	}
 }
 
@@ -143,8 +152,7 @@ async function onClickSign() {
 		await handleSign()
 		status.value = TransactionStatus.Send
 	} catch (e: unknown) {
-		console.error(e)
-		error.value = getErrMsg(e, 'Failed to sign transaction')
+		handleError(e, 'Failed to sign user operation')
 		status.value = TransactionStatus.Sign
 	}
 }
@@ -166,8 +174,7 @@ async function onClickSend() {
 			}
 		})
 	} catch (e: unknown) {
-		console.error(e)
-		error.value = getErrMsg(e, 'Failed to send transaction')
+		handleError(e, 'Failed to send user operation')
 		status.value = TransactionStatus.Estimation
 	}
 }
@@ -284,8 +291,12 @@ const entryPointAddress = computed(() => {
 						<!-- EOA-Owned or SmartEOA -->
 						<div
 							v-if="showEOAWalletValidationMethod"
-							class="flex flex-col p-2.5 border rounded-lg transition-all cursor-pointer"
-							@click="selectSigner('EOAWallet')"
+							class="flex flex-col p-2.5 border rounded-lg transition-all"
+							:class="{
+								'cursor-pointer': status === TransactionStatus.Estimation,
+								'opacity-50 cursor-not-allowed': status !== TransactionStatus.Estimation,
+							}"
+							@click="status === TransactionStatus.Estimation && selectSigner('EOAWallet')"
 						>
 							<div class="space-y-1">
 								<div class="flex justify-between items-center">
@@ -311,8 +322,11 @@ const entryPointAddress = computed(() => {
 						<div
 							v-if="showPasskeyValidationMethod"
 							class="flex flex-col p-2.5 border rounded-lg transition-all"
-							:class="{ 'cursor-pointer': selectedSigner?.type !== 'Passkey' }"
-							@click="selectSigner('Passkey')"
+							:class="{
+								'cursor-pointer': status === TransactionStatus.Estimation,
+								'opacity-50 cursor-not-allowed': status !== TransactionStatus.Estimation,
+							}"
+							@click="status === TransactionStatus.Estimation && selectSigner('Passkey')"
 						>
 							<div class="space-y-1">
 								<div class="flex justify-between items-center">

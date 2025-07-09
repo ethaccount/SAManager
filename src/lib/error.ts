@@ -1,6 +1,36 @@
 import type { ethers } from 'ethers'
 import { ErrorCode, isError } from 'ethers'
 
+export function isEthersError(error: unknown): error is ethers.EthersError {
+	return isError(error, (error as ethers.EthersError).code)
+}
+
+export function getEthersErrorMsg(error: ethers.EthersError, prefix?: string): string {
+	const msg = error.error?.message || error.error?.toString() || error.message || error.toString()
+	return prefix ? `${prefix}: ${msg}` : msg
+}
+
+export function getErrorMsg(error: unknown, prefix?: string): string {
+	const msg = error instanceof Error ? error.message : String(error)
+	return prefix ? `${prefix}: ${msg}` : msg
+}
+
+export function getErrorChainMessage(err: unknown, prefix?: string): string {
+	const msg = err instanceof Error ? err.message : String(err)
+	if (err instanceof Error) {
+		const messages: string[] = []
+
+		while (err instanceof Error) {
+			messages.push(`${err.name}: ${err.message}`)
+			err = err.cause as Error
+		}
+
+		return prefix ? `${prefix}: ${messages.join(' → ')}` : messages.join(' → ')
+	}
+
+	return prefix ? `${prefix}: ${msg}` : msg
+}
+
 export function parseError(unknownError: unknown): Error {
 	let err: Error
 	switch (true) {
@@ -11,24 +41,6 @@ export function parseError(unknownError: unknown): Error {
 			err = new Error(String(unknownError))
 	}
 	return err
-}
-
-export function getErrMsg(err: unknown, defaultMsg: string): string {
-	if (err instanceof Error) {
-		return getErrorChainMessage(err)
-	}
-	return defaultMsg
-}
-
-export function getErrorChainMessage(err: Error): string {
-	const messages: string[] = []
-
-	while (err instanceof Error) {
-		messages.push(`${err.name}: ${err.message}`)
-		err = err.cause as Error
-	}
-
-	return messages.join(' → ')
 }
 
 // ================================ Error classes =================================
