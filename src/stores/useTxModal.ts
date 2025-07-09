@@ -1,6 +1,5 @@
 import TxModal from '@/components/TxModal.vue'
-import { buildAccountExecutions, buildKernelNonRootExecutions } from '@/lib/userop-builder'
-import { deserializeValidationMethod } from '@/lib/validations'
+import { UserOpDirector } from '@/lib/UserOpDirector'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { defineStore, storeToRefs } from 'pinia'
@@ -49,7 +48,8 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 	}
 
 	const { bundler, selectedChainId, client, fetchGasPrice } = useBlockchain()
-	const { selectedAccount } = useAccount()
+	const { selectedAccount, accountVMethods } = useAccount()
+	const { selectedSignerType } = useSigner()
 
 	const paymasters = [
 		{ id: 'none', name: 'No Paymaster', description: 'Pay gas fees with native tokens' },
@@ -85,6 +85,10 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 			throw new Error('[handleEstimate] Account not selected')
 		}
 
+		if (!selectedSignerType.value) {
+			throw new Error('[handleEstimate] No signer selected')
+		}
+
 		if (executions.length === 0 && !initCode) {
 			throw new Error('[handleEstimate] No executions and no init code provided')
 		}
@@ -94,41 +98,15 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 			bundler: bundler.value,
 		})
 
-		const { selectedSignerType } = useSigner()
-
-		// find validation method by selected signer type
-		const vMethod = selectedAccount.value.vMethods.find(
-			vMethod => deserializeValidationMethod(vMethod).signerType === selectedSignerType.value,
-		)
-
-		if (!vMethod) {
-			throw new Error('[handleEstimate] vMethod not found')
-		}
-
-		// handle special case for kernel advanced v0.3.x
-		// If the vMethod is not the first method in the vMethods array,
-		// we need to use KernelValidationType.VALIDATOR for non-root validation
-		if (
-			selectedAccount.value.accountId.startsWith('kernel.advanced.v0.3') &&
-			selectedAccount.value.vMethods.indexOf(vMethod) !== 0
-		) {
-			await buildKernelNonRootExecutions({
-				op,
-				validationMethod: deserializeValidationMethod(vMethod),
-				accountAddress: selectedAccount.value.address,
-				client: client.value,
-				executions,
-			})
-		} else {
-			await buildAccountExecutions({
-				op,
-				accountId: selectedAccount.value.accountId,
-				validationMethod: deserializeValidationMethod(vMethod),
-				accountAddress: selectedAccount.value.address,
-				client: client.value,
-				executions,
-			})
-		}
+		await UserOpDirector.buildAccountExecutions({
+			op,
+			accountId: selectedAccount.value.accountId,
+			vMethods: accountVMethods.value,
+			signerType: selectedSignerType.value,
+			accountAddress: selectedAccount.value.address,
+			client: client.value,
+			executions,
+		})
 
 		if (initCode) {
 			op.setFactory({

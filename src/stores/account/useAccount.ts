@@ -1,4 +1,5 @@
 import { isModularAccount } from '@/lib/accounts'
+import { ValidationMethod } from '@/lib/validations'
 import { deserializeValidationMethod } from '@/lib/validations/helpers'
 import { ImportedAccount } from '@/stores/account/account'
 import { InitCodeData, useInitCode } from '@/stores/account/useInitCode'
@@ -25,7 +26,7 @@ export const useAccountStore = defineStore('useAccountStore', () => {
 		return selectedChainId.value === selectedAccount.value?.chainId
 	})
 
-	const accountVMethods = computed(() => {
+	const accountVMethods = computed<ValidationMethod[]>(() => {
 		if (!selectedAccount.value) return []
 		if (!selectedAccount.value.vMethods) return []
 		return selectedAccount.value.vMethods.map(vMethod => deserializeValidationMethod(vMethod))

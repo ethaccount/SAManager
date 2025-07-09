@@ -2,9 +2,8 @@ import { apiRegisterJob } from '@/api/backend/registerJob'
 import { AccountId } from '@/lib/accounts'
 import { CHAIN_ID } from '@/stores/blockchain/blockchain'
 import { JsonRpcProvider } from 'ethers'
-import { ENTRY_POINT_V07_ADDRESS, ERC4337Bundler, UserOpBuilder } from 'sendop'
-import { ADDRESS, Execution, INTERFACES } from 'sendop'
-import { buildSmartSessionExecutions } from '../userop-builder'
+import { ADDRESS, ENTRY_POINT_V07_ADDRESS, ERC4337Bundler, Execution, INTERFACES, UserOpBuilder } from 'sendop'
+import { UserOpDirector } from '../UserOpDirector'
 import { getSwapParameters, SwapParameters } from './swap-utils'
 
 export type JobType = 'transfer' | 'swap'
@@ -68,7 +67,7 @@ export async function registerJob({
 			throw new Error(`Unsupported job type: ${jobType}`)
 	}
 
-	await buildSmartSessionExecutions({
+	await UserOpDirector.buildSmartSessionExecutions({
 		op,
 		accountId,
 		permissionId,
