@@ -11,6 +11,7 @@ import { TxModalExecution, useTxModal } from '@/stores/useTxModal'
 import { getBigInt, hexlify } from 'ethers'
 import { ADDRESS, ERC7579_MODULE_TYPE, ERC7579Module } from 'sendop'
 import { toast } from 'vue-sonner'
+import { DEPRECATED_WEB_AUTHN_VALIDATOR_ADDRESS } from '../addressToName'
 
 export function useValidatorManagement() {
 	const { selectedAccount, isAccountAccessible } = useAccount()
@@ -192,6 +193,13 @@ export function useValidatorManagement() {
 		})
 	}
 
+	async function uninstallDeprecatedWebAuthnValidator(options?: { onSuccess?: () => Promise<void> }) {
+		await uninstallValidatorModule(DEPRECATED_WEB_AUTHN_VALIDATOR_ADDRESS, 'WebAuthnValidator', {
+			description: 'Uninstall Deprecated WebAuthnValidator',
+			...options,
+		})
+	}
+
 	async function uninstallOwnableValidator(options?: { onSuccess?: () => Promise<void> }) {
 		await uninstallValidatorModule(ADDRESS.OwnableValidator, 'OwnableValidator', {
 			description: 'Uninstall OwnableValidator',
@@ -210,6 +218,7 @@ export function useValidatorManagement() {
 		installOwnableValidator,
 		uninstallECDSAValidator,
 		uninstallWebAuthnValidator,
+		uninstallDeprecatedWebAuthnValidator,
 		uninstallOwnableValidator,
 
 		isLoading,

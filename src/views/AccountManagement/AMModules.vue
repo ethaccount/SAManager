@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { addressToName } from '@/lib/addressToName'
 import { ACCOUNT_SUPPORTED_INITIAL_VALIDATION } from '@/lib/accounts/account-specific'
+import { addressToName, DEPRECATED_WEB_AUTHN_VALIDATOR_ADDRESS } from '@/lib/addressToName'
 import { MODULE_TYPE_LABELS } from '@/lib/modules/supported-modules'
 import { ModuleRecordModule, useAccountModule } from '@/lib/modules/useAccountModule'
 import { useValidatorManagement } from '@/lib/modules/useValidatorManagement'
@@ -32,6 +32,7 @@ const {
 	installOwnableValidator,
 	uninstallECDSAValidator,
 	uninstallWebAuthnValidator,
+	uninstallDeprecatedWebAuthnValidator,
 	uninstallOwnableValidator,
 } = useValidatorManagement()
 
@@ -109,6 +110,8 @@ async function onClickUninstall(recordModule: ModuleRecordModule) {
 			await uninstallWebAuthnValidator({ onSuccess })
 		} else if (isSameAddress(recordModule.address, ADDRESS.OwnableValidator)) {
 			await uninstallOwnableValidator({ onSuccess })
+		} else if (isSameAddress(recordModule.address, DEPRECATED_WEB_AUTHN_VALIDATOR_ADDRESS)) {
+			await uninstallDeprecatedWebAuthnValidator({ onSuccess })
 		} else {
 			throw new Error(`Unsupported module address: ${recordModule.address}`)
 		}
