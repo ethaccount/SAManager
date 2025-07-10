@@ -6,6 +6,7 @@ import { useAccount } from '@/stores/account/useAccount'
 import { useAccounts } from '@/stores/account/useAccounts'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { usePasskey } from '@/stores/passkey/usePasskey'
+import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { TxModalExecution, useTxModal } from '@/stores/useTxModal'
 import { getBigInt, hexlify } from 'ethers'
@@ -152,7 +153,7 @@ export function useValidatorManagement() {
 
 		const credential = selectedCredential.value
 		const validationMethod = new WebAuthnValidatorVMethod(
-			credential.credentialId,
+			getAuthenticatorIdHash(credential.credentialId),
 			getBigInt(hexlify(credential.pubKeyX)),
 			getBigInt(hexlify(credential.pubKeyY)),
 			credential.username,

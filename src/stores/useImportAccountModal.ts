@@ -18,6 +18,7 @@ import { getBigInt, hexlify } from 'ethers'
 import { defineStore, storeToRefs } from 'pinia'
 import { useModal } from 'vue-final-modal'
 import { usePasskey } from './passkey/usePasskey'
+import { getAuthenticatorIdHash } from './passkey/passkeyNoRp'
 
 // IAM: Import Account Modal
 
@@ -97,7 +98,7 @@ const IAM_CONFIG: Record<IAMStageKey, IAMStage<Component>> = {
 				const pubKeyX = getBigInt(hexlify(credential.pubKeyX))
 				const pubKeyY = getBigInt(hexlify(credential.pubKeyY))
 				const vMethod = new WebAuthnValidatorVMethod(
-					credential.credentialId,
+					getAuthenticatorIdHash(credential.credentialId),
 					pubKeyX,
 					pubKeyY,
 					credential.username,

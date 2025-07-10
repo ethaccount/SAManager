@@ -8,7 +8,6 @@ import {
 	WebAuthnValidationMethodData,
 } from '@/lib/validations/ValidationMethod'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
 import { shortenAddress } from '@vue-dapp/core'
 import { getAddress, JsonRpcProvider } from 'ethers'
 import { ChevronRight, Loader2 } from 'lucide-vue-next'
@@ -83,14 +82,11 @@ onMounted(async () => {
 			}
 			case 'Passkey': {
 				const vMethod = props.vMethod() as WebAuthnValidationMethodData
-				const credentialId = vMethod.credentialId
-				if (!credentialId) {
+				const authenticatorIdHash = vMethod.authenticatorIdHash
+				if (!authenticatorIdHash) {
 					throw new Error('AccountOptions(onMounted): Passkey credential ID not found')
 				}
-				addresses = await fetchWebAuthnRegisteredEvent(
-					tenderlyClient.value,
-					getAuthenticatorIdHash(credentialId),
-				)
+				addresses = await fetchWebAuthnRegisteredEvent(tenderlyClient.value, authenticatorIdHash)
 				break
 			}
 		}

@@ -27,6 +27,7 @@ import { useAccounts } from '@/stores/account/useAccounts'
 import { displayChainName } from '@/stores/blockchain/blockchain'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { usePasskey } from '@/stores/passkey/usePasskey'
+import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useSigner } from '@/stores/useSigner'
 import { useTxModal } from '@/stores/useTxModal'
@@ -107,7 +108,7 @@ const selectedValidationMethod = computed<ValidationMethod | null>(() => {
 			if (!selectedCredential.value) return null
 			const credential = selectedCredential.value
 			return new WebAuthnValidatorVMethod(
-				credential.credentialId,
+				getAuthenticatorIdHash(credential.credentialId),
 				getBigInt(hexlify(credential.pubKeyX)),
 				getBigInt(hexlify(credential.pubKeyY)),
 				credential.username,

@@ -1,5 +1,6 @@
 import { AppSigner, EOASigner, PasskeySigner, SignerType, ValidationMethod } from '@/lib/validations'
 import { usePasskey } from '@/stores/passkey/usePasskey'
+import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 
 export const useSignerStore = defineStore('useSignerStore', () => {
@@ -18,7 +19,10 @@ export const useSignerStore = defineStore('useSignerStore', () => {
 				isConnected: isEOAWalletConnected.value,
 			},
 			Passkey: {
-				identifier: isLogin.value ? selectedCredentialId.value : null,
+				identifier:
+					isLogin.value && selectedCredentialId.value
+						? getAuthenticatorIdHash(selectedCredentialId.value)
+						: null,
 				isConnected: isLogin.value,
 			},
 		}

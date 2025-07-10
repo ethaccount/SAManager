@@ -12,7 +12,7 @@ export interface EOAValidationMethodData {
 
 export interface WebAuthnValidationMethodData {
 	name: 'WebAuthnValidator'
-	credentialId: string
+	authenticatorIdHash: string
 	pubKeyX?: bigint
 	pubKeyY?: bigint
 	username?: string

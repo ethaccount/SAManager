@@ -36,7 +36,7 @@ export class WebAuthnValidatorVMethod extends ValidationMethodBase {
 	validatorAddress = ADDRESS.WebAuthnValidator
 
 	constructor(
-		identifier: string,
+		identifier: string, // authenticatorIdHash
 		public pubKeyX?: bigint,
 		public pubKeyY?: bigint,
 		public username?: string,
@@ -47,7 +47,7 @@ export class WebAuthnValidatorVMethod extends ValidationMethodBase {
 	serialize(): WebAuthnValidationMethodData {
 		return {
 			name: 'WebAuthnValidator',
-			credentialId: this.identifier,
+			authenticatorIdHash: this.identifier,
 			...(this.pubKeyX !== undefined && { pubKeyX: this.pubKeyX }),
 			...(this.pubKeyY !== undefined && { pubKeyY: this.pubKeyY }),
 			...(this.username !== undefined && { username: this.username }),

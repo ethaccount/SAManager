@@ -41,7 +41,7 @@ ValidationMethodRegistry.register('ECDSAValidator', {
 ValidationMethodRegistry.register('WebAuthnValidator', {
 	create: data => {
 		if (data.name !== 'WebAuthnValidator') throw new Error('Invalid data type for WebAuthnValidator')
-		return new WebAuthnValidatorVMethod(data.credentialId, data.pubKeyX, data.pubKeyY, data.username)
+		return new WebAuthnValidatorVMethod(data.authenticatorIdHash, data.pubKeyX, data.pubKeyY, data.username)
 	},
 })
 

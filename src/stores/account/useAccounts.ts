@@ -11,6 +11,17 @@ import { CHAIN_ID } from '@/stores/blockchain/blockchain'
 import { JSONParse, JSONStringify } from 'json-with-bigint'
 import { isSameAddress } from 'sendop'
 import { useSigner } from '../useSigner'
+import { getAuthenticatorIdHash } from '../passkey/passkeyNoRp'
+
+// Legacy type for migration purposes
+interface LegacyWebAuthnValidationMethodData {
+	name: 'WebAuthnValidator'
+	credentialId?: string
+	authenticatorIdHash?: string
+	pubKeyX?: bigint
+	pubKeyY?: bigint
+	username?: string
+}
 
 const ACCOUNTS_STORAGE_KEY = 'samanager-accounts'
 
@@ -42,7 +53,7 @@ export const useAccountsStore = defineStore('useAccountsStore', () => {
 					if (vMethodName === 'WebAuthnValidator') {
 						account.vMethods.push({
 							name: vMethodName,
-							credentialId: vOption.identifier,
+							authenticatorIdHash: getAuthenticatorIdHash(vOption.identifier),
 						})
 					} else {
 						account.vMethods.push({
@@ -55,6 +66,34 @@ export const useAccountsStore = defineStore('useAccountsStore', () => {
 				console.log('migrated account', account.address)
 			}
 		})
+	})
+
+	// migrate existing WebAuthnValidatorVMethodData identifier to authenticatorIdHash
+	watchImmediate(accounts, accounts => {
+		let hasChanges = false
+		accounts.forEach(account => {
+			if (account.vMethods) {
+				account.vMethods.forEach(vMethod => {
+					if (vMethod.name === 'WebAuthnValidator') {
+						// Check if this is the old format with credentialId
+						const vMethodData = vMethod as LegacyWebAuthnValidationMethodData
+						if (vMethodData.credentialId && !vMethodData.authenticatorIdHash) {
+							// Convert credentialId to authenticatorIdHash
+							vMethodData.authenticatorIdHash = getAuthenticatorIdHash(vMethodData.credentialId)
+							delete vMethodData.credentialId
+							hasChanges = true
+							console.log(
+								'migrated WebAuthnValidator credentialId to authenticatorIdHash for account',
+								account.address,
+							)
+						}
+					}
+				})
+			}
+		})
+		if (hasChanges) {
+			console.log('WebAuthnValidator migration completed')
+		}
 	})
 
 	const hasAccounts = computed(() => accounts.value.length > 0)

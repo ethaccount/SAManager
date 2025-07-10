@@ -8,7 +8,7 @@ export class EOASigner implements AppSigner {
 	private signer: Signer
 
 	constructor(
-		public identifier: string,
+		public identifier: string, // owner address
 		signer: Signer,
 	) {
 		this.identifier = getAddress(identifier)
@@ -33,7 +33,7 @@ export class EOASigner implements AppSigner {
 export class PasskeySigner implements AppSigner {
 	type: SignerType = 'Passkey'
 
-	constructor(public identifier: string) {}
+	constructor(public identifier: string) {} // authenticatorIdHash
 
 	async sign(userop: UserOpBuilder): Promise<string> {
 		return await signMessageUsingPasskey(userop.hash())
