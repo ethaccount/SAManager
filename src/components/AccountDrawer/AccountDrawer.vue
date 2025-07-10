@@ -38,7 +38,7 @@ const { isLogin, resetCredentialId, selectedCredentialDisplay, isPasskeySupporte
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 const { selectSigner, selectedSigner } = useSigner()
 
-const accountList = computed(() =>
+const accountList = computed<(ImportedAccount & { isCrossChain: boolean })[]>(() =>
 	accounts.value
 		.reduce(
 			(acc, cur) => {
@@ -57,16 +57,22 @@ const accountList = computed(() =>
 		)
 		.sort((a, b) => {
 			// Put selected account at the top
-			const aIsSelected =
-				a.address === selectedAccount.value?.address && a.chainId === selectedAccount.value?.chainId
-			const bIsSelected =
-				b.address === selectedAccount.value?.address && b.chainId === selectedAccount.value?.chainId
+			const aIsSelected = isAccountSelected(a)
+			const bIsSelected = isAccountSelected(b)
 
 			if (aIsSelected && !bIsSelected) return -1
 			if (!aIsSelected && bIsSelected) return 1
 			return 0
 		}),
 )
+
+function isAccountSelected(account: ImportedAccount & { isCrossChain: boolean }) {
+	return (
+		selectedAccount.value &&
+		isSameAddress(account.address, selectedAccount.value.address) &&
+		(account.chainId === selectedAccount.value.chainId || account.isCrossChain)
+	)
+}
 
 function onClickSelectAccount(account: ImportedAccount & { isCrossChain: boolean }) {
 	const { selectedChainId } = useBlockchain()
@@ -372,9 +378,7 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 						:key="account.address"
 						class="relative group p-3 rounded-lg border transition-colors hover:bg-accent cursor-pointer overflow-visible"
 						:class="{
-							'bg-accent':
-								account.address === selectedAccount?.address &&
-								account.chainId === selectedAccount?.chainId,
+							'bg-accent': isAccountSelected(account),
 						}"
 						@click="onClickSelectAccount(account)"
 					>
