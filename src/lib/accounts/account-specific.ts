@@ -1,8 +1,28 @@
-import { ValidationMethod } from '@/lib/validations'
+import { ValidationMethod, ValidationMethodName, ValidationType } from '@/lib/validations'
 import { JsonRpcProvider } from 'ethers'
 import { AccountAPI, ERC7579Module, ValidationAPI } from 'sendop'
 import { AccountRegistry } from './registry'
 import { AccountId, Deployment } from './types'
+
+export const ACCOUNT_SUPPORTED_INITIAL_VALIDATION: Partial<
+	Record<
+		AccountId,
+		{
+			type: ValidationType
+			name: ValidationMethodName
+		}[]
+	>
+> = {
+	[AccountId['kernel.advanced.v0.3.3']]: [
+		{ type: 'EOA-Owned', name: 'ECDSAValidator' },
+		{ type: 'PASSKEY', name: 'WebAuthnValidator' },
+	],
+	[AccountId['biconomy.nexus.1.0.2']]: [
+		{ type: 'EOA-Owned', name: 'OwnableValidator' },
+		{ type: 'PASSKEY', name: 'WebAuthnValidator' },
+	],
+	[AccountId['rhinestone.safe7579.v1.0.0']]: [{ type: 'EOA-Owned', name: 'OwnableValidator' }],
+} as const
 
 export async function getDeployment(
 	client: JsonRpcProvider,

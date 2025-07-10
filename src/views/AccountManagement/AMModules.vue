@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { addressToName } from '@/lib/addressToName'
+import { ACCOUNT_SUPPORTED_INITIAL_VALIDATION } from '@/lib/accounts/account-specific'
 import { MODULE_TYPE_LABELS } from '@/lib/modules/supported-modules'
 import { ModuleRecordModule, useAccountModule } from '@/lib/modules/useAccountModule'
 import { useValidatorManagement } from '@/lib/modules/useValidatorManagement'
+import { ValidationMethodName } from '@/lib/validations/ValidationMethod'
 import { ImportedAccount } from '@/stores/account/account'
 import { shortenAddress } from '@vue-dapp/core'
 import { getAddress } from 'ethers'
@@ -44,17 +46,27 @@ const onlyOneValidator = computed<boolean>(() => {
 })
 
 // Available modules that can be installed (only validators for now)
-const availableModules = computed<{ address: string; name: string }[]>(() => {
-	const installableModules = [
-		{ address: ADDRESS.ECDSAValidator, name: 'ECDSA Validator' },
-		{ address: ADDRESS.WebAuthnValidator, name: 'WebAuthn Validator' },
-		{ address: ADDRESS.OwnableValidator, name: 'Ownable Validator' },
+const availableModules = computed<{ address: string; name: ValidationMethodName }[]>(() => {
+	const installableModules: { address: string; name: ValidationMethodName }[] = [
+		{ address: ADDRESS.ECDSAValidator, name: 'ECDSAValidator' },
+		{ address: ADDRESS.WebAuthnValidator, name: 'WebAuthnValidator' },
+		{ address: ADDRESS.OwnableValidator, name: 'OwnableValidator' },
 	]
 
-	return installableModules.filter(
-		module =>
-			!moduleRecord.value[ERC7579_MODULE_TYPE.VALIDATOR]?.find(m => isSameAddress(m.address, module.address)),
-	)
+	// Get supported validation methods for the current account type
+	const supportedValidations = ACCOUNT_SUPPORTED_INITIAL_VALIDATION[props.selectedAccount.accountId] || []
+	const supportedValidationNames = new Set(supportedValidations.map(v => v.name))
+
+	return installableModules.filter(module => {
+		// Check if module is already installed
+		const isInstalled = moduleRecord.value[ERC7579_MODULE_TYPE.VALIDATOR]?.find(m =>
+			isSameAddress(m.address, module.address),
+		)
+		if (isInstalled) return false
+
+		// Check if module is supported by the account type
+		return supportedValidationNames.has(module.name)
+	})
 })
 
 const operatingModule = ref<string | null>(null)

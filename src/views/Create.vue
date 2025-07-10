@@ -4,7 +4,13 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { AccountId, AccountRegistry, Deployment, getDeployment } from '@/lib/accounts'
+import {
+	ACCOUNT_SUPPORTED_INITIAL_VALIDATION,
+	AccountId,
+	AccountRegistry,
+	Deployment,
+	getDeployment,
+} from '@/lib/accounts'
 import { displayAccountName } from '@/lib/accounts/helpers'
 import { toRoute } from '@/lib/router'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
@@ -46,27 +52,15 @@ const { canSign } = useSigner()
 
 const supportedAccounts = AccountRegistry.getSupportedAccountsForCreation()
 
-type ValidationTypeWithName = {
-	type: ValidationType
-	name: ValidationMethodName
-}
-
-const ACCOUNT_SUPPORTED_INITIAL_VALIDATION: Partial<Record<AccountId, ValidationTypeWithName[]>> = {
-	[AccountId['kernel.advanced.v0.3.3']]: [
-		{ type: 'EOA-Owned', name: 'ECDSAValidator' },
-		{ type: 'PASSKEY', name: 'WebAuthnValidator' },
-	],
-	[AccountId['biconomy.nexus.1.0.2']]: [
-		{ type: 'EOA-Owned', name: 'OwnableValidator' },
-		{ type: 'PASSKEY', name: 'WebAuthnValidator' },
-	],
-	[AccountId['rhinestone.safe7579.v1.0.0']]: [{ type: 'EOA-Owned', name: 'OwnableValidator' }],
-} as const
-
 const selectedAccountType = ref<AccountId | undefined>(undefined) // use undefined instead of null for v-model
 const selectedValidationType = ref<ValidationType | undefined>(undefined) // use undefined instead of null for v-model
 
-const supportedValidations = computed<ValidationTypeWithName[]>(() => {
+const supportedValidations = computed<
+	{
+		type: ValidationType
+		name: ValidationMethodName
+	}[]
+>(() => {
 	if (!selectedAccountType.value) return []
 	return ACCOUNT_SUPPORTED_INITIAL_VALIDATION[selectedAccountType.value] || []
 })
