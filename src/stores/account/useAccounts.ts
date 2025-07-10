@@ -1,4 +1,9 @@
-import { deserializeValidationMethod, ValidationMethod, ValidationMethodName } from '@/lib/validations'
+import {
+	deserializeValidationMethod,
+	getVMethodIdentifier,
+	ValidationMethod,
+	ValidationMethodName,
+} from '@/lib/validations'
 import { ImportedAccount, isSameAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useInitCode } from '@/stores/account/useInitCode'
@@ -126,8 +131,16 @@ export const useAccountsStore = defineStore('useAccountsStore', () => {
 	function addValidationMethod(account: ImportedAccount, vMethod: ValidationMethod) {
 		const acc = accounts.value.find(a => isSameAccount(a, account))
 		if (!acc) {
-			throw new Error(`addValidationMethod: Account not found: ${account.address} ${account.chainId}`)
+			throw new Error(`[addValidationMethod] Account not found: ${account.address} ${account.chainId}`)
 		}
+
+		// don't add the same vMethod if the vMethod name and identifier are the same
+		if (acc.vMethods.some(v => v.name === vMethod.name && getVMethodIdentifier(v) === vMethod.identifier)) {
+			throw new Error(
+				`[addValidationMethod] Validation method already exists: ${vMethod.name} ${vMethod.identifier}`,
+			)
+		}
+
 		acc.vMethods.push(vMethod.serialize())
 		accounts.value = accounts.value.map(a => (isSameAccount(a, acc) ? acc : a))
 
