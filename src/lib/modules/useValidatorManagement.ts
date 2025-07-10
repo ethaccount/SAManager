@@ -39,8 +39,6 @@ export function useValidatorManagement() {
 			onSuccess?: () => Promise<void>
 		},
 	) {
-		const { description = 'Install Module', onSuccess } = options || {}
-
 		if (!validateAccountAccess()) return
 
 		isLoading.value = true
@@ -49,7 +47,7 @@ export function useValidatorManagement() {
 			const module = getModuleByValidationMethod(validationMethod)
 
 			const execution: TxModalExecution = {
-				description,
+				description: options?.description || `Install ${validationMethod.name}`,
 				to: selectedAccount.value!.address,
 				data: await getInstallModuleData(selectedAccount.value!.accountId, module),
 				value: 0n,
@@ -63,7 +61,7 @@ export function useValidatorManagement() {
 					}
 
 					addValidationMethod(selectedAccount.value, validationMethod)
-					await onSuccess?.()
+					await options?.onSuccess?.()
 				},
 			})
 		} catch (e: unknown) {
@@ -81,8 +79,6 @@ export function useValidatorManagement() {
 			onSuccess?: () => Promise<void>
 		},
 	) {
-		const { description = 'Uninstall Module', onSuccess } = options || {}
-
 		if (!validateAccountAccess()) return
 
 		isLoading.value = true
@@ -97,7 +93,7 @@ export function useValidatorManagement() {
 			}
 
 			const execution: TxModalExecution = {
-				description,
+				description: options?.description || `Uninstall ${validationMethodName}`,
 				to: selectedAccount.value!.address,
 				data: await getUninstallModuleData(
 					selectedAccount.value!.accountId,
@@ -115,7 +111,7 @@ export function useValidatorManagement() {
 						throw new Error('No account selected')
 					}
 					removeValidationMethod(selectedAccount.value, validationMethodName)
-					await onSuccess?.()
+					await options?.onSuccess?.()
 				},
 			})
 		} catch (e: unknown) {
