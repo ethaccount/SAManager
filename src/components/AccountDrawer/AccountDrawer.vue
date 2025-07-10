@@ -39,21 +39,33 @@ const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 const { selectSigner, selectedSigner } = useSigner()
 
 const accountList = computed(() =>
-	accounts.value.reduce(
-		(acc, cur) => {
-			const account = {
-				...cur,
-				isCrossChain: cur.category === 'Smart Account' && hasInitCode(cur.address),
-			}
+	accounts.value
+		.reduce(
+			(acc, cur) => {
+				const account = {
+					...cur,
+					isCrossChain: cur.category === 'Smart Account' && hasInitCode(cur.address),
+				}
 
-			if (!acc.some(a => isSameAddress(a.address, account.address))) {
-				acc.push(account)
-			}
+				if (!acc.some(a => isSameAddress(a.address, account.address))) {
+					acc.push(account)
+				}
 
-			return acc
-		},
-		[] as (ImportedAccount & { isCrossChain: boolean })[],
-	),
+				return acc
+			},
+			[] as (ImportedAccount & { isCrossChain: boolean })[],
+		)
+		.sort((a, b) => {
+			// Put selected account at the top
+			const aIsSelected =
+				a.address === selectedAccount.value?.address && a.chainId === selectedAccount.value?.chainId
+			const bIsSelected =
+				b.address === selectedAccount.value?.address && b.chainId === selectedAccount.value?.chainId
+
+			if (aIsSelected && !bIsSelected) return -1
+			if (!aIsSelected && bIsSelected) return 1
+			return 0
+		}),
 )
 
 function onClickSelectAccount(account: ImportedAccount & { isCrossChain: boolean }) {
