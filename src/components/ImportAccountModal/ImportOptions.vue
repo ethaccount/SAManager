@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Card } from '@/components/ui/card'
-import { IAMStageKey, useImportAccountModal } from '@/stores/useImportAccountModal'
 import { AccountCategory } from '@/stores/account/account'
-import { Code, Key, LinkIcon, Wallet, ChevronRight } from 'lucide-vue-next'
+import { IAMStageKey, useImportAccountModal } from '@/stores/useImportAccountModal'
+import { ChevronRight, Code, Key, Wallet } from 'lucide-vue-next'
 
 type AccountOption = {
 	title: string
@@ -16,32 +16,32 @@ const accountOptions = computed<AccountOption[]>(() => {
 	return [
 		{
 			title: 'Passkey',
-			description: 'Import an account using your passkey for this site',
+			description: 'Import an account using the passkey for this site',
 			icon: Key,
 			nextStageKey: IAMStageKey.CONNECT_PASSKEY,
 			category: 'Smart Account',
 		},
 		{
 			title: 'EOA-Owned',
-			description: 'Import an account controlled by an EOA in a wallet',
+			description: 'Import an account controlled by an EOA using ECDSA validator (only for Kernel currently)',
 			icon: Wallet,
 			nextStageKey: IAMStageKey.CONNECT_EOA_WALLET,
 			category: 'Smart Account',
 		},
 		{
 			title: 'Smart EOA',
-			description: 'Import an EIP-7702 upgraded EOA that has smart account capabilities',
+			description: 'Import an EIP-7702 upgraded EOA (only for Simple7702Account currently)',
 			icon: Code,
 			nextStageKey: IAMStageKey.CONNECT_SMART_EOA,
 			category: 'Smart EOA',
 		},
-		{
-			title: 'Address',
-			description: 'Import an account by entering your account address',
-			icon: LinkIcon,
-			nextStageKey: null,
-			category: 'Smart Account',
-		},
+		// {
+		// 	title: 'Address',
+		// 	description: 'Import an account by entering your account address',
+		// 	icon: LinkIcon,
+		// 	nextStageKey: null,
+		// 	category: 'Smart Account',
+		// },
 	]
 })
 
