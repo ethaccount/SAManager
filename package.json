@@ -1,7 +1,7 @@
 {
 	"name": "smart-account-manager",
 	"private": true,
-	"version": "0.2.0",
+	"version": "0.3.0-beta.2",
 	"type": "module",
 	"repository": "https://github.com/ethaccount/SAManager",
 	"homepage": "https://samanager.johnson86tw.workers.dev",
@@ -26,12 +26,13 @@
 		"deploy": "pnpm run build && wrangler deploy",
 		"cf-typegen": "wrangler types",
 		"lint": "eslint .",
-		"lint:fix": "eslint . --fix"
+		"lint:fix": "eslint . --fix",
+		"check": "pnpm typecheck && pnpm lint"
 	},
 	"dependencies": {
 		"@internationalized/date": "^3.7.0",
 		"@noble/curves": "^1.8.1",
-		"@simplewebauthn/browser": "^10.0.0",
+		"@rhinestone/module-sdk": "^0.2.10",
 		"@tanstack/vue-table": "^8.21.3",
 		"@vee-validate/zod": "^4.15.0",
 		"@vue-dapp/core": "1.5.1",
@@ -39,18 +40,20 @@
 		"@vueuse/core": "^12.4.0",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
-		"ethers": "^6.13.5",
+		"ethers": "^6.15.0",
 		"evm-providers": "^0.5.7",
+		"json-with-bigint": "^3.4.4",
 		"lucide-vue-next": "^0.471.0",
 		"pinia": "^3.0.1",
 		"pinia-plugin-persistedstate": "^4.2.0",
 		"radix-vue": "^1.9.12",
 		"reka-ui": "^2.2.0",
-		"sendop": "0.4.2",
+		"sendop": "0.5.0-beta.6",
 		"tailwind-merge": "^2.6.0",
 		"unique-names-generator": "^4.7.1",
 		"uuid": "^11.1.0",
 		"vee-validate": "^4.15.0",
+		"viem": "^2.31.6",
 		"vue": "^3.5.13",
 		"vue-final-modal": "^4.5.5",
 		"vue-router": "^4.5.0",
@@ -59,8 +62,7 @@
 	},
 	"devDependencies": {
 		"@babel/helpers": "^7.27.1",
-		"@cloudflare/vite-plugin": "^1.2.4",
-		"@simplewebauthn/typescript-types": "^8.3.4",
+		"@cloudflare/vite-plugin": ">=1.6.0",
 		"@types/node": "^22.10.6",
 		"@vitejs/plugin-vue": "^5.2.1",
 		"@vitest/eslint-plugin": "^1.2.1",
@@ -83,12 +85,14 @@
 		"vite-plugin-node-polyfills": "^0.23.0",
 		"vitest": "^3.1.4",
 		"vue-tsc": "^2.2.8",
-		"wrangler": "^4.16.1"
+		"wrangler": "^4.24.0"
 	},
 	"pnpm": {
 		"overrides": {
 			"@babel/helpers": "7.27.1",
-			"postcss": "8.5.3"
+			"postcss": "8.5.3",
+			"brace-expansion": ">=2.0.2",
+			"pinia": "3.0.1"
 		}
 	},
 	"packageManager": "pnpm@9.14.4+sha512.c8180b3fbe4e4bca02c94234717896b5529740a6cbadf19fa78254270403ea2f27d4e1d46a08a0f56c89b63dc8ebfd3ee53326da720273794e6200fcf0d184ab"

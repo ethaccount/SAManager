@@ -1,39 +1,45 @@
 <script setup lang="ts">
+import { env } from '@/app/useSetupEnv'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { env } from '@/app/useSetupEnv'
+import {
+	ACCOUNT_SUPPORTED_INITIAL_VALIDATION,
+	AccountId,
+	AccountRegistry,
+	Deployment,
+	getDeployment,
+} from '@/lib/accounts'
+import { displayAccountName } from '@/lib/accounts/helpers'
 import { toRoute } from '@/lib/router'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
-import { ACCOUNT_ID_TO_NAME, AccountId, displayAccountName, SUPPORTED_ACCOUNTS } from '@/stores/account/account'
-import { checkIfAccountIsDeployed, getComputedAddressAndInitCode } from '@/stores/account/create'
+import { useGetCode } from '@/lib/useGetCode'
+import {
+	ECDSAValidatorVMethod,
+	SingleOwnableValidatorVMethod,
+	ValidationMethod,
+	ValidationMethodName,
+	ValidationType,
+	WebAuthnValidatorVMethod,
+} from '@/lib/validations'
 import { useAccounts } from '@/stores/account/useAccounts'
 import { displayChainName } from '@/stores/blockchain/blockchain'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { usePasskey } from '@/stores/passkey/usePasskey'
+import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
 import { useEOAWallet } from '@/stores/useEOAWallet'
+import { useSigner } from '@/stores/useSigner'
 import { useTxModal } from '@/stores/useTxModal'
-import { useSigner } from '@/stores/validation/useSigner'
-import { useAccount } from '@/stores/account/useAccount'
-import {
-	createEOAOwnedValidation,
-	createPasskeyValidation,
-	displayValidationName,
-	SUPPORTED_VALIDATION_OPTIONS,
-	ValidationOption,
-	ValidationType,
-} from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
-import { isAddress } from 'ethers'
-import { ChevronRight, Power, AlertCircle } from 'lucide-vue-next'
+import { concat, getBigInt, hexlify, isAddress } from 'ethers'
+import { AlertCircle, ChevronRight, Power } from 'lucide-vue-next'
 import { toBytes32 } from 'sendop'
 
 const router = useRouter()
-const { client, selectedChainId, switchEntryPoint } = useBlockchain()
-const { wallet, address, disconnect } = useEOAWallet()
+const { client, selectedChainId } = useBlockchain()
+const { wallet, address, disconnect, isEOAWalletConnected, isEOAWalletSupported, signer } = useEOAWallet()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
-const { isEOAWalletConnected, isEOAWalletSupported } = useEOAWallet()
 const {
 	selectedCredentialDisplay,
 	isLogin,
@@ -43,87 +49,81 @@ const {
 	isPasskeySupported,
 } = usePasskey()
 const { importAccount, selectAccount, isAccountImported } = useAccounts()
+const { canSign } = useSigner()
 
-const supportedAccounts = Object.entries(SUPPORTED_ACCOUNTS)
-	.filter(([_, data]) => data.isModular)
-	.map(([id]) => ({
-		id: id as AccountId,
-		name: ACCOUNT_ID_TO_NAME[id as AccountId],
-		description: `Supports EntryPoint ${SUPPORTED_ACCOUNTS[id as AccountId].entryPointVersion}`,
-	}))
+const supportedAccounts = AccountRegistry.getSupportedAccountsForCreation()
 
-const CREATE_ACCOUNT_VALIDATION_RULES: Record<AccountId, ValidationType[]> = {
-	[AccountId['kernel.advanced.v0.3.1']]: ['EOA-Owned', 'Passkey'],
-	[AccountId['biconomy.nexus.1.0.2']]: ['EOA-Owned', 'Passkey'],
-	[AccountId['rhinestone.safe7579.v1.0.0']]: ['EOA-Owned'],
-	[AccountId['infinitism.SimpleAccount.0.8.0']]: [],
-	[AccountId['infinitism.Simple7702Account.0.8.0']]: [],
-} as const
+const selectedAccountType = ref<AccountId | undefined>(undefined) // use undefined instead of null for v-model
+const selectedValidationType = ref<ValidationType | undefined>(undefined) // use undefined instead of null for v-model
 
-const supportedValidationOptions = computed(() => {
+const supportedValidations = computed<
+	{
+		type: ValidationType
+		name: ValidationMethodName
+	}[]
+>(() => {
 	if (!selectedAccountType.value) return []
-
-	const allowedValidations = CREATE_ACCOUNT_VALIDATION_RULES[selectedAccountType.value]
-	return Object.entries(SUPPORTED_VALIDATION_OPTIONS)
-		.filter(([key]) => allowedValidations.includes(key as ValidationType))
-		.map(([key, data]) => ({
-			type: key as ValidationType,
-			name: data.name,
-			description: data.description,
-		}))
+	return ACCOUNT_SUPPORTED_INITIAL_VALIDATION[selectedAccountType.value] || []
 })
 
-const selectedAccountType = ref<AccountId | undefined>(undefined)
-
-watch(selectedAccountType, newAccountType => {
-	// Reset validation type if not supported by new account type
-	if (!newAccountType) {
-		selectedValidationType.value = undefined
-		return
-	}
-
-	const allowedValidations = CREATE_ACCOUNT_VALIDATION_RULES[newAccountType]
-	if (selectedValidationType.value && !allowedValidations.includes(selectedValidationType.value)) {
-		selectedValidationType.value = undefined
-	}
-
-	// Fix EntryPointMismatch: Switch EntryPoint version based on the selected account type
-	switchEntryPoint(SUPPORTED_ACCOUNTS[newAccountType].entryPointVersion)
-})
-
-// Fix EntryPointMismatch: When users leave Create page, reset the EntryPoint version for the selected account
-onBeforeRouteLeave(() => {
-	const { selectedAccount } = useAccount()
-	if (selectedAccount.value) {
-		switchEntryPoint(SUPPORTED_ACCOUNTS[selectedAccount.value.accountId].entryPointVersion)
-	}
-})
-
-const selectedValidationType = ref<ValidationType | undefined>(undefined)
 const isComputingAddress = ref(false)
 const showMoreOptions = ref(false)
 
-const selectedValidation = computed<ValidationOption | null>(() => {
+// Reset validation type when account type is changed
+watch(selectedAccountType, () => {
+	// if the supported validations only has one type, select it
+	if (supportedValidations.value && supportedValidations.value.length === 1) {
+		selectedValidationType.value = supportedValidations.value[0].type
+	} else {
+		selectedValidationType.value = undefined
+	}
+})
+
+const selectedValidationMethod = computed<ValidationMethod | null>(() => {
+	// Return null instead of throwing error in this computed property
+	if (!selectedAccountType.value) return null
 	if (!selectedValidationType.value) return null
 
 	switch (selectedValidationType.value) {
-		case 'EOA-Owned':
-			const { signer } = useEOAWallet()
+		case 'EOA-Owned': {
 			if (!signer.value) return null
-			return createEOAOwnedValidation(signer.value.address)
-		case 'Passkey':
+			const identifier = signer.value.address
+
+			// get account supported validation method name
+			const validationMethodName = ACCOUNT_SUPPORTED_INITIAL_VALIDATION[selectedAccountType.value]?.find(
+				v => v.type === selectedValidationType.value,
+			)?.name
+			if (!validationMethodName) return null
+
+			switch (validationMethodName) {
+				case 'ECDSAValidator':
+					return new ECDSAValidatorVMethod(identifier)
+				case 'OwnableValidator':
+					return new SingleOwnableValidatorVMethod(identifier)
+				default:
+					return null
+			}
+		}
+		case 'PASSKEY': {
 			if (!selectedCredential.value) return null
-			return createPasskeyValidation(selectedCredential.value.credentialId)
+			const credential = selectedCredential.value
+			return new WebAuthnValidatorVMethod(
+				getAuthenticatorIdHash(credential.credentialId),
+				getBigInt(hexlify(credential.pubKeyX)),
+				getBigInt(hexlify(credential.pubKeyY)),
+				credential.username,
+			)
+		}
 		default:
 			return null
 	}
 })
 
-// Auto select the signer when the selectedValidation is updated
-watchImmediate(selectedValidationType, () => {
-	if (selectedValidation.value) {
+// Auto select the signer when the selectedValidationMethod is updated
+watchImmediate(selectedValidationMethod, () => {
+	if (selectedValidationMethod.value) {
 		const { selectSigner } = useSigner()
-		selectSigner(SUPPORTED_VALIDATION_OPTIONS[selectedValidation.value.type].signerType)
+		selectSigner(selectedValidationMethod.value.signerType)
 	}
 })
 
@@ -133,54 +133,67 @@ const computedSalt = computed(() => {
 	return toBytes32(BigInt(saltInput.value))
 })
 
-/**
- * Check if the signer is connected and corresponding to the selected validation type
- */
+// Check if the signer is connected and corresponding to the selected validation type
 const isValidationAvailable = computed(() => {
-	if (!selectedValidation.value) return false
-	return useSigner().isSignerEligibleForValidation([selectedValidation.value])
+	if (!selectedValidationMethod.value) return false
+	return canSign(selectedValidationMethod.value)
 })
 
-const computedAddress = ref<string>('')
-const initCode = ref<string>('')
+const deployment = ref<Deployment | null>(null)
 const isDeployed = ref(false)
 
+const computedAddress = computed(() => {
+	return deployment.value?.accountAddress
+})
+
+const initCode = computed(() => {
+	if (!deployment.value) return null
+	return concat([deployment.value.factory, deployment.value.factoryData])
+})
+
 const isImported = computed(() => {
-	return isAccountImported(computedAddress.value, selectedChainId.value)
+	return deployment.value && isAccountImported(deployment.value.accountAddress, selectedChainId.value)
 })
 
 const errMsg = ref<string | null>(null)
 
-watchImmediate([isValidationAvailable, selectedValidation, isLogin, selectedAccountType, computedSalt], async () => {
-	computedAddress.value = ''
-	initCode.value = ''
-	isDeployed.value = false
-	errMsg.value = null
+watchImmediate(
+	[isValidationAvailable, selectedValidationMethod, isLogin, selectedAccountType, computedSalt],
+	async () => {
+		deployment.value = null
+		isDeployed.value = false
+		errMsg.value = null
 
-	if (isValidationAvailable.value && selectedValidation.value && selectedAccountType.value && computedSalt.value) {
-		isComputingAddress.value = true
-		try {
-			const res = await getComputedAddressAndInitCode(
-				client.value,
-				selectedAccountType.value,
-				selectedValidation.value,
-				computedSalt.value,
-			)
-			computedAddress.value = res.computedAddress
-			initCode.value = res.initCode
-			isDeployed.value = await checkIfAccountIsDeployed(client.value, computedAddress.value)
-		} catch (error) {
-			throw error
-		} finally {
-			isComputingAddress.value = false
+		if (
+			isValidationAvailable.value &&
+			selectedValidationMethod.value &&
+			selectedAccountType.value &&
+			computedSalt.value
+		) {
+			isComputingAddress.value = true
+			try {
+				deployment.value = await getDeployment(
+					client.value,
+					selectedAccountType.value,
+					selectedValidationMethod.value,
+					computedSalt.value,
+				)
+				const { getCode, isDeployed: isAccountDeployed } = useGetCode()
+				await getCode(deployment.value.accountAddress)
+				isDeployed.value = isAccountDeployed.value
+			} catch (error) {
+				throw error
+			} finally {
+				isComputingAddress.value = false
+			}
+		} else if (!selectedValidationMethod.value) {
+			if (selectedValidationType.value === 'PASSKEY' && isLogin.value && !isFullCredential.value) {
+				errMsg.value =
+					"This passkey's public key is not stored in the frontend, so it can only be used for signing but not for installing a new webauthn validator. To use a passkey with a public key, please create a new one."
+			}
 		}
-	} else if (!selectedValidation.value) {
-		if (selectedValidationType.value === 'Passkey' && isLogin.value && !isFullCredential.value) {
-			errMsg.value =
-				"This passkey's public key is not stored in the frontend, so it can only be used for signing but not for installing a new webauthn validator. To use a passkey with a public key, please create a new one."
-		}
-	}
-})
+	},
+)
 
 function onClickImport() {
 	if (!selectedAccountType.value) {
@@ -195,7 +208,7 @@ function onClickImport() {
 		throw new Error('onClickImport: No init code')
 	}
 
-	if (!selectedValidation.value) {
+	if (!selectedValidationMethod.value) {
 		throw new Error('onClickImport: No validation')
 	}
 
@@ -206,7 +219,7 @@ function onClickImport() {
 				category: 'Smart Account',
 				address: computedAddress.value,
 				chainId: selectedChainId.value,
-				vOptions: [selectedValidation.value],
+				vMethods: [selectedValidationMethod.value.serialize()],
 			},
 			initCode.value,
 		)
@@ -230,9 +243,11 @@ function onClickDeploy() {
 		throw new Error('onClickDeploy: No init code')
 	}
 
-	if (!selectedValidation.value) {
+	if (!selectedValidationMethod.value) {
 		throw new Error('onClickDeploy: No validation')
 	}
+
+	console.log('initCode', initCode.value)
 
 	importAccount(
 		{
@@ -240,7 +255,7 @@ function onClickDeploy() {
 			category: 'Smart Account',
 			address: computedAddress.value,
 			chainId: selectedChainId.value,
-			vOptions: [selectedValidation.value],
+			vMethods: [selectedValidationMethod.value.serialize()],
 		},
 		initCode.value,
 	)
@@ -251,17 +266,22 @@ function onClickDeploy() {
 		// Update the deployed status when the transaction status changes
 		// When users has deployed and closed the modal, they can't click the deploy button again
 		onSuccess: async () => {
-			isDeployed.value = await checkIfAccountIsDeployed(client.value, computedAddress.value)
+			if (!computedAddress.value) {
+				throw new Error('[onClickDeploy] computedAddress is falsy')
+			}
+			const { getCode, isDeployed: isAccountDeployed } = useGetCode()
+			await getCode(computedAddress.value)
+			isDeployed.value = isAccountDeployed.value
 		},
 	})
 }
 
 const disabledDeployButton = computed(() => {
-	return !computedAddress.value || !initCode.value || !selectedValidation.value || isDeployed.value
+	return !computedAddress.value || !initCode.value || !selectedValidationMethod.value || isDeployed.value
 })
 
 const disabledImportButton = computed(() => {
-	return !computedAddress.value || !initCode.value || !selectedValidation.value
+	return !computedAddress.value || !initCode.value || !selectedValidationMethod.value
 })
 
 function onClickPasskeyLogout() {
@@ -293,19 +313,21 @@ function onClickPasskeyLogout() {
 
 					<SelectContent>
 						<SelectItem
-							v-for="supportedAccount in supportedAccounts"
-							:key="supportedAccount.id"
-							:value="supportedAccount.id"
+							v-for="supportedAccountId in supportedAccounts"
+							:key="supportedAccountId"
+							:value="supportedAccountId"
 							class="cursor-pointer"
 						>
 							<div class="flex flex-col py-1 w-full">
 								<div class="flex items-center justify-between w-full">
-									<div class="font-medium">{{ supportedAccount.name }}</div>
+									<div class="font-medium">{{ displayAccountName(supportedAccountId) }}</div>
 									<div class="text-xs text-muted-foreground rounded-full bg-muted px-2.5 py-0.5">
-										EntryPoint {{ SUPPORTED_ACCOUNTS[supportedAccount.id].entryPointVersion }}
+										EntryPoint {{ AccountRegistry.getEntryPointVersion(supportedAccountId) }}
 									</div>
 								</div>
-								<div class="text-xs text-muted-foreground mt-0.5">{{ supportedAccount.id }}</div>
+								<div class="text-xs text-muted-foreground mt-0.5">
+									{{ supportedAccountId }}
+								</div>
 							</div>
 						</SelectItem>
 					</SelectContent>
@@ -316,28 +338,24 @@ function onClickPasskeyLogout() {
 					<SelectTrigger class="w-full bg-muted/30 border-border/50 hover:border-primary transition-colors">
 						<SelectValue placeholder="Select Validation Type">
 							<div class="flex items-center justify-between w-full gap-2">
-								{{
-									selectedValidationType
-										? displayValidationName(selectedValidationType)
-										: 'Select Validation Type'
-								}}
+								{{ selectedValidationType ? selectedValidationType : 'Select Validation Type' }}
 							</div>
 						</SelectValue>
 					</SelectTrigger>
 
 					<SelectContent>
 						<SelectItem
-							v-for="validationOption in supportedValidationOptions"
-							:key="validationOption.type"
-							:value="validationOption.type"
+							v-for="validationType in supportedValidations"
+							:key="validationType.type"
+							:value="validationType.type"
 							class="cursor-pointer"
 						>
 							<div class="flex flex-col py-1">
 								<div class="flex items-center justify-between w-full gap-2">
-									<div class="font-medium">{{ validationOption.name }}</div>
+									<div class="font-medium">{{ validationType.type }}</div>
 								</div>
 								<div class="text-xs text-muted-foreground mt-0.5">
-									{{ validationOption.description }}
+									{{ validationType.name }}
 								</div>
 							</div>
 						</SelectItem>
@@ -380,7 +398,7 @@ function onClickPasskeyLogout() {
 					</div>
 				</div>
 
-				<div v-if="selectedValidationType === 'Passkey'">
+				<div v-if="selectedValidationType === 'PASSKEY'">
 					<div
 						v-if="isPasskeySupported"
 						class="flex flex-col p-3 border rounded-lg"

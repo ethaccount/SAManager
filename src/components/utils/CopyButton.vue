@@ -21,7 +21,10 @@ const isCopied = ref(false)
 
 function onClickCopyAddress(event: Event) {
 	event.stopPropagation()
-	navigator.clipboard.writeText(props.address || '')
+	if (!props.address) {
+		throw new Error('CopyButton: address is required')
+	}
+	navigator.clipboard.writeText(props.address)
 	isCopied.value = true
 	setTimeout(() => {
 		isCopied.value = false
@@ -54,7 +57,7 @@ const buttonClass = computed(() => {
 </script>
 
 <template>
-	<div :class="buttonClass" @click="onClickCopyAddress">
+	<div v-if="address" :class="buttonClass" @click="onClickCopyAddress">
 		<Transition name="fade" mode="out-in">
 			<Copy v-if="!isCopied" :class="iconSize" />
 			<Check v-else :class="iconSize" />

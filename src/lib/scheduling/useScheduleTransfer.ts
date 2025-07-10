@@ -1,4 +1,4 @@
-import { getEncodedInstallScheduledTransfers, getEncodedInstallSmartSession } from '@/lib/module-management/module'
+import { getInstallModuleData } from '@/lib/accounts/account-specific'
 import { createScheduledTransferSession, getScheduledTransferSessionStatus } from '@/lib/permissions/session'
 import { useSessionList } from '@/lib/permissions/useSessionList'
 import {
@@ -10,7 +10,9 @@ import {
 } from '@/lib/scheduling/common'
 import { registerJob } from '@/lib/scheduling/registerJob'
 import { getToken, NATIVE_TOKEN_ADDRESS, TokenTransfer } from '@/lib/token'
-import { AccountId, ImportedAccount } from '@/stores/account/account'
+import { useGetCode } from '@/lib/useGetCode'
+import { AccountId } from '@/lib/accounts'
+import { ImportedAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { TxModalExecution, useTxModal } from '@/stores/useTxModal'
@@ -20,16 +22,16 @@ import {
 	abiEncode,
 	ADDRESS,
 	ERC7579_MODULE_TYPE,
+	ERC7579Module,
 	getEncodedFunctionParams,
 	INTERFACES,
 	isSameAddress,
 	SMART_SESSIONS_ENABLE_MODE,
-	TIERC7579Account__factory,
-	TScheduledTransfers__factory,
+	IERC7579Account__factory,
+	ScheduledTransfers__factory,
 	zeroPadLeft,
 } from 'sendop'
-import { SessionStruct } from 'sendop/dist/src/contract-types/TSmartSession'
-import { useGetCode } from '@/lib/useGetCode'
+import { SessionStruct } from 'sendop/contract-types/SmartSession'
 
 export type ScheduleTransfer = TokenTransfer & {
 	frequency: string
@@ -92,7 +94,7 @@ export function useScheduleTransfer() {
 		let permissionId: string | null = null
 
 		if (isDeployed.value) {
-			const account = TIERC7579Account__factory.connect(importedAccount.address, client.value)
+			const account = IERC7579Account__factory.connect(importedAccount.address, client.value)
 
 			// Check if ScheduledTransfers module is installed
 			isScheduledTransfersInstalled = await account.isModuleInstalled(
@@ -155,10 +157,17 @@ export function useScheduleTransfer() {
 				)
 				const smartSessionInitData = concat([SMART_SESSIONS_ENABLE_MODE, encodedSessions])
 
+				const smartSession: ERC7579Module = {
+					type: ERC7579_MODULE_TYPE.VALIDATOR,
+					address: ADDRESS.SmartSession,
+					initData: smartSessionInitData,
+					deInitData: '0x',
+				}
+
 				executions.push({
 					to: importedAccount.address,
 					value: 0n,
-					data: getEncodedInstallSmartSession(importedAccount.accountId, smartSessionInitData),
+					data: getInstallModuleData(importedAccount.accountId, smartSession),
 					description: 'Install SmartSession module and enable the session',
 				})
 			}
@@ -184,11 +193,19 @@ export function useScheduleTransfer() {
 			})
 		} else {
 			const { selectedAccount } = useAccount()
+
+			const scheduledTransfers: ERC7579Module = {
+				type: ERC7579_MODULE_TYPE.EXECUTOR,
+				address: ADDRESS.ScheduledTransfers,
+				initData: scheduledTransfersOrderData,
+				deInitData: '0x',
+			}
+
 			// Install scheduled transfers module and create a job
 			executions.push({
 				to: selectedAccount.value!.address,
 				value: 0n,
-				data: getEncodedInstallScheduledTransfers(accountId, scheduledTransfersOrderData),
+				data: getInstallModuleData(accountId, scheduledTransfers),
 				description: 'Install ScheduledTransfers and add a order',
 			})
 		}
@@ -216,7 +233,7 @@ export function useScheduleTransfer() {
 
 	async function getJobId(accountAddress: string): Promise<bigint> {
 		const { client } = useBlockchain()
-		const scheduledTransfers = TScheduledTransfers__factory.connect(ADDRESS.ScheduledTransfers, client.value)
+		const scheduledTransfers = ScheduledTransfers__factory.connect(ADDRESS.ScheduledTransfers, client.value)
 		const jobCount = await scheduledTransfers.accountJobCount(accountAddress)
 		return jobCount + 1n
 	}

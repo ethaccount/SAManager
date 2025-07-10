@@ -1,13 +1,11 @@
+import { AppSigner, EOASigner, PasskeySigner, SignerType, ValidationMethod } from '@/lib/validations'
 import { usePasskey } from '@/stores/passkey/usePasskey'
+import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
 import { useEOAWallet } from '@/stores/useEOAWallet'
-import { SUPPORTED_VALIDATION_OPTIONS, ValidationOption } from '@/stores/validation/validation'
-import { isSameAddress } from 'sendop'
-
-export type SUPPORTED_SIGNER_TYPE = 'EOAWallet' | 'Passkey'
 
 export const useSignerStore = defineStore('useSignerStore', () => {
 	const connectedSigners = computed<{
-		[key in SUPPORTED_SIGNER_TYPE]: {
+		[key in SignerType]: {
 			identifier: string | null
 			isConnected: boolean
 		}
@@ -15,38 +13,48 @@ export const useSignerStore = defineStore('useSignerStore', () => {
 		const { isEOAWalletConnected, wallet } = useEOAWallet()
 		const { isLogin, selectedCredentialId } = usePasskey()
 
-		// console.log('connectedSigners: wallet.address', wallet.address)
-
 		return {
 			EOAWallet: {
 				identifier: isEOAWalletConnected.value ? wallet.address : null,
 				isConnected: isEOAWalletConnected.value,
 			},
 			Passkey: {
-				identifier: isLogin.value ? selectedCredentialId.value : null,
+				identifier:
+					isLogin.value && selectedCredentialId.value
+						? getAuthenticatorIdHash(selectedCredentialId.value)
+						: null,
 				isConnected: isLogin.value,
 			},
 		}
 	})
 
-	const selectedSignerType = ref<SUPPORTED_SIGNER_TYPE | null>(null)
-	const selectedSigner = computed<{
-		type: SUPPORTED_SIGNER_TYPE
-		identifier: string
-	} | null>(() => {
+	function isSignerConnected(signerType: SignerType) {
+		return connectedSigners.value[signerType].isConnected
+	}
+
+	const selectedSignerType = ref<SignerType | null>(null)
+
+	const selectedSigner = computed<AppSigner | null>(() => {
 		if (!selectedSignerType.value) return null
 		const identifier = connectedSigners.value[selectedSignerType.value].identifier
 		if (!identifier) {
 			return null
 		}
 
-		return {
-			type: selectedSignerType.value,
-			identifier,
+		// Create actual Signer instances based on type
+		switch (selectedSignerType.value) {
+			case 'EOAWallet':
+				const { signer } = useEOAWallet()
+				if (!signer.value) return null
+				return new EOASigner(identifier, signer.value)
+			case 'Passkey':
+				return new PasskeySigner(identifier)
+			default:
+				return null
 		}
 	})
 
-	function selectSigner(signerType: SUPPORTED_SIGNER_TYPE) {
+	function selectSigner(signerType: SignerType) {
 		// if the signer type is already selected, do nothing
 		if (signerType === selectedSignerType.value) return
 		// check if the signer is connected
@@ -61,39 +69,19 @@ export const useSignerStore = defineStore('useSignerStore', () => {
 		}
 	}
 
-	function isSignerEligibleForValidation(vOptions: ValidationOption[]): boolean {
-		const { selectedSigner } = useSigner()
-		if (!selectedSigner.value) return false
-
-		// console.log('checkValidationAvailability: selectedSigner', selectedSigner.value)
-
-		for (const vOption of vOptions) {
-			const vOptionSignerType = SUPPORTED_VALIDATION_OPTIONS[vOption.type].signerType
-
-			if (vOptionSignerType === selectedSigner.value.type) {
-				if (vOptionSignerType === 'EOAWallet') {
-					if (isSameAddress(selectedSigner.value.identifier, vOption.identifier)) {
-						return true
-					}
-				}
-
-				if (vOptionSignerType === 'Passkey') {
-					if (selectedSigner.value.identifier === vOption.identifier) {
-						return true
-					}
-				}
-			}
-		}
-
-		return false
+	function canSign(vMethod: ValidationMethod): boolean {
+		return (
+			vMethod.signerType === selectedSignerType.value && vMethod.identifier === selectedSigner.value?.identifier
+		)
 	}
 
 	return {
 		connectedSigners,
 		selectedSigner,
-		selectSigner,
-		isSignerEligibleForValidation,
 		selectedSignerType,
+		selectSigner,
+		canSign,
+		isSignerConnected,
 	}
 })
 

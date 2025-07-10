@@ -45,6 +45,16 @@ const closeSheet = () => {
 		>
 			Scheduling
 		</RouterLink>
+
+		<RouterLink
+			:to="toRoute('browser')"
+			class="transition-colors hover:text-foreground/80 text-foreground/60"
+			:class="{
+				'text-foreground/80': route.name === 'browser',
+			}"
+		>
+			Browser
+		</RouterLink>
 	</nav>
 
 	<!-- Mobile Navigation -->
@@ -139,6 +149,17 @@ const closeSheet = () => {
 					@click="closeSheet"
 				>
 					Scheduled Jobs
+				</RouterLink>
+
+				<RouterLink
+					:to="toRoute('browser')"
+					class="transition-colors hover:text-foreground/80 text-foreground/60"
+					:class="{
+						'text-foreground/80': route.name === 'browser',
+					}"
+					@click="closeSheet"
+				>
+					Browser
 				</RouterLink>
 			</nav>
 		</SheetContent>

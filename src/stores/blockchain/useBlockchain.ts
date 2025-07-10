@@ -8,9 +8,10 @@ import {
 	TESTNET_CHAIN_ID,
 } from '@/stores/blockchain/blockchain'
 import { JsonRpcProvider } from 'ethers'
+import { ERC4337Bundler } from 'sendop'
 import { publicNode, PublicNodeChain } from 'evm-providers'
 import { defineStore } from 'pinia'
-import { ADDRESS, AlchemyBundler, Bundler, EntryPointVersion, PimlicoBundler, PublicPaymaster } from 'sendop'
+import { EntryPointVersion, fetchGasPriceAlchemy, fetchGasPricePimlico } from 'sendop'
 
 export const DEFAULT_CHAIN_ID = TESTNET_CHAIN_ID.SEPOLIA
 export const DEFAULT_ENTRY_POINT_VERSION: EntryPointVersion = 'v0.7'
@@ -64,12 +65,6 @@ export const useBlockchainStore = defineStore(
 			return ['v0.7', 'v0.8']
 		})
 
-		const selectedEntryPoint = ref<EntryPointVersion>(DEFAULT_ENTRY_POINT_VERSION)
-
-		function switchEntryPoint(entryPoint: EntryPointVersion) {
-			selectedEntryPoint.value = entryPoint
-		}
-
 		const supportedBundlers = computed<SUPPORTED_BUNDLER[]>(() => {
 			return Object.values(SUPPORTED_BUNDLER)
 		})
@@ -102,26 +97,23 @@ export const useBlockchainStore = defineStore(
 			})
 		})
 
-		const bundler = computed<Bundler>(() => {
-			const bundlerOptions = {
-				parseError: true,
-				entryPointVersion: selectedEntryPoint.value,
-			}
-
-			switch (selectedBundler.value) {
-				case SUPPORTED_BUNDLER.PIMLICO:
-					return new PimlicoBundler(chainIdBigInt.value, bundlerUrl.value, bundlerOptions)
-				case SUPPORTED_BUNDLER.ALCHEMY:
-					return new AlchemyBundler(chainIdBigInt.value, bundlerUrl.value, bundlerOptions)
-				default:
-					return new AlchemyBundler(chainIdBigInt.value, bundlerUrl.value, bundlerOptions)
-			}
+		const bundler = computed<ERC4337Bundler>(() => {
+			return new ERC4337Bundler(bundlerUrl.value)
 		})
-
-		const pmGetter = computed(() => new PublicPaymaster(ADDRESS.PublicPaymaster))
 
 		function switchChain(chainId: CHAIN_ID) {
 			selectedChainId.value = chainId
+		}
+
+		async function fetchGasPrice() {
+			switch (selectedBundler.value) {
+				case SUPPORTED_BUNDLER.PIMLICO:
+					return await fetchGasPricePimlico(getPimlicoUrl(selectedChainId.value))
+				case SUPPORTED_BUNDLER.ALCHEMY:
+					return await fetchGasPriceAlchemy(getAlchemyUrl(selectedChainId.value))
+				default:
+					return await fetchGasPriceAlchemy(getAlchemyUrl(selectedChainId.value))
+			}
 		}
 
 		return {
@@ -134,16 +126,14 @@ export const useBlockchainStore = defineStore(
 			bundlerUrl,
 			bundler,
 			supportedBundlers,
-			selectedEntryPoint,
 			selectedBundler,
 			selectedNode,
-			pmGetter,
 			supportedNodes,
 			supportedEntryPoints,
 			chainIdBigInt,
 			tenderlyClient,
-			switchEntryPoint,
 			switchChain,
+			fetchGasPrice,
 		}
 	},
 	{

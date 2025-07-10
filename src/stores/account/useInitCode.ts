@@ -1,11 +1,11 @@
-import { ValidationOption } from '@/stores/validation/validation'
+import { ValidationMethodData } from '@/lib/validations/ValidationMethod'
 import { defineStore, storeToRefs } from 'pinia'
 import { isSameAddress } from 'sendop'
 
 export type InitCodeData = {
 	address: string
 	initCode: string
-	vOption: ValidationOption
+	vMethod: ValidationMethodData
 }
 
 export const useInitCodeStore = defineStore(

@@ -1,6 +1,6 @@
 import { env } from '@/app/useSetupEnv'
 import { abiEncode, ADDRESS, getPermissionId, INTERFACES, isSameAddress } from 'sendop'
-import { SessionStruct } from 'sendop/dist/src/contract-types/TSmartSession'
+import { SessionStruct } from 'sendop/contract-types/SmartSession'
 
 export type SessionData = {
 	permissionId: string

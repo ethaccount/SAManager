@@ -3,13 +3,7 @@ import { useAccount } from '@/stores/account/useAccount'
 import type { CHAIN_ID } from '@/stores/blockchain/blockchain'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { JsonRpcProvider } from 'ethers'
-import {
-	ADDRESS,
-	isSameAddress,
-	TIERC20__factory,
-	TScheduledOrders__factory,
-	TScheduledTransfers__factory,
-} from 'sendop'
+import { ADDRESS, isSameAddress, IERC20__factory, ScheduledOrders__factory, ScheduledTransfers__factory } from 'sendop'
 import { decodeSwapExecutionData, decodeTransferExecutionData } from './jobs'
 
 export type TransferJobDetails = {
@@ -148,7 +142,7 @@ async function buildTokenInfoMap(
 	// Batch fetch token info from blockchain for remaining tokens
 	if (tokensToFetchFromBlockchain.size > 0) {
 		const tokenInfoPromises = Array.from(tokensToFetchFromBlockchain).map(async tokenAddress => {
-			const token = TIERC20__factory.connect(tokenAddress, client)
+			const token = IERC20__factory.connect(tokenAddress, client)
 			const [name, symbol, decimals] = await Promise.all([token.name(), token.symbol(), token.decimals()])
 			return { tokenAddress, name, symbol, decimals }
 		})
@@ -176,7 +170,7 @@ function isNativeToken(address: string): boolean {
 }
 
 export async function fetchTransferJobs(client: JsonRpcProvider, accountAddress: string) {
-	const scheduledTransfers = TScheduledTransfers__factory.connect(ADDRESS.ScheduledTransfers, client)
+	const scheduledTransfers = ScheduledTransfers__factory.connect(ADDRESS.ScheduledTransfers, client)
 
 	const jobCount = await getJobCount(scheduledTransfers, accountAddress)
 	if (jobCount === 0n) return []
@@ -240,7 +234,7 @@ export async function fetchTransferJobs(client: JsonRpcProvider, accountAddress:
 }
 
 export async function fetchSwapJobs(client: JsonRpcProvider, accountAddress: string) {
-	const scheduledOrders = TScheduledOrders__factory.connect(ADDRESS.ScheduledOrders, client)
+	const scheduledOrders = ScheduledOrders__factory.connect(ADDRESS.ScheduledOrders, client)
 
 	const jobCount = await getJobCount(scheduledOrders, accountAddress)
 	if (jobCount === 0n) return []

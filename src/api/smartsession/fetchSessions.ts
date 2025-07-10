@@ -1,10 +1,10 @@
 import { SCHEDULED_SWAP_ACTION_ID, SCHEDULED_TRANSFER_ACTION_ID, SessionData } from '@/lib/permissions/session'
-import { isSameAddress, TSmartSession } from 'sendop'
+import { isSameAddress, SmartSession } from 'sendop'
 
 // event SessionCreated(PermissionId permissionId, address account);
 // event SessionRemoved(PermissionId permissionId, address smartAccount);
 
-export async function fetchSessions(accountAddress: string, smartsession: TSmartSession): Promise<SessionData[]> {
+export async function fetchSessions(accountAddress: string, smartsession: SmartSession): Promise<SessionData[]> {
 	const [sessionCreatedEvents, sessionRemovedEvents] = await Promise.all([
 		smartsession.queryFilter(smartsession.filters.SessionCreated()),
 		smartsession.queryFilter(smartsession.filters.SessionRemoved()),

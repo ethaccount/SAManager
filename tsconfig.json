@@ -6,7 +6,7 @@
 		"lib": ["ESNext", "DOM", "DOM.Iterable"],
 		"skipLibCheck": true,
 
-		"moduleResolution": "node",
+		"moduleResolution": "bundler",
 		"esModuleInterop": true,
 		"allowImportingTsExtensions": true,
 		"resolveJsonModule": true,
@@ -21,7 +21,8 @@
 		"noFallthroughCasesInSwitch": true,
 		"baseUrl": ".",
 		"paths": {
-			"@/*": ["./src/*"]
+			"@/*": ["./src/*"],
+			"sendop/contract-types/*": ["./node_modules/sendop/src/contract-types/*"]
 		},
 		"noImplicitAny": false, // prevents error in router.ts when importing component
 		"types": ["vitest/globals"]

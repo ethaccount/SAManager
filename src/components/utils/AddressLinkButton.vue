@@ -4,7 +4,7 @@ import { ExternalLink } from 'lucide-vue-next'
 
 const props = withDefaults(
 	defineProps<{
-		address: string
+		address?: string | undefined
 		size?: 'xs' | 'sm' | 'md'
 	}>(),
 	{
@@ -38,7 +38,7 @@ const iconSize = computed(() => SIZES[props.size].icon)
 </script>
 
 <template>
-	<a v-if="externalLink" :href="externalLink" target="_blank">
+	<a v-if="address && externalLink" :href="externalLink" target="_blank">
 		<div :class="buttonSize" class="link">
 			<ExternalLink :class="iconSize" />
 		</div>

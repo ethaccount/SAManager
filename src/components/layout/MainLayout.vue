@@ -3,7 +3,11 @@ const route = useRoute()
 </script>
 
 <template>
-	<main class="mt-14 flex-1 container px-4 py-5">
+	<main v-if="route.name === 'browser'" class="mt-14 h-[calc(100vh-3.5rem)]">
+		<router-view />
+	</main>
+
+	<main v-else class="mt-14 flex-1 mx-auto w-full max-w-[1200px] px-4 py-5">
 		<SendLayout v-if="route.name === 'send-token' || route.name === 'send-raw'">
 			<router-view />
 		</SendLayout>
@@ -22,8 +26,4 @@ const route = useRoute()
 	</main>
 </template>
 
-<style lang="css" scoped>
-.container {
-	@apply mx-auto w-full max-w-[1200px] px-4;
-}
-</style>
+<style lang="css"></style>

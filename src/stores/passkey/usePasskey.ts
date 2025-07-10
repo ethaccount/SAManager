@@ -1,7 +1,7 @@
 import { env } from '@/app/useSetupEnv'
-import { PasskeyCredential } from '@/stores/passkey/passkey'
-import { createCredential, getCredential } from './passkeyNoRp'
+import { PasskeyCredential } from '@/stores/passkey/types'
 import { isBytes } from 'sendop'
+import { createCredential, getCredential } from './passkeyNoRp'
 
 export const usePasskeyStore = defineStore(
 	'usePasskeyStore',

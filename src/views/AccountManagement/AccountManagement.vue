@@ -1,11 +1,16 @@
 <script setup lang="ts">
+import { displayAccountName } from '@/lib/accounts'
 import { toRoute } from '@/lib/router'
 import { useGetCode } from '@/lib/useGetCode'
-import { displayAccountName } from '@/stores/account/account'
+import {
+	getVMethodIdentifier,
+	getVMethodName,
+	getVMethodType,
+	getVMethodValidatorAddress,
+} from '@/lib/validations/helpers'
 import { useAccount } from '@/stores/account/useAccount'
 import { displayChainName } from '@/stores/blockchain/blockchain'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { displayValidationIdentifier } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
 import { ArrowLeft, Loader2 } from 'lucide-vue-next'
 
@@ -131,22 +136,70 @@ const showSwitchToCorrectChain = computed(() => {
 			</div>
 
 			<div class="mt-4" v-else>
-				<!-- Validation Options -->
+				<!-- Validation Methods -->
 				<div class="space-y-4">
-					<div class="text-sm font-medium">Validation Options</div>
-					<div class="grid gap-1">
+					<div class="text-sm font-medium">Validation Methods</div>
+					<div class="grid gap-3">
 						<div
-							v-for="(vOption, index) in selectedAccount.vOptions"
+							v-for="(vMethod, index) in selectedAccount.vMethods"
 							:key="index"
-							class="group flex items-center justify-between py-2 px-3 bg-card border border-border/40 rounded-lg"
+							class="group py-3 px-4 bg-card border border-border/40 rounded-lg hover:border-border/60 transition-colors"
 						>
-							<div class="w-full flex items-center justify-between gap-3">
-								<div class="text-xs font-medium px-2.5 py-1 rounded-full bg-muted">
-									{{ vOption.type }}
+							<div class="w-full space-y-3">
+								<div class="flex items-center gap-2">
+									<div class="text-xs font-medium px-2.5 py-1 rounded-full bg-muted">
+										{{ getVMethodName(vMethod) }}
+									</div>
+									<div
+										class="text-xs px-2.5 py-1 rounded-full font-medium"
+										:class="
+											getVMethodType(vMethod) === 'PASSKEY'
+												? 'bg-blue-500/10 text-blue-500'
+												: 'bg-green-500/10 text-green-500'
+										"
+									>
+										{{ getVMethodType(vMethod) }}
+									</div>
 								</div>
-								<div class="font-mono text-xs text-muted-foreground flex items-center gap-2">
-									<span>{{ shortenAddress(displayValidationIdentifier(vOption)) }}</span>
-									<CopyButton :address="displayValidationIdentifier(vOption)" />
+								<div class="space-y-1">
+									<div
+										v-if="getVMethodValidatorAddress(vMethod)"
+										class="flex items-center gap-2 text-xs text-muted-foreground"
+									>
+										<span class="font-medium min-w-0">Validator:</span>
+										<div class="font-mono flex-1 truncate flex items-center gap-1">
+											<span>{{ shortenAddress(getVMethodValidatorAddress(vMethod)!) }}</span>
+											<CopyButton :address="getVMethodValidatorAddress(vMethod)" size="xs" />
+											<AddressLinkButton
+												:address="getVMethodValidatorAddress(vMethod)"
+												size="xs"
+											/>
+										</div>
+									</div>
+									<div
+										v-if="getVMethodType(vMethod) === 'EOA-Owned'"
+										class="flex items-center gap-2 text-xs text-muted-foreground"
+									>
+										<span class="font-medium min-w-0">Owner:</span>
+										<div class="font-mono flex-1 truncate flex items-center gap-1">
+											<span>{{ shortenAddress(getVMethodIdentifier(vMethod)) }}</span>
+											<CopyButton :address="getVMethodIdentifier(vMethod)" size="xs" />
+											<AddressLinkButton :address="getVMethodIdentifier(vMethod)" size="xs" />
+										</div>
+									</div>
+									<div
+										v-if="
+											getVMethodType(vMethod) === 'PASSKEY' &&
+											vMethod.name === 'WebAuthnValidator' &&
+											vMethod.username
+										"
+										class="flex items-center gap-2 text-xs text-muted-foreground"
+									>
+										<span class="font-medium min-w-0">Username:</span>
+										<span class="flex-1 truncate">
+											{{ vMethod.username }}
+										</span>
+									</div>
 								</div>
 							</div>
 						</div>

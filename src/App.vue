@@ -6,11 +6,14 @@ import { useSetupPasskey } from '@/app/useSetupPasskey'
 import { useSetupVueDapp } from '@/app/useSetupVueDapp'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
-import { useSigner } from '@/stores/validation/useSigner'
+import { useSigner } from '@/stores/useSigner'
 import { VueDappModal } from '@vue-dapp/modal'
 import { ModalsContainer } from 'vue-final-modal'
 import { Toaster } from 'vue-sonner'
 import { useBackend } from './stores/useBackend'
+import { useAccount } from './stores/account/useAccount'
+
+const route = useRoute()
 
 const { isEOAWalletConnected } = useEOAWallet()
 const { isLogin } = usePasskey()
@@ -23,6 +26,7 @@ useSetupPasskey()
 useSetupEnv()
 
 const { checkBackendHealth } = useBackend()
+const { accountVMethods } = useAccount()
 
 onMounted(async () => {
 	await checkBackendHealth()
@@ -30,6 +34,19 @@ onMounted(async () => {
 
 // Auto-select signer when connected
 watchImmediate([isEOAWalletConnected, isLogin], ([eoaWalletConnected, passkeyConnected]) => {
+	// select the signer for selected account: passkey > eoa
+	if (accountVMethods.value.length) {
+		const passkeyMethod = accountVMethods.value.find(vMethod => vMethod.signerType === 'Passkey')
+		if (passkeyMethod && passkeyConnected) {
+			selectSigner('Passkey')
+			return
+		}
+		const eoaMethod = accountVMethods.value.find(vMethod => vMethod.signerType === 'EOAWallet')
+		if (eoaMethod && eoaWalletConnected) {
+			selectSigner('EOAWallet')
+			return
+		}
+	}
 	if (eoaWalletConnected && !passkeyConnected) {
 		selectSigner('EOAWallet')
 	} else if (!eoaWalletConnected && passkeyConnected) {
@@ -50,7 +67,7 @@ const mode = useColorMode()
 	<Header />
 	<MainLayout />
 
-	<AppHelp class="fixed bottom-4 left-4" />
+	<AppHelp v-if="route.name !== 'browser'" class="fixed bottom-4 left-4" />
 
 	<VueDappModal :dark="mode === 'dark'" autoConnect />
 	<ModalsContainer />

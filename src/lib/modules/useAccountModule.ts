@@ -1,8 +1,8 @@
-import { fetchModules } from '@/lib/module-management/fetch-modules'
-import { SUPPORTED_MODULES } from '@/lib/module-management/module-constants'
+import { fetchModules } from '@/lib/modules/fetch-modules'
+import { SUPPORTED_MODULES } from '@/lib/modules/supported-modules'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { ERC7579_MODULE_TYPE, isSameAddress, TIERC7579Account__factory } from 'sendop'
+import { ERC7579_MODULE_TYPE, isSameAddress, IERC7579Account__factory } from 'sendop'
 
 export type ModuleRecordModule = { id: string; address: string }
 export type ModuleRecord = Record<ERC7579_MODULE_TYPE, ModuleRecordModule[]>
@@ -33,6 +33,7 @@ export function useAccountModule() {
 	async function fetchAccountModules() {
 		loading.value = true
 		error.value = null
+		moduleRecord.value = getDefaultModules()
 
 		try {
 			// throw new Error('test')
@@ -56,7 +57,7 @@ export function useAccountModule() {
 
 			// check if available modules are installed
 			for (const module of Object.values(SUPPORTED_MODULES)) {
-				const account = TIERC7579Account__factory.connect(accountAddress, client.value)
+				const account = IERC7579Account__factory.connect(accountAddress, client.value)
 				const isInstalled = await account.isModuleInstalled(module.type, module.address, '0x')
 
 				// if installed, and module by type doesn't have it, add it

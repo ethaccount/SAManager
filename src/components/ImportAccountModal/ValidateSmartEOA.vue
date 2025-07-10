@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { ADDRESS, getSmartEOADelegateAddress, isSameAddress } from 'sendop'
-import { ref, onMounted } from 'vue'
-import { useImportAccountModal } from '@/stores/useImportAccountModal'
-import { AccountId } from '@/stores/account/account'
 import { Button } from '@/components/ui/button'
-import { Loader2, CheckCircle2, XCircle, ArrowLeft } from 'lucide-vue-next'
+import { AccountId } from '@/lib/accounts'
+import { displayChainName } from '@/stores/blockchain/blockchain'
+import { useBlockchain } from '@/stores/blockchain/useBlockchain'
+import { useImportAccountModal } from '@/stores/useImportAccountModal'
+import { ArrowLeft, CheckCircle2, Loader2, XCircle } from 'lucide-vue-next'
+import { ADDRESS, getSmartEOADelegateAddress, isSameAddress } from 'sendop'
+import { onMounted, ref } from 'vue'
 
 const props = defineProps<{
 	address: () => string
@@ -13,7 +14,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{ (e: 'confirm', accountId: AccountId): void }>()
 
-const { client } = useBlockchain()
+const { client, selectedChainId } = useBlockchain()
 const importAccountModal = useImportAccountModal()
 
 const validationState = ref<'loading' | 'success' | 'failed'>('loading')
@@ -26,13 +27,14 @@ onMounted(async () => {
 
 		if (!delegateAddress) {
 			validationState.value = 'failed'
-			errorMessage.value = 'Not a Smart EOA account'
+			errorMessage.value = `Not a Smart EOA on ${displayChainName(selectedChainId.value)}`
 			return
 		}
 
 		// Check if it's a Simple7702Account
 		if (isSameAddress(delegateAddress, ADDRESS.Simple7702AccountV08)) {
 			validationState.value = 'success'
+			onClickConfirm()
 		} else {
 			// TODO: Add logic to check if the accountId is supported
 			validationState.value = 'failed'

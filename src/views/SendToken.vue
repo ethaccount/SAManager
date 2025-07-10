@@ -3,10 +3,11 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { TokenTransfer, getTokens, getToken, NATIVE_TOKEN_ADDRESS } from '@/lib/token'
+import { getToken, getTokens, NATIVE_TOKEN_ADDRESS, TokenTransfer } from '@/lib/token'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { useTxModal } from '@/stores/useTxModal'
+import { shortenAddress } from '@vue-dapp/core'
 import { isAddress, parseUnits } from 'ethers'
 import { Eraser, Plus, X, Zap } from 'lucide-vue-next'
 import { INTERFACES } from 'sendop'
@@ -74,6 +75,7 @@ const onClickReview = () => {
 				throw new Error(`Token ${t.tokenAddress} not found`)
 			}
 			return {
+				description: `Transfer ${t.amount} ${token.symbol} to ${shortenAddress(t.recipient)}`,
 				to: token.address,
 				value: 0n,
 				data: INTERFACES.IERC20.encodeFunctionData('transfer', [
@@ -85,14 +87,14 @@ const onClickReview = () => {
 	})
 }
 
-const { isAccountConnected } = useAccount()
+const { isAccountAccessible } = useAccount()
 
 const reviewDisabled = computed(() => {
-	return !isAccountConnected.value || !isValidTransfers.value || transfers.value.length === 0
+	return !isAccountAccessible.value || !isValidTransfers.value || transfers.value.length === 0
 })
 
 const reviewButtonText = computed(() => {
-	if (!isAccountConnected.value) return 'Connect your account to review'
+	if (!isAccountAccessible.value) return 'Connect your account to review'
 	if (!isValidTransfers.value) return 'Invalid transfers'
 	return 'Review Transfers'
 })
@@ -185,7 +187,7 @@ const reviewButtonText = computed(() => {
 								size="sm"
 								@click="onClickSendTestToken(index)"
 								class="px-3 py-1 text-xs border-border/50 hover:border-primary hover:bg-primary/5"
-								:disabled="!isAccountConnected"
+								:disabled="!isAccountAccessible"
 							>
 								<Zap class="mr-1 h-3 w-3" />
 								Send Test Token

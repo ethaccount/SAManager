@@ -1,20 +1,22 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { getErrMsg } from '@/lib/error'
+import { displayAccountName } from '@/lib/accounts/helpers'
+import { addressToName } from '@/lib/addressToName'
+import { getErrorChainMessage, getErrorMsg, getEthersErrorMsg, isEthersError } from '@/lib/error'
 import { useGetCode } from '@/lib/useGetCode'
-import { displayAccountName } from '@/stores/account/account'
+import { deserializeValidationMethod } from '@/lib/validations'
 import { useAccount } from '@/stores/account/useAccount'
 import { displayChainName } from '@/stores/blockchain/blockchain'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
+import { useSigner } from '@/stores/useSigner'
 import { TransactionStatus, TxModalExecution, useTxModal } from '@/stores/useTxModal'
-import { useSigner } from '@/stores/validation/useSigner'
 import { shortenAddress } from '@vue-dapp/core'
-import { formatEther } from 'ethers'
+import { formatEther, isError } from 'ethers'
 import { CircleDot, ExternalLink, Loader2, X } from 'lucide-vue-next'
-import { isSameAddress } from 'sendop'
+import { extractHexString, isSameAddress, parseContractError, replaceHexString } from 'sendop'
 import { VueFinalModal } from 'vue-final-modal'
 import { toast } from 'vue-sonner'
 
@@ -43,8 +45,8 @@ function onClickClose() {
 }
 
 const { wallet, isConnected } = useEOAWallet()
-const { selectedChainId, explorerUrl, selectedEntryPoint } = useBlockchain()
-const { selectedAccount, selectedAccountInitCodeData, isAccountConnected } = useAccount()
+const { selectedChainId, explorerUrl } = useBlockchain()
+const { selectedAccount, selectedAccountInitCodeData, isAccountAccessible } = useAccount()
 const { selectSigner, selectedSigner } = useSigner()
 const { selectedCredentialDisplay, isLogin } = usePasskey()
 
@@ -66,7 +68,7 @@ const { isDeployed, getCode, loading: isLoadingCode } = useGetCode()
 
 onMounted(async () => {
 	// Check if account is connected
-	if (!isAccountConnected.value) {
+	if (!isAccountAccessible.value) {
 		emit('close')
 		toast.error('Account not connected')
 		return
@@ -79,11 +81,13 @@ onMounted(async () => {
 		nextTick(() => {
 			if (!isDeployed.value && !selectedAccountInitCodeData.value) {
 				emit('close')
-				toast.error('Account not deployed and no init code provided')
-				return
+				throw new Error('Account not deployed and no init code provided')
 			}
 		})
 	}
+
+	// auto click estimate
+	await onClickEstimate()
 })
 
 onUnmounted(() => {
@@ -100,6 +104,22 @@ function toggleExecutionExpansion(index: number) {
 		expandedExecutions.value.delete(index)
 	} else {
 		expandedExecutions.value.add(index)
+	}
+}
+
+function handleError(e: unknown, prefix?: string) {
+	console.error(getErrorChainMessage(e, prefix))
+	if (isEthersError(e)) {
+		const err = getEthersErrorMsg(e, prefix)
+		const errHex = extractHexString(err)
+		if (errHex && parseContractError(errHex)) {
+			error.value = replaceHexString(err, parseContractError(errHex, true))
+		} else {
+			error.value = err
+		}
+		return
+	} else {
+		error.value = getErrorMsg(e, prefix)
 	}
 }
 
@@ -125,8 +145,7 @@ async function onClickEstimate() {
 		}
 		status.value = TransactionStatus.Sign
 	} catch (e: unknown) {
-		console.error(e)
-		error.value = getErrMsg(e, 'Failed to estimate gas')
+		handleError(e, 'Failed to estimate gas')
 		status.value = TransactionStatus.Estimation
 	}
 }
@@ -138,8 +157,24 @@ async function onClickSign() {
 		await handleSign()
 		status.value = TransactionStatus.Send
 	} catch (e: unknown) {
-		console.error(e)
-		error.value = getErrMsg(e, 'Failed to sign transaction')
+		const prefix = 'Failed to sign user operation'
+		console.error(getErrorChainMessage(e, prefix))
+
+		let msg = ''
+
+		if (isEthersError(e)) {
+			if (isError(e, 'ACTION_REJECTED')) {
+				msg = '' // User rejected the operation on browser wallet. Don't show error message
+			} else {
+				msg = getEthersErrorMsg(e, prefix)
+			}
+		} else if (e instanceof Error && e.message.includes('The operation either timed out or was not allowed')) {
+			msg = '' // User rejected the operation on passkey. Don't show error message
+		} else {
+			msg = getErrorMsg(e, prefix)
+		}
+
+		error.value = msg
 		status.value = TransactionStatus.Sign
 	}
 }
@@ -161,8 +196,7 @@ async function onClickSend() {
 			}
 		})
 	} catch (e: unknown) {
-		console.error(e)
-		error.value = getErrMsg(e, 'Failed to send transaction')
+		handleError(e, 'Failed to send user operation')
 		status.value = TransactionStatus.Estimation
 	}
 }
@@ -180,7 +214,8 @@ watch(status, (newStatus, oldStatus) => {
  */
 const txLink = computed(() => {
 	if (!userOp.value || !opReceipt.value) return null
-	const sender = userOp.value.sender
+	const op = userOp.value
+	const sender = op.preview().sender
 	const foundLog = opReceipt.value.logs.find(log => isSameAddress(log.address, sender))
 	if (!foundLog) {
 		return `${explorerUrl.value}/tx/${opReceipt.value.receipt.transactionHash}`
@@ -191,18 +226,23 @@ const txLink = computed(() => {
 const showEOAWalletValidationMethod = computed(() => {
 	if (!selectedAccount.value) return false
 	if (!isConnected.value) return false
-	return selectedAccount.value.vOptions.some(v => v.type === 'EOA-Owned' || v.type === 'SmartEOA')
+	return selectedAccount.value.vMethods.some(v => deserializeValidationMethod(v).signerType === 'EOAWallet')
 })
 
 const showPasskeyValidationMethod = computed(() => {
 	if (!selectedAccount.value) return false
 	if (!isLogin.value) return false
-	return selectedAccount.value.vOptions.some(v => v.type === 'Passkey')
+	return selectedAccount.value.vMethods.some(v => deserializeValidationMethod(v).signerType === 'Passkey')
 })
 
 // Computed property to determine if modal can be closed
 const canClose = computed(() => {
 	return status.value !== TransactionStatus.Sending && status.value !== TransactionStatus.Pending
+})
+
+const entryPointAddress = computed(() => {
+	if (!userOp.value) return null
+	return userOp.value.entryPointAddress
 })
 </script>
 
@@ -273,8 +313,12 @@ const canClose = computed(() => {
 						<!-- EOA-Owned or SmartEOA -->
 						<div
 							v-if="showEOAWalletValidationMethod"
-							class="flex flex-col p-2.5 border rounded-lg transition-all cursor-pointer"
-							@click="selectSigner('EOAWallet')"
+							class="flex flex-col p-2.5 border rounded-lg transition-all"
+							:class="{
+								'cursor-pointer': status === TransactionStatus.Estimation,
+								'opacity-50 cursor-not-allowed': status !== TransactionStatus.Estimation,
+							}"
+							@click="status === TransactionStatus.Estimation && selectSigner('EOAWallet')"
 						>
 							<div class="space-y-1">
 								<div class="flex justify-between items-center">
@@ -300,8 +344,11 @@ const canClose = computed(() => {
 						<div
 							v-if="showPasskeyValidationMethod"
 							class="flex flex-col p-2.5 border rounded-lg transition-all"
-							:class="{ 'cursor-pointer': selectedSigner?.type !== 'Passkey' }"
-							@click="selectSigner('Passkey')"
+							:class="{
+								'cursor-pointer': status === TransactionStatus.Estimation,
+								'opacity-50 cursor-not-allowed': status !== TransactionStatus.Estimation,
+							}"
+							@click="status === TransactionStatus.Estimation && selectSigner('Passkey')"
 						>
 							<div class="space-y-1">
 								<div class="flex justify-between items-center">
@@ -357,9 +404,9 @@ const canClose = computed(() => {
 						</div>
 
 						<!-- Entry Point Version -->
-						<div class="flex items-center justify-between text-sm">
-							<span class="text-muted-foreground">EntryPoint Version</span>
-							<span class="text-sm">{{ selectedEntryPoint }}</span>
+						<div v-if="entryPointAddress" class="flex items-center justify-between text-sm">
+							<span class="text-muted-foreground">EntryPoint</span>
+							<span class="text-sm">{{ addressToName(entryPointAddress) }}</span>
 						</div>
 
 						<!-- Deployment Status -->
@@ -512,7 +559,7 @@ const canClose = computed(() => {
 						<!-- Send Button -->
 						<Button
 							v-if="
-								(userOp?.signature && status === TransactionStatus.Send) ||
+								status === TransactionStatus.Send ||
 								status === TransactionStatus.Sending ||
 								status === TransactionStatus.Pending
 							"
@@ -526,8 +573,8 @@ const canClose = computed(() => {
 								status === TransactionStatus.Sending
 									? 'Sending...'
 									: status === TransactionStatus.Pending
-									? 'Pending...'
-									: 'Send Transaction'
+										? 'Pending...'
+										: 'Send Transaction'
 							}}
 						</Button>
 					</div>

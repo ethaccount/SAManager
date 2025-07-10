@@ -1,20 +1,11 @@
 import TxModal from '@/components/TxModal.vue'
+import { UserOpDirector } from '@/lib/UserOpDirector'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { defineStore, storeToRefs } from 'pinia'
-import {
-	ADDRESS,
-	createUserOp,
-	estimateUserOp,
-	Execution,
-	getPaymasterData,
-	PublicPaymaster,
-	sendUserOp,
-	signUserOp,
-	UserOp,
-	UserOpReceipt,
-} from 'sendop'
+import { Execution, PublicPaymaster, UserOpBuilder, UserOperationReceipt } from 'sendop'
 import { useModal } from 'vue-final-modal'
+import { useSigner } from './useSigner'
 
 export enum TransactionStatus {
 	Estimation = 'Estimation',
@@ -56,8 +47,9 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 		open()
 	}
 
-	const { bundler } = useBlockchain()
-	const { selectedAccount, opGetter } = useAccount()
+	const { bundler, selectedChainId, client, fetchGasPrice } = useBlockchain()
+	const { selectedAccount, accountVMethods } = useAccount()
+	const { selectedSignerType } = useSigner()
 
 	const paymasters = [
 		{ id: 'none', name: 'No Paymaster', description: 'Pay gas fees with native tokens' },
@@ -76,70 +68,93 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 
 	const canSign = computed(() => {
 		if (status.value !== TransactionStatus.Sign) return false
-		return userOp.value !== null
+		return true
 	})
 
 	const canSend = computed(() => {
 		if (status.value !== TransactionStatus.Send) return false
-		return userOp.value !== null && userOp.value.signature !== undefined
+		return true
 	})
 
-	const userOp = ref<UserOp | null>(null)
+	const userOp = ref<UserOpBuilder | null>(null)
 	const opHash = ref<string | null>(null)
-	const opReceipt = ref<UserOpReceipt | null>(null)
-
-	const pmGetter = computed(() => {
-		switch (selectedPaymaster.value) {
-			case 'public':
-				return new PublicPaymaster(ADDRESS.PublicPaymaster)
-			default:
-				return undefined
-		}
-	})
+	const opReceipt = ref<UserOperationReceipt | null>(null)
 
 	async function handleEstimate(executions: Execution[], initCode?: string) {
-		if (!opGetter.value || !selectedAccount.value) {
-			throw new Error('handleEstimate: Account not selected')
+		if (!selectedAccount.value) {
+			throw new Error('[handleEstimate] Account not selected')
+		}
+
+		if (!selectedSignerType.value) {
+			throw new Error('[handleEstimate] No signer selected')
 		}
 
 		if (executions.length === 0 && !initCode) {
-			throw new Error('handleEstimate: No executions and no init code provided')
+			throw new Error('[handleEstimate] No executions and no init code provided')
 		}
 
-		let _userOp: UserOp | null = null
+		const op = new UserOpBuilder({
+			chainId: selectedChainId.value,
+			bundler: bundler.value,
+		})
 
-		try {
-			_userOp = await createUserOp(bundler.value, executions, opGetter.value, initCode)
-		} catch (e: unknown) {
-			throw new Error('handleEstimate: Failed to create user operation', { cause: e })
+		await UserOpDirector.buildAccountExecutions({
+			op,
+			accountId: selectedAccount.value.accountId,
+			vMethods: accountVMethods.value,
+			signerType: selectedSignerType.value,
+			accountAddress: selectedAccount.value.address,
+			client: client.value,
+			executions,
+		})
+
+		if (initCode) {
+			op.setFactory({
+				factory: initCode.slice(0, 42),
+				factoryData: '0x' + initCode.slice(42),
+			})
 		}
 
-		const estimation = await estimateUserOp(_userOp, bundler.value, opGetter.value, pmGetter.value)
-
-		_userOp = estimation.userOp
-		if (!estimation.pmIsFinal && pmGetter.value) {
-			_userOp = await getPaymasterData(_userOp, pmGetter.value)
+		if (selectedPaymaster.value === 'public') {
+			op.setPaymaster({
+				paymaster: await PublicPaymaster.getPaymaster(),
+				paymasterData: await PublicPaymaster.getPaymasterData(),
+				paymasterPostOpGasLimit: await PublicPaymaster.getPaymasterPostOpGasLimit(),
+			})
 		}
 
-		userOp.value = _userOp
+		op.setGasPrice(await fetchGasPrice())
+
+		await op.estimateGas()
+
+		// Notice: markRaw is used to prevent TypeError: Cannot read from private field
+		// similar issue: https://github.com/vuejs/core/issues/8245
+		userOp.value = markRaw(op)
 	}
 
 	async function handleSign() {
-		if (!userOp.value || !opGetter.value || !selectedAccount.value) {
-			throw new Error('handleSign: Transaction not prepared')
+		if (!userOp.value) {
+			throw new Error('[handleSign] User operation not built')
 		}
-		userOp.value = await signUserOp(userOp.value, bundler.value, opGetter.value)
+
+		const { selectedSigner } = useSigner()
+
+		if (!selectedSigner.value) {
+			throw new Error('[handleSign] No signer selected')
+		}
+
+		const signature = await selectedSigner.value.sign(userOp.value as UserOpBuilder)
+		userOp.value.setSignature(signature)
+		// Notice to formate signature if needed
 	}
 
 	async function handleSend() {
 		if (!userOp.value) {
-			throw new Error('handleSend: Transaction not signed')
+			throw new Error('[handleSend] User operation not built')
 		}
+		const op = userOp.value
 
-		// Send the user operation
-		const op = await sendUserOp(bundler.value, userOp.value)
-
-		opHash.value = op.hash
+		await op.send()
 
 		// Wait for the transaction to be mined
 		status.value = TransactionStatus.Pending

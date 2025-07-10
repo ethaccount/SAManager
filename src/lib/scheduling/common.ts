@@ -1,5 +1,6 @@
 import { findTrustedAttesters } from '@/api/registry'
-import { AccountId, ImportedAccount } from '@/stores/account/account'
+import { AccountId } from '@/lib/accounts'
+import { ImportedAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBackend } from '@/stores/useBackend'
 import { TxModalExecution } from '@/stores/useTxModal'
@@ -8,8 +9,8 @@ import {
 	ADDRESS,
 	ERC7579_MODULE_TYPE,
 	RHINESTONE_ATTESTER_ADDRESS,
-	TIERC7579Account__factory,
-	TRegistry__factory,
+	IERC7579Account__factory,
+	Registry__factory,
 } from 'sendop'
 
 export const DEFAULT_FREQUENCY = '3min'
@@ -76,16 +77,16 @@ export function useReviewButton(
 	isLoading: Ref<boolean>,
 	actionType: 'transfer' | 'swap',
 ) {
-	const { isAccountConnected } = useAccount()
+	const { isAccountAccessible } = useAccount()
 	const { isBackendHealthy } = useBackend()
 
 	const reviewDisabled = computed(() => {
-		return !isAccountConnected.value || !isValid.value || !isBackendHealthy.value
+		return !isAccountAccessible.value || !isValid.value || !isBackendHealthy.value
 	})
 
 	const reviewButtonText = computed(() => {
 		if (!isBackendHealthy.value) return 'Backend service is unavailable'
-		if (!isAccountConnected.value) return 'Connect your account to review'
+		if (!isAccountAccessible.value) return 'Connect your account to review'
 		if (!isValid.value) return `Invalid scheduled ${actionType}`
 		return `Review schedule ${actionType}`
 	})
@@ -120,7 +121,7 @@ export async function checkBaseModuleStatus(
 	let isSmartSessionInstalled = false
 
 	if (isDeployed) {
-		const account = TIERC7579Account__factory.connect(importedAccount.address, client)
+		const account = IERC7579Account__factory.connect(importedAccount.address, client)
 
 		// Check if SmartSession module is installed
 		isSmartSessionInstalled = await account.isModuleInstalled(
@@ -162,7 +163,7 @@ export function buildRhinestoneAttesterExecutions(isRhinestoneAttesterTrusted: b
 		{
 			to: ADDRESS.Registry,
 			value: 0n,
-			data: TRegistry__factory.createInterface().encodeFunctionData('trustAttesters', [
+			data: Registry__factory.createInterface().encodeFunctionData('trustAttesters', [
 				1,
 				[RHINESTONE_ATTESTER_ADDRESS],
 			]),

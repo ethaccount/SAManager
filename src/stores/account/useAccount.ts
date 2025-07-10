@@ -1,177 +1,109 @@
-import { AccountId, ImportedAccount, SUPPORTED_ACCOUNTS } from '@/stores/account/account'
+import { isModularAccount } from '@/lib/accounts'
+import { ValidationMethod } from '@/lib/validations'
+import { deserializeValidationMethod } from '@/lib/validations/helpers'
+import { ImportedAccount } from '@/stores/account/account'
 import { InitCodeData, useInitCode } from '@/stores/account/useInitCode'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { signMessage } from '@/stores/passkey/passkey'
-import { usePasskey } from '@/stores/passkey/usePasskey'
-import { useEOAWallet } from '@/stores/useEOAWallet'
-import { useSigner } from '@/stores/validation/useSigner'
-import { SUPPORTED_VALIDATION_OPTIONS } from '@/stores/validation/validation'
-import {
-	EOAValidator,
-	ERC7579Validator,
-	isSameAddress,
-	KernelV3Account,
-	NexusAccount,
-	Safe7579Account,
-	Simple7702Account,
-	WebAuthnValidator,
-} from 'sendop'
+import { useSigner } from '@/stores/useSigner'
+import { JSONParse, JSONStringify } from 'json-with-bigint'
+import { isSameAddress } from 'sendop'
 
-export const useAccountStore = defineStore(
-	'useAccountStore',
-	() => {
-		const { initCodeList, hasInitCode } = useInitCode()
+const SELECTED_ACCOUNT_STORAGE_KEY = 'samanager-selected-account'
 
-		const selectedAccount = ref<ImportedAccount | null>(null)
+export const useAccountStore = defineStore('useAccountStore', () => {
+	const { initCodeList, hasInitCode } = useInitCode()
+	const { canSign } = useSigner()
+	const { selectedChainId } = useBlockchain()
 
-		const isChainIdMatching = computed(() => {
-			const { selectedChainId } = useBlockchain()
-			return selectedChainId.value === selectedAccount.value?.chainId
-		})
+	const selectedAccount = ref<ImportedAccount | null>(loadSelectedAccountFromStorage())
 
-		const isAccountConnected = computed(() => {
-			if (!selectedAccount.value) return false
-			// check if the chainId of the selected account is the same as the selected chainId
-			const { selectedChainId } = useBlockchain()
-			if (selectedAccount.value.chainId !== selectedChainId.value) return false
+	// Watch for changes and sync to localStorage
+	watchDeep(selectedAccount, newAccount => {
+		saveSelectedAccountToStorage(newAccount)
+	})
 
-			return useSigner().isSignerEligibleForValidation(selectedAccount.value.vOptions)
-		})
+	const isChainIdMatching = computed(() => {
+		return selectedChainId.value === selectedAccount.value?.chainId
+	})
 
-		const isModular = computed(() => {
-			if (!selectedAccount.value) return false
-			return SUPPORTED_ACCOUNTS[selectedAccount.value.accountId].isModular
-		})
+	const accountVMethods = computed<ValidationMethod[]>(() => {
+		if (!selectedAccount.value) return []
+		if (!selectedAccount.value.vMethods) return []
+		return selectedAccount.value.vMethods.map(vMethod => deserializeValidationMethod(vMethod))
+	})
 
-		const isSmartEOA = computed(() => {
-			if (!selectedAccount.value) return false
-			return selectedAccount.value.category === 'Smart EOA'
-		})
+	const isAccountAccessible = computed(() => {
+		if (!selectedAccount.value) return false
+		if (selectedAccount.value.chainId !== selectedChainId.value) return false
+		return accountVMethods.value.some(canSign)
+	})
 
-		const isCrossChain = computed<boolean>(() => {
-			const account = selectedAccount.value
-			if (!account) return false
-			return checkIsCrossChain(account)
-		})
+	const isModular = computed(() => {
+		if (!selectedAccount.value) return false
+		return isModularAccount(selectedAccount.value.accountId)
+	})
 
-		function checkIsCrossChain(account: ImportedAccount) {
-			if (account.category !== 'Smart Account') return false
-			return hasInitCode(account.address)
-		}
+	const isSmartEOA = computed(() => {
+		if (!selectedAccount.value) return false
+		return selectedAccount.value.category === 'Smart EOA'
+	})
 
-		const selectedAccountInitCodeData = computed<InitCodeData | null>(() => {
-			const account = selectedAccount.value
-			if (!account) return null
-			return initCodeList.value.find(i => isSameAddress(i.address, account.address)) || null
-		})
+	const isCrossChain = computed<boolean>(() => {
+		const account = selectedAccount.value
+		if (!account) return false
+		return checkIsCrossChain(account)
+	})
 
-		const erc7579Validator = computed<ERC7579Validator | null>(() => {
-			const { selectedSigner } = useSigner()
-			if (!isAccountConnected.value) return null
-			if (!selectedSigner.value) return null
-			if (!isModular.value) return null
-			if (!selectedAccount.value) return null
+	function checkIsCrossChain(account: ImportedAccount) {
+		if (account.category !== 'Smart Account') return false
+		return hasInitCode(account.address)
+	}
 
-			switch (selectedSigner.value.type) {
-				case 'EOAWallet':
-					const { signer } = useEOAWallet()
-					if (!signer.value) {
-						return null
-					}
-					return new EOAValidator({
-						address: SUPPORTED_VALIDATION_OPTIONS['EOA-Owned'].validatorAddress,
-						signer: signer.value,
-					})
-				case 'Passkey':
-					const { isLogin } = usePasskey()
-					if (!isLogin.value) {
-						return null
-					}
-					return new WebAuthnValidator({
-						address: SUPPORTED_VALIDATION_OPTIONS['Passkey'].validatorAddress,
-						signMessage: signMessage,
-					})
-				default:
-					return null
-			}
-		})
+	const selectedAccountInitCodeData = computed<InitCodeData | null>(() => {
+		const account = selectedAccount.value
+		if (!account) return null
+		return initCodeList.value.find(i => isSameAddress(i.address, account.address)) || null
+	})
 
-		const opGetter = computed(() => {
-			if (!selectedAccount.value || !isAccountConnected.value) return null
-
-			const { client, bundler } = useBlockchain()
-
-			switch (selectedAccount.value.accountId) {
-				case AccountId['kernel.advanced.v0.3.1']:
-					if (!erc7579Validator.value) {
-						return null
-					}
-					return new KernelV3Account({
-						address: selectedAccount.value.address,
-						client: client.value,
-						bundler: bundler.value,
-						validator: erc7579Validator.value,
-					})
-				case AccountId['biconomy.nexus.1.0.2']:
-					if (!erc7579Validator.value) {
-						return null
-					}
-					return new NexusAccount({
-						address: selectedAccount.value.address,
-						client: client.value,
-						bundler: bundler.value,
-						validator: erc7579Validator.value,
-					})
-				case AccountId['rhinestone.safe7579.v1.0.0']:
-					if (!erc7579Validator.value) {
-						return null
-					}
-					return new Safe7579Account({
-						address: selectedAccount.value.address,
-						client: client.value,
-						bundler: bundler.value,
-						validator: erc7579Validator.value,
-					})
-				case AccountId['infinitism.Simple7702Account.0.8.0']:
-					const { signer } = useEOAWallet()
-					if (!signer.value) {
-						return null
-					}
-					return new Simple7702Account({
-						address: selectedAccount.value.address,
-						client: client.value,
-						bundler: bundler.value,
-						signer: signer.value,
-					})
-				default:
-					throw new Error(`opGetter: Unsupported accountId: ${selectedAccount.value.accountId}`)
-			}
-		})
-
-		return {
-			selectedAccount,
-			selectedAccountInitCodeData,
-			opGetter,
-			isCrossChain,
-			isAccountConnected,
-			erc7579Validator,
-			isModular,
-			isSmartEOA,
-			isChainIdMatching,
-			checkIsCrossChain,
-		}
-	},
-	{
-		persist: {
-			pick: ['selectedAccount'],
-		},
-	},
-)
+	return {
+		selectedAccount,
+		selectedAccountInitCodeData,
+		accountVMethods,
+		isCrossChain,
+		isAccountAccessible,
+		isModular,
+		isSmartEOA,
+		isChainIdMatching,
+		checkIsCrossChain,
+	}
+})
 
 export function useAccount() {
 	const store = useAccountStore()
 	return {
 		...store,
 		...storeToRefs(store),
+	}
+}
+
+function loadSelectedAccountFromStorage(): ImportedAccount | null {
+	try {
+		const stored = localStorage.getItem(SELECTED_ACCOUNT_STORAGE_KEY)
+		return stored ? JSONParse(stored) : null
+	} catch (error) {
+		console.error('Failed to load selected account from localStorage:', error)
+		return null
+	}
+}
+
+function saveSelectedAccountToStorage(account: ImportedAccount | null) {
+	try {
+		if (account) {
+			localStorage.setItem(SELECTED_ACCOUNT_STORAGE_KEY, JSONStringify(account))
+		} else {
+			localStorage.removeItem(SELECTED_ACCOUNT_STORAGE_KEY)
+		}
+	} catch (error) {
+		console.error('Failed to save selected account to localStorage:', error)
 	}
 }

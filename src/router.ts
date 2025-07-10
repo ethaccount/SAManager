@@ -15,6 +15,10 @@ const router = createRouter({
 							path: '/:chainId/test',
 							children: [
 								{
+									path: '/:chainId/test/test',
+									component: () => import('@/views/test/Test.vue'),
+								},
+								{
 									path: '/:chainId/test/connect',
 									component: () => import('@/views/test/Connect.vue'),
 								},
@@ -87,6 +91,12 @@ const router = createRouter({
 							path: '/:chainId/scheduling/jobs',
 							name: 'scheduling-jobs',
 							component: () => import('@/views/ScheduledJobs.vue'),
+						},
+						// Browser
+						{
+							path: '/:chainId/browser',
+							name: 'browser',
+							component: () => import('@/views/DappBrowser.vue'),
 						},
 					],
 				},

@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { displayAccountName } from '@/lib/accounts/helpers'
 import { toRoute } from '@/lib/router'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
-import { displayAccountName, ImportedAccount } from '@/stores/account/account'
+import { ImportedAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useAccounts } from '@/stores/account/useAccounts'
 import { useInitCode } from '@/stores/account/useInitCode'
@@ -12,7 +13,7 @@ import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
-import { useSigner } from '@/stores/validation/useSigner'
+import { useSigner } from '@/stores/useSigner'
 import { shortenAddress } from '@vue-dapp/core'
 import { breakpointsTailwind } from '@vueuse/core'
 import { AlertCircle, ArrowRight, CheckCircle, CircleDot, Download, Plus, Power, X } from 'lucide-vue-next'
@@ -31,26 +32,47 @@ function onClickCloseSidebar() {
 
 const { accounts } = useAccounts()
 const { hasInitCode } = useInitCode()
-const { selectedAccount, isAccountConnected, isChainIdMatching, isCrossChain } = useAccount()
+const { selectedAccount, isAccountAccessible, isChainIdMatching, isCrossChain } = useAccount()
 const { wallet, address, isEOAWalletConnected, disconnect, isEOAWalletSupported } = useEOAWallet()
 const { isLogin, resetCredentialId, selectedCredentialDisplay, isPasskeySupported } = usePasskey()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 const { selectSigner, selectedSigner } = useSigner()
 
-const accountList = computed(() =>
-	accounts.value.reduce((acc, cur) => {
-		const account = {
-			...cur,
-			isCrossChain: cur.category === 'Smart Account' && hasInitCode(cur.address),
-		}
+const accountList = computed<(ImportedAccount & { isCrossChain: boolean })[]>(() =>
+	accounts.value
+		.reduce(
+			(acc, cur) => {
+				const account = {
+					...cur,
+					isCrossChain: cur.category === 'Smart Account' && hasInitCode(cur.address),
+				}
 
-		if (!acc.some(a => isSameAddress(a.address, account.address))) {
-			acc.push(account)
-		}
+				if (!acc.some(a => isSameAddress(a.address, account.address))) {
+					acc.push(account)
+				}
 
-		return acc
-	}, [] as (ImportedAccount & { isCrossChain: boolean })[]),
+				return acc
+			},
+			[] as (ImportedAccount & { isCrossChain: boolean })[],
+		)
+		.sort((a, b) => {
+			// Put selected account at the top
+			const aIsSelected = isAccountSelected(a)
+			const bIsSelected = isAccountSelected(b)
+
+			if (aIsSelected && !bIsSelected) return -1
+			if (!aIsSelected && bIsSelected) return 1
+			return 0
+		}),
 )
+
+function isAccountSelected(account: ImportedAccount & { isCrossChain: boolean }) {
+	return (
+		selectedAccount.value &&
+		isSameAddress(account.address, selectedAccount.value.address) &&
+		(account.chainId === selectedAccount.value.chainId || account.isCrossChain)
+	)
+}
 
 function onClickSelectAccount(account: ImportedAccount & { isCrossChain: boolean }) {
 	const { selectedChainId } = useBlockchain()
@@ -145,11 +167,11 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 											<TooltipTrigger asChild>
 												<CircleDot
 													class="w-3 h-3"
-													:class="isAccountConnected ? 'text-green-500' : 'text-red-500'"
+													:class="isAccountAccessible ? 'text-green-500' : 'text-red-500'"
 												/>
 											</TooltipTrigger>
 											<TooltipContent class="z-[1100]">
-												{{ isAccountConnected ? 'Connected' : 'Not Connected' }}
+												{{ isAccountAccessible ? 'Connected' : 'Not Connected' }}
 											</TooltipContent>
 										</Tooltip>
 									</TooltipProvider>
@@ -356,9 +378,7 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 						:key="account.address"
 						class="relative group p-3 rounded-lg border transition-colors hover:bg-accent cursor-pointer overflow-visible"
 						:class="{
-							'bg-accent':
-								account.address === selectedAccount?.address &&
-								account.chainId === selectedAccount?.chainId,
+							'bg-accent': isAccountSelected(account),
 						}"
 						@click="onClickSelectAccount(account)"
 					>

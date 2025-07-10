@@ -1,16 +1,21 @@
 <script setup lang="ts">
-import { AccountId } from '@/stores/account/account'
+import { fetchECDSAValidatorRegisteredEvent, fetchWebAuthnRegisteredEvent } from '@/api/registered-events'
+import { AccountId } from '@/lib/accounts'
+import { deserializeValidationMethod } from '@/lib/validations'
+import {
+	EOAValidationMethodData,
+	ValidationMethodData,
+	WebAuthnValidationMethodData,
+} from '@/lib/validations/ValidationMethod'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
-import { SUPPORTED_VALIDATION_OPTIONS, ValidationOption } from '@/stores/validation/validation'
 import { shortenAddress } from '@vue-dapp/core'
 import { getAddress, JsonRpcProvider } from 'ethers'
 import { ChevronRight, Loader2 } from 'lucide-vue-next'
-import { ERC7579_MODULE_TYPE, TIERC7579Account__factory } from 'sendop'
+import { ADDRESS, ERC7579_MODULE_TYPE, IERC7579Account__factory } from 'sendop'
 import { toast } from 'vue-sonner'
 
 const props = defineProps<{
-	vOption: () => ValidationOption
+	vMethod: () => ValidationMethodData
 }>()
 
 const emit = defineEmits<{
@@ -40,9 +45,9 @@ onMounted(async () => {
 
 		let addresses: string[] = []
 
-		const vType = props.vOption().type
+		const vType = deserializeValidationMethod(props.vMethod()).signerType
 
-		if (vType !== 'EOA-Owned' && vType !== 'Passkey') {
+		if (vType !== 'EOAWallet' && vType !== 'Passkey') {
 			throw new Error('Unsupported validation type')
 		}
 
@@ -53,19 +58,17 @@ onMounted(async () => {
 		}
 
 		switch (vType) {
-			case 'EOA-Owned':
-				addresses = await SUPPORTED_VALIDATION_OPTIONS['EOA-Owned'].getAccounts(
-					tenderlyClient.value, // use tenderly client for event logs
-					props.vOption().identifier,
-				)
+			case 'EOAWallet': {
+				const vMethod = props.vMethod() as EOAValidationMethodData
+				addresses = await fetchECDSAValidatorRegisteredEvent(tenderlyClient.value, vMethod.address)
 
 				// Specially check if the module is installed because the ECDSAValidator doesn't emit event when uninstalled
 				const filteredAddresses: string[] = []
 				for (const address of addresses) {
-					const account = TIERC7579Account__factory.connect(address, client.value) // use client for batch RPC
+					const account = IERC7579Account__factory.connect(address, client.value) // use client for batch RPC
 					const isInstalled = await account.isModuleInstalled(
 						ERC7579_MODULE_TYPE.VALIDATOR,
-						SUPPORTED_VALIDATION_OPTIONS['EOA-Owned'].validatorAddress,
+						ADDRESS.ECDSAValidator,
 						'0x',
 					)
 
@@ -76,16 +79,16 @@ onMounted(async () => {
 
 				addresses = addresses.filter(a => !filteredAddresses.includes(getAddress(a)))
 				break
-			case 'Passkey':
-				const credentialId = props.vOption().identifier
-				if (!credentialId) {
+			}
+			case 'Passkey': {
+				const vMethod = props.vMethod() as WebAuthnValidationMethodData
+				const authenticatorIdHash = vMethod.authenticatorIdHash
+				if (!authenticatorIdHash) {
 					throw new Error('AccountOptions(onMounted): Passkey credential ID not found')
 				}
-				addresses = await SUPPORTED_VALIDATION_OPTIONS['Passkey'].getAccounts(
-					tenderlyClient.value, // use tenderly client for event logs
-					getAuthenticatorIdHash(credentialId),
-				)
+				addresses = await fetchWebAuthnRegisteredEvent(tenderlyClient.value, authenticatorIdHash)
 				break
+			}
 		}
 
 		accounts.value = addresses.map(address => ({
@@ -96,7 +99,7 @@ onMounted(async () => {
 		loadingAddresses.value = false
 
 		async function fetchAccountId(client: JsonRpcProvider, address: string) {
-			const account = TIERC7579Account__factory.connect(address, client)
+			const account = IERC7579Account__factory.connect(address, client)
 			return await account.accountId()
 		}
 

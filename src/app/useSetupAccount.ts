@@ -1,17 +1,11 @@
-import { SUPPORTED_ACCOUNTS } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useAccounts } from '@/stores/account/useAccounts'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 
 export function useSetupAccount() {
 	const { selectAccount, isAccountImported, importAccount } = useAccounts()
-	const { selectedAccount, isAccountConnected, isCrossChain, isChainIdMatching } = useAccount()
-	const { selectedChainId, switchEntryPoint } = useBlockchain()
-
-	watchImmediate(isAccountConnected, () => {
-		if (!selectedAccount.value) return
-		switchEntryPoint(SUPPORTED_ACCOUNTS[selectedAccount.value.accountId].entryPointVersion)
-	})
+	const { selectedAccount, isCrossChain, isChainIdMatching } = useAccount()
+	const { selectedChainId } = useBlockchain()
 
 	// Timing: App loaded, Chain changed
 	watchImmediate(selectedChainId, () => {

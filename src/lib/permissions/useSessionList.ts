@@ -1,6 +1,6 @@
 import { fetchSessions } from '@/api/smartsession/fetchSessions'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { ADDRESS, TSmartSession__factory } from 'sendop'
+import { ADDRESS, SmartSession__factory } from 'sendop'
 import { SessionData } from './session'
 
 export function useSessionList() {
@@ -11,7 +11,7 @@ export function useSessionList() {
 	const error = ref<string | null>(null)
 	const expandedSessions = ref<Set<string>>(new Set())
 
-	const smartsession = computed(() => TSmartSession__factory.connect(ADDRESS.SmartSession, tenderlyClient.value))
+	const smartsession = computed(() => SmartSession__factory.connect(ADDRESS.SmartSession, tenderlyClient.value))
 
 	async function loadSessions(accountAddress: string) {
 		error.value = null
