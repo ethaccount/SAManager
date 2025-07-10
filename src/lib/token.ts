@@ -79,14 +79,17 @@ const CHAIN_TOKEN_ADDRESSES = {
 // Generate tokens object from metadata and addresses
 export const tokens: Record<string, Record<string, Token>> = Object.entries(CHAIN_TOKEN_ADDRESSES).reduce(
 	(acc, [chainId, tokenAddresses]) => {
-		acc[chainId] = Object.entries(tokenAddresses).reduce((chainTokens, [tokenKey, address]) => {
-			const metadata = BASE_TOKEN_METADATA[tokenKey as keyof typeof BASE_TOKEN_METADATA]
-			chainTokens[address] = {
-				...metadata,
-				address,
-			}
-			return chainTokens
-		}, {} as Record<string, Token>)
+		acc[chainId] = Object.entries(tokenAddresses).reduce(
+			(chainTokens, [tokenKey, address]) => {
+				const metadata = BASE_TOKEN_METADATA[tokenKey as keyof typeof BASE_TOKEN_METADATA]
+				chainTokens[address] = {
+					...metadata,
+					address,
+				}
+				return chainTokens
+			},
+			{} as Record<string, Token>,
+		)
 		return acc
 	},
 	{} as Record<string, Record<string, Token>>,

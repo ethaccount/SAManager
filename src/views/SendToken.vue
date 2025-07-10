@@ -3,10 +3,11 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { TokenTransfer, getTokens, getToken, NATIVE_TOKEN_ADDRESS } from '@/lib/token'
+import { getToken, getTokens, NATIVE_TOKEN_ADDRESS, TokenTransfer } from '@/lib/token'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { useTxModal } from '@/stores/useTxModal'
+import { shortenAddress } from '@vue-dapp/core'
 import { isAddress, parseUnits } from 'ethers'
 import { Eraser, Plus, X, Zap } from 'lucide-vue-next'
 import { INTERFACES } from 'sendop'
@@ -74,6 +75,7 @@ const onClickReview = () => {
 				throw new Error(`Token ${t.tokenAddress} not found`)
 			}
 			return {
+				description: `Transfer ${t.amount} ${token.symbol} to ${shortenAddress(t.recipient)}`,
 				to: token.address,
 				value: 0n,
 				data: INTERFACES.IERC20.encodeFunctionData('transfer', [

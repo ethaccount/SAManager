@@ -11,6 +11,7 @@ import { Eraser, Plus, X, Zap } from 'lucide-vue-next'
 const { isAccountAccessible, selectedAccount } = useAccount()
 
 type Execution = {
+	description?: string
 	to: string
 	value: string
 	data: string
@@ -42,6 +43,7 @@ const onClickMintTestToken = (index: number) => {
 	if (!selectedAccount.value) return
 
 	executions.value[index] = {
+		description: 'Mint Test Token to the account',
 		to: '0xef26611a6f2cb9f2f6234F4635d98a7094c801Ce',
 		value: '0',
 		data: new Interface(['function mint(address,uint256)']).encodeFunctionData('mint', [
@@ -84,6 +86,7 @@ const reviewButtonText = computed(() => {
 async function onClickSend() {
 	useTxModal().openModal({
 		executions: executions.value.map(exec => ({
+			description: exec.description,
 			to: exec.to,
 			value: BigInt(parseEther(exec.value)),
 			data: exec.data,
