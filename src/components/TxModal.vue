@@ -81,8 +81,7 @@ onMounted(async () => {
 		nextTick(() => {
 			if (!isDeployed.value && !selectedAccountInitCodeData.value) {
 				emit('close')
-				toast.error('Account not deployed and no init code provided')
-				return
+				throw new Error('Account not deployed and no init code provided')
 			}
 		})
 	}

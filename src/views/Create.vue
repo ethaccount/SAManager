@@ -246,6 +246,8 @@ function onClickDeploy() {
 		throw new Error('onClickDeploy: No validation')
 	}
 
+	console.log('initCode', initCode.value)
+
 	importAccount(
 		{
 			accountId: selectedAccountType.value,
@@ -360,7 +362,7 @@ function onClickPasskeyLogout() {
 				</Select>
 
 				<!-- Signer connection -->
-				<div v-if="selectedValidationType === 'EOA-Owned' || selectedValidationType === 'PASSKEY'">
+				<div v-if="selectedValidationType === 'EOA-Owned'">
 					<div
 						v-if="isEOAWalletSupported"
 						class="flex flex-col p-3 border rounded-lg bg-muted/30"

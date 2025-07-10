@@ -1,39 +1,36 @@
-import { decodeBase64URL } from '@/lib/helper'
 import { p256 } from '@noble/curves/p256'
-import { startAuthentication } from '@simplewebauthn/browser'
-import type { PublicKeyCredentialRequestOptionsJSON } from '@simplewebauthn/typescript-types'
-import { AbiCoder, encodeBase64, getBytes, hexlify, isHexString, keccak256, toUtf8Bytes } from 'ethers'
+import { AbiCoder, getBytes, hexlify, isHexString, keccak256, toUtf8Bytes } from 'ethers'
 
-// Modified from zerodev-sdk signMessageUsingWebAuthn
-export async function signMessageUsingPasskey(
-	message: string,
-	allowCredentials?: PublicKeyCredentialRequestOptionsJSON['allowCredentials'],
-) {
+export async function signMessageUsingPasskey(message: string) {
 	let hash = message
 	if (!isHexString(message)) {
 		hash = keccak256(getBytes(toUtf8Bytes(message)))
 	}
 
-	const challenge = encodeBase64(getBytes(hash))
-
-	// prepare assertion options
-	const assertionOptions: PublicKeyCredentialRequestOptionsJSON = {
-		challenge,
-		allowCredentials,
-		userVerification: 'required',
+	const publicKey: PublicKeyCredentialRequestOptions = {
+		challenge: getBytes(hash),
+		// rpId,
+		// allowCredentials: [{ id: Buffer.from(credentialId, 'base64'), type: 'public-key' }],
+		userVerification: 'required', // or 'discouraged' so user doesn't have to touch the passkey
 	}
 
-	// start authentication (signing)
-	const cred = await startAuthentication(assertionOptions)
+	// start authentication
+	const assertion = await navigator.credentials.get({ publicKey, mediation: 'silent' })
 
-	// get authenticator data
-	const { authenticatorData } = cred.response
-	const authenticatorDataHex = hexlify(decodeBase64URL(authenticatorData))
+	if (!assertion) {
+		throw new Error('[signMessageUsingPasskey] No assertion')
+	}
 
-	// get client data JSON
-	const clientDataJSON = atob(cred.response.clientDataJSON)
+	const response: AuthenticatorAssertionResponse = (assertion as PublicKeyCredential)
+		.response as AuthenticatorAssertionResponse
 
-	const findQuoteIndices = (input: string): { beforeType: bigint; beforeChallenge: bigint } => {
+	const authenticatorDataHex = hexlify(new Uint8Array(response.authenticatorData))
+	const clientDataJSON = new TextDecoder().decode(response.clientDataJSON)
+
+	// get challenge and response type location
+	const { beforeType } = findQuoteIndices(clientDataJSON)
+
+	function findQuoteIndices(input: string): { beforeType: bigint; beforeChallenge: bigint } {
 		const beforeTypeIndex = BigInt(input.lastIndexOf('"type":"webauthn.get"'))
 		const beforeChallengeIndex = BigInt(input.indexOf('"challenge'))
 		return {
@@ -41,12 +38,9 @@ export async function signMessageUsingPasskey(
 			beforeChallenge: beforeChallengeIndex,
 		}
 	}
-	// get challenge and response type location
-	const { beforeType } = findQuoteIndices(clientDataJSON)
 
-	// get signature r,s
-	const { signature } = cred.response
-	const signatureHex = hexlify(decodeBase64URL(signature))
+	// get signature r,s - use proper signature handling
+	const signatureHex = hexlify(new Uint8Array(response.signature))
 
 	return formatSignature(authenticatorDataHex, clientDataJSON, beforeType, signatureHex)
 }

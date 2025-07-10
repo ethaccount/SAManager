@@ -23,9 +23,6 @@ importers:
       '@rhinestone/module-sdk':
         specifier: ^0.2.10
         version: 0.2.10(viem@2.31.6(typescript@5.7.2)(zod@3.24.1))
-      '@simplewebauthn/browser':
-        specifier: ^10.0.0
-        version: 10.0.0
       '@tanstack/vue-table':
         specifier: ^8.21.3
         version: 8.21.3(vue@3.5.13(typescript@5.7.2))
@@ -111,9 +108,6 @@ importers:
       '@cloudflare/vite-plugin':
         specifier: '>=1.6.0'
         version: 1.9.1(rollup@4.34.9)(vite@6.3.5(@types/node@22.10.6)(jiti@2.4.2)(yaml@2.6.1))(workerd@1.20250705.0)(wrangler@4.24.0)
-      '@simplewebauthn/typescript-types':
-        specifier: ^8.3.4
-        version: 8.3.4
       '@types/node':
         specifier: ^22.10.6
         version: 22.10.6
@@ -1272,16 +1266,6 @@ packages:
 
   '@sec-ant/readable-stream@0.4.1':
     resolution: {integrity: sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg==}
-
-  '@simplewebauthn/browser@10.0.0':
-    resolution: {integrity: sha512-hG0JMZD+LiLUbpQcAjS4d+t4gbprE/dLYop/CkE01ugU/9sKXflxV5s0DRjdz3uNMFecatRfb4ZLG3XvF8m5zg==}
-
-  '@simplewebauthn/types@10.0.0':
-    resolution: {integrity: sha512-SFXke7xkgPRowY2E+8djKbdEznTVnD5R6GO7GPTthpHrokLvNKw8C3lFZypTxLI7KkCfGPfhtqB3d7OVGGa9jQ==}
-
-  '@simplewebauthn/typescript-types@8.3.4':
-    resolution: {integrity: sha512-38xtca0OqfRVNloKBrFB5LEM6PN5vzFbJG6rAutPVrtGHFYxPdiV3btYWq0eAZAZmP+dqFPYJxJWeJrGfmYHng==}
-    deprecated: This package has been renamed to @simplewebauthn/types. Please install @simplewebauthn/types instead to ensure you receive future updates.
 
   '@sindresorhus/merge-streams@2.3.0':
     resolution: {integrity: sha512-LtoMMhxAlorcGhmFYI+LhPgbPZCkgP6ra1YL604EeF6U98pLlQ3iWIGMdWSC+vWmPBWBNgmDBAhnAobLROJmwg==}
@@ -4941,14 +4925,6 @@ snapshots:
       '@scure/base': 1.2.6
 
   '@sec-ant/readable-stream@0.4.1': {}
-
-  '@simplewebauthn/browser@10.0.0':
-    dependencies:
-      '@simplewebauthn/types': 10.0.0
-
-  '@simplewebauthn/types@10.0.0': {}
-
-  '@simplewebauthn/typescript-types@8.3.4': {}
 
   '@sindresorhus/merge-streams@2.3.0': {}
 
