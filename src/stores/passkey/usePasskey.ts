@@ -1,5 +1,5 @@
 import { env } from '@/app/useSetupEnv'
-import { PasskeyCredential } from '@/stores/passkey/passkey'
+import { PasskeyCredential } from '@/stores/passkey/types'
 import { isBytes } from 'sendop'
 import { createCredential, getCredential } from './passkeyNoRp'
 
