@@ -1,8 +1,22 @@
-import type { ethers } from 'ethers'
-import { ErrorCode, isError } from 'ethers'
+import type { ethers, EthersError } from 'ethers'
 
-export function isEthersError(error: unknown): error is ethers.EthersError {
-	return isError(error, (error as ethers.EthersError).code)
+/**
+ * Check if the error is from ethers.js by checking if the error has a error property and the error property is an object
+ */
+export function isEthersError(error: unknown): error is EthersError {
+	if (
+		'error' in <EthersError>error &&
+		typeof error === 'object' &&
+		error !== null &&
+		'code' in error &&
+		typeof error.code === 'string' &&
+		'name' in error &&
+		typeof error.name === 'string'
+	) {
+		return true
+	}
+
+	return false
 }
 
 export function getEthersErrorMsg(error: ethers.EthersError, prefix?: string): string {
@@ -49,41 +63,6 @@ export class AppError extends Error {
 	constructor(message: string, options?: ErrorOptions) {
 		super(message, options)
 		this.name = 'AppError'
-	}
-}
-
-export class EthersError extends Error {
-	code: ErrorCode = 'UNKNOWN_ERROR'
-
-	constructor(message: string, options?: ErrorOptions & { code?: ErrorCode }) {
-		super(message, options)
-		this.name = 'EthersError'
-
-		if (options?.cause && EthersError.isEthersError(options.cause)) {
-			const ethersError = options.cause as ethers.EthersError
-			this.code = ethersError.code
-			this.message = this.message.replace(/^([^(]+).*/, '$1').trim()
-			if (ethersError.name === 'Error') {
-				this.name = `EthersError`
-			} else {
-				this.name = `EthersError(${ethersError.name})`
-			}
-		}
-	}
-
-	static isEthersError(error: unknown): error is ethers.EthersError {
-		if (
-			typeof error === 'object' &&
-			error !== null &&
-			'code' in error &&
-			typeof (error as ethers.EthersError).code === 'string' &&
-			'name' in error &&
-			typeof (error as ethers.EthersError).name === 'string'
-		) {
-			return isError(error, (error as ethers.EthersError).code)
-		}
-
-		return false
 	}
 }
 

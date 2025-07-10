@@ -14,7 +14,7 @@ import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useSigner } from '@/stores/useSigner'
 import { TransactionStatus, TxModalExecution, useTxModal } from '@/stores/useTxModal'
 import { shortenAddress } from '@vue-dapp/core'
-import { formatEther } from 'ethers'
+import { formatEther, isError } from 'ethers'
 import { CircleDot, ExternalLink, Loader2, X } from 'lucide-vue-next'
 import { extractHexString, isSameAddress, parseContractError, replaceHexString } from 'sendop'
 import { VueFinalModal } from 'vue-final-modal'
@@ -158,7 +158,25 @@ async function onClickSign() {
 		await handleSign()
 		status.value = TransactionStatus.Send
 	} catch (e: unknown) {
-		handleError(e, 'Failed to sign user operation')
+		const prefix = 'Failed to sign user operation'
+		console.error(getErrorChainMessage(e, prefix))
+
+		let msg = ''
+
+		if (isEthersError(e)) {
+			console.log('isEthersError', e.code, e.name)
+			if (isError(e, 'ACTION_REJECTED')) {
+				msg = '' // User rejected the operation on browser wallet. Don't show error message
+			} else {
+				msg = getEthersErrorMsg(e, prefix)
+			}
+		} else if (e instanceof Error && e.message.includes('The operation either timed out or was not allowed')) {
+			msg = '' // User rejected the operation on passkey. Don't show error message
+		} else {
+			msg = getErrorMsg(e, prefix)
+		}
+
+		error.value = msg
 		status.value = TransactionStatus.Sign
 	}
 }
