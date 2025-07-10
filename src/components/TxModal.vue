@@ -164,7 +164,6 @@ async function onClickSign() {
 		let msg = ''
 
 		if (isEthersError(e)) {
-			console.log('isEthersError', e.code, e.name)
 			if (isError(e, 'ACTION_REJECTED')) {
 				msg = '' // User rejected the operation on browser wallet. Don't show error message
 			} else {

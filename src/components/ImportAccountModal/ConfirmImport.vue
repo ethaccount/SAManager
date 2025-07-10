@@ -75,7 +75,7 @@ function displayValidationOptions(vMethods: ValidationMethodData[]) {
 		</div>
 
 		<!-- Action Button -->
-		<Button v-if="!isSuccess" @click="onClickConfirm"> Confirm </Button>
+		<Button v-if="!isSuccess" @click="onClickConfirm"> Import </Button>
 		<Button v-else @click="useImportAccountModal().closeModal()" variant="outline"> Done </Button>
 	</div>
 </template>

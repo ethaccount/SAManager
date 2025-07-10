@@ -89,7 +89,7 @@ export const useAccountsStore = defineStore('useAccountsStore', () => {
 			})
 		}
 
-		console.log('Account imported successfully', account)
+		console.log('Account imported', account)
 
 		if (accounts.value.length === 1) {
 			selectedAccount.value = accounts.value[0]
