@@ -78,15 +78,16 @@ export function useReviewButton(
 	actionType: 'transfer' | 'swap',
 ) {
 	const { isAccountAccessible } = useAccount()
-	const { isBackendHealthy } = useBackend()
+	const { isBackendHealthy, isBackendHealthyLoading } = useBackend()
 
 	const reviewDisabled = computed(() => {
-		return !isAccountAccessible.value || !isValid.value || !isBackendHealthy.value
+		return !isAccountAccessible.value || !isValid.value || !isBackendHealthy.value || isBackendHealthyLoading.value
 	})
 
 	const reviewButtonText = computed(() => {
+		if (isBackendHealthyLoading.value) return 'Checking backend health...'
 		if (!isBackendHealthy.value) return 'Backend service is unavailable'
-		if (!isAccountAccessible.value) return 'Connect your account to review'
+		if (!isAccountAccessible.value) return 'Connect your account first'
 		if (!isValid.value) return `Invalid scheduled ${actionType}`
 		return `Review schedule ${actionType}`
 	})
