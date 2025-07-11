@@ -14,7 +14,7 @@ const closeSheet = () => {
 
 <template>
 	<!-- Desktop Navigation -->
-	<nav class="hidden sm:flex items-center space-x-6 text-sm font-medium">
+	<nav class="hidden md:flex items-center space-x-6 text-sm font-medium">
 		<RouterLink
 			:to="toRoute('create')"
 			class="transition-colors hover:text-foreground/80 text-foreground/60"
@@ -59,13 +59,13 @@ const closeSheet = () => {
 
 	<!-- Mobile Navigation -->
 	<Sheet v-model:open="isOpen">
-		<SheetTrigger asChild class="sm:hidden">
+		<SheetTrigger asChild class="md:hidden">
 			<Button variant="ghost" size="icon">
 				<Menu class="h-5 w-5" />
 			</Button>
 		</SheetTrigger>
 
-		<SheetContent side="top" class="w-full sm:hidden">
+		<SheetContent side="top" class="w-full md:hidden">
 			<SheetHeader>
 				<SheetTitle></SheetTitle>
 				<SheetDescription></SheetDescription>
