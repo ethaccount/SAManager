@@ -11,7 +11,6 @@ import {
 	Deployment,
 	getDeployment,
 } from '@/lib/accounts'
-import { displayAccountName } from '@/lib/accounts/helpers'
 import { toRoute } from '@/lib/router'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
 import { useGetCode } from '@/lib/useGetCode'
@@ -26,8 +25,8 @@ import {
 import { useAccounts } from '@/stores/account/useAccounts'
 import { displayChainName } from '@/stores/blockchain/blockchain'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { usePasskey } from '@/stores/passkey/usePasskey'
 import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
+import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useSigner } from '@/stores/useSigner'
 import { useTxModal } from '@/stores/useTxModal'
@@ -304,7 +303,7 @@ function onClickPasskeyLogout() {
 							<div class="flex items-center justify-between w-full">
 								<span class="font-medium">{{
 									selectedAccountType
-										? displayAccountName(selectedAccountType)
+										? AccountRegistry.getName(selectedAccountType)
 										: 'Select Account Type'
 								}}</span>
 							</div>
@@ -320,7 +319,9 @@ function onClickPasskeyLogout() {
 						>
 							<div class="flex flex-col py-1 w-full">
 								<div class="flex items-center justify-between w-full">
-									<div class="font-medium">{{ displayAccountName(supportedAccountId) }}</div>
+									<div class="font-medium">
+										{{ AccountRegistry.getName(supportedAccountId) }}
+									</div>
 									<div class="text-xs text-muted-foreground rounded-full bg-muted px-2.5 py-0.5">
 										EntryPoint {{ AccountRegistry.getEntryPointVersion(supportedAccountId) }}
 									</div>

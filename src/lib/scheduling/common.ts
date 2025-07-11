@@ -148,7 +148,7 @@ export async function checkRhinestoneAttesterTrusted(
 	importedAccount: ImportedAccount,
 ): Promise<boolean> {
 	// Only check for Kernel accounts because Nexus and Safe7579 will trust Rhinestone Attester when deployed
-	if (AccountRegistry.getConfig(importedAccount.accountId).name === 'Kernel') {
+	if (AccountRegistry.getName(importedAccount.accountId) === 'Kernel') {
 		const attesters = await findTrustedAttesters(client, importedAccount.address)
 		return attesters.includes(RHINESTONE_ATTESTER_ADDRESS)
 	}

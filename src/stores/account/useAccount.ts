@@ -1,4 +1,4 @@
-import { isModularAccount } from '@/lib/accounts'
+import { AccountRegistry } from '@/lib/accounts'
 import { ValidationMethod } from '@/lib/validations'
 import { deserializeValidationMethod } from '@/lib/validations/helpers'
 import { ImportedAccount } from '@/stores/account/account'
@@ -40,7 +40,7 @@ export const useAccountStore = defineStore('useAccountStore', () => {
 
 	const isModular = computed(() => {
 		if (!selectedAccount.value) return false
-		return isModularAccount(selectedAccount.value.accountId)
+		return AccountRegistry.getIsModular(selectedAccount.value.accountId)
 	})
 
 	const isSmartEOA = computed(() => {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { displayAccountName } from '@/lib/accounts'
+import { AccountRegistry } from '@/lib/accounts'
 import { toRoute } from '@/lib/router'
 import { useGetCode } from '@/lib/useGetCode'
 import {
@@ -65,7 +65,9 @@ const showSwitchToCorrectChain = computed(() => {
 					<div class="flex items-center gap-3 mt-2">
 						<div>
 							<p class="text-sm text-muted-foreground">
-								{{ displayAccountName(selectedAccount.accountId) }} ({{ selectedAccount.accountId }})
+								{{ AccountRegistry.getName(selectedAccount.accountId) }} ({{
+									selectedAccount.accountId
+								}})
 							</p>
 						</div>
 					</div>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { displayAccountName } from '@/lib/accounts/helpers'
+import { AccountRegistry } from '@/lib/accounts'
 import { addressToName } from '@/lib/addressToName'
 import { getErrorChainMessage, getErrorMsg, getEthersErrorMsg, isEthersError } from '@/lib/error'
 import { useGetCode } from '@/lib/useGetCode'
@@ -399,7 +399,7 @@ const entryPointAddress = computed(() => {
 						<div class="flex items-center justify-between text-sm">
 							<span class="text-muted-foreground">Account Type</span>
 							<span class="text-sm">{{
-								selectedAccount?.accountId ? displayAccountName(selectedAccount.accountId) : '-'
+								selectedAccount?.accountId ? AccountRegistry.getName(selectedAccount.accountId) : '-'
 							}}</span>
 						</div>
 

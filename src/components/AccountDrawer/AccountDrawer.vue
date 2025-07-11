@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { displayAccountName } from '@/lib/accounts/helpers'
+import { AccountRegistry } from '@/lib/accounts'
 import { toRoute } from '@/lib/router'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
 import { ImportedAccount } from '@/stores/account/account'
@@ -189,7 +189,7 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 								<div class="flex flex-col gap-1">
 									<!-- account Id -->
 									<div class="flex items-center gap-1 text-xs">
-										<span>{{ displayAccountName(selectedAccount.accountId) }}</span>
+										<span>{{ AccountRegistry.getName(selectedAccount.accountId) }}</span>
 										<!-- Long name with ID may cause layout break -->
 										<!-- <span>({{ selectedAccount.accountId }})</span> -->
 									</div>
@@ -392,7 +392,7 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 								<!-- <span class="text-xs text-muted-foreground">{{ account.type }}</span> -->
 							</div>
 							<div class="flex justify-between items-center text-xs text-muted-foreground">
-								<span>{{ displayAccountName(account.accountId) }}</span>
+								<span>{{ AccountRegistry.getName(account.accountId) }}</span>
 								<!-- <span>{{ account.vOptions.map(v => v.type).join(', ') }}</span> -->
 							</div>
 						</div>

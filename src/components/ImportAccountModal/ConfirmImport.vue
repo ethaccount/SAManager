@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { displayAccountName } from '@/lib/accounts/helpers'
+import { AccountRegistry } from '@/lib/accounts'
 import { ValidationMethodData } from '@/lib/validations/ValidationMethod'
 import { ImportedAccount } from '@/stores/account/account'
 import { useAccounts } from '@/stores/account/useAccounts'
@@ -56,7 +56,7 @@ function displayValidationOptions(vMethods: ValidationMethodData[]) {
 			</div>
 			<div class="flex justify-between items-center">
 				<span class="text-sm text-muted-foreground">Account Type</span>
-				<span class="font-medium text-foreground">{{ displayAccountName(accountData().accountId) }}</span>
+				<span class="font-medium text-foreground">{{ AccountRegistry.getName(accountData().accountId) }}</span>
 			</div>
 			<div class="flex justify-between items-center">
 				<span class="text-sm text-muted-foreground">Address</span>

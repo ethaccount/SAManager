@@ -5,21 +5,13 @@ import {
 	Safe7579AccountProvider,
 	Simple7702AccountProvider,
 } from './providers'
-import { AccountId, AccountProvider, AccountConfig } from './types'
+import { AccountConfig, AccountId, AccountProvider } from './types'
 
 export class AccountRegistry {
 	private static readonly registry = new Map<AccountId, AccountConfig>()
 
 	static register(accountId: AccountId, config: AccountConfig): void {
 		this.registry.set(accountId, config)
-	}
-
-	static getProvider(accountId: AccountId): AccountProvider {
-		const config = this.registry.get(accountId)
-		if (!config) {
-			throw new Error(`Unknown account type: ${accountId}`)
-		}
-		return config.provider
 	}
 
 	static getConfig(accountId: AccountId): AccountConfig {
@@ -38,8 +30,24 @@ export class AccountRegistry {
 		return Array.from(this.registry.keys()).filter(accountId => this.getConfig(accountId).canCreate)
 	}
 
+	static getProvider(accountId: AccountId): AccountProvider {
+		return this.getConfig(accountId).provider
+	}
+
+	static getName(accountId: AccountId) {
+		return AccountRegistry.getConfig(accountId).name
+	}
+
+	static getIsModular(accountId: AccountId): boolean {
+		return AccountRegistry.getConfig(accountId).isModular
+	}
+
 	static getEntryPointVersion(accountId: AccountId): EntryPointVersion {
 		return this.getConfig(accountId).entryPointVersion
+	}
+
+	static getCanCreate(accountId: AccountId): boolean {
+		return AccountRegistry.getConfig(accountId).canCreate
 	}
 }
 
