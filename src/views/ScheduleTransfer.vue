@@ -9,15 +9,15 @@ import {
 import { ScheduleTransfer, useScheduleTransfer } from '@/lib/scheduling/useScheduleTransfer'
 import { getToken, getTokenAddress, getTokens } from '@/lib/token'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { DateFormatter, getLocalTimeZone, today, type DateValue } from '@internationalized/date'
+import { getLocalTimeZone, now, type DateValue } from '@internationalized/date'
 import { isAddress } from 'ethers'
 import { CalendarIcon } from 'lucide-vue-next'
 
 const { selectedChainId } = useBlockchain()
 
-const dateFormatter = new DateFormatter('en-US', {
-	dateStyle: 'long',
-})
+// const dateFormatter = new DateFormatter('en-US', {
+// 	dateStyle: 'long',
+// })
 
 const availableTokens = computed(() => getTokens(selectedChainId.value))
 
@@ -25,10 +25,10 @@ function getDefaultTransfer(): ScheduleTransfer {
 	return {
 		recipient: '0xd78B5013757Ea4A7841811eF770711e6248dC282',
 		amount: '0.0001',
-		tokenAddress: getTokenAddress(selectedChainId.value, 'WETH') || '',
+		tokenAddress: getTokenAddress(selectedChainId.value, 'SAM') || '',
 		frequency: DEFAULT_FREQUENCY,
 		times: 3,
-		startDate: today(getLocalTimeZone()),
+		startDate: now(getLocalTimeZone()),
 	}
 }
 
@@ -178,7 +178,7 @@ async function onClickReview() {
 					class="relative p-4 rounded-xl bg-muted/30 border border-border/50 backdrop-blur-sm transition-all duration-200 hover:border-border"
 				>
 					<h3 class="mb-2 text-sm font-medium">Start Date</h3>
-					<Popover>
+					<!-- <Popover>
 						<PopoverTrigger class="w-full">
 							<Button
 								variant="outline"
@@ -197,7 +197,11 @@ async function onClickReview() {
 						<PopoverContent class="w-auto p-0">
 							<Calendar v-model="scheduledTransferInput.startDate as DateValue" />
 						</PopoverContent>
-					</Popover>
+					</Popover> -->
+					<div class="w-full p-3 rounded-md bg-muted flex items-center">
+						<CalendarIcon class="mr-2 h-4 w-4" />
+						<span class="text-sm">Now</span>
+					</div>
 				</div>
 			</div>
 		</CardContent>
