@@ -26,8 +26,10 @@ export interface AccountProvider {
 
 export type AccountConfig = {
 	provider: AccountProvider
-	name: string
+	name: AccountName
 	isModular: boolean
 	entryPointVersion: EntryPointVersion
 	canCreate: boolean
 }
+
+export type AccountName = 'Kernel' | 'Nexus' | 'Safe7579' | 'Simple7702Account'

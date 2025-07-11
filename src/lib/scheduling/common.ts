@@ -1,5 +1,5 @@
 import { findTrustedAttesters } from '@/api/registry'
-import { AccountId } from '@/lib/accounts'
+import { AccountRegistry } from '@/lib/accounts'
 import { ImportedAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBackend } from '@/stores/useBackend'
@@ -8,9 +8,9 @@ import { JsonRpcProvider } from 'ethers'
 import {
 	ADDRESS,
 	ERC7579_MODULE_TYPE,
-	RHINESTONE_ATTESTER_ADDRESS,
 	IERC7579Account__factory,
 	Registry__factory,
+	RHINESTONE_ATTESTER_ADDRESS,
 } from 'sendop'
 
 export const DEFAULT_FREQUENCY = '3min'
@@ -148,7 +148,7 @@ export async function checkRhinestoneAttesterTrusted(
 	importedAccount: ImportedAccount,
 ): Promise<boolean> {
 	// Only check for Kernel accounts because Nexus and Safe7579 will trust Rhinestone Attester when deployed
-	if (importedAccount.accountId === AccountId['kernel.advanced.v0.3.1']) {
+	if (AccountRegistry.getConfig(importedAccount.accountId).name === 'Kernel') {
 		const attesters = await findTrustedAttesters(client, importedAccount.address)
 		return attesters.includes(RHINESTONE_ATTESTER_ADDRESS)
 	}
