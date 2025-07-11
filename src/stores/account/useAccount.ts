@@ -8,102 +8,87 @@ import { useSigner } from '@/stores/useSigner'
 import { JSONParse, JSONStringify } from 'json-with-bigint'
 import { isSameAddress } from 'sendop'
 
-const SELECTED_ACCOUNT_STORAGE_KEY = 'samanager-selected-account'
+export const useAccountStore = defineStore(
+	'useAccountStore',
+	() => {
+		const { initCodeList, hasInitCode } = useInitCode()
+		const { canSign } = useSigner()
+		const { selectedChainId } = useBlockchain()
 
-export const useAccountStore = defineStore('useAccountStore', () => {
-	const { initCodeList, hasInitCode } = useInitCode()
-	const { canSign } = useSigner()
-	const { selectedChainId } = useBlockchain()
+		const selectedAccount = ref<ImportedAccount | null>(null)
 
-	const selectedAccount = ref<ImportedAccount | null>(loadSelectedAccountFromStorage())
+		const isChainIdMatching = computed(() => {
+			return selectedChainId.value === selectedAccount.value?.chainId
+		})
 
-	// Watch for changes and sync to localStorage
-	watchDeep(selectedAccount, newAccount => {
-		saveSelectedAccountToStorage(newAccount)
-	})
+		const accountVMethods = computed<ValidationMethod[]>(() => {
+			if (!selectedAccount.value) return []
+			if (!selectedAccount.value.vMethods) return []
+			return selectedAccount.value.vMethods.map(vMethod => deserializeValidationMethod(vMethod))
+		})
 
-	const isChainIdMatching = computed(() => {
-		return selectedChainId.value === selectedAccount.value?.chainId
-	})
+		const isAccountAccessible = computed(() => {
+			if (!selectedAccount.value) return false
+			if (selectedAccount.value.chainId !== selectedChainId.value) return false
+			return accountVMethods.value.some(canSign)
+		})
 
-	const accountVMethods = computed<ValidationMethod[]>(() => {
-		if (!selectedAccount.value) return []
-		if (!selectedAccount.value.vMethods) return []
-		return selectedAccount.value.vMethods.map(vMethod => deserializeValidationMethod(vMethod))
-	})
+		const isModular = computed(() => {
+			if (!selectedAccount.value) return false
+			return AccountRegistry.getIsModular(selectedAccount.value.accountId)
+		})
 
-	const isAccountAccessible = computed(() => {
-		if (!selectedAccount.value) return false
-		if (selectedAccount.value.chainId !== selectedChainId.value) return false
-		return accountVMethods.value.some(canSign)
-	})
+		const isSmartEOA = computed(() => {
+			if (!selectedAccount.value) return false
+			return selectedAccount.value.category === 'Smart EOA'
+		})
 
-	const isModular = computed(() => {
-		if (!selectedAccount.value) return false
-		return AccountRegistry.getIsModular(selectedAccount.value.accountId)
-	})
+		const isCrossChain = computed<boolean>(() => {
+			const account = selectedAccount.value
+			if (!account) return false
+			return checkIsCrossChain(account)
+		})
 
-	const isSmartEOA = computed(() => {
-		if (!selectedAccount.value) return false
-		return selectedAccount.value.category === 'Smart EOA'
-	})
+		function checkIsCrossChain(account: ImportedAccount) {
+			if (account.category !== 'Smart Account') return false
+			return hasInitCode(account.address)
+		}
 
-	const isCrossChain = computed<boolean>(() => {
-		const account = selectedAccount.value
-		if (!account) return false
-		return checkIsCrossChain(account)
-	})
+		const selectedAccountInitCodeData = computed<InitCodeData | null>(() => {
+			const account = selectedAccount.value
+			if (!account) return null
+			return initCodeList.value.find(i => isSameAddress(i.address, account.address)) || null
+		})
 
-	function checkIsCrossChain(account: ImportedAccount) {
-		if (account.category !== 'Smart Account') return false
-		return hasInitCode(account.address)
-	}
-
-	const selectedAccountInitCodeData = computed<InitCodeData | null>(() => {
-		const account = selectedAccount.value
-		if (!account) return null
-		return initCodeList.value.find(i => isSameAddress(i.address, account.address)) || null
-	})
-
-	return {
-		selectedAccount,
-		selectedAccountInitCodeData,
-		accountVMethods,
-		isCrossChain,
-		isAccountAccessible,
-		isModular,
-		isSmartEOA,
-		isChainIdMatching,
-		checkIsCrossChain,
-	}
-})
+		return {
+			selectedAccount,
+			selectedAccountInitCodeData,
+			accountVMethods,
+			isCrossChain,
+			isAccountAccessible,
+			isModular,
+			isSmartEOA,
+			isChainIdMatching,
+			checkIsCrossChain,
+		}
+	},
+	{
+		persist: {
+			pick: ['selectedAccount'],
+			// Note: If the stored data contains bigint, a serializer must be used.
+			// Otherwise, the state will be ignored and not saved to local storage.
+			serializer: {
+				deserialize: JSONParse,
+				serialize: JSONStringify,
+			},
+		},
+	},
+)
 
 export function useAccount() {
 	const store = useAccountStore()
 	return {
 		...store,
 		...storeToRefs(store),
-	}
-}
-
-function loadSelectedAccountFromStorage(): ImportedAccount | null {
-	try {
-		const stored = localStorage.getItem(SELECTED_ACCOUNT_STORAGE_KEY)
-		return stored ? JSONParse(stored) : null
-	} catch (error) {
-		console.error('Failed to load selected account from localStorage:', error)
-		return null
-	}
-}
-
-function saveSelectedAccountToStorage(account: ImportedAccount | null) {
-	try {
-		if (account) {
-			localStorage.setItem(SELECTED_ACCOUNT_STORAGE_KEY, JSONStringify(account))
-		} else {
-			localStorage.removeItem(SELECTED_ACCOUNT_STORAGE_KEY)
-		}
-	} catch (error) {
-		console.error('Failed to save selected account to localStorage:', error)
 	}
 }

@@ -1,4 +1,5 @@
-import { ValidationMethodData } from '@/lib/validations/ValidationMethod'
+import { ValidationMethodData } from '@/lib/validations'
+import { JSONParse, JSONStringify } from 'json-with-bigint'
 import { defineStore, storeToRefs } from 'pinia'
 import { isSameAddress } from 'sendop'
 
@@ -56,6 +57,12 @@ export const useInitCodeStore = defineStore(
 	{
 		persist: {
 			pick: ['initCodeList'],
+			// Note: If the stored data contains bigint, a serializer must be used.
+			// Otherwise, the state will be ignored and not saved to local storage.
+			serializer: {
+				deserialize: JSONParse,
+				serialize: JSONStringify,
+			},
 		},
 	},
 )
