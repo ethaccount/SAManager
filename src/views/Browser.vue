@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ArrowLeft, ArrowRight, Loader2, RotateCcw } from 'lucide-vue-next'
+import { toast } from 'vue-sonner'
 
 // State
 const route = useRoute()
@@ -19,6 +20,8 @@ const canGoForward = computed(() => historyIndex.value < history.value.length - 
 // Lifecycle hooks
 onMounted(() => {
 	initializeFromRoute()
+
+	toast.warning('Dapp browser is under development. Currently unavailable. Stay tuned!')
 })
 
 // Watchers

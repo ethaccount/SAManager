@@ -96,7 +96,7 @@ const router = createRouter({
 						{
 							path: '/:chainId/browser',
 							name: 'browser',
-							component: () => import('@/views/DappBrowser.vue'),
+							component: () => import('@/views/Browser.vue'),
 						},
 					],
 				},
