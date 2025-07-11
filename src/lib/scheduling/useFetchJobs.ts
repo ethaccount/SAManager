@@ -1,4 +1,4 @@
-import { getToken, NATIVE_TOKEN_ADDRESS, Token } from '@/lib/token'
+import { getToken, NATIVE_TOKEN_ADDRESS, Token } from '@/lib/tokens/token'
 import { useAccount } from '@/stores/account/useAccount'
 import type { CHAIN_ID } from '@/stores/blockchain/blockchain'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'

@@ -1,3 +1,4 @@
+import { AccountId } from '@/lib/accounts'
 import { getInstallModuleData } from '@/lib/accounts/account-specific'
 import { createScheduledSwapSession, getScheduledSwapSessionStatus } from '@/lib/permissions/session'
 import { useSessionList } from '@/lib/permissions/useSessionList'
@@ -9,9 +10,9 @@ import {
 	validateAccount,
 } from '@/lib/scheduling/common'
 import { registerJob } from '@/lib/scheduling/registerJob'
-import { getToken } from '@/lib/token'
+import { checkTokenBalance } from '@/lib/tokens/helpers'
+import { getToken } from '@/lib/tokens/token'
 import { useGetCode } from '@/lib/useGetCode'
-import { AccountId } from '@/lib/accounts'
 import { ImportedAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
@@ -24,10 +25,10 @@ import {
 	ERC7579_MODULE_TYPE,
 	ERC7579Module,
 	getEncodedFunctionParams,
-	INTERFACES,
-	SMART_SESSIONS_ENABLE_MODE,
 	IERC7579Account__factory,
+	INTERFACES,
 	ScheduledOrders__factory,
+	SMART_SESSIONS_ENABLE_MODE,
 	zeroPadLeft,
 } from 'sendop'
 import { SessionStruct } from 'sendop/contract-types/SmartSession'
@@ -242,37 +243,46 @@ export function useScheduleSwap() {
 			// Step 1: Validate account
 			const selectedAccount = await validateAccount()
 
-			// Step 2: Check module and session status
+			// Step 2: Check token balance
+			const config = createScheduleSwapConfig(scheduledSwap)
+			await checkTokenBalance({
+				client: client.value,
+				accountAddress: selectedAccount.address,
+				tokenAddress: config.tokenIn,
+				requiredAmount: config.amountIn,
+				chainId: selectedChainId.value,
+			})
+
+			// Step 3: Check module and session status
 			const moduleStatus = await checkModuleStatus(selectedAccount)
 
-			// Step 3: Build SmartSession executions
+			// Step 4: Build SmartSession executions
 			const { executions: smartSessionExecutions, permissionId } = buildSmartSessionExecutions(
 				moduleStatus,
 				selectedAccount,
 			)
 
-			// Step 4: Create schedule swap configuration
-			const config = createScheduleSwapConfig(scheduledSwap)
+			// Step 5: Create schedule swap configuration and order data
 			const scheduledOrdersOrderData = createScheduledOrdersOrderData(config)
 
-			// Step 5: Build ScheduledOrders executions
+			// Step 6: Build ScheduledOrders executions
 			const scheduledOrdersExecutions = buildScheduledOrdersExecutions(
 				moduleStatus,
 				selectedAccount.accountId,
 				scheduledOrdersOrderData,
 			)
 
-			// Step 6: Build Rhinestone Attester executions (for Kernel accounts)
+			// Step 7: Build Rhinestone Attester executions (for Kernel accounts)
 			const rhinestoneExecutions = buildRhinestoneAttesterExecutions(moduleStatus.isRhinestoneAttesterTrusted)
 
-			// Step 7: Combine all executions
+			// Step 8: Combine all executions
 			const executions: TxModalExecution[] = [
 				...rhinestoneExecutions,
 				...smartSessionExecutions,
 				...scheduledOrdersExecutions,
 			]
 
-			// Step 8: Get job ID and open transaction modal
+			// Step 9: Get job ID and open transaction modal
 			const jobId = await getJobId(selectedAccount.address)
 
 			useTxModal().openModal({

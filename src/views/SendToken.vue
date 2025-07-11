@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { getToken, getTokens, NATIVE_TOKEN_ADDRESS, TokenTransfer } from '@/lib/token'
+import { checkTokenBalance } from '@/lib/tokens/helpers'
+import { getToken, getTokens, NATIVE_TOKEN_ADDRESS, TokenTransfer } from '@/lib/tokens/token'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { useTxModal } from '@/stores/useTxModal'
@@ -67,7 +68,32 @@ const onClickClearInputs = (index: number) => {
 	}
 }
 
-const onClickReview = () => {
+const onClickReview = async () => {
+	const { selectedAccount } = useAccount()
+	const { client } = useBlockchain()
+
+	if (!selectedAccount.value || !client.value) {
+		throw new Error('Account or client not available')
+	}
+
+	// Check balances for all transfers
+	for (const transfer of transfers.value) {
+		const token = getToken(selectedChainId.value, transfer.tokenAddress)
+		if (!token) {
+			throw new Error(`Token ${transfer.tokenAddress} not found`)
+		}
+
+		const requiredAmount = parseUnits(transfer.amount, token.decimals)
+		await checkTokenBalance({
+			client: client.value,
+			accountAddress: selectedAccount.value.address,
+			tokenAddress: transfer.tokenAddress,
+			requiredAmount,
+			chainId: selectedChainId.value,
+		})
+	}
+
+	// If all balance checks pass, proceed with the transaction
 	useTxModal().openModal({
 		executions: transfers.value.map(t => {
 			const token = getToken(selectedChainId.value, t.tokenAddress)

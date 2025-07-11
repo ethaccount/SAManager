@@ -7,7 +7,7 @@ import {
 	validateTimes,
 } from '@/lib/scheduling/common'
 import { ScheduleTransfer, useScheduleTransfer } from '@/lib/scheduling/useScheduleTransfer'
-import { getToken, getTokenAddress, getTokens } from '@/lib/token'
+import { getToken, getTokenAddress, getTokens } from '@/lib/tokens/token'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { getLocalTimeZone, now, type DateValue } from '@internationalized/date'
 import { isAddress } from 'ethers'

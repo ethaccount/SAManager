@@ -1,3 +1,4 @@
+import { AccountId } from '@/lib/accounts'
 import { getInstallModuleData } from '@/lib/accounts/account-specific'
 import { createScheduledTransferSession, getScheduledTransferSessionStatus } from '@/lib/permissions/session'
 import { useSessionList } from '@/lib/permissions/useSessionList'
@@ -9,9 +10,9 @@ import {
 	validateAccount,
 } from '@/lib/scheduling/common'
 import { registerJob } from '@/lib/scheduling/registerJob'
-import { getToken, NATIVE_TOKEN_ADDRESS, TokenTransfer } from '@/lib/token'
+import { checkTokenBalance } from '@/lib/tokens/helpers'
+import { getToken, NATIVE_TOKEN_ADDRESS, TokenTransfer } from '@/lib/tokens/token'
 import { useGetCode } from '@/lib/useGetCode'
-import { AccountId } from '@/lib/accounts'
 import { ImportedAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
@@ -24,11 +25,11 @@ import {
 	ERC7579_MODULE_TYPE,
 	ERC7579Module,
 	getEncodedFunctionParams,
+	IERC7579Account__factory,
 	INTERFACES,
 	isSameAddress,
-	SMART_SESSIONS_ENABLE_MODE,
-	IERC7579Account__factory,
 	ScheduledTransfers__factory,
+	SMART_SESSIONS_ENABLE_MODE,
 	zeroPadLeft,
 } from 'sendop'
 import { SessionStruct } from 'sendop/contract-types/SmartSession'
@@ -246,37 +247,46 @@ export function useScheduleTransfer() {
 			// Step 1: Validate account
 			const selectedAccount = await validateAccount()
 
-			// Step 2: Check module and session status
+			// Step 2: Check token balance
+			const config = createScheduleTransferConfig(scheduledTransfer)
+			await checkTokenBalance({
+				client: client.value,
+				accountAddress: selectedAccount.address,
+				tokenAddress: config.tokenAddress,
+				requiredAmount: config.amount,
+				chainId: selectedChainId.value,
+			})
+
+			// Step 3: Check module and session status
 			const moduleStatus = await checkModuleStatus(selectedAccount)
 
-			// Step 3: Build SmartSession executions
+			// Step 4: Build SmartSession executions
 			const { executions: smartSessionExecutions, permissionId } = buildSmartSessionExecutions(
 				moduleStatus,
 				selectedAccount,
 			)
 
-			// Step 4: Create schedule transfer configuration
-			const config = createScheduleTransferConfig(scheduledTransfer)
+			// Step 5: Create schedule transfer configuration and order data
 			const scheduledTransfersOrderData = createScheduledTransfersOrderData(config)
 
-			// Step 5: Build ScheduledTransfers executions
+			// Step 6: Build ScheduledTransfers executions
 			const scheduledTransfersExecutions = buildScheduledTransfersExecutions(
 				moduleStatus,
 				selectedAccount.accountId,
 				scheduledTransfersOrderData,
 			)
 
-			// Step 6: Build Rhinestone Attester executions (for Kernel accounts)
+			// Step 7: Build Rhinestone Attester executions (for Kernel accounts)
 			const rhinestoneExecutions = buildRhinestoneAttesterExecutions(moduleStatus.isRhinestoneAttesterTrusted)
 
-			// Step 7: Combine all executions
+			// Step 8: Combine all executions
 			const executions: TxModalExecution[] = [
 				...rhinestoneExecutions,
 				...smartSessionExecutions,
 				...scheduledTransfersExecutions,
 			]
 
-			// Step 8: Get job ID and open transaction modal
+			// Step 9: Get job ID and open transaction modal
 			const jobId = await getJobId(selectedAccount.address)
 
 			useTxModal().openModal({

@@ -1,5 +1,5 @@
 import { Contract, getAddress, Interface, JsonRpcProvider } from 'ethers'
-import { getToken, Token } from '../token'
+import { getToken, Token } from '../tokens/token'
 import { CHAIN_ID } from '@/stores/blockchain/blockchain'
 import { isSameAddress } from 'sendop'
 

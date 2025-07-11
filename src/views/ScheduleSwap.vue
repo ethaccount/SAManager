@@ -8,7 +8,7 @@ import {
 } from '@/lib/scheduling/common'
 import { DEFAULT_FEE, DEFAULT_SLIPPAGE, getSwapParameters, SwapParameters } from '@/lib/scheduling/swap-utils'
 import { ScheduleSwap, useScheduleSwap } from '@/lib/scheduling/useScheduleSwap'
-import { getToken, getTokens, NATIVE_TOKEN_ADDRESS } from '@/lib/token'
+import { getToken, getTokens, NATIVE_TOKEN_ADDRESS } from '@/lib/tokens/token'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { getLocalTimeZone, today, type DateValue } from '@internationalized/date'
 import { formatUnits, parseUnits } from 'ethers'
