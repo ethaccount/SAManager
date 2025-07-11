@@ -1,8 +1,15 @@
 # Smart Account Manager
 
-> ⚠️ **WARNING**: This project is under active development. Use at your own risk.
+SAManager is a general web wallet that aims to enable interoperability across different contract account implementations. 
 
-## Dev
+By leveraging ERC-4337 and various account providers, it allows users to access their smart accounts using EOAs or Passkeys to authenticate their accounts.
+
+Smart accounts shouldn't be locked into specific wallet providers. SAManager ensures your accounts remain accessible regardless of the interface you choose to use, promoting a more open and self-custodial experience.
+
+## Dev notes
+
+- [Backend repository](https://github.com/ethaccount/SAManager-backend)
+
 
 ### Commands
 
