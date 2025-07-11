@@ -1,23 +1,21 @@
-import { ValidationMethod } from '@/lib/validations'
+import { getModuleByValidationMethod, ValidationMethod } from '@/lib/validations'
 import { hexlify, JsonRpcProvider, randomBytes } from 'ethers'
 import {
 	AccountAPI,
 	ADDRESS,
 	BICONOMY_ATTESTER_ADDRESS,
-	DEV_ATTESTER_ADDRESS,
 	ERC7579_MODULE_TYPE,
 	ERC7579Module,
 	findPrevious,
-	RHINESTONE_ATTESTER_ADDRESS,
-	Safe7579API,
-	Safe7579AccountAPI,
-	SimpleSmartSessionValidation,
 	ISafe7579__factory,
+	RHINESTONE_ATTESTER_ADDRESS,
+	Safe7579AccountAPI,
+	Safe7579API,
+	SimpleSmartSessionValidation,
 	ValidationAPI,
 	zeroPadLeft,
 } from 'sendop'
 import { AccountProvider, Deployment } from '../types'
-import { getModuleByValidationMethod } from '@/lib/validations'
 
 export class Safe7579AccountProvider implements AccountProvider {
 	getExecutionAccountAPI(validationAPI: ValidationAPI, validatorAddress?: string): AccountAPI {
@@ -90,7 +88,7 @@ export class Safe7579AccountProvider implements AccountProvider {
 				validatorInitData: module.initData,
 				owners: [validation.identifier],
 				ownersThreshold: 1,
-				attesters: [RHINESTONE_ATTESTER_ADDRESS, BICONOMY_ATTESTER_ADDRESS, DEV_ATTESTER_ADDRESS],
+				attesters: [RHINESTONE_ATTESTER_ADDRESS, BICONOMY_ATTESTER_ADDRESS],
 				attestersThreshold: 1,
 			},
 		})

@@ -4,7 +4,6 @@ import {
 	AccountAPI,
 	ADDRESS,
 	BICONOMY_ATTESTER_ADDRESS,
-	DEV_ATTESTER_ADDRESS,
 	ERC7579_MODULE_TYPE,
 	ERC7579Module,
 	findPrevious,
@@ -89,7 +88,7 @@ export class NexusAccountProvider implements AccountProvider {
 				validatorInitData: module.initData,
 				bootstrap: 'initNexusWithSingleValidator',
 				registryAddress: ADDRESS.Registry,
-				attesters: [RHINESTONE_ATTESTER_ADDRESS, BICONOMY_ATTESTER_ADDRESS, DEV_ATTESTER_ADDRESS],
+				attesters: [RHINESTONE_ATTESTER_ADDRESS, BICONOMY_ATTESTER_ADDRESS],
 				threshold: 1,
 			},
 		})
