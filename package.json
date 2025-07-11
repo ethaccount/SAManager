@@ -48,7 +48,7 @@
 		"pinia-plugin-persistedstate": "^4.2.0",
 		"radix-vue": "^1.9.12",
 		"reka-ui": "^2.2.0",
-		"sendop": "0.5.0-beta.6",
+		"sendop": "0.5.0",
 		"tailwind-merge": "^2.6.0",
 		"unique-names-generator": "^4.7.1",
 		"uuid": "^11.1.0",
