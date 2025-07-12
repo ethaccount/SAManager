@@ -52,6 +52,7 @@ export enum SUPPORTED_NODE {
 export enum SUPPORTED_BUNDLER {
 	PIMLICO = 'PIMLICO',
 	ALCHEMY = 'ALCHEMY',
+	ETHERSPOT = 'ETHERSPOT',
 }
 
 export type SUPPORTED_ENTRY_POINT = EntryPointVersion

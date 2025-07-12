@@ -25,6 +25,8 @@ function displayBundlerName(bundler: SUPPORTED_BUNDLER) {
 			return 'Pimlico'
 		case SUPPORTED_BUNDLER.ALCHEMY:
 			return 'Alchemy'
+		case SUPPORTED_BUNDLER.ETHERSPOT:
+			return 'Etherspot'
 		default:
 			return 'Unknown'
 	}

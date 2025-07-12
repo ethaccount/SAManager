@@ -10,6 +10,7 @@ export interface Env {
 	TENDERLY_API_KEY_BASE_SEPOLIA: string
 	TENDERLY_API_KEY_POLYGON_AMOY: string
 	BACKEND_URL: string
+	ETHERSPOT_API_KEY: string
 
 	// Frontend env usage
 	API_SECRET: string
@@ -36,6 +37,7 @@ function validateEnv(env: Env) {
 	if (!env.TENDERLY_API_KEY_BASE_SEPOLIA) throw new Error('Missing TENDERLY_API_KEY_BASE_SEPOLIA')
 	if (!env.TENDERLY_API_KEY_POLYGON_AMOY) throw new Error('Missing TENDERLY_API_KEY_POLYGON_AMOY')
 	if (!env.BACKEND_URL) throw new Error('Missing BACKEND_URL')
+	if (!env.ETHERSPOT_API_KEY) throw new Error('Missing ETHERSPOT_API_KEY')
 
 	// Frontend env usage
 	if (!env.API_SECRET) throw new Error('Missing API_SECRET')
@@ -143,6 +145,12 @@ export default {
 						return Response.json({ error: `Tenderly not supported for chain ${chainId}` }, { status: 400 })
 					}
 					providerUrl = tenderly(chainIdNum as TenderlyChain, tenderlyApiKey)
+					break
+				case 'etherspot-v2': // for entrypoint v0.7
+					providerUrl = `https://testnet-rpc.etherspot.io/v2/${chainIdNum}?api-key=${env.ETHERSPOT_API_KEY}`
+					break
+				case 'etherspot-v3': // for entrypoint v0.8
+					providerUrl = `https://testnet-rpc.etherspot.io/v3/${chainIdNum}?api-key=${env.ETHERSPOT_API_KEY}`
 					break
 			}
 
