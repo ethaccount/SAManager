@@ -9,6 +9,7 @@ Smart accounts shouldn't be locked into specific wallet providers. SAManager ens
 ## Dev notes
 
 - [Backend repository](https://github.com/ethaccount/SAManager-backend)
+- TypeScript library [sendop](https://github.com/ethaccount/sendop)
 
 
 ### Commands
