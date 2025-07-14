@@ -26,19 +26,6 @@ export function useSetupEnv() {
 			if (!env.APP_SALT) {
 				throw new Error('APP_SALT is not set')
 			}
-
-			// Load Cloudflare Web Analytics only in production
-			if (import.meta.env.PROD) {
-				if (!env.CLOUDFLARE_ANALYTICS_TOKEN) {
-					throw new Error('CLOUDFLARE_ANALYTICS_TOKEN is not set')
-				}
-
-				const script = document.createElement('script')
-				script.defer = true
-				script.src = 'https://static.cloudflareinsights.com/beacon.min.js'
-				script.setAttribute('data-cf-beacon', `{"token": "${env.CLOUDFLARE_ANALYTICS_TOKEN}"}`)
-				document.head.appendChild(script)
-			}
 		} catch (err: unknown) {
 			console.error(err)
 			throw err
