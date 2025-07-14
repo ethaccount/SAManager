@@ -4,7 +4,6 @@
 	"version": "0.4.0",
 	"type": "module",
 	"repository": "https://github.com/ethaccount/SAManager",
-	"homepage": "https://samanager.johnson86tw.workers.dev",
 	"author": "Johnson Chen <https://x.com/johnson86tw>",
 	"license": "AGPL-3.0-only",
 	"description": "A clean interface for smart accounts on ERC-4337",
