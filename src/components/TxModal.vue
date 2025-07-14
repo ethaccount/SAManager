@@ -166,7 +166,18 @@ async function onClickSign() {
 			if (isError(e, 'ACTION_REJECTED')) {
 				msg = '' // User rejected the operation on browser wallet. Don't show error message
 			} else {
-				msg = getEthersErrorMsg(e, prefix)
+				const errorMsg = getEthersErrorMsg(e, prefix)
+				// Check for chain ID mismatch error
+				const chainMismatchMatch = errorMsg.match(
+					/Provided chainId "(\d+)" must match the active chainId "(\d+)"/,
+				)
+				if (chainMismatchMatch) {
+					const expectedChainId = chainMismatchMatch[1]
+					const currentChainName = displayChainName(Number(expectedChainId))
+					msg = `Please switch your wallet to ${currentChainName} to sign the user operation`
+				} else {
+					msg = errorMsg
+				}
 			}
 		} else if (e instanceof Error && e.message.includes('The operation either timed out or was not allowed')) {
 			msg = '' // User rejected the operation on passkey. Don't show error message
