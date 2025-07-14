@@ -1,19 +1,33 @@
-import type { ethers, EthersError } from 'ethers'
+import type { ErrorCode, ethers, EthersError } from 'ethers'
 
-/**
- * Check if the error is from ethers.js by checking if the error has a error property and the error property is an object
- */
 export function isEthersError(error: unknown): error is EthersError {
-	if (
-		'error' in <EthersError>error &&
-		typeof error === 'object' &&
-		error !== null &&
-		'code' in error &&
-		typeof error.code === 'string' &&
-		'name' in error &&
-		typeof error.name === 'string'
-	) {
-		return true
+	const validErrorCodes: ErrorCode[] = [
+		'UNKNOWN_ERROR',
+		'NOT_IMPLEMENTED',
+		'UNSUPPORTED_OPERATION',
+		'NETWORK_ERROR',
+		'SERVER_ERROR',
+		'TIMEOUT',
+		'BAD_DATA',
+		'CANCELLED',
+		'BUFFER_OVERRUN',
+		'NUMERIC_FAULT',
+		'INVALID_ARGUMENT',
+		'MISSING_ARGUMENT',
+		'UNEXPECTED_ARGUMENT',
+		'VALUE_MISMATCH',
+		'CALL_EXCEPTION',
+		'INSUFFICIENT_FUNDS',
+		'NONCE_EXPIRED',
+		'REPLACEMENT_UNDERPRICED',
+		'TRANSACTION_REPLACED',
+		'UNCONFIGURED_NAME',
+		'OFFCHAIN_FAULT',
+		'ACTION_REJECTED',
+	]
+
+	if (typeof error === 'object' && error !== null && 'code' in error && typeof error.code === 'string') {
+		return validErrorCodes.includes(error.code as ErrorCode)
 	}
 
 	return false
