@@ -51,7 +51,7 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 		open()
 	}
 
-	const { bundler, selectedChainId, client, fetchGasPrice } = useBlockchain()
+	const { bundler, selectedChainId, client, fetchGasPrice, setEntryPointAddress } = useBlockchain()
 	const { selectedAccount, accountVMethods } = useAccount()
 	const { selectedSignerType } = useSigner()
 
@@ -129,7 +129,18 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 
 		op.setGasPrice(await fetchGasPrice())
 
-		await op.estimateGas()
+		// Set entry point address in blockchain store for correct etherspot bundler selection
+		if (!op.entryPointAddress) {
+			throw new Error('[handleEstimate] No entry point address in user operation')
+		}
+		setEntryPointAddress(op.entryPointAddress)
+
+		try {
+			await op.estimateGas()
+		} catch (e: unknown) {
+			console.error(op.preview())
+			throw e
+		}
 
 		// Notice: markRaw is used to prevent TypeError: Cannot read from private field
 		// similar issue: https://github.com/vuejs/core/issues/8245
