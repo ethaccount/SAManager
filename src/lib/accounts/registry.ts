@@ -70,6 +70,13 @@ AccountRegistry.register(AccountId['biconomy.nexus.1.0.2'], {
 	name: 'Nexus',
 	isModular: true,
 	entryPointVersion: 'v0.7',
+	canCreate: false,
+})
+AccountRegistry.register(AccountId['biconomy.nexus.1.2.0'], {
+	provider: new NexusAccountProvider(),
+	name: 'Nexus',
+	isModular: true,
+	entryPointVersion: 'v0.7',
 	canCreate: true,
 })
 AccountRegistry.register(AccountId['rhinestone.safe7579.v1.0.0'], {

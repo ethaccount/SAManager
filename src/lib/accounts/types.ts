@@ -6,6 +6,7 @@ export enum AccountId {
 	'kernel.advanced.v0.3.1' = 'kernel.advanced.v0.3.1',
 	'kernel.advanced.v0.3.3' = 'kernel.advanced.v0.3.3',
 	'biconomy.nexus.1.0.2' = 'biconomy.nexus.1.0.2',
+	'biconomy.nexus.1.2.0' = 'biconomy.nexus.1.2.0',
 	'rhinestone.safe7579.v1.0.0' = 'rhinestone.safe7579.v1.0.0',
 	'infinitism.Simple7702Account.0.8.0' = 'infinitism.Simple7702Account.0.8.0',
 }

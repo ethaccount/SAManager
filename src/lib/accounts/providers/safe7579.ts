@@ -7,7 +7,7 @@ import {
 	ERC7579_MODULE_TYPE,
 	ERC7579Module,
 	findPrevious,
-	ISafe7579__factory,
+	getValidatorsPaginated,
 	RHINESTONE_ATTESTER_ADDRESS,
 	Safe7579AccountAPI,
 	Safe7579API,
@@ -65,9 +65,8 @@ export class Safe7579AccountProvider implements AccountProvider {
 			moduleAddress: module.address,
 			deInitData: module.deInitData,
 		}
-		const safe = ISafe7579__factory.connect(accountAddress, client)
-		const validators = await safe.getValidatorsPaginated(zeroPadLeft('0x01', 20), 10)
-		const prev = findPrevious(validators.array, module.address)
+		const { validators } = await getValidatorsPaginated(client, accountAddress, zeroPadLeft('0x01', 20), 10)
+		const prev = findPrevious(validators, module.address)
 		return Safe7579API.encodeUninstallModule({
 			...config,
 			prev,

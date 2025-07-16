@@ -7,7 +7,7 @@ import {
 	ERC7579_MODULE_TYPE,
 	ERC7579Module,
 	findPrevious,
-	Nexus__factory,
+	getValidatorsPaginated,
 	NexusAccountAPI,
 	NexusAPI,
 	RHINESTONE_ATTESTER_ADDRESS,
@@ -65,9 +65,8 @@ export class NexusAccountProvider implements AccountProvider {
 			moduleAddress: module.address,
 			deInitData: module.deInitData,
 		}
-		const nexus = Nexus__factory.connect(accountAddress, client)
-		const validators = await nexus.getValidatorsPaginated(zeroPadLeft('0x01', 20), 10)
-		const prev = findPrevious(validators.array, module.address)
+		const { validators } = await getValidatorsPaginated(client, accountAddress, zeroPadLeft('0x01', 20), 10)
+		const prev = findPrevious(validators, module.address)
 		return NexusAPI.encodeUninstallModule({
 			...config,
 			prev,
