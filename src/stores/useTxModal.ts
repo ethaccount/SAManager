@@ -24,9 +24,13 @@ export type TxModalExecution = Execution & {
 }
 
 export const useTxModalStore = defineStore('useTxModalStore', () => {
+	// Keep in sync with TxModal props and emits
 	const defaultProps: InstanceType<typeof TxModal>['$props'] = {
 		executions: [],
 		onClose: () => close(),
+		onExecuted: () => {},
+		onSuccess: () => {},
+		onFailed: () => {},
 	}
 
 	const { open, close, patchOptions } = useModal({

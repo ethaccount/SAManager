@@ -27,6 +27,7 @@ import {
 import { VueFinalModal } from 'vue-final-modal'
 import { toast } from 'vue-sonner'
 
+// If modified, also update defaultProps in useTxModalStore
 const props = withDefaults(
 	defineProps<{
 		executions?: TxModalExecution[]
@@ -36,6 +37,7 @@ const props = withDefaults(
 	},
 )
 
+// If modified, also update defaultProps in useTxModalStore
 const emit = defineEmits<{
 	(e: 'close'): void
 	(e: 'executed'): void // when status is success or failed
