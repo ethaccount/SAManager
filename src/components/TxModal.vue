@@ -16,7 +16,14 @@ import { TransactionStatus, TxModalExecution, useTxModal } from '@/stores/useTxM
 import { shortenAddress } from '@vue-dapp/core'
 import { formatEther, isError } from 'ethers'
 import { CircleDot, ExternalLink, Loader2, X } from 'lucide-vue-next'
-import { extractHexString, isSameAddress, parseContractError, replaceHexString } from 'sendop'
+import {
+	ERC4337Error,
+	extractHexString,
+	isSameAddress,
+	parseContractError,
+	replaceHexString,
+	UserOpBuilder,
+} from 'sendop'
 import { VueFinalModal } from 'vue-final-modal'
 import { toast } from 'vue-sonner'
 
@@ -109,17 +116,23 @@ function toggleExecutionExpansion(index: number) {
 
 function handleError(e: unknown, prefix?: string) {
 	console.error(getErrorChainMessage(e, prefix))
-	if (isEthersError(e)) {
-		const err = getEthersErrorMsg(e, prefix)
-		const errHex = extractHexString(err)
-		if (errHex && parseContractError(errHex)) {
-			error.value = replaceHexString(err, parseContractError(errHex, true))
-		} else {
-			error.value = err
+
+	if (e instanceof ERC4337Error) {
+		console.log(e.payload)
+		if (e.userOp) {
+			const op = UserOpBuilder.from(e.userOp, {
+				chainId: selectedChainId.value,
+			})
+			console.log('encoded handleOps data', op.encodeHandleOpsDataWithDefaultGas())
 		}
-		return
+	}
+
+	const msg = getErrorMsg(e, prefix)
+	const errHex = extractHexString(msg)
+	if (errHex && parseContractError(errHex)) {
+		error.value = replaceHexString(msg, parseContractError(errHex, true))
 	} else {
-		error.value = getErrorMsg(e, prefix)
+		error.value = msg
 	}
 }
 

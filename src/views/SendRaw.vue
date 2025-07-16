@@ -80,7 +80,7 @@ const reviewDisabled = computed(() => {
 })
 
 const reviewButtonText = computed(() => {
-	return isAccountAccessible.value ? 'Review Executions' : 'Connect your account to review'
+	return isAccountAccessible.value ? 'Review Executions' : 'Connect your account first'
 })
 
 async function onClickSend() {
