@@ -7,6 +7,7 @@
 	"author": "Johnson Chen <https://x.com/johnson86tw>",
 	"license": "AGPL-3.0-only",
 	"description": "A clean interface for smart accounts on ERC-4337",
+	"homepage": "https://samanager.xyz",
 	"keywords": [
 		"ERC-4337",
 		"smart accounts",
