@@ -120,7 +120,7 @@ const reviewDisabled = computed(() => {
 })
 
 const reviewButtonText = computed(() => {
-	if (!isAccountAccessible.value) return 'Connect your account to review'
+	if (!isAccountAccessible.value) return 'Connect your account first'
 	if (!isValidTransfers.value) return 'Invalid transfers'
 	return 'Review Transfers'
 })

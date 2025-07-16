@@ -6,8 +6,11 @@ import { defineStore, storeToRefs } from 'pinia'
 import { Execution, PublicPaymaster, UserOpBuilder, UserOperationReceipt } from 'sendop'
 import { useModal } from 'vue-final-modal'
 import { useSigner } from './useSigner'
+import { toast } from 'vue-sonner'
+import { SUPPORTED_BUNDLER } from './blockchain/blockchain'
 
 export enum TransactionStatus {
+	Closed = 'Closed',
 	Estimation = 'Estimation',
 	Estimating = 'Estimating',
 	Sign = 'Sign',
@@ -24,9 +27,13 @@ export type TxModalExecution = Execution & {
 }
 
 export const useTxModalStore = defineStore('useTxModalStore', () => {
+	// Keep in sync with TxModal props and emits
 	const defaultProps: InstanceType<typeof TxModal>['$props'] = {
 		executions: [],
 		onClose: () => close(),
+		onExecuted: () => {},
+		onSuccess: () => {},
+		onFailed: () => {},
 	}
 
 	const { open, close, patchOptions } = useModal({
@@ -45,9 +52,10 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 			},
 		})
 		open()
+		status.value = TransactionStatus.Estimation
 	}
 
-	const { bundler, selectedChainId, client, fetchGasPrice } = useBlockchain()
+	const { bundler, selectedChainId, client, fetchGasPrice, setEntryPointAddress, selectedBundler } = useBlockchain()
 	const { selectedAccount, accountVMethods } = useAccount()
 	const { selectedSignerType } = useSigner()
 
@@ -58,7 +66,17 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 
 	const selectedPaymaster = ref<(typeof paymasters)[number]['id']>('public')
 
-	const status = ref<TransactionStatus>(TransactionStatus.Estimation)
+	const status = ref<TransactionStatus>(TransactionStatus.Closed)
+
+	// Auto switch to 'none' if 'public' paymaster is selected and bundler is etherspot in estimation status
+	watch(status, () => {
+		if (status.value === TransactionStatus.Estimation) {
+			if (selectedPaymaster.value === 'public' && selectedBundler.value === SUPPORTED_BUNDLER.ETHERSPOT) {
+				selectedPaymaster.value = 'none'
+				toast.info('Public Paymaster cannot be used with Etherspot Bundler')
+			}
+		}
+	})
 
 	const canEstimate = computed(() => {
 		if (status.value !== TransactionStatus.Estimation) return false
@@ -125,7 +143,18 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 
 		op.setGasPrice(await fetchGasPrice())
 
-		await op.estimateGas()
+		// Set entry point address in blockchain store for correct etherspot bundler selection
+		if (!op.entryPointAddress) {
+			throw new Error('[handleEstimate] No entry point address in user operation')
+		}
+		setEntryPointAddress(op.entryPointAddress)
+
+		try {
+			await op.estimateGas()
+		} catch (e: unknown) {
+			console.error(op.preview())
+			throw e
+		}
 
 		// Notice: markRaw is used to prevent TypeError: Cannot read from private field
 		// similar issue: https://github.com/vuejs/core/issues/8245
@@ -170,11 +199,10 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 	}
 
 	function reset() {
-		status.value = TransactionStatus.Estimation
+		status.value = TransactionStatus.Closed
 		userOp.value = null
 		opHash.value = null
 		opReceipt.value = null
-		selectedPaymaster.value = 'public'
 	}
 
 	return {

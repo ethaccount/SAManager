@@ -8,27 +8,21 @@ import {
 	TESTNET_CHAIN_ID,
 } from '@/stores/blockchain/blockchain'
 import { JsonRpcProvider } from 'ethers'
-import { ERC4337Bundler } from 'sendop'
 import { publicNode, PublicNodeChain } from 'evm-providers'
 import { defineStore } from 'pinia'
-import { EntryPointVersion, fetchGasPriceAlchemy, fetchGasPricePimlico } from 'sendop'
+import {
+	ENTRY_POINT_V07_ADDRESS,
+	ENTRY_POINT_V08_ADDRESS,
+	EntryPointVersion,
+	ERC4337Bundler,
+	fetchGasPriceAlchemy,
+	fetchGasPricePimlico,
+} from 'sendop'
 
 export const DEFAULT_CHAIN_ID = TESTNET_CHAIN_ID.SEPOLIA
 export const DEFAULT_ENTRY_POINT_VERSION: EntryPointVersion = 'v0.7'
 export const DEFAULT_NODE = SUPPORTED_NODE.ALCHEMY
 export const DEFAULT_BUNDLER = SUPPORTED_BUNDLER.PIMLICO
-
-function getAlchemyUrl(chainId: CHAIN_ID) {
-	return `${window.location.origin}/api/provider?chainId=${chainId}&provider=alchemy`
-}
-
-function getPimlicoUrl(chainId: CHAIN_ID) {
-	return `${window.location.origin}/api/provider?chainId=${chainId}&provider=pimlico`
-}
-
-function getTenderlyUrl(chainId: CHAIN_ID) {
-	return `${window.location.origin}/api/provider?chainId=${chainId}&provider=tenderly`
-}
 
 export const useBlockchainStore = defineStore(
 	'useBlockchainStore',
@@ -71,6 +65,12 @@ export const useBlockchainStore = defineStore(
 
 		const selectedBundler = ref<SUPPORTED_BUNDLER>(DEFAULT_BUNDLER)
 
+		const selectedEntryPointAddress = ref<string>(ENTRY_POINT_V07_ADDRESS)
+
+		function setEntryPointAddress(entryPointAddress: string) {
+			selectedEntryPointAddress.value = entryPointAddress
+		}
+
 		const bundlerUrl = computed(() => {
 			if (selectedChainId.value === TESTNET_CHAIN_ID.LOCAL) {
 				return `http://localhost:4337`
@@ -80,25 +80,65 @@ export const useBlockchainStore = defineStore(
 					return getPimlicoUrl(selectedChainId.value)
 				case SUPPORTED_BUNDLER.ALCHEMY:
 					return getAlchemyUrl(selectedChainId.value)
+				case SUPPORTED_BUNDLER.ETHERSPOT:
+					switch (selectedEntryPointAddress.value) {
+						case ENTRY_POINT_V07_ADDRESS:
+							return getEtherspotTestnetUrl(selectedChainId.value, 'v0.7')
+						case ENTRY_POINT_V08_ADDRESS:
+							return getEtherspotTestnetUrl(selectedChainId.value, 'v0.8')
+						default:
+							throw new Error(`Invalid entry point address: ${selectedEntryPointAddress.value}`)
+					}
 				default:
 					return getAlchemyUrl(selectedChainId.value)
 			}
 		})
 
-		const client = computed(() => new JsonRpcProvider(rpcUrl.value, undefined, { staticNetwork: true }))
+		function getAlchemyUrl(chainId: CHAIN_ID) {
+			return `${window.location.origin}/api/provider?chainId=${chainId}&provider=alchemy`
+		}
+
+		function getPimlicoUrl(chainId: CHAIN_ID) {
+			return `${window.location.origin}/api/provider?chainId=${chainId}&provider=pimlico`
+		}
+
+		function getTenderlyUrl(chainId: CHAIN_ID) {
+			return `${window.location.origin}/api/provider?chainId=${chainId}&provider=tenderly`
+		}
+
+		function getEtherspotTestnetUrl(chainId: CHAIN_ID, entryPointVersion: SUPPORTED_ENTRY_POINT) {
+			switch (entryPointVersion) {
+				case 'v0.7':
+					return `${window.location.origin}/api/provider?chainId=${chainId}&provider=etherspot-v2`
+				case 'v0.8':
+					return `${window.location.origin}/api/provider?chainId=${chainId}&provider=etherspot-v3`
+			}
+		}
+
+		const client = computed(
+			() => new JsonRpcProvider(rpcUrl.value, Number(selectedChainId.value), { staticNetwork: true }),
+		)
+
 		const clientNoBatch = computed(
-			() => new JsonRpcProvider(rpcUrl.value, undefined, { batchMaxCount: 1, staticNetwork: true }),
+			() =>
+				new JsonRpcProvider(rpcUrl.value, Number(selectedChainId.value), {
+					batchMaxCount: 1,
+					staticNetwork: true,
+				}),
 		)
 
 		// only for fetching event logs
 		const tenderlyClient = computed<JsonRpcProvider | null>(() => {
-			return new JsonRpcProvider(getTenderlyUrl(selectedChainId.value), undefined, {
+			return new JsonRpcProvider(getTenderlyUrl(selectedChainId.value), Number(selectedChainId.value), {
 				staticNetwork: true,
 			})
 		})
 
 		const bundler = computed<ERC4337Bundler>(() => {
-			return new ERC4337Bundler(bundlerUrl.value)
+			// disables pre-fetching eth_chainId (Note that ethersport bundler does not support eth_chainId)
+			return new ERC4337Bundler(bundlerUrl.value, Number(selectedChainId.value), {
+				staticNetwork: true,
+			})
 		})
 
 		function switchChain(chainId: CHAIN_ID) {
@@ -134,6 +174,7 @@ export const useBlockchainStore = defineStore(
 			tenderlyClient,
 			switchChain,
 			fetchGasPrice,
+			setEntryPointAddress,
 		}
 	},
 	{

@@ -4,6 +4,7 @@ import { AccountAPI, ERC7579Module, ValidationAPI } from 'sendop'
 import { AccountRegistry } from './registry'
 import { AccountId, Deployment } from './types'
 
+// Validation methods that can be created for new accounts in Create.vue
 export const ACCOUNT_SUPPORTED_INITIAL_VALIDATION: Partial<
 	Record<
 		AccountId,
@@ -17,11 +18,36 @@ export const ACCOUNT_SUPPORTED_INITIAL_VALIDATION: Partial<
 		{ type: 'EOA-Owned', name: 'ECDSAValidator' },
 		{ type: 'PASSKEY', name: 'WebAuthnValidator' },
 	],
-	[AccountId['biconomy.nexus.1.0.2']]: [
+	[AccountId['biconomy.nexus.1.2.0']]: [
 		{ type: 'EOA-Owned', name: 'OwnableValidator' },
 		{ type: 'PASSKEY', name: 'WebAuthnValidator' },
 	],
 	[AccountId['rhinestone.safe7579.v1.0.0']]: [{ type: 'EOA-Owned', name: 'OwnableValidator' }],
+} as const
+
+// Validation methods that can be installed for deployed accounts in Account Management (AMModules.vue)
+export const ACCOUNT_SUPPORTED_INSTALL_VALIDATION: Partial<
+	Record<
+		AccountId,
+		{
+			type: ValidationType
+			name: ValidationMethodName
+		}[]
+	>
+> = {
+	[AccountId['kernel.advanced.v0.3.3']]: [
+		{ type: 'EOA-Owned', name: 'ECDSAValidator' },
+		{ type: 'PASSKEY', name: 'WebAuthnValidator' },
+		{ type: 'EOA-Owned', name: 'OwnableValidator' },
+	],
+	[AccountId['biconomy.nexus.1.2.0']]: [
+		{ type: 'EOA-Owned', name: 'OwnableValidator' },
+		{ type: 'PASSKEY', name: 'WebAuthnValidator' },
+	],
+	[AccountId['rhinestone.safe7579.v1.0.0']]: [
+		{ type: 'EOA-Owned', name: 'OwnableValidator' },
+		{ type: 'PASSKEY', name: 'WebAuthnValidator' },
+	],
 } as const
 
 export async function getDeployment(

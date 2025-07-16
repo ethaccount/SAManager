@@ -1,19 +1,17 @@
-import { ValidationMethod } from '@/lib/validations'
+import { getModuleByValidationMethod, ValidationMethod } from '@/lib/validations'
 import { hexlify, JsonRpcProvider, randomBytes } from 'ethers'
 import {
 	AccountAPI,
 	ADDRESS,
 	ERC7579_MODULE_TYPE,
 	ERC7579Module,
-	INTERFACES,
-	KernelAPI,
 	KernelAccountAPI,
+	KernelAPI,
 	KernelValidationType,
 	SimpleSmartSessionValidation,
 	ValidationAPI,
 } from 'sendop'
 import { AccountProvider, Deployment } from '../types'
-import { getModuleByValidationMethod } from '@/lib/validations'
 
 export class KernelAccountProvider implements AccountProvider {
 	getExecutionAccountAPI(validationAPI: ValidationAPI, validatorAddress?: string): AccountAPI {
@@ -54,7 +52,7 @@ export class KernelAccountProvider implements AccountProvider {
 		if (module.type === ERC7579_MODULE_TYPE.VALIDATOR) {
 			return KernelAPI.encodeInstallModule({
 				...config,
-				selectorData: INTERFACES.KernelV3.getFunction('execute').selector,
+				selectorData: KernelAPI.executeSelector,
 			})
 		}
 		return KernelAPI.encodeInstallModule(config)

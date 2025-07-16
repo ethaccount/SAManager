@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ACCOUNT_SUPPORTED_INITIAL_VALIDATION } from '@/lib/accounts/account-specific'
+import { ACCOUNT_SUPPORTED_INSTALL_VALIDATION } from '@/lib/accounts/account-specific'
 import { addressToName, DEPRECATED_WEB_AUTHN_VALIDATOR_ADDRESS } from '@/lib/addressToName'
 import { MODULE_TYPE_LABELS } from '@/lib/modules/supported-modules'
 import { ModuleRecordModule, useAccountModule } from '@/lib/modules/useAccountModule'
@@ -55,7 +55,7 @@ const availableModules = computed<{ address: string; name: ValidationMethodName 
 	]
 
 	// Get supported validation methods for the current account type
-	const supportedValidations = ACCOUNT_SUPPORTED_INITIAL_VALIDATION[props.selectedAccount.accountId] || []
+	const supportedValidations = ACCOUNT_SUPPORTED_INSTALL_VALIDATION[props.selectedAccount.accountId] || []
 	const supportedValidationNames = new Set(supportedValidations.map(v => v.name))
 
 	return installableModules.filter(module => {

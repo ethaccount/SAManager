@@ -177,6 +177,7 @@ watchImmediate(
 					selectedValidationMethod.value,
 					computedSalt.value,
 				)
+				console.log('deployment', deployment.value)
 				const { getCode, isDeployed: isAccountDeployed } = useGetCode()
 				await getCode(deployment.value.accountAddress)
 				isDeployed.value = isAccountDeployed.value
