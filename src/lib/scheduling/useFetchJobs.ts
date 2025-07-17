@@ -91,12 +91,12 @@ interface JobContract {
 }
 
 // Utility function to get job count from contract
-async function getJobCount(contract: JobContract, accountAddress: string): Promise<bigint> {
+export async function getJobCount(contract: JobContract, accountAddress: string): Promise<bigint> {
 	return await contract.accountJobCount(accountAddress)
 }
 
 // Utility function to batch fetch execution logs
-async function fetchExecutionLogs(contract: JobContract, accountAddress: string, jobCount: number) {
+export async function fetchExecutionLogs(contract: JobContract, accountAddress: string, jobCount: number) {
 	const executionLogPromises = Array.from({ length: jobCount }, (_, i) =>
 		contract.executionLog(accountAddress, i + 1),
 	)
