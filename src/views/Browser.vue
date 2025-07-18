@@ -1,30 +1,86 @@
 <script setup lang="ts">
+import { useSafeApps } from '@/lib/browser/useSafeApps'
+import { useAccount } from '@/stores/account/useAccount'
+import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { ArrowLeft, ArrowRight, Loader2, RotateCcw } from 'lucide-vue-next'
-import { toast } from 'vue-sonner'
 
-// State
 const route = useRoute()
 const router = useRouter()
 
-const defaultUrl = 'https://app.uniswap.org/swap?lng=en'
+const { selectedAccount } = useAccount()
+const { selectedChainId } = useBlockchain()
+
+const defaultUrl = `https://swap.cow.fi/#/11155111/swap/ETH/0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`
 const currentUrl = ref(defaultUrl)
 const urlInput = ref(defaultUrl)
 const iframe = ref<HTMLIFrameElement>()
 const history = ref<string[]>([defaultUrl])
 const historyIndex = ref(0)
-const isLoading = ref(false)
+const isLoading = ref(true)
 
 const canGoBack = computed(() => historyIndex.value > 0)
 const canGoForward = computed(() => historyIndex.value < history.value.length - 1)
 
-// Lifecycle hooks
-onMounted(() => {
+const { initialize, communicator } = useSafeApps()
+
+onMounted(async () => {
 	initializeFromRoute()
 
-	toast.warning('Dapp browser is under development. Currently unavailable. Stay tuned!')
+	if (iframe.value) {
+		initialize(iframe.value)
+	}
 })
 
-// Watchers
+onUnmounted(() => {
+	communicator.value?.clear()
+})
+
+watch([selectedAccount, selectedChainId], async () => {
+	refreshBrowser()
+})
+
+function refreshBrowser() {
+	isLoading.value = true
+
+	try {
+		communicator.value?.clear()
+
+		// Refresh iframe
+		if (iframe.value) {
+			iframe.value.contentWindow?.location.reload()
+		}
+	} catch (error) {
+		console.error('Error refreshing browser', error)
+		// Fallback: force reload by manipulating src
+		if (iframe.value) {
+			iframe.value.src = 'about:blank'
+			setTimeout(() => {
+				if (iframe.value) {
+					iframe.value.src = currentUrl.value
+					initialize(iframe.value)
+				}
+			}, 100)
+		}
+	}
+}
+
+function navigateToUrl(url: string) {
+	isLoading.value = true
+
+	// Add to history if it's a new URL
+	if (url !== currentUrl.value) {
+		// Remove any forward history when navigating to a new URL
+		history.value = history.value.slice(0, historyIndex.value + 1)
+		history.value.push(url)
+		historyIndex.value = history.value.length - 1
+	}
+
+	currentUrl.value = url
+	urlInput.value = url
+
+	updateRouteUrlQuery(url)
+}
+
 watchImmediate(
 	() => route.query.url,
 	() => {
@@ -32,17 +88,13 @@ watchImmediate(
 	},
 )
 
-watch(
+watchImmediate(
 	() => route.params.chainId,
 	() => {
-		// Update router path when chain changes
-		if (currentUrl.value !== defaultUrl) {
-			updateRouter(currentUrl.value)
-		}
+		updateRouteUrlQuery(currentUrl.value)
 	},
 )
 
-// Important functions
 function initializeFromRoute() {
 	if (route.query.url) {
 		const url = Array.isArray(route.query.url) ? route.query.url[0] : route.query.url
@@ -62,83 +114,48 @@ function initializeFromRoute() {
 	}
 }
 
-function updateRouter(url: string) {
+function updateRouteUrlQuery(url: string) {
 	const basePath = `/${route.params.chainId}/browser`
 
-	if (url === defaultUrl) {
-		// Navigate to base browser path for default URL
-		router.replace(basePath)
-	} else {
-		// Navigate to browser with URL query param
-		router.replace({
-			path: basePath,
-			query: { url },
-		})
-	}
-}
-
-function navigateToUrl(url: string) {
-	// Add to history if it's a new URL
-	if (url !== currentUrl.value) {
-		// Remove any forward history when navigating to a new URL
-		history.value = history.value.slice(0, historyIndex.value + 1)
-		history.value.push(url)
-		historyIndex.value = history.value.length - 1
-	}
-
-	currentUrl.value = url
-	urlInput.value = url
-	isLoading.value = true
-
-	// Update router
-	updateRouter(url)
+	router.replace({
+		path: basePath,
+		query: { url },
+	})
 }
 
 function onClickBack() {
 	if (canGoBack.value) {
+		isLoading.value = true
 		historyIndex.value--
 		currentUrl.value = history.value[historyIndex.value]
 		urlInput.value = currentUrl.value
-		isLoading.value = true
-		updateRouter(currentUrl.value)
+
+		updateRouteUrlQuery(currentUrl.value)
 	}
 }
 
 function onClickForward() {
 	if (canGoForward.value) {
+		isLoading.value = true
 		historyIndex.value++
 		currentUrl.value = history.value[historyIndex.value]
 		urlInput.value = currentUrl.value
-		isLoading.value = true
-		updateRouter(currentUrl.value)
+		updateRouteUrlQuery(currentUrl.value)
 	}
 }
 
 function onClickRefresh() {
-	isLoading.value = true
-	if (iframe.value) {
-		iframe.value.src = iframe.value.src
-	}
+	refreshBrowser()
 }
 
 function onClickUrlSubmit() {
 	navigateToUrl(urlInput.value)
 }
 
-function handleIframeLoad() {
-	isLoading.value = false
-	try {
-		// Try to get the actual URL from iframe (may fail due to CORS)
-		if (iframe.value?.contentWindow?.location?.href) {
-			const actualUrl = iframe.value.contentWindow.location.href
-			if (actualUrl !== 'about:blank' && actualUrl !== currentUrl.value) {
-				currentUrl.value = actualUrl
-				urlInput.value = actualUrl
-			}
-		}
-	} catch {
-		// Ignore CORS errors
-	}
+function iframeLoad() {
+	setTimeout(() => {
+		isLoading.value = false
+	}, 1000)
 }
 
 function handleKeyPress(e: KeyboardEvent) {
@@ -170,7 +187,7 @@ function handleKeyPress(e: KeyboardEvent) {
 					</Button>
 
 					<!-- Loading indicator -->
-					<div v-if="isLoading" class="">
+					<div v-if="isLoading" class="h-10 w-10 flex items-center justify-center">
 						<Loader2 class="w-4 h-4 animate-spin" />
 					</div>
 				</div>
@@ -195,7 +212,7 @@ function handleKeyPress(e: KeyboardEvent) {
 					ref="iframe"
 					:src="currentUrl"
 					class="w-full h-full"
-					@load="handleIframeLoad"
+					@load="iframeLoad"
 					sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
 				/>
 			</div>

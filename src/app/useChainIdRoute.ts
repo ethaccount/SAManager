@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 
 export function useChainIdRoute() {
 	const router = useRouter()
+	const route = useRoute()
 	const { selectedChainId } = useBlockchain()
 
 	const urlChainId = window.location.pathname.split('/')[1]
@@ -22,6 +23,12 @@ export function useChainIdRoute() {
 
 	watch(selectedChainId, () => {
 		router.replace({ params: { chainId: selectedChainId.value } })
+
+		// Reload page when selectedChainId changes except for the excluded routes
+		const excludedRouteNames = ['browser']
+		if (excludedRouteNames.includes(route.name as string)) {
+			return
+		}
 		setTimeout(() => {
 			location.reload()
 		}, 100)
