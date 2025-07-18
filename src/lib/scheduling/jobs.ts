@@ -1,6 +1,9 @@
 import { AbiCoder } from 'ethers'
 import { Job } from './useFetchJobs'
 
+// Only consider overdue if it's more than 2.5 minutes past the expected time
+const OVERDUE_THRESHOLD_MS = 2.5 * 60 * 1000 // 2.5 minutes in milliseconds
+
 export function decodeTransferExecutionData(data: string) {
 	const abiCoder = new AbiCoder()
 	const [recipient, tokenAddress, amount] = abiCoder.decode(['address', 'address', 'uint256'], data)
@@ -88,7 +91,9 @@ export function isJobOverdue(job: Job) {
 
 	const nextTime = getNextExecutionTime(job)
 	const now = new Date()
-	return nextTime.getTime() < now.getTime()
+	const diffMs = now.getTime() - nextTime.getTime()
+
+	return diffMs > OVERDUE_THRESHOLD_MS
 }
 
 export function isJobCompleted(job: Job) {
