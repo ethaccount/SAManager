@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useChainIdRoute } from '@/app/useChainIdRoute'
-import { useSetupAccount } from '@/app/useSetupAccount'
+import { useCrossChainAutoImport } from '@/app/useCrossChainAutoImport'
 import { useSetupEnv } from '@/app/useSetupEnv'
 import { useSetupPasskey } from '@/app/useSetupPasskey'
 import { useSetupVueDapp } from '@/app/useSetupVueDapp'
@@ -21,7 +21,7 @@ const { selectSigner } = useSigner()
 
 useChainIdRoute()
 useSetupVueDapp()
-useSetupAccount()
+useCrossChainAutoImport()
 useSetupPasskey()
 useSetupEnv()
 
