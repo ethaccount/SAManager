@@ -6,10 +6,10 @@ import { shortenAddress } from '@vue-dapp/core'
 import { Wallet } from 'lucide-vue-next'
 
 const { isAccountAccessible, selectedAccount } = useAccount()
+const { toggle } = useAccountDrawer() // must be placed outside onClickAccountButton
 
 function onClickAccountButton() {
-	const { openAccountDrawer } = useAccountDrawer()
-	openAccountDrawer()
+	toggle()
 }
 </script>
 

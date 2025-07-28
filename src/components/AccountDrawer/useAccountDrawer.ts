@@ -2,7 +2,7 @@ import AccountDrawer from '@/components/AccountDrawer/AccountDrawer.vue'
 import { useModal } from 'vue-final-modal'
 
 export function useAccountDrawer() {
-	const { open, close } = useModal({
+	const { open, close, options } = useModal({
 		component: AccountDrawer,
 		attrs: {
 			onClose: () => close(),
@@ -10,8 +10,15 @@ export function useAccountDrawer() {
 		slots: {},
 	})
 
+	function toggle() {
+		if (options.modelValue) {
+			close()
+		} else {
+			open()
+		}
+	}
+
 	return {
-		openAccountDrawer: open,
-		closeAccountDrawer: close,
+		toggle,
 	}
 }
