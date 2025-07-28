@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { AccountRegistry } from '@/lib/accounts'
 import { addressToName } from '@/lib/addressToName'
@@ -7,7 +8,7 @@ import { getErrorChainMessage, getErrorMsg, getEthersErrorMsg, isEthersError } f
 import { useGetCode } from '@/lib/useGetCode'
 import { deserializeValidationMethod } from '@/lib/validations'
 import { useAccount } from '@/stores/account/useAccount'
-import { displayChainName } from '@/stores/blockchain/blockchain'
+import { displayChainName, isTestnet } from '@/stores/blockchain/blockchain'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
@@ -68,9 +69,23 @@ const {
 	canSend,
 	selectedPaymaster,
 	paymasters,
+	formattedUsdcBalance,
+	formattedUsdcAllowance,
+	hasValidUsdcBalance,
+	hasValidUsdcAllowance,
+	isCheckingUsdcData,
+	permitAllowanceAmount,
+	isValidPermitAmount,
+	canSignPermit,
+	isSigningPermit,
+	onClickSignPermit,
 	handleEstimate,
 	handleSign,
 	handleSend,
+	resetTxModal,
+	resetUsdcData,
+	checkUsdcBalanceAndAllowance,
+	usdcPaymasterData,
 } = useTxModal()
 
 const { isDeployed, getCode, loading: isLoadingCode } = useGetCode()
@@ -96,11 +111,28 @@ onMounted(async () => {
 	}
 
 	// auto click estimate
-	await onClickEstimate()
+	// await onClickEstimate()
 })
 
 onUnmounted(() => {
-	useTxModal().reset()
+	resetTxModal()
+})
+
+// This cannot be placed in useTxModal because it needs to be executed immediately when the TxModal is mounted
+watchImmediate(selectedPaymaster, async newPaymaster => {
+	resetUsdcData()
+
+	if (status.value === TransactionStatus.Initial) {
+		if (newPaymaster === 'usdc') {
+			status.value = TransactionStatus.PreparingPaymaster
+			await checkUsdcBalanceAndAllowance()
+			if (usdcPaymasterData.value) {
+				status.value = TransactionStatus.Initial
+			}
+		} else {
+			status.value = TransactionStatus.Initial
+		}
+	}
 })
 
 const error = ref<string | null>(null)
@@ -161,7 +193,7 @@ async function onClickEstimate() {
 		status.value = TransactionStatus.Sign
 	} catch (e: unknown) {
 		handleError(e, 'Failed to estimate gas')
-		status.value = TransactionStatus.Estimation
+		status.value = TransactionStatus.Initial
 	}
 }
 
@@ -223,7 +255,7 @@ async function onClickSend() {
 		})
 	} catch (e: unknown) {
 		handleError(e, 'Failed to send user operation')
-		status.value = TransactionStatus.Estimation
+		status.value = TransactionStatus.Initial
 	}
 }
 
@@ -270,6 +302,24 @@ const entryPointAddress = computed(() => {
 	if (!userOp.value) return null
 	return userOp.value.entryPointAddress
 })
+
+const paymasterSelectorDisabled = computed(() => {
+	return status.value !== TransactionStatus.Initial && status.value !== TransactionStatus.PreparingPaymaster
+})
+
+// Computed properties for signer selection
+const canSelectSigner = computed(() => {
+	return status.value === TransactionStatus.Initial || status.value === TransactionStatus.PreparingPaymaster
+})
+
+const signerSelectorDisabled = computed(() => {
+	return !canSelectSigner.value
+})
+
+// Check if current chain is testnet
+const isCurrentChainTestnet = computed(() => {
+	return isTestnet(selectedChainId.value)
+})
 </script>
 
 <template>
@@ -283,7 +333,7 @@ const entryPointAddress = computed(() => {
 	>
 		<div class="flex flex-col h-full">
 			<!-- Header -->
-			<div class="flex justify-between items-center">
+			<div class="flex justify-between items-center border-b border-border px-4 py-1">
 				<div class="w-9"></div>
 				<div class="font-medium">Transaction</div>
 				<Button variant="ghost" size="icon" :disabled="!canClose" @click="onClickClose">
@@ -292,14 +342,82 @@ const entryPointAddress = computed(() => {
 			</div>
 
 			<!-- Content -->
-			<div class="flex-1 mt-2 space-y-6 overflow-y-auto max-h-[420px] py-2">
+			<div class="flex-1 mt-2 space-y-6 overflow-y-auto max-h-[420px] px-4 py-2">
+				<!-- Signer -->
+				<div class="space-y-3">
+					<div class="text-sm font-medium">Signer</div>
+					<div class="space-y-2">
+						<!-- EOA-Owned or SmartEOA -->
+						<div
+							v-if="showEOAWalletValidationMethod"
+							class="flex flex-col p-2.5 border rounded-lg transition-all"
+							:class="{
+								'cursor-pointer': canSelectSigner,
+								'opacity-50 cursor-not-allowed': signerSelectorDisabled,
+							}"
+							@click="canSelectSigner && selectSigner('EOAWallet')"
+						>
+							<div class="space-y-1">
+								<div class="flex justify-between items-center">
+									<div class="flex items-center gap-1.5 text-xs">
+										<CircleDot
+											class="w-2.5 h-2.5"
+											:class="
+												selectedSigner?.type === 'EOAWallet'
+													? 'text-green-500'
+													: 'text-muted-foreground'
+											"
+										/>
+										<span>{{ wallet.providerInfo?.name }} Connected</span>
+									</div>
+								</div>
+								<div class="text-xs text-muted-foreground font-mono">
+									{{ wallet.address ? shortenAddress(wallet.address) : '-' }}
+								</div>
+							</div>
+						</div>
+
+						<!-- Passkey -->
+						<div
+							v-if="showPasskeyValidationMethod"
+							class="flex flex-col p-2.5 border rounded-lg transition-all"
+							:class="{
+								'cursor-pointer': canSelectSigner,
+								'opacity-50 cursor-not-allowed': signerSelectorDisabled,
+							}"
+							@click="canSelectSigner && selectSigner('Passkey')"
+						>
+							<div class="space-y-1">
+								<div class="flex justify-between items-center">
+									<div class="flex items-center gap-1.5 text-xs">
+										<CircleDot
+											class="w-2.5 h-2.5"
+											:class="
+												selectedSigner?.type === 'Passkey'
+													? 'text-green-500'
+													: 'text-muted-foreground'
+											"
+										/>
+										<span>Passkey Connected</span>
+									</div>
+								</div>
+								<div class="text-xs text-muted-foreground">
+									{{ selectedCredentialDisplay }}
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
 				<!-- Paymaster Selection -->
 				<div class="space-y-3">
-					<div class="text-sm font-medium">Select Paymaster</div>
-					<Select v-model="selectedPaymaster" :disabled="status !== TransactionStatus.Estimation">
+					<div class="text-sm font-medium">Paymaster</div>
+					<Select v-model="selectedPaymaster" :disabled="paymasterSelectorDisabled">
 						<SelectTrigger
-							class="w-full bg-muted/30 border-border/50 hover:border-primary transition-colors"
-							:class="{ 'opacity-50 cursor-not-allowed': status !== TransactionStatus.Estimation }"
+							class=""
+							:class="{
+								'hover:border-primary': !paymasterSelectorDisabled,
+							}"
 						>
 							<SelectValue placeholder="Select Paymaster">
 								<div class="flex items-center justify-between w-full">
@@ -330,69 +448,122 @@ const entryPointAddress = computed(() => {
 							</SelectItem>
 						</SelectContent>
 					</Select>
-				</div>
 
-				<!-- Validation Method -->
-				<div class="space-y-3">
-					<div class="text-sm font-medium">Validation Method</div>
-					<div class="space-y-2">
-						<!-- EOA-Owned or SmartEOA -->
-						<div
-							v-if="showEOAWalletValidationMethod"
-							class="flex flex-col p-2.5 border rounded-lg transition-all"
-							:class="{
-								'cursor-pointer': status === TransactionStatus.Estimation,
-								'opacity-50 cursor-not-allowed': status !== TransactionStatus.Estimation,
-							}"
-							@click="status === TransactionStatus.Estimation && selectSigner('EOAWallet')"
-						>
-							<div class="space-y-1">
-								<div class="flex justify-between items-center">
-									<div class="flex items-center gap-1.5 text-xs">
-										<CircleDot
-											class="w-2.5 h-2.5"
-											:class="
-												selectedSigner?.type === 'EOAWallet'
-													? 'text-green-500'
-													: 'text-muted-foreground'
-											"
-										/>
-										<span>{{ wallet.providerInfo?.name }} Connected</span>
-									</div>
+					<!-- USDC Paymaster Checks -->
+					<div
+						v-if="
+							selectedPaymaster === 'usdc' &&
+							(status === TransactionStatus.Initial || status === TransactionStatus.PreparingPaymaster)
+						"
+						class="space-y-2 mt-3 p-3 bg-muted/20 rounded-lg border"
+					>
+						<div class="space-y-1">
+							<!-- Loading State -->
+							<div
+								v-if="isCheckingUsdcData"
+								class="flex items-center gap-2 text-sm text-muted-foreground"
+							>
+								<Loader2 class="w-4 h-4 animate-spin" />
+								Checking USDC balance and allowance...
+							</div>
+
+							<!-- USDC Balance -->
+							<div v-if="!isCheckingUsdcData" class="flex items-center justify-between text-xs">
+								<div class="flex items-center gap-2">
+									<span>USDC Balance</span>
 								</div>
-								<div class="text-xs text-muted-foreground font-mono">
-									{{ wallet.address ? shortenAddress(wallet.address) : '-' }}
+								<span
+									class="font-mono"
+									:class="hasValidUsdcBalance ? 'text-primary' : 'text-yellow-600'"
+								>
+									{{ formattedUsdcBalance ?? 'N/A' }} USDC
+								</span>
+							</div>
+
+							<!-- USDC Allowance -->
+							<div v-if="!isCheckingUsdcData" class="flex items-center justify-between text-xs">
+								<div class="flex items-center gap-2">
+									<span>USDC Allowance</span>
 								</div>
+								<span
+									class="font-mono"
+									:class="hasValidUsdcAllowance ? 'text-primary' : 'text-yellow-600'"
+								>
+									{{ formattedUsdcAllowance ?? 'N/A' }} USDC
+								</span>
 							</div>
 						</div>
 
-						<!-- Passkey -->
+						<!-- Message about needing sufficient balance -->
 						<div
-							v-if="showPasskeyValidationMethod"
-							class="flex flex-col p-2.5 border rounded-lg transition-all"
-							:class="{
-								'cursor-pointer': status === TransactionStatus.Estimation,
-								'opacity-50 cursor-not-allowed': status !== TransactionStatus.Estimation,
-							}"
-							@click="status === TransactionStatus.Estimation && selectSigner('Passkey')"
+							v-if="!isCheckingUsdcData && !hasValidUsdcBalance"
+							class="text-xs text-yellow-600 dark:text-yellow-400 p-2 bg-yellow-50 dark:bg-yellow-950/20 rounded border border-yellow-200 dark:border-yellow-800"
 						>
-							<div class="space-y-1">
-								<div class="flex justify-between items-center">
-									<div class="flex items-center gap-1.5 text-xs">
-										<CircleDot
-											class="w-2.5 h-2.5"
-											:class="
-												selectedSigner?.type === 'Passkey'
-													? 'text-green-500'
-													: 'text-muted-foreground'
-											"
-										/>
-										<span>Passkey Connected</span>
-									</div>
+							⚠️ You need some USDC in your account to pay for gas fees.
+							<span v-if="isCurrentChainTestnet">
+								<a
+									href="https://faucet.circle.com/"
+									target="_blank"
+									rel="noopener noreferrer"
+									class="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline"
+								>
+									USDC Faucet
+									<ExternalLink class="w-3 h-3" />
+								</a>
+							</span>
+						</div>
+
+						<!-- Approve USDC -->
+						<div
+							v-if="
+								!isCheckingUsdcData &&
+								hasValidUsdcBalance &&
+								(status === TransactionStatus.Initial ||
+									status === TransactionStatus.PreparingPaymaster)
+							"
+							class="space-y-2 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800"
+						>
+							<div class="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2">Approve USDC</div>
+
+							<!-- Allowance amount input -->
+							<div class="space-y-2">
+								<div class="text-xs text-muted-foreground">Allowance Amount (USDC)</div>
+								<Input
+									v-model="permitAllowanceAmount"
+									placeholder="Enter USDC amount"
+									class="text-sm"
+									:class="{
+										'border-red-300 dark:border-red-700': !isValidPermitAmount,
+										'border-green-300 dark:border-green-700': isValidPermitAmount,
+									}"
+								/>
+								<div v-if="!isValidPermitAmount" class="text-xs text-red-500">
+									Please enter a valid amount greater than 0
 								</div>
-								<div class="text-xs text-muted-foreground">
-									{{ selectedCredentialDisplay }}
-								</div>
+							</div>
+
+							<!-- Permit signature button -->
+							<Button
+								:disabled="!canSignPermit"
+								:loading="isSigningPermit"
+								@click="onClickSignPermit"
+								class="w-full text-sm"
+								variant="outline"
+								size="sm"
+							>
+								<span v-if="isSigningPermit"> Signing Permit... </span>
+								<span v-else-if="!hasValidUsdcBalance" class="text-muted-foreground">
+									Insufficient USDC Balance
+								</span>
+								<span v-else-if="!isValidPermitAmount" class="text-muted-foreground">
+									Invalid Amount
+								</span>
+								<span v-else> Sign Permit </span>
+							</Button>
+
+							<div class="text-xs text-muted-foreground">
+								This will allow the paymaster to spend up to {{ permitAllowanceAmount }} USDC from your
+								account to pay for gas fees.
 							</div>
 						</div>
 					</div>
@@ -504,7 +675,7 @@ const entryPointAddress = computed(() => {
 			</div>
 
 			<!-- Footer -->
-			<div class="mt-5 space-y-3">
+			<div class="mt-5 space-y-3 px-4 pb-4">
 				<!-- Error message display -->
 				<div v-if="error" class="error-section max-h-[100px] overflow-y-auto">
 					{{ error }}
@@ -560,7 +731,7 @@ const entryPointAddress = computed(() => {
 					<div v-else>
 						<!-- Estimate Button -->
 						<Button
-							v-if="status === TransactionStatus.Estimation || status === TransactionStatus.Estimating"
+							v-if="status === TransactionStatus.Initial || status === TransactionStatus.Estimating"
 							class="w-full"
 							size="lg"
 							:disabled="!canEstimate"
@@ -618,7 +789,7 @@ const entryPointAddress = computed(() => {
 }
 
 .transaction-modal-content {
-	@apply border border-border bg-background p-6 mx-2;
+	@apply border border-border bg-background;
 	width: 420px;
 	min-height: 390px;
 	max-height: 95vh;

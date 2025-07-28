@@ -1,5 +1,5 @@
 import { signMessageUsingPasskey } from '@/stores/passkey/signMessageUsingPasskey'
-import { getAddress, getBytes, Signer } from 'ethers'
+import { getAddress, getBytes, hexlify, Signer } from 'ethers'
 import { ENTRY_POINT_V07_ADDRESS, ENTRY_POINT_V08_ADDRESS, UserOpBuilder } from 'sendop'
 import { AppSigner, SignerType } from './Signer'
 
@@ -28,6 +28,10 @@ export class EOASigner implements AppSigner {
 				throw new Error('[EOASigner] Unsupported entry point version')
 		}
 	}
+
+	async signHash(hash: Uint8Array): Promise<string> {
+		return await this.signer.signMessage(hash)
+	}
 }
 
 export class PasskeySigner implements AppSigner {
@@ -37,5 +41,9 @@ export class PasskeySigner implements AppSigner {
 
 	async sign(userop: UserOpBuilder): Promise<string> {
 		return await signMessageUsingPasskey(userop.hash())
+	}
+
+	async signHash(hash: Uint8Array): Promise<string> {
+		return await signMessageUsingPasskey(hexlify(hash))
 	}
 }

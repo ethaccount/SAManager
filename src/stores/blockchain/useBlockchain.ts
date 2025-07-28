@@ -158,6 +158,7 @@ export const useBlockchainStore = defineStore(
 
 		return {
 			selectedChainId,
+			selectedEntryPointAddress,
 			supportedChainIds,
 			rpcUrl,
 			explorerUrl,

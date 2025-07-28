@@ -49,6 +49,10 @@ export class AccountRegistry {
 	static getCanCreate(accountId: AccountId): boolean {
 		return AccountRegistry.getConfig(accountId).canCreate
 	}
+
+	static getVersion(accountId: AccountId): string {
+		return AccountRegistry.getConfig(accountId).version
+	}
 }
 
 AccountRegistry.register(AccountId['kernel.advanced.v0.3.1'], {
@@ -57,6 +61,7 @@ AccountRegistry.register(AccountId['kernel.advanced.v0.3.1'], {
 	isModular: true,
 	entryPointVersion: 'v0.7',
 	canCreate: false,
+	version: '0.3.1',
 })
 AccountRegistry.register(AccountId['kernel.advanced.v0.3.3'], {
 	provider: new KernelAccountProvider(),
@@ -64,6 +69,7 @@ AccountRegistry.register(AccountId['kernel.advanced.v0.3.3'], {
 	isModular: true,
 	entryPointVersion: 'v0.7',
 	canCreate: true,
+	version: '0.3.3',
 })
 AccountRegistry.register(AccountId['biconomy.nexus.1.0.2'], {
 	provider: new NexusAccountProvider(),
@@ -71,6 +77,7 @@ AccountRegistry.register(AccountId['biconomy.nexus.1.0.2'], {
 	isModular: true,
 	entryPointVersion: 'v0.7',
 	canCreate: false,
+	version: '1.0.2',
 })
 AccountRegistry.register(AccountId['biconomy.nexus.1.2.0'], {
 	provider: new NexusAccountProvider(),
@@ -78,6 +85,7 @@ AccountRegistry.register(AccountId['biconomy.nexus.1.2.0'], {
 	isModular: true,
 	entryPointVersion: 'v0.7',
 	canCreate: true,
+	version: '1.2.0',
 })
 AccountRegistry.register(AccountId['rhinestone.safe7579.v1.0.0'], {
 	provider: new Safe7579AccountProvider(),
@@ -85,6 +93,7 @@ AccountRegistry.register(AccountId['rhinestone.safe7579.v1.0.0'], {
 	isModular: true,
 	entryPointVersion: 'v0.7',
 	canCreate: true,
+	version: '1.0.0',
 })
 AccountRegistry.register(AccountId['infinitism.Simple7702Account.0.8.0'], {
 	provider: new Simple7702AccountProvider(),
@@ -92,4 +101,5 @@ AccountRegistry.register(AccountId['infinitism.Simple7702Account.0.8.0'], {
 	isModular: false,
 	entryPointVersion: 'v0.8',
 	canCreate: false,
+	version: '0.8.0',
 })

@@ -78,7 +78,34 @@ const CHAIN_TOKEN_ADDRESSES = {
 	},
 } as const
 
-// Generate tokens object from metadata and addresses
+/**
+ * Nested token registry organized by chain and token address
+ * Structure: {
+ *   [chainId: string]: {
+ *     [tokenAddress: string]: Token
+ *   }
+ * }
+ *
+ * Example:
+ * {
+ *   "11155111": { // Sepolia chain ID
+ *     "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE": {
+ *       symbol: "ETH",
+ *       name: "Ethereum",
+ *       icon: "Ξ",
+ *       decimals: 18,
+ *       address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+ *     },
+ *     "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14": {
+ *       symbol: "WETH",
+ *       name: "Wrapped Ether",
+ *       icon: "Ξ",
+ *       decimals: 18,
+ *       address: "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14"
+ *     }
+ *   }
+ * }
+ */
 export const tokens: Record<string, Record<string, Token>> = Object.entries(CHAIN_TOKEN_ADDRESSES).reduce(
 	(acc, [chainId, tokenAddresses]) => {
 		acc[chainId] = Object.entries(tokenAddresses).reduce(

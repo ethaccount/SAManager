@@ -1,17 +1,19 @@
 import TxModal from '@/components/TxModal.vue'
+import { usePaymaster } from '@/lib/paymasters'
 import { UserOpDirector } from '@/lib/UserOpDirector'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { defineStore, storeToRefs } from 'pinia'
-import { Execution, PublicPaymaster, UserOpBuilder, UserOperationReceipt } from 'sendop'
+import { Execution, UserOpBuilder, UserOperationReceipt } from 'sendop'
 import { useModal } from 'vue-final-modal'
-import { useSigner } from './useSigner'
 import { toast } from 'vue-sonner'
 import { SUPPORTED_BUNDLER } from './blockchain/blockchain'
+import { useSigner } from './useSigner'
 
 export enum TransactionStatus {
 	Closed = 'Closed',
-	Estimation = 'Estimation',
+	Initial = 'Initial',
+	PreparingPaymaster = 'PreparingPaymaster',
 	Estimating = 'Estimating',
 	Sign = 'Sign',
 	Signing = 'Signing',
@@ -52,25 +54,45 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 			},
 		})
 		open()
-		status.value = TransactionStatus.Estimation
+		status.value = TransactionStatus.Initial
 	}
 
 	const { bundler, selectedChainId, client, fetchGasPrice, setEntryPointAddress, selectedBundler } = useBlockchain()
 	const { selectedAccount, accountVMethods } = useAccount()
 	const { selectedSignerType } = useSigner()
+	const {
+		// ============================ Paymaster Core ============================
+		selectedPaymaster,
+		paymasters,
 
-	const paymasters = [
-		{ id: 'none', name: 'No Paymaster', description: 'Pay gas fees with native tokens' },
-		{ id: 'public', name: 'Public Paymaster', description: 'Use public paymaster for gas sponsorship' },
-	] as const
+		// ============================ USDC States ============================
+		formattedUsdcBalance,
+		formattedUsdcAllowance,
+		minAllowanceThreshold,
+		isCheckingUsdcData,
+		permitAllowanceAmount,
+		usdcPaymasterData,
 
-	const selectedPaymaster = ref<(typeof paymasters)[number]['id']>('public')
+		// ============================ USDC Computed Properties ============================
+		hasValidUsdcBalance,
+		hasValidUsdcAllowance,
+		showUsdcChecks,
+		isValidPermitAmount,
+		isSigningPermit,
+
+		// ============================ USDC Functions ============================
+		checkUsdcBalanceAndAllowance,
+		resetUsdcData,
+		handleSignPermit,
+
+		buildPaymasterData,
+	} = usePaymaster()
 
 	const status = ref<TransactionStatus>(TransactionStatus.Closed)
 
-	// Auto switch to 'none' if 'public' paymaster is selected and bundler is etherspot in estimation status
+	// Auto switch to 'none' if 'public' paymaster is selected and bundler is etherspot in initial status
 	watch(status, () => {
-		if (status.value === TransactionStatus.Estimation) {
+		if (status.value === TransactionStatus.Initial) {
 			if (selectedPaymaster.value === 'public' && selectedBundler.value === SUPPORTED_BUNDLER.ETHERSPOT) {
 				selectedPaymaster.value = 'none'
 				toast.info('Public Paymaster cannot be used with Etherspot Bundler')
@@ -78,8 +100,18 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 		}
 	})
 
+	const canSignPermit = computed(() => {
+		return (
+			selectedPaymaster.value === 'usdc' &&
+			hasValidUsdcBalance.value &&
+			isValidPermitAmount.value &&
+			!isSigningPermit.value &&
+			(status.value === TransactionStatus.Initial || status.value === TransactionStatus.PreparingPaymaster)
+		)
+	})
+
 	const canEstimate = computed(() => {
-		if (status.value !== TransactionStatus.Estimation) return false
+		if (status.value !== TransactionStatus.Initial) return false
 		if (!selectedPaymaster.value) return false
 		return true
 	})
@@ -97,6 +129,14 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 	const userOp = ref<UserOpBuilder | null>(null)
 	const opHash = ref<string | null>(null)
 	const opReceipt = ref<UserOperationReceipt | null>(null)
+
+	function resetTxModal() {
+		status.value = TransactionStatus.Closed
+		userOp.value = null
+		opHash.value = null
+		opReceipt.value = null
+		resetUsdcData()
+	}
 
 	async function handleEstimate(executions: Execution[], initCode?: string) {
 		if (!selectedAccount.value) {
@@ -133,12 +173,10 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 			})
 		}
 
-		if (selectedPaymaster.value === 'public') {
-			op.setPaymaster({
-				paymaster: await PublicPaymaster.getPaymaster(),
-				paymasterData: await PublicPaymaster.getPaymasterData(),
-				paymasterPostOpGasLimit: await PublicPaymaster.getPaymasterPostOpGasLimit(),
-			})
+		// Set paymaster data based on selected paymaster
+		const paymasterData = await buildPaymasterData()
+		if (paymasterData) {
+			op.setPaymaster(paymasterData)
 		}
 
 		op.setGasPrice(await fetchGasPrice())
@@ -198,29 +236,53 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 		}
 	}
 
-	function reset() {
-		status.value = TransactionStatus.Closed
-		userOp.value = null
-		opHash.value = null
-		opReceipt.value = null
+	async function onClickSignPermit() {
+		await handleSignPermit()
+		status.value = TransactionStatus.Initial
 	}
 
 	return {
+		// ============================ Store Functions ============================
 		openModal,
 		closeModal: close,
-		reset,
+		resetTxModal,
 		handleEstimate,
 		handleSign,
 		handleSend,
+
+		// ============================ Store States ============================
 		userOp,
-		selectedPaymaster,
-		paymasters,
 		canEstimate,
 		canSign,
 		canSend,
 		status,
 		opHash,
 		opReceipt,
+
+		// ============================ From usePaymaster - Core ============================
+		selectedPaymaster,
+		paymasters,
+
+		// ============================ From usePaymaster - USDC States ============================
+		formattedUsdcBalance,
+		formattedUsdcAllowance,
+		minAllowanceThreshold,
+		isCheckingUsdcData,
+		permitAllowanceAmount,
+		usdcPaymasterData,
+
+		// ============================ From usePaymaster - USDC Computed ============================
+		hasValidUsdcBalance,
+		hasValidUsdcAllowance,
+		showUsdcChecks,
+		isValidPermitAmount,
+		canSignPermit,
+		isSigningPermit,
+
+		// ============================ From usePaymaster - USDC Functions ============================
+		onClickSignPermit,
+		resetUsdcData,
+		checkUsdcBalanceAndAllowance,
 	}
 })
 

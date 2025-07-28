@@ -23,6 +23,9 @@ export interface AccountProvider {
 	getInstallModuleData(module: ERC7579Module): string
 	getUninstallModuleData(module: ERC7579Module, accountAddress: string, client: JsonRpcProvider): Promise<string>
 	getDeployment(client: JsonRpcProvider, validation: ValidationMethod, salt: string): Promise<Deployment>
+
+	// TODO: remove ?
+	sign1271?(hash: Uint8Array, vMethod: ValidationMethod): Promise<string>
 }
 
 export type AccountConfig = {
@@ -31,6 +34,7 @@ export type AccountConfig = {
 	isModular: boolean
 	entryPointVersion: EntryPointVersion
 	canCreate: boolean
+	version: string // example: '0.3.1'
 }
 
 export type AccountName = 'Kernel' | 'Nexus' | 'Safe7579' | 'Simple7702Account'
