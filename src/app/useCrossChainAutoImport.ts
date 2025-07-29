@@ -2,7 +2,7 @@ import { useAccount } from '@/stores/account/useAccount'
 import { useAccounts } from '@/stores/account/useAccounts'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 
-export function useSetupAccount() {
+export function useCrossChainAutoImport() {
 	const { selectAccount, isAccountImported, importAccount } = useAccounts()
 	const { selectedAccount, isCrossChain, isChainIdMatching } = useAccount()
 	const { selectedChainId } = useBlockchain()
@@ -20,6 +20,10 @@ export function useSetupAccount() {
 				importAccount({
 					...selectedAccount.value,
 					chainId: selectedChainId.value,
+					// When auto-importing cross-chain accounts, undeployed accounts on the new chain
+					// should only have the first validation method, as additional validation methods
+					// need to be installed after deployment
+					vMethods: [selectedAccount.value.vMethods[0]],
 				})
 			}
 			selectAccount(selectedAccount.value.address, selectedChainId.value)
