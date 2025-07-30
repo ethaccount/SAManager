@@ -15,7 +15,6 @@ import {
 	zeroPadValue,
 } from 'ethers'
 import {
-	ADDRESS,
 	ENTRY_POINT_V07_ADDRESS,
 	ENTRY_POINT_V08_ADDRESS,
 	getPermitTypedData,
@@ -198,7 +197,7 @@ export function usePaymaster() {
 		try {
 			isSigningPermit.value = true
 
-			const { selectedAccount } = useAccount()
+			const { selectedAccount, accountVMethods } = useAccount()
 			const { selectedChainId, client } = useBlockchain()
 			const { selectedSigner } = useSigner()
 
@@ -221,8 +220,6 @@ export function usePaymaster() {
 				throw new Error('USDC permit signature is currently only supported for Kernel')
 			}
 
-			const accountVersion = AccountRegistry.getVersion(selectedAccount.value.accountId)
-
 			// Convert permit amount to BigInt
 			const permitAmount = parseUnits(permitAllowanceAmount.value, 6)
 
@@ -237,11 +234,23 @@ export function usePaymaster() {
 			})
 
 			// Sign using Kernel 1271
+			const currentVMethod = accountVMethods.value.find(vMethod => {
+				if (vMethod.signerType === selectedSigner.value?.type) {
+					return true
+				}
+				return false
+			})
+
+			const validatorAddress = currentVMethod?.validatorAddress
+			if (!validatorAddress) {
+				throw new Error('[handleSignPermit] No validator address found for the validation method')
+			}
+
 			let permitSig: string
 			try {
 				permitSig = await KernelAPI.sign1271({
-					version: accountVersion as '0.3.1' | '0.3.3',
-					validator: ADDRESS.ECDSAValidator,
+					version: AccountRegistry.getVersion(selectedAccount.value.accountId) as '0.3.1' | '0.3.3',
+					validator: validatorAddress,
 					hash: getBytes(TypedDataEncoder.hash(...typedData)),
 					chainId: selectedChainId.value,
 					accountAddress: selectedAccount.value.address,
