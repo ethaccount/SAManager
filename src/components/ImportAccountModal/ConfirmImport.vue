@@ -14,7 +14,7 @@ const props = defineProps<{
 }>()
 
 const { selectedChainId } = useBlockchain()
-const { importAccount } = useAccounts()
+const { importAccount, selectAccount } = useAccounts()
 
 const isSuccess = ref(false)
 
@@ -26,6 +26,8 @@ const onClickConfirm = () => {
 		category: props.accountData().category,
 		chainId: selectedChainId.value,
 	})
+	// select the account after import
+	selectAccount(props.accountData().address, selectedChainId.value)
 	isSuccess.value = true
 }
 
