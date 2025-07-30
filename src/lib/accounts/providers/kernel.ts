@@ -11,7 +11,8 @@ import {
 	SimpleSmartSessionValidation,
 	ValidationAPI,
 } from 'sendop'
-import { AccountProvider, Deployment } from '../types'
+import { AccountRegistry } from '../registry'
+import { AccountProvider, Deployment, Sign1271Config } from '../types'
 
 export class KernelAccountProvider implements AccountProvider {
 	getExecutionAccountAPI(validationAPI: ValidationAPI, validatorAddress?: string): AccountAPI {
@@ -78,6 +79,23 @@ export class KernelAccountProvider implements AccountProvider {
 			validatorAddress: module.address,
 			validatorData: module.initData,
 			salt,
+		})
+	}
+
+	async sign1271(config: Sign1271Config): Promise<string> {
+		const { hash, accountId, validatorAddress, chainId, accountAddress, signTypedData } = config
+
+		if (!validatorAddress) {
+			throw new Error('[KernelAccountProvider#sign1271] validatorAddress is not set')
+		}
+
+		return await KernelAPI.sign1271({
+			hash,
+			version: AccountRegistry.getVersion(accountId) as '0.3.1' | '0.3.3',
+			validator: validatorAddress,
+			chainId,
+			accountAddress,
+			signTypedData,
 		})
 	}
 }

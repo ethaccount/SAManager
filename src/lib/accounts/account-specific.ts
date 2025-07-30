@@ -2,7 +2,7 @@ import { ValidationMethod, ValidationMethodName, ValidationType } from '@/lib/va
 import { JsonRpcProvider } from 'ethers'
 import { AccountAPI, ERC7579Module, ValidationAPI } from 'sendop'
 import { AccountRegistry } from './registry'
-import { AccountId, Deployment } from './types'
+import { AccountId, Deployment, Sign1271Config } from './types'
 
 // Validation methods that can be created for new accounts in Create.vue
 export const ACCOUNT_SUPPORTED_INITIAL_VALIDATION: Partial<
@@ -83,4 +83,9 @@ export async function getUninstallModuleData(
 	client: JsonRpcProvider,
 ): Promise<string> {
 	return AccountRegistry.getProvider(accountId).getUninstallModuleData(module, accountAddress, client)
+}
+
+export async function sign1271(config: Sign1271Config): Promise<string> {
+	const provider = AccountRegistry.getProvider(config.accountId)
+	return provider.sign1271(config)
 }

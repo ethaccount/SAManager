@@ -1,6 +1,6 @@
 import { ValidationMethod } from '@/lib/validations'
-import { JsonRpcProvider } from 'ethers'
-import { AccountAPI, ERC7579Module, ValidationAPI, EntryPointVersion } from 'sendop'
+import { BigNumberish, JsonRpcProvider } from 'ethers'
+import { AccountAPI, ERC7579Module, ValidationAPI, EntryPointVersion, TypedData } from 'sendop'
 
 export enum AccountId {
 	'kernel.advanced.v0.3.1' = 'kernel.advanced.v0.3.1',
@@ -17,15 +17,23 @@ export type Deployment = {
 	factoryData: string
 }
 
+export interface Sign1271Config {
+	accountId: AccountId
+	validatorAddress?: string
+	chainId: BigNumberish
+	accountAddress: string
+	hash: Uint8Array
+	typedData: TypedData
+	signTypedData: (typedData: TypedData) => Promise<string>
+}
+
 export interface AccountProvider {
 	getExecutionAccountAPI(validationAPI: ValidationAPI, validatorAddress?: string): AccountAPI
 	getSmartSessionExecutionAccountAPI(permissionId: string): AccountAPI
 	getInstallModuleData(module: ERC7579Module): string
 	getUninstallModuleData(module: ERC7579Module, accountAddress: string, client: JsonRpcProvider): Promise<string>
 	getDeployment(client: JsonRpcProvider, validation: ValidationMethod, salt: string): Promise<Deployment>
-
-	// TODO: remove ?
-	sign1271?(hash: Uint8Array, vMethod: ValidationMethod): Promise<string>
+	sign1271(config: Sign1271Config): Promise<string>
 }
 
 export type AccountConfig = {

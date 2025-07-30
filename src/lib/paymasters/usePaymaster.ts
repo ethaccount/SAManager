@@ -19,9 +19,10 @@ import {
 	ENTRY_POINT_V08_ADDRESS,
 	getPermitTypedData,
 	IERC20__factory,
-	KernelAPI,
 	PublicPaymaster,
+	TypedData,
 } from 'sendop'
+import { sign1271 } from '../accounts/account-specific'
 import { AccountRegistry } from '../accounts/registry'
 import { isEthersError } from '../error'
 import { getTokenAddress } from '../tokens'
@@ -117,7 +118,6 @@ export function usePaymaster() {
 	})
 
 	async function checkUsdcBalanceAndAllowance() {
-		console.log('checkUsdcBalanceAndAllowance')
 		try {
 			const { selectedAccount } = useAccount()
 			const { selectedChainId, client } = useBlockchain()
@@ -193,7 +193,7 @@ export function usePaymaster() {
 		}
 	})
 
-	async function handleSignPermit() {
+	async function handleSignUsdcPermit() {
 		try {
 			isSigningPermit.value = true
 
@@ -201,23 +201,23 @@ export function usePaymaster() {
 			const { selectedChainId, client } = useBlockchain()
 			const { selectedSigner } = useSigner()
 
-			if (!selectedAccount.value || !client.value || !selectedSigner.value) {
-				throw new Error('Selected account, client, or signer is not set')
+			if (!selectedAccount.value) {
+				throw new Error('[handleSignUsdcPermit] Selected account is not set')
 			}
 
+			if (!selectedSigner.value) {
+				throw new Error('[handleSignUsdcPermit] Selected signer is not set')
+			}
+
+			const signer = selectedSigner.value
+
 			if (!usdcPaymasterAddress.value) {
-				throw new Error('USDC paymaster address is not available')
+				throw new Error('[handleSignUsdcPermit] USDC paymaster address is not available')
 			}
 
 			const usdcAddress = getTokenAddress(selectedChainId.value, 'USDC')
 			if (!usdcAddress) {
-				throw new Error('USDC token address is not set')
-			}
-
-			// Check if account is Kernel (only supported for now)
-			const accountName = AccountRegistry.getName(selectedAccount.value.accountId)
-			if (accountName !== 'Kernel') {
-				throw new Error('USDC permit signature is currently only supported for Kernel')
+				throw new Error('[handleSignUsdcPermit] USDC token address is not set')
 			}
 
 			// Convert permit amount to BigInt
@@ -233,7 +233,6 @@ export function usePaymaster() {
 				amount: permitAmount,
 			})
 
-			// Sign using Kernel 1271
 			const currentVMethod = accountVMethods.value.find(vMethod => {
 				if (vMethod.signerType === selectedSigner.value?.type) {
 					return true
@@ -242,23 +241,23 @@ export function usePaymaster() {
 			})
 
 			const validatorAddress = currentVMethod?.validatorAddress
-			if (!validatorAddress) {
-				throw new Error('[handleSignPermit] No validator address found for the validation method')
+			const isModularAccount = AccountRegistry.getIsModular(selectedAccount.value.accountId)
+
+			if (isModularAccount && !validatorAddress) {
+				throw new Error('[handleSignUsdcPermit] No validator address found for the validation method')
 			}
 
 			let permitSig: string
 			try {
-				permitSig = await KernelAPI.sign1271({
-					version: AccountRegistry.getVersion(selectedAccount.value.accountId) as '0.3.1' | '0.3.3',
-					validator: validatorAddress,
+				permitSig = await sign1271({
+					accountId: selectedAccount.value.accountId,
+					typedData,
 					hash: getBytes(TypedDataEncoder.hash(...typedData)),
+					validatorAddress,
 					chainId: selectedChainId.value,
 					accountAddress: selectedAccount.value.address,
-					signHash: async (hash: Uint8Array) => {
-						if (!selectedSigner.value) {
-							throw new Error('No signer selected')
-						}
-						return selectedSigner.value.signHash(hash)
+					signTypedData: async (typedData: TypedData) => {
+						return signer.signTypedData(typedData)
 					},
 				})
 			} catch (error) {
@@ -294,8 +293,7 @@ export function usePaymaster() {
 				paymasterPostOpGasLimit,
 			}
 		} catch (error) {
-			console.error('Error signing USDC permit:', error)
-			throw new Error(`Failed to sign USDC permit: ${error instanceof Error ? error.message : 'Unknown error'}`)
+			throw error
 		} finally {
 			isSigningPermit.value = false
 		}
@@ -350,7 +348,7 @@ export function usePaymaster() {
 		permitAllowanceAmount,
 		isValidPermitAmount,
 		isSigningPermit,
-		handleSignPermit,
+		handleSignUsdcPermit,
 		// ============================ USDC Paymaster End ============================
 
 		// ============================ Build Paymaster Data ============================

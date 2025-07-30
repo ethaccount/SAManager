@@ -1,6 +1,6 @@
 import { signMessageUsingPasskey } from '@/stores/passkey/signMessageUsingPasskey'
-import { getAddress, getBytes, hexlify, Signer } from 'ethers'
-import { ENTRY_POINT_V07_ADDRESS, ENTRY_POINT_V08_ADDRESS, UserOpBuilder } from 'sendop'
+import { getAddress, getBytes, hexlify, Signer, TypedDataEncoder } from 'ethers'
+import { ENTRY_POINT_V07_ADDRESS, ENTRY_POINT_V08_ADDRESS, TypedData, UserOpBuilder } from 'sendop'
 import { AppSigner, SignerType } from './Signer'
 
 export class EOASigner implements AppSigner {
@@ -32,6 +32,10 @@ export class EOASigner implements AppSigner {
 	async signHash(hash: Uint8Array): Promise<string> {
 		return await this.signer.signMessage(hash)
 	}
+
+	async signTypedData(typedData: TypedData): Promise<string> {
+		return await this.signer.signTypedData(...typedData)
+	}
 }
 
 export class PasskeySigner implements AppSigner {
@@ -45,5 +49,9 @@ export class PasskeySigner implements AppSigner {
 
 	async signHash(hash: Uint8Array): Promise<string> {
 		return await signMessageUsingPasskey(hexlify(hash))
+	}
+
+	async signTypedData(typedData: TypedData): Promise<string> {
+		return await signMessageUsingPasskey(TypedDataEncoder.hash(...typedData))
 	}
 }

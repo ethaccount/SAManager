@@ -221,7 +221,7 @@ async function onClickSign() {
 				if (chainMismatchMatch) {
 					const expectedChainId = chainMismatchMatch[1]
 					const currentChainName = displayChainName(Number(expectedChainId))
-					msg = `Please switch your wallet to ${currentChainName} to sign the user operation`
+					msg = `Please switch your EOA Wallet network to ${currentChainName} to sign the user operation`
 				} else {
 					msg = errorMsg
 				}
@@ -320,6 +320,25 @@ const signerSelectorDisabled = computed(() => {
 const isCurrentChainTestnet = computed(() => {
 	return isTestnet(selectedChainId.value)
 })
+
+// Check if usdcPaymasterData has a valid permit signature
+const hasUsdcPermitSignature = computed(() => {
+	if (!usdcPaymasterData.value?.paymasterData) return false
+
+	// paymasterData structure: concat(['0x00', usdcAddress, zeroPadValue(permitAmount, 32), permitSig])
+	// When no permit signature: concat(['0x00', usdcAddress, zeroPadValue('0x', 32)])
+	// The basic structure without permit is: 0x00 (1 byte) + usdcAddress (20 bytes) + zeroPadValue('0x', 32) (32 bytes) = 53 bytes = 106 hex chars + 2 for '0x' = 108 chars
+	// With permit signature, it should be longer
+	const paymasterData = usdcPaymasterData.value.paymasterData
+	const dataLength = paymasterData.length
+	const basicStructureLength = 2 + 2 + 40 + 64 // '0x' + '00' + usdcAddress + zeroPadded32Bytes
+
+	if (dataLength <= basicStructureLength) return false
+
+	// Check if the additional data is not just zeros (which would indicate no real permit signature)
+	const permitSignaturePart = paymasterData.slice(basicStructureLength)
+	return permitSignaturePart !== '0'.repeat(permitSignaturePart.length)
+})
 </script>
 
 <template>
@@ -342,7 +361,7 @@ const isCurrentChainTestnet = computed(() => {
 			</div>
 
 			<!-- Content -->
-			<div class="flex-1 mt-2 space-y-6 overflow-y-auto max-h-[420px] px-4 py-2">
+			<div class="flex-1 mt-2 space-y-6 overflow-y-auto max-h-[420px] px-4 pt-2 pb-4">
 				<!-- Signer -->
 				<div class="space-y-3">
 					<div class="text-sm font-medium">Signer</div>
@@ -490,6 +509,19 @@ const isCurrentChainTestnet = computed(() => {
 									:class="hasValidUsdcAllowance ? 'text-primary' : 'text-yellow-600'"
 								>
 									{{ formattedUsdcAllowance ?? 'N/A' }} USDC
+								</span>
+							</div>
+
+							<!-- USDC Permit Signature -->
+							<div v-if="!isCheckingUsdcData" class="flex items-center justify-between text-xs">
+								<div class="flex items-center gap-2">
+									<span>Permit Signature</span>
+								</div>
+								<span
+									class="font-mono"
+									:class="hasUsdcPermitSignature ? 'text-primary' : 'text-muted-foreground'"
+								>
+									{{ hasUsdcPermitSignature ? 'Signed' : 'None' }}
 								</span>
 							</div>
 						</div>
@@ -675,7 +707,7 @@ const isCurrentChainTestnet = computed(() => {
 			</div>
 
 			<!-- Footer -->
-			<div class="mt-5 space-y-3 px-4 pb-4">
+			<div class="space-y-2 px-4 py-4 border-t border-border">
 				<!-- Error message display -->
 				<div v-if="error" class="error-section max-h-[100px] overflow-y-auto">
 					{{ error }}
@@ -688,13 +720,13 @@ const isCurrentChainTestnet = computed(() => {
 				>
 					<template v-if="status === TransactionStatus.Success">
 						<div class="flex flex-col items-center justify-center">
-							<h3 class="text-xl font-semibold text-emerald-500 mb-2">Transaction Successful!</h3>
+							<h3 class="text-xl font-semibold text-emerald-500">Transaction Successful!</h3>
 							<a
 								v-if="txLink"
 								:href="txLink"
 								target="_blank"
 								rel="noopener noreferrer"
-								class="inline-flex items-center gap-1.5 mt-2 text-sm text-primary hover:underline"
+								class="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
 							>
 								View on Explorer
 								<ExternalLink class="w-4 h-4" />

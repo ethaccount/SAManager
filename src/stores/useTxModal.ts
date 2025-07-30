@@ -83,7 +83,7 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 		// ============================ USDC Functions ============================
 		checkUsdcBalanceAndAllowance,
 		resetUsdcData,
-		handleSignPermit,
+		handleSignUsdcPermit,
 
 		buildPaymasterData,
 	} = usePaymaster()
@@ -237,8 +237,12 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 	}
 
 	async function onClickSignPermit() {
-		await handleSignPermit()
-		status.value = TransactionStatus.Initial
+		await handleSignUsdcPermit()
+
+		// only when the data is set, users can start estimating the gas
+		if (usdcPaymasterData.value) {
+			status.value = TransactionStatus.Initial
+		}
 	}
 
 	return {
