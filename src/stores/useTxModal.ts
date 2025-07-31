@@ -57,36 +57,19 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 		status.value = TransactionStatus.Initial
 	}
 
-	const { bundler, selectedChainId, client, fetchGasPrice, setEntryPointAddress, selectedBundler } = useBlockchain()
+	const { bundler, selectedChainId, client, fetchGasPrice, selectedBundler } = useBlockchain()
 	const { selectedAccount, accountVMethods } = useAccount()
 	const { selectedSignerType } = useSigner()
+
+	const paymasterHook = usePaymaster()
 	const {
-		// ============================ Paymaster Core ============================
 		selectedPaymaster,
-		paymasters,
-
-		// ============================ USDC States ============================
-		formattedUsdcBalance,
-		formattedUsdcAllowance,
-		minAllowanceThreshold,
-		isCheckingUsdcData,
-		permitAllowanceAmount,
-		usdcPaymasterData,
-
-		// ============================ USDC Computed Properties ============================
 		hasValidUsdcBalance,
-		hasValidUsdcAllowance,
-		showUsdcChecks,
 		isValidPermitAmount,
 		isSigningPermit,
-
-		// ============================ USDC Functions ============================
-		checkUsdcBalanceAndAllowance,
 		resetUsdcData,
-		handleSignUsdcPermit,
-
 		buildPaymasterData,
-	} = usePaymaster()
+	} = paymasterHook
 
 	const status = ref<TransactionStatus>(TransactionStatus.Closed)
 
@@ -181,12 +164,6 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 
 		op.setGasPrice(await fetchGasPrice())
 
-		// Set entry point address in blockchain store for correct etherspot bundler selection
-		if (!op.entryPointAddress) {
-			throw new Error('[handleEstimate] No entry point address in user operation')
-		}
-		setEntryPointAddress(op.entryPointAddress)
-
 		try {
 			await op.estimateGas()
 		} catch (e: unknown) {
@@ -236,25 +213,7 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 		}
 	}
 
-	async function onClickSignPermit() {
-		await handleSignUsdcPermit()
-
-		// only when the data is set, users can start estimating the gas
-		if (usdcPaymasterData.value) {
-			status.value = TransactionStatus.Initial
-		}
-	}
-
 	return {
-		// ============================ Store Functions ============================
-		openModal,
-		closeModal: close,
-		resetTxModal,
-		handleEstimate,
-		handleSign,
-		handleSend,
-
-		// ============================ Store States ============================
 		userOp,
 		canEstimate,
 		canSign,
@@ -262,31 +221,14 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 		status,
 		opHash,
 		opReceipt,
-
-		// ============================ From usePaymaster - Core ============================
-		selectedPaymaster,
-		paymasters,
-
-		// ============================ From usePaymaster - USDC States ============================
-		formattedUsdcBalance,
-		formattedUsdcAllowance,
-		minAllowanceThreshold,
-		isCheckingUsdcData,
-		permitAllowanceAmount,
-		usdcPaymasterData,
-
-		// ============================ From usePaymaster - USDC Computed ============================
-		hasValidUsdcBalance,
-		hasValidUsdcAllowance,
-		showUsdcChecks,
-		isValidPermitAmount,
 		canSignPermit,
-		isSigningPermit,
-
-		// ============================ From usePaymaster - USDC Functions ============================
-		onClickSignPermit,
-		resetUsdcData,
-		checkUsdcBalanceAndAllowance,
+		openModal,
+		closeModal: close,
+		resetTxModal,
+		handleEstimate,
+		handleSign,
+		handleSend,
+		...paymasterHook,
 	}
 })
 

@@ -8,7 +8,7 @@ import { getErrorChainMessage, getErrorMsg, getEthersErrorMsg, isEthersError } f
 import { useGetCode } from '@/lib/useGetCode'
 import { deserializeValidationMethod } from '@/lib/validations'
 import { useAccount } from '@/stores/account/useAccount'
-import { displayChainName, isTestnet } from '@/stores/blockchain/blockchain'
+import { displayChainName, getEntryPointAddress, isTestnet } from '@/stores/blockchain/blockchain'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
@@ -76,20 +76,23 @@ const {
 	isCheckingUsdcData,
 	permitAllowanceAmount,
 	isValidPermitAmount,
-	canSignPermit,
+	usdcAddress,
 	isSigningPermit,
-	onClickSignPermit,
+	canSignPermit,
+	handleSignUsdcPermit,
 	handleEstimate,
 	handleSign,
 	handleSend,
 	resetTxModal,
-	resetUsdcData,
 	checkUsdcBalanceAndAllowance,
 	usdcPaymasterData,
+	usdcPaymasterAddress,
 } = useTxModal()
 
 const { isDeployed, getCode, loading: isLoadingCode } = useGetCode()
+const { currentEntryPointAddress, setEntryPointAddress } = useBlockchain()
 
+// When the TxModal is opened
 onMounted(async () => {
 	// Check if account is connected
 	if (!isAccountAccessible.value) {
@@ -98,8 +101,12 @@ onMounted(async () => {
 		return
 	}
 
+	if (!selectedAccount.value) {
+		throw new Error('[TxModal#onMounted] No account selected')
+	}
+
 	// Check if account is deployed
-	if (selectedAccount.value?.address && selectedAccount.value.category === 'Smart Account') {
+	if (selectedAccount.value.address && selectedAccount.value.category === 'Smart Account') {
 		await getCode(selectedAccount.value.address)
 
 		nextTick(() => {
@@ -110,8 +117,10 @@ onMounted(async () => {
 		})
 	}
 
-	// auto click estimate
-	// await onClickEstimate()
+	// Set entrypoint address to the blockchain store
+	const entryPointVersion = AccountRegistry.getEntryPointVersion(selectedAccount.value.accountId)
+	const entryPointAddress = getEntryPointAddress(entryPointVersion)
+	setEntryPointAddress(entryPointAddress)
 })
 
 onUnmounted(() => {
@@ -120,8 +129,6 @@ onUnmounted(() => {
 
 // This cannot be placed in useTxModal because it needs to be executed immediately when the TxModal is mounted
 watchImmediate(selectedPaymaster, async newPaymaster => {
-	resetUsdcData()
-
 	if (status.value === TransactionStatus.Initial) {
 		if (newPaymaster === 'usdc') {
 			status.value = TransactionStatus.PreparingPaymaster
@@ -298,11 +305,6 @@ const canClose = computed(() => {
 	return status.value !== TransactionStatus.Sending && status.value !== TransactionStatus.Pending
 })
 
-const entryPointAddress = computed(() => {
-	if (!userOp.value) return null
-	return userOp.value.entryPointAddress
-})
-
 const paymasterSelectorDisabled = computed(() => {
 	return status.value !== TransactionStatus.Initial && status.value !== TransactionStatus.PreparingPaymaster
 })
@@ -339,6 +341,15 @@ const hasUsdcPermitSignature = computed(() => {
 	const permitSignaturePart = paymasterData.slice(basicStructureLength)
 	return permitSignaturePart !== '0'.repeat(permitSignaturePart.length)
 })
+
+async function onClickSignPermit() {
+	await handleSignUsdcPermit()
+
+	// only when the data is set, users can start estimating the gas
+	if (usdcPaymasterData.value) {
+		status.value = TransactionStatus.Initial
+	}
+}
 </script>
 
 <template>
@@ -476,7 +487,7 @@ const hasUsdcPermitSignature = computed(() => {
 						"
 						class="space-y-2 mt-3 p-3 bg-muted/20 rounded-lg border"
 					>
-						<div class="space-y-1">
+						<div>
 							<!-- Loading State -->
 							<div
 								v-if="isCheckingUsdcData"
@@ -486,43 +497,67 @@ const hasUsdcPermitSignature = computed(() => {
 								Checking USDC balance and allowance...
 							</div>
 
-							<!-- USDC Balance -->
-							<div v-if="!isCheckingUsdcData" class="flex items-center justify-between text-xs">
-								<div class="flex items-center gap-2">
-									<span>USDC Balance</span>
+							<div v-else class="space-y-1">
+								<!-- USDC Address -->
+								<div class="flex items-center justify-between text-xs">
+									<div class="flex items-center gap-2">
+										<span>USDC Address</span>
+									</div>
+									<span class="flex items-center gap-2 text-muted-foreground">
+										{{ shortenAddress(usdcAddress ?? '') }}
+										<CopyButton size="xs" :address="usdcAddress ?? ''" />
+									</span>
 								</div>
-								<span
-									class="font-mono"
-									:class="hasValidUsdcBalance ? 'text-primary' : 'text-yellow-600'"
-								>
-									{{ formattedUsdcBalance ?? 'N/A' }} USDC
-								</span>
-							</div>
 
-							<!-- USDC Allowance -->
-							<div v-if="!isCheckingUsdcData" class="flex items-center justify-between text-xs">
-								<div class="flex items-center gap-2">
-									<span>USDC Allowance</span>
+								<!-- USDC Paymaster Address -->
+								<div class="flex items-center justify-between text-xs">
+									<div class="flex items-center gap-2">
+										<span>USDC Paymaster Address</span>
+									</div>
+									<span class="flex items-center gap-2 text-muted-foreground">
+										{{ shortenAddress(usdcPaymasterAddress ?? '') }}
+										<CopyButton size="xs" :address="usdcPaymasterAddress ?? ''" />
+									</span>
 								</div>
-								<span
-									class="font-mono"
-									:class="hasValidUsdcAllowance ? 'text-primary' : 'text-yellow-600'"
-								>
-									{{ formattedUsdcAllowance ?? 'N/A' }} USDC
-								</span>
-							</div>
 
-							<!-- USDC Permit Signature -->
-							<div v-if="!isCheckingUsdcData" class="flex items-center justify-between text-xs">
-								<div class="flex items-center gap-2">
-									<span>Permit Signature</span>
+								<!-- USDC Balance -->
+								<div class="flex items-center justify-between text-xs">
+									<div class="flex items-center gap-2">
+										<span>USDC Balance</span>
+									</div>
+									<span
+										class="font-mono"
+										:class="hasValidUsdcBalance ? 'text-primary' : 'text-yellow-600'"
+									>
+										{{ formattedUsdcBalance ?? 'N/A' }} USDC
+									</span>
 								</div>
-								<span
-									class="font-mono"
-									:class="hasUsdcPermitSignature ? 'text-primary' : 'text-muted-foreground'"
-								>
-									{{ hasUsdcPermitSignature ? 'Signed' : 'None' }}
-								</span>
+
+								<!-- USDC Allowance -->
+								<div class="flex items-center justify-between text-xs">
+									<div class="flex items-center gap-2">
+										<span>USDC Allowance</span>
+									</div>
+									<span
+										class="font-mono"
+										:class="hasValidUsdcAllowance ? 'text-primary' : 'text-yellow-600'"
+									>
+										{{ formattedUsdcAllowance ?? 'N/A' }} USDC
+									</span>
+								</div>
+
+								<!-- USDC Permit Signature -->
+								<div class="flex items-center justify-between text-xs">
+									<div class="flex items-center gap-2">
+										<span>Permit Signature</span>
+									</div>
+									<span
+										class="font-mono"
+										:class="hasUsdcPermitSignature ? 'text-primary' : 'text-muted-foreground'"
+									>
+										{{ hasUsdcPermitSignature ? 'Signed' : 'None' }}
+									</span>
+								</div>
 							</div>
 						</div>
 
@@ -555,7 +590,9 @@ const hasUsdcPermitSignature = computed(() => {
 							"
 							class="space-y-2 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800"
 						>
-							<div class="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2">Approve USDC</div>
+							<div class="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2">
+								Permit USDC Spend to Paymaster
+							</div>
 
 							<!-- Allowance amount input -->
 							<div class="space-y-2">
@@ -566,7 +603,6 @@ const hasUsdcPermitSignature = computed(() => {
 									class="text-sm"
 									:class="{
 										'border-red-300 dark:border-red-700': !isValidPermitAmount,
-										'border-green-300 dark:border-green-700': isValidPermitAmount,
 									}"
 								/>
 								<div v-if="!isValidPermitAmount" class="text-xs text-red-500">
@@ -633,9 +669,9 @@ const hasUsdcPermitSignature = computed(() => {
 						</div>
 
 						<!-- Entry Point Version -->
-						<div v-if="entryPointAddress" class="flex items-center justify-between text-sm">
+						<div v-if="currentEntryPointAddress" class="flex items-center justify-between text-sm">
 							<span class="text-muted-foreground">EntryPoint</span>
-							<span class="text-sm">{{ addressToName(entryPointAddress) }}</span>
+							<span class="text-sm">{{ addressToName(currentEntryPointAddress) }}</span>
 						</div>
 
 						<!-- Deployment Status -->
