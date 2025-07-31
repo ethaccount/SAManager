@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { AccountRegistry } from '@/lib/accounts'
 import { addressToName } from '@/lib/addressToName'
-import { getErrorChainMessage, getErrorMsg, getEthersErrorMsg, isEthersError } from '@/lib/error'
+import { getErrorChainMessage, getErrorMsg, getEthersErrorMsg, isEthersError, isUserRejectedError } from '@/lib/error'
 import { useGetCode } from '@/lib/useGetCode'
 import { deserializeValidationMethod } from '@/lib/validations'
 import { useAccount } from '@/stores/account/useAccount'
@@ -15,7 +15,7 @@ import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useSigner } from '@/stores/useSigner'
 import { TransactionStatus, TxModalExecution, useTxModal } from '@/stores/useTxModal'
 import { shortenAddress } from '@vue-dapp/core'
-import { formatEther, isError } from 'ethers'
+import { formatEther } from 'ethers'
 import { CircleDot, ExternalLink, Loader2, X } from 'lucide-vue-next'
 import {
 	ERC4337Error,
@@ -71,8 +71,6 @@ const {
 	paymasters,
 	formattedUsdcBalance,
 	formattedUsdcAllowance,
-	hasValidUsdcBalance,
-	hasValidUsdcAllowance,
 	isCheckingUsdcData,
 	permitAllowanceAmount,
 	isValidPermitAmount,
@@ -87,6 +85,9 @@ const {
 	checkUsdcBalanceAndAllowance,
 	usdcPaymasterData,
 	usdcPaymasterAddress,
+	usdcAllowance,
+	hasUsdcPermitSignature,
+	usdcBalance,
 } = useTxModal()
 
 const { isDeployed, getCode, loading: isLoadingCode } = useGetCode()
@@ -217,26 +218,23 @@ async function onClickSign() {
 		let msg = ''
 
 		if (isEthersError(e)) {
-			if (isError(e, 'ACTION_REJECTED')) {
-				msg = '' // User rejected the operation on browser wallet. Don't show error message
+			const errorMsg = getEthersErrorMsg(e, prefix)
+			// Check for chain ID mismatch error
+			const chainMismatchMatch = errorMsg.match(/Provided chainId "(\d+)" must match the active chainId "(\d+)"/)
+			if (chainMismatchMatch) {
+				const expectedChainId = chainMismatchMatch[1]
+				const currentChainName = displayChainName(Number(expectedChainId))
+				msg = `Please switch your EOA Wallet network to ${currentChainName} to sign the user operation`
 			} else {
-				const errorMsg = getEthersErrorMsg(e, prefix)
-				// Check for chain ID mismatch error
-				const chainMismatchMatch = errorMsg.match(
-					/Provided chainId "(\d+)" must match the active chainId "(\d+)"/,
-				)
-				if (chainMismatchMatch) {
-					const expectedChainId = chainMismatchMatch[1]
-					const currentChainName = displayChainName(Number(expectedChainId))
-					msg = `Please switch your EOA Wallet network to ${currentChainName} to sign the user operation`
-				} else {
-					msg = errorMsg
-				}
+				msg = errorMsg
 			}
-		} else if (e instanceof Error && e.message.includes('The operation either timed out or was not allowed')) {
-			msg = '' // User rejected the operation on passkey. Don't show error message
 		} else {
 			msg = getErrorMsg(e, prefix)
+		}
+
+		// User rejected signing on browser wallet or passkey. Don't show error message
+		if (isUserRejectedError(e)) {
+			msg = ''
 		}
 
 		error.value = msg
@@ -323,23 +321,12 @@ const isCurrentChainTestnet = computed(() => {
 	return isTestnet(selectedChainId.value)
 })
 
-// Check if usdcPaymasterData has a valid permit signature
-const hasUsdcPermitSignature = computed(() => {
-	if (!usdcPaymasterData.value?.paymasterData) return false
+const hasUsdcAllowance = computed(() => {
+	return usdcAllowance.value !== null && usdcAllowance.value > 0n
+})
 
-	// paymasterData structure: concat(['0x00', usdcAddress, zeroPadValue(permitAmount, 32), permitSig])
-	// When no permit signature: concat(['0x00', usdcAddress, zeroPadValue('0x', 32)])
-	// The basic structure without permit is: 0x00 (1 byte) + usdcAddress (20 bytes) + zeroPadValue('0x', 32) (32 bytes) = 53 bytes = 106 hex chars + 2 for '0x' = 108 chars
-	// With permit signature, it should be longer
-	const paymasterData = usdcPaymasterData.value.paymasterData
-	const dataLength = paymasterData.length
-	const basicStructureLength = 2 + 2 + 40 + 64 // '0x' + '00' + usdcAddress + zeroPadded32Bytes
-
-	if (dataLength <= basicStructureLength) return false
-
-	// Check if the additional data is not just zeros (which would indicate no real permit signature)
-	const permitSignaturePart = paymasterData.slice(basicStructureLength)
-	return permitSignaturePart !== '0'.repeat(permitSignaturePart.length)
+const hasUsdcBalance = computed(() => {
+	return usdcBalance.value !== null && usdcBalance.value > 0n
 })
 
 async function onClickSignPermit() {
@@ -527,7 +514,7 @@ async function onClickSignPermit() {
 									</div>
 									<span
 										class="font-mono"
-										:class="hasValidUsdcBalance ? 'text-primary' : 'text-yellow-600'"
+										:class="hasUsdcBalance ? 'text-primary' : 'text-yellow-600'"
 									>
 										{{ formattedUsdcBalance ?? 'N/A' }} USDC
 									</span>
@@ -540,7 +527,7 @@ async function onClickSignPermit() {
 									</div>
 									<span
 										class="font-mono"
-										:class="hasValidUsdcAllowance ? 'text-primary' : 'text-yellow-600'"
+										:class="hasUsdcAllowance ? 'text-primary' : 'text-yellow-600'"
 									>
 										{{ formattedUsdcAllowance ?? 'N/A' }} USDC
 									</span>
@@ -553,7 +540,13 @@ async function onClickSignPermit() {
 									</div>
 									<span
 										class="font-mono"
-										:class="hasUsdcPermitSignature ? 'text-primary' : 'text-muted-foreground'"
+										:class="
+											hasUsdcPermitSignature
+												? 'text-green-600'
+												: !hasUsdcAllowance
+													? 'text-yellow-600'
+													: 'text-muted-foreground'
+										"
 									>
 										{{ hasUsdcPermitSignature ? 'Signed' : 'None' }}
 									</span>
@@ -563,7 +556,7 @@ async function onClickSignPermit() {
 
 						<!-- Message about needing sufficient balance -->
 						<div
-							v-if="!isCheckingUsdcData && !hasValidUsdcBalance"
+							v-if="!isCheckingUsdcData && !hasUsdcBalance"
 							class="text-xs text-yellow-600 dark:text-yellow-400 p-2 bg-yellow-50 dark:bg-yellow-950/20 rounded border border-yellow-200 dark:border-yellow-800"
 						>
 							⚠️ You need some USDC in your account to pay for gas fees.
@@ -584,7 +577,7 @@ async function onClickSignPermit() {
 						<div
 							v-if="
 								!isCheckingUsdcData &&
-								hasValidUsdcBalance &&
+								hasUsdcBalance &&
 								(status === TransactionStatus.Initial ||
 									status === TransactionStatus.PreparingPaymaster)
 							"
@@ -620,7 +613,7 @@ async function onClickSignPermit() {
 								size="sm"
 							>
 								<span v-if="isSigningPermit"> Signing Permit... </span>
-								<span v-else-if="!hasValidUsdcBalance" class="text-muted-foreground">
+								<span v-else-if="!hasUsdcBalance" class="text-muted-foreground">
 									Insufficient USDC Balance
 								</span>
 								<span v-else-if="!isValidPermitAmount" class="text-muted-foreground">
@@ -743,7 +736,10 @@ async function onClickSignPermit() {
 			</div>
 
 			<!-- Footer -->
-			<div class="space-y-2 px-4 py-4 border-t border-border">
+			<div
+				v-if="status !== TransactionStatus.PreparingPaymaster"
+				class="space-y-2 px-4 py-4 border-t border-border"
+			>
 				<!-- Error message display -->
 				<div v-if="error" class="error-section max-h-[100px] overflow-y-auto">
 					{{ error }}

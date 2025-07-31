@@ -8,7 +8,6 @@ import {
 	getBigInt,
 	getBytes,
 	Interface,
-	isError,
 	parseUnits,
 	toBeHex,
 	TypedDataEncoder,
@@ -17,13 +16,15 @@ import {
 import {
 	ENTRY_POINT_V07_ADDRESS,
 	ENTRY_POINT_V08_ADDRESS,
+	ERC1271_MAGICVALUE,
 	getPermitTypedData,
+	IERC1271__factory,
 	IERC20__factory,
 	TypedData,
 } from 'sendop'
 import { sign1271 } from '../accounts/account-specific'
 import { AccountRegistry } from '../accounts/registry'
-import { isEthersError } from '../error'
+import { isUserRejectedError } from '../error'
 import { getTokenAddress } from '../tokens'
 import { USDC_PAYMASTER_V07_ADDRESSES, USDC_PAYMASTER_V08_ADDRESSES } from './constants'
 import { PaymasterData } from './types'
@@ -101,14 +102,6 @@ export function useUsdcPaymaster() {
 		return formatUnits(usdcAllowance.value, 6) // USDC has 6 decimals
 	})
 
-	const hasValidUsdcBalance = computed(() => {
-		return usdcBalance.value !== null && usdcBalance.value > 0n
-	})
-
-	const hasValidUsdcAllowance = computed(() => {
-		return usdcAllowance.value !== null && usdcAllowance.value > 0n
-	})
-
 	const usdcAddress = computed(() => {
 		return getTokenAddress(selectedChainId.value, 'USDC')
 	})
@@ -174,6 +167,25 @@ export function useUsdcPaymaster() {
 			isCheckingUsdcData.value = false
 		}
 	}
+
+	// Check if usdcPaymasterData has a permit signature
+	const hasUsdcPermitSignature = computed(() => {
+		if (!usdcPaymasterData.value?.paymasterData) return false
+
+		// paymasterData structure: concat(['0x00', usdcAddress, zeroPadValue(permitAmount, 32), permitSig])
+		// When no permit signature: concat(['0x00', usdcAddress, zeroPadValue('0x', 32)])
+		// The basic structure without permit is: 0x00 (1 byte) + usdcAddress (20 bytes) + zeroPadValue('0x', 32) (32 bytes) = 53 bytes = 106 hex chars + 2 for '0x' = 108 chars
+		// With permit signature, it should be longer
+		const paymasterData = usdcPaymasterData.value.paymasterData
+		const dataLength = paymasterData.length
+		const basicStructureLength = 2 + 2 + 40 + 64 // '0x' + '00' + usdcAddress + zeroPadded32Bytes
+
+		if (dataLength <= basicStructureLength) return false
+
+		// Check if the additional data is not just zeros (which would indicate no real permit signature)
+		const permitSignaturePart = paymasterData.slice(basicStructureLength)
+		return permitSignaturePart !== '0'.repeat(permitSignaturePart.length)
+	})
 
 	async function handleSignUsdcPermit() {
 		try {
@@ -242,18 +254,26 @@ export function useUsdcPaymaster() {
 						return signer.signTypedData(typedData)
 					},
 				})
-			} catch (error) {
-				// Handle user rejected error
-				if (error instanceof Error) {
-					if (isEthersError(error)) {
-						if (isError(error, 'ACTION_REJECTED')) {
-							return
-						}
+
+				// check if the permit sig is valid
+				const contract = IERC1271__factory.connect(selectedAccount.value.address, client.value)
+				try {
+					const result = await contract.isValidSignature(TypedDataEncoder.hash(...typedData), permitSig)
+					if (result !== ERC1271_MAGICVALUE) {
+						throw new Error(`Invalid permit signature`)
 					}
-					if (error.message.includes('The operation either timed out or was not allowed')) {
-						return
-					}
+				} catch (error) {
+					console.error(error)
+					throw new Error(`Invalid permit signature`)
 				}
+			} catch (error) {
+				// User rejected signing on browser wallet or passkey. Don't show error message
+				if (isUserRejectedError(error)) return
+
+				if (error instanceof Error && error.message.includes('could not decode result data')) {
+					throw new Error('Invalid permit signature: Account may not be deployed')
+				}
+
 				throw error
 			}
 
@@ -295,9 +315,8 @@ export function useUsdcPaymaster() {
 		usdcPaymasterAddress,
 		formattedUsdcBalance,
 		formattedUsdcAllowance,
-		hasValidUsdcBalance,
-		hasValidUsdcAllowance,
 		usdcAddress,
+		hasUsdcPermitSignature,
 
 		checkUsdcBalanceAndAllowance,
 		resetUsdcData,

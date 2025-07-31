@@ -62,14 +62,7 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 	const { selectedSignerType } = useSigner()
 
 	const paymasterHook = usePaymaster()
-	const {
-		selectedPaymaster,
-		hasValidUsdcBalance,
-		isValidPermitAmount,
-		isSigningPermit,
-		resetUsdcData,
-		buildPaymasterData,
-	} = paymasterHook
+	const { selectedPaymaster, isValidPermitAmount, isSigningPermit, resetUsdcData, buildPaymasterData } = paymasterHook
 
 	const status = ref<TransactionStatus>(TransactionStatus.Closed)
 
@@ -86,7 +79,6 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 	const canSignPermit = computed(() => {
 		return (
 			selectedPaymaster.value === 'usdc' &&
-			hasValidUsdcBalance.value &&
 			isValidPermitAmount.value &&
 			!isSigningPermit.value &&
 			(status.value === TransactionStatus.Initial || status.value === TransactionStatus.PreparingPaymaster)

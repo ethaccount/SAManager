@@ -1,4 +1,5 @@
 import type { ErrorCode, ethers, EthersError } from 'ethers'
+import { isError } from 'ethers'
 
 export function isEthersError(error: unknown): error is EthersError {
 	const validErrorCodes: ErrorCode[] = [
@@ -28,6 +29,21 @@ export function isEthersError(error: unknown): error is EthersError {
 
 	if (typeof error === 'object' && error !== null && 'code' in error && typeof error.code === 'string') {
 		return validErrorCodes.includes(error.code as ErrorCode)
+	}
+
+	return false
+}
+
+export function isUserRejectedError(error: unknown): boolean {
+	if (error instanceof Error) {
+		if (isEthersError(error)) {
+			if (isError(error, 'ACTION_REJECTED')) {
+				return true
+			}
+		}
+		if (error.message.includes('The operation either timed out or was not allowed')) {
+			return true
+		}
 	}
 
 	return false
