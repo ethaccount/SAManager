@@ -2,6 +2,7 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import Address from '@/components/utils/Address.vue'
 import { AccountRegistry } from '@/lib/accounts'
 import { addressToName } from '@/lib/addressToName'
 import { getErrorChainMessage, getErrorMsg, getEthersErrorMsg, isEthersError, isUserRejectedError } from '@/lib/error'
@@ -586,10 +587,7 @@ const shouldShowEffectiveFee = computed(() => {
 									<div class="flex items-center gap-2">
 										<span>USDC Address</span>
 									</div>
-									<span class="flex items-center gap-2 text-muted-foreground">
-										{{ shortenAddress(usdcAddress ?? '') }}
-										<CopyButton size="xs" :address="usdcAddress ?? ''" />
-									</span>
+									<Address :address="usdcAddress ?? ''" button-size="xs" text-size="xs" />
 								</div>
 
 								<!-- USDC Paymaster Address -->
@@ -597,10 +595,7 @@ const shouldShowEffectiveFee = computed(() => {
 									<div class="flex items-center gap-2">
 										<span>USDC Paymaster Address</span>
 									</div>
-									<span class="flex items-center gap-2 text-muted-foreground">
-										{{ shortenAddress(usdcPaymasterAddress ?? '') }}
-										<CopyButton size="xs" :address="usdcPaymasterAddress ?? ''" />
-									</span>
+									<Address :address="usdcPaymasterAddress ?? ''" button-size="xs" text-size="xs" />
 								</div>
 
 								<!-- USDC Balance -->
@@ -743,12 +738,7 @@ const shouldShowEffectiveFee = computed(() => {
 						<!-- Account Address -->
 						<div class="flex items-center justify-between text-sm">
 							<div class="text-muted-foreground">Sender</div>
-							<div class="flex gap-2">
-								<div class="font-mono font-medium">
-									{{ shortenAddress(selectedAccount?.address || '') }}
-								</div>
-								<CopyButton :address="selectedAccount?.address || ''" />
-							</div>
+							<Address :address="selectedAccount?.address || ''" button-size="xs" text-size="sm" />
 						</div>
 
 						<!-- Network -->
@@ -818,10 +808,7 @@ const shouldShowEffectiveFee = computed(() => {
 									<!-- To -->
 									<div class="flex items-center justify-between text-sm">
 										<div class="text-muted-foreground">To</div>
-										<div class="flex gap-2 items-center">
-											<div class="font-mono text-xs">{{ shortenAddress(execution.to) }}</div>
-											<CopyButton :address="execution.to" />
-										</div>
+										<Address :address="execution.to" button-size="xs" text-size="xs" />
 									</div>
 
 									<!-- Value -->

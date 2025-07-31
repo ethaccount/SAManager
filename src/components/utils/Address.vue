@@ -1,68 +1,50 @@
 <script setup lang="ts">
 import { shortenAddress } from '@vue-dapp/core'
-import { ExternalLink } from 'lucide-vue-next'
-import { useBlockchainStore } from '@/stores/blockchain/useBlockchain'
+import AddressLinkButton from './AddressLinkButton.vue'
+import CopyButton from './CopyButton.vue'
 
-const props = defineProps<{
-	address?: string
-}>()
+interface Props {
+	address: string
+	textSize?: 'xs' | 'sm' | 'base'
+	buttonSize?: 'xs' | 'sm' | 'md'
+	showButtons?: boolean
+}
 
-const externalLink = computed(() => {
-	if (!props.address) return ''
-	const networkStore = useBlockchainStore()
-	if (!networkStore.explorerUrl) {
-		return ''
+const props = withDefaults(defineProps<Props>(), {
+	textSize: 'sm',
+	buttonSize: 'xs',
+	showButtons: true,
+})
+
+const textSizeClass = computed(() => {
+	switch (props.textSize) {
+		case 'xs':
+			return 'text-xs'
+		case 'sm':
+			return 'text-sm'
+		case 'base':
+			return 'text-base'
+		default:
+			return 'text-sm'
 	}
-	return `${networkStore.explorerUrl}/address/${props.address}`
+})
+
+// CopyButton only supports 'xs' and 'sm', so map 'md' to 'sm'
+const copyButtonSize = computed(() => {
+	return props.buttonSize === 'md' ? 'sm' : props.buttonSize
 })
 </script>
 
 <template>
-	<div class="inline-flex gap-1.5 items-center justify-between bg-gray-200 py-0.5 rounded-3xl">
-		<!-- Address -->
-		<span class="text-xs pl-3">{{ address && shortenAddress(address) }}</span>
-
-		<div class="flex gap-0.5 items-center pr-0.5">
-			<!-- Copy -->
-			<CopyButton :address="address" />
-
-			<!-- Link -->
-			<a v-if="externalLink" :href="externalLink" target="_blank">
-				<div class="address-button">
-					<ExternalLink class="address-button-icon" />
-				</div>
-			</a>
-
-			<slot name="button" />
+	<div class="flex items-center gap-1">
+		<span class="font-medium truncate" :class="textSizeClass">
+			{{ shortenAddress(address) }}
+		</span>
+		<div v-if="showButtons" class="flex items-center gap-1">
+			<CopyButton :size="copyButtonSize" :address="address" />
+			<AddressLinkButton :size="buttonSize" :address="address" />
 		</div>
 	</div>
 </template>
 
-<style lang="css">
-.address-button {
-	@apply w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-black;
-}
-
-.address-button:hover {
-	@apply bg-gray-50 cursor-pointer;
-}
-
-.address-button-icon {
-	@apply w-2.5;
-}
-
-.fade-enter-active,
-.fade-leave-active {
-	@apply transition-all duration-200;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-	@apply opacity-0 transform scale-75;
-}
-
-.fade-enter-to,
-.fade-leave-from {
-	@apply opacity-100 transform scale-100;
-}
-</style>
+<style lang="css" scoped></style>
