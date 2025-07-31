@@ -16,7 +16,7 @@ import { useSigner } from '@/stores/useSigner'
 import { TransactionStatus, TxModalExecution, useTxModal } from '@/stores/useTxModal'
 import { shortenAddress } from '@vue-dapp/core'
 import { formatEther } from 'ethers'
-import { ChevronDown, ChevronUp, CircleDot, ExternalLink, Loader2, X } from 'lucide-vue-next'
+import { ArrowLeft, ChevronDown, ChevronUp, CircleDot, Code, ExternalLink, Loader2, X } from 'lucide-vue-next'
 import {
 	ERC4337Error,
 	extractHexString,
@@ -27,6 +27,7 @@ import {
 } from 'sendop'
 import { VueFinalModal } from 'vue-final-modal'
 import { toast } from 'vue-sonner'
+import TxModalUOPreview from './TxModalOpPreview.vue'
 
 // If modified, also update defaultProps in useTxModalStore
 const props = withDefaults(
@@ -166,6 +167,13 @@ const isPermitSectionExpanded = ref(false)
 
 function togglePermitSectionExpansion() {
 	isPermitSectionExpanded.value = !isPermitSectionExpanded.value
+}
+
+// UserOp preview state
+const showUserOpPreview = ref(false)
+
+function toggleUserOpPreview() {
+	showUserOpPreview.value = !showUserOpPreview.value
 }
 
 watchImmediate(status, (newStatus, oldStatus) => {
@@ -427,15 +435,27 @@ const shouldShowEffectiveFee = computed(() => {
 		<div class="flex flex-col h-full">
 			<!-- Header -->
 			<div class="flex justify-between items-center border-b border-border px-4 py-1">
-				<div class="w-9"></div>
-				<div class="font-medium">Transaction</div>
+				<Button
+					variant="ghost"
+					size="icon"
+					@click="toggleUserOpPreview"
+					:title="showUserOpPreview ? 'Back to Transaction' : 'Show UserOp Preview'"
+					:disabled="!userOp"
+				>
+					<ArrowLeft v-if="showUserOpPreview" class="w-4 h-4" />
+					<Code v-else class="w-4 h-4" />
+				</Button>
+				<div class="font-medium">{{ showUserOpPreview ? 'UserOp Preview' : 'Transaction' }}</div>
 				<Button variant="ghost" size="icon" :disabled="!canClose" @click="onClickClose">
 					<X class="w-4 h-4" />
 				</Button>
 			</div>
 
+			<!-- UserOp Preview Screen -->
+			<TxModalUOPreview v-show="showUserOpPreview" :user-op="userOp" />
+
 			<!-- Content -->
-			<div class="flex-1 mt-2 space-y-6 overflow-y-auto max-h-[420px] px-4 pt-2 pb-4">
+			<div v-show="!showUserOpPreview" class="flex-1 mt-2 space-y-6 overflow-y-auto max-h-[420px] px-4 pt-2 pb-4">
 				<!-- Signer -->
 				<div class="space-y-3">
 					<div class="text-sm font-medium">Signer</div>
@@ -824,7 +844,7 @@ const shouldShowEffectiveFee = computed(() => {
 
 			<!-- Footer -->
 			<div
-				v-if="status !== TransactionStatus.PreparingPaymaster"
+				v-show="!showUserOpPreview && status !== TransactionStatus.PreparingPaymaster"
 				class="space-y-2 px-4 py-4 border-t border-border"
 			>
 				<!-- Error message display -->

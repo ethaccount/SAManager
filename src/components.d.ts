@@ -126,6 +126,8 @@ declare module 'vue' {
     TooltipProvider: typeof import('./components/ui/tooltip/TooltipProvider.vue')['default']
     TooltipTrigger: typeof import('./components/ui/tooltip/TooltipTrigger.vue')['default']
     TxModal: typeof import('./components/TxModal.vue')['default']
+    TxModalOpPreview: typeof import('./components/TxModalOpPreview.vue')['default']
+    TxModalUOPreview: (typeof import('./components/TxModalOpPreview.vue'))['default']
     ValidateSmartEOA: typeof import('./components/ImportAccountModal/ValidateSmartEOA.vue')['default']
   }
 }
