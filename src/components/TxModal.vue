@@ -16,7 +16,7 @@ import { useSigner } from '@/stores/useSigner'
 import { TransactionStatus, TxModalExecution, useTxModal } from '@/stores/useTxModal'
 import { shortenAddress } from '@vue-dapp/core'
 import { formatEther } from 'ethers'
-import { CircleDot, ExternalLink, Loader2, X } from 'lucide-vue-next'
+import { ChevronDown, ChevronUp, CircleDot, ExternalLink, Loader2, X } from 'lucide-vue-next'
 import {
 	ERC4337Error,
 	extractHexString,
@@ -141,6 +141,11 @@ watchImmediate(selectedPaymaster, async newPaymaster => {
 			status.value = TransactionStatus.Initial
 		}
 	}
+
+	// from usdc paymaster to other paymaster
+	if (status.value === TransactionStatus.PreparingPaymaster && newPaymaster !== 'usdc') {
+		status.value = TransactionStatus.Initial
+	}
 })
 
 const error = ref<string | null>(null)
@@ -155,6 +160,27 @@ function toggleExecutionExpansion(index: number) {
 		expandedExecutions.value.add(index)
 	}
 }
+
+// Expansion state for permit USDC section
+const isPermitSectionExpanded = ref(false)
+
+function togglePermitSectionExpansion() {
+	isPermitSectionExpanded.value = !isPermitSectionExpanded.value
+}
+
+watchImmediate(status, (newStatus, oldStatus) => {
+	// Auto send when signing is done
+	if (oldStatus === TransactionStatus.Signing && newStatus === TransactionStatus.Send) {
+		onClickSend()
+	}
+
+	// auto-expand when PreparingPaymaster, auto-collapse when not
+	if (newStatus === TransactionStatus.PreparingPaymaster) {
+		isPermitSectionExpanded.value = true
+	} else {
+		isPermitSectionExpanded.value = false
+	}
+})
 
 function handleError(e: unknown, prefix?: string) {
 	console.error(getErrorChainMessage(e, prefix))
@@ -263,13 +289,6 @@ async function onClickSend() {
 		status.value = TransactionStatus.Initial
 	}
 }
-
-// Auto send when signing is done
-watch(status, (newStatus, oldStatus) => {
-	if (oldStatus === TransactionStatus.Signing && newStatus === TransactionStatus.Send) {
-		onClickSend()
-	}
-})
 
 /**
  * If the sender's tx hash is not found in the receipt logs, use the entire bundle's tx hash.
@@ -573,7 +592,7 @@ async function onClickSignPermit() {
 							</span>
 						</div>
 
-						<!-- Approve USDC -->
+						<!-- Permit USDC Spend -->
 						<div
 							v-if="
 								!isCheckingUsdcData &&
@@ -581,50 +600,61 @@ async function onClickSignPermit() {
 								(status === TransactionStatus.Initial ||
 									status === TransactionStatus.PreparingPaymaster)
 							"
-							class="space-y-2 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800"
+							class="border rounded-lg border-border"
 						>
-							<div class="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2">
-								Permit USDC Spend to Paymaster
-							</div>
-
-							<!-- Allowance amount input -->
-							<div class="space-y-2">
-								<div class="text-xs text-muted-foreground">Allowance Amount (USDC)</div>
-								<Input
-									v-model="permitAllowanceAmount"
-									placeholder="Enter USDC amount"
-									class="text-sm"
-									:class="{
-										'border-red-300 dark:border-red-700': !isValidPermitAmount,
-									}"
-								/>
-								<div v-if="!isValidPermitAmount" class="text-xs text-red-500">
-									Please enter a valid amount greater than 0
-								</div>
-							</div>
-
-							<!-- Permit signature button -->
-							<Button
-								:disabled="!canSignPermit"
-								:loading="isSigningPermit"
-								@click="onClickSignPermit"
-								class="w-full text-sm"
-								variant="outline"
-								size="sm"
+							<!-- Permit Section Header -->
+							<div
+								class="flex items-center justify-between p-3 cursor-pointer hover:bg-muted/50 bg-muted/20"
+								@click="togglePermitSectionExpansion"
 							>
-								<span v-if="isSigningPermit"> Signing Permit... </span>
-								<span v-else-if="!hasUsdcBalance" class="text-muted-foreground">
-									Insufficient USDC Balance
-								</span>
-								<span v-else-if="!isValidPermitAmount" class="text-muted-foreground">
-									Invalid Amount
-								</span>
-								<span v-else> Sign Permit </span>
-							</Button>
+								<div class="text-xs font-medium text-foreground">Permit USDC Spend</div>
+								<ChevronUp v-if="isPermitSectionExpanded" class="w-4 h-4 text-muted-foreground" />
+								<ChevronDown v-else class="w-4 h-4 text-muted-foreground" />
+							</div>
 
-							<div class="text-xs text-muted-foreground">
-								This will allow the paymaster to spend up to {{ permitAllowanceAmount }} USDC from your
-								account to pay for gas fees.
+							<!-- Permit Section Details -->
+							<div v-if="isPermitSectionExpanded" class="border-t bg-muted/20 border-border">
+								<div class="p-3 space-y-2">
+									<!-- Allowance amount input -->
+									<div class="space-y-2">
+										<div class="text-xs text-muted-foreground">Allowance Amount (USDC)</div>
+										<Input
+											v-model="permitAllowanceAmount"
+											placeholder="Enter USDC amount"
+											class="text-sm"
+											:class="{
+												'border-red-300 dark:border-red-700': !isValidPermitAmount,
+											}"
+										/>
+										<div v-if="!isValidPermitAmount" class="text-xs text-red-500">
+											Please enter a valid amount greater than 0
+										</div>
+									</div>
+
+									<!-- Permit signature button -->
+									<Button
+										:disabled="!canSignPermit"
+										:loading="isSigningPermit"
+										@click="onClickSignPermit"
+										class="w-full text-sm"
+										variant="outline"
+										size="sm"
+									>
+										<span v-if="isSigningPermit"> Signing Permit... </span>
+										<span v-else-if="!hasUsdcBalance" class="text-muted-foreground">
+											Insufficient USDC Balance
+										</span>
+										<span v-else-if="!isValidPermitAmount" class="text-muted-foreground">
+											Invalid Amount
+										</span>
+										<span v-else> Sign Permit </span>
+									</Button>
+
+									<div class="text-xs text-muted-foreground">
+										This will allow the paymaster to spend up to {{ permitAllowanceAmount }} USDC
+										from your account to pay for gas fees.
+									</div>
+								</div>
 							</div>
 						</div>
 					</div>
