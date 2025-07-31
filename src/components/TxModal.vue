@@ -356,6 +356,63 @@ async function onClickSignPermit() {
 		status.value = TransactionStatus.Initial
 	}
 }
+
+// Computed property for maximum possible fee calculation
+const maxPossibleFee = computed(() => {
+	if (!userOp.value) return null
+
+	const op = userOp.value.preview()
+
+	// Maximum possible fee (worst case)
+	const maxTotalGas =
+		BigInt(op.verificationGasLimit) +
+		BigInt(op.callGasLimit) +
+		BigInt(op.preVerificationGas) +
+		BigInt(op.paymasterVerificationGasLimit || 0) +
+		BigInt(op.paymasterPostOpGasLimit || 0)
+
+	const maxFeeWei = maxTotalGas * BigInt(op.maxFeePerGas)
+	const maxFeeGwei = Number(maxFeeWei) / 1e9 // Convert wei to Gwei
+
+	return {
+		wei: maxFeeWei,
+		gwei: maxFeeGwei,
+		formatted: maxFeeGwei.toFixed(2), // 2 decimal places for gwei display
+	}
+})
+
+// Show max fee when userOp exists and transaction is estimated or completed
+const shouldShowMaxFee = computed(() => {
+	return (
+		userOp.value &&
+		status.value !== TransactionStatus.Initial &&
+		status.value !== TransactionStatus.Estimating &&
+		status.value !== TransactionStatus.PreparingPaymaster &&
+		status.value !== TransactionStatus.Failed
+	)
+})
+
+// Computed property for effective transaction fee (actual fee paid)
+const effectiveTransactionFee = computed(() => {
+	if (!opReceipt.value || status.value !== TransactionStatus.Success) return null
+
+	// Use actualGasCost if available, otherwise calculate from actualGasUsed
+	if (opReceipt.value.actualGasCost) {
+		const actualGasCostGwei = Number(opReceipt.value.actualGasCost) / 1e9 // Convert wei to Gwei
+		return {
+			wei: opReceipt.value.actualGasCost,
+			gwei: actualGasCostGwei,
+			formatted: actualGasCostGwei.toFixed(2), // 2 decimal places for gwei display
+		}
+	}
+
+	return null
+})
+
+// Show effective fee when transaction is successful and we have receipt data
+const shouldShowEffectiveFee = computed(() => {
+	return status.value === TransactionStatus.Success && effectiveTransactionFee.value
+})
 </script>
 
 <template>
@@ -773,6 +830,24 @@ async function onClickSignPermit() {
 				<!-- Error message display -->
 				<div v-if="error" class="error-section max-h-[100px] overflow-y-auto">
 					{{ error }}
+				</div>
+
+				<!-- Fee Display -->
+				<div class="flex flex-col text-xs px-2">
+					<!-- Max Possible Fee -->
+					<div v-if="shouldShowMaxFee && maxPossibleFee" class="flex items-center justify-between">
+						<span class="text-muted-foreground">Max Possible Fee</span>
+						<span class="">{{ maxPossibleFee.formatted }} Gwei</span>
+					</div>
+
+					<!-- Effective Fee -->
+					<div
+						v-if="shouldShowEffectiveFee && effectiveTransactionFee"
+						class="flex items-center justify-between"
+					>
+						<span class="text-muted-foreground">Effective Fee</span>
+						<span class="">{{ effectiveTransactionFee.formatted }} Gwei</span>
+					</div>
 				</div>
 
 				<!-- Transaction Status Display -->
