@@ -14,12 +14,14 @@ import {
 	zeroPadValue,
 } from 'ethers'
 import {
+	ADDRESS,
 	ENTRY_POINT_V07_ADDRESS,
 	ENTRY_POINT_V08_ADDRESS,
 	ERC1271_MAGICVALUE,
 	getPermitTypedData,
 	IERC1271__factory,
 	IERC20__factory,
+	isSameAddress,
 	TypedData,
 } from 'sendop'
 import { sign1271 } from '../accounts/account-specific'
@@ -251,6 +253,12 @@ export function useUsdcPaymaster() {
 					chainId: selectedChainId.value,
 					accountAddress: selectedAccount.value.address,
 					signTypedData: async (typedData: TypedData) => {
+						// OwnableValidator uses a special signature verification method
+						// It recovers signatures using ECDSA.toEthSignedMessageHash(hash), forcing EIP-191 format
+						// Therefore, we cannot use standard signTypedData and must use signHash to directly sign the hash
+						if (validatorAddress && isSameAddress(validatorAddress, ADDRESS.OwnableValidator)) {
+							return signer.signHash(getBytes(TypedDataEncoder.hash(...typedData)))
+						}
 						return signer.signTypedData(typedData)
 					},
 				})
