@@ -157,6 +157,7 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 		:click-to-close="true"
 		:esc-to-close="true"
 		:lock-scroll="xlAndLarger ? false : true"
+		:focus-trap="xlAndLarger ? false : { allowOutsideClick: true }"
 	>
 		<div class="account-drawer-visual-container">
 			<!-- Selected Account -->
