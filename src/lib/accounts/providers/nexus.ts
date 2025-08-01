@@ -15,7 +15,7 @@ import {
 	ValidationAPI,
 	zeroPadLeft,
 } from 'sendop'
-import { AccountProvider, Deployment } from '../types'
+import { AccountProvider, Deployment, Sign1271Config } from '../types'
 
 export class NexusAccountProvider implements AccountProvider {
 	getExecutionAccountAPI(validationAPI: ValidationAPI, validatorAddress?: string): AccountAPI {
@@ -90,6 +90,20 @@ export class NexusAccountProvider implements AccountProvider {
 				attesters: [RHINESTONE_ATTESTER_ADDRESS, BICONOMY_ATTESTER_ADDRESS],
 				threshold: 1,
 			},
+		})
+	}
+
+	async sign1271(config: Sign1271Config): Promise<string> {
+		const { typedData, validatorAddress, signTypedData } = config
+
+		if (!validatorAddress) {
+			throw new Error('[NexusAccountProvider#sign1271] validatorAddress is not set')
+		}
+
+		return await NexusAPI.sign1271({
+			validatorAddress,
+			typedData,
+			signTypedData,
 		})
 	}
 }

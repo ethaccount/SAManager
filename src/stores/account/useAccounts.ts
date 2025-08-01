@@ -131,13 +131,13 @@ export const useAccountsStore = defineStore(
 		}
 
 		function removeAccount(account: ImportedAccount) {
-			accounts.value = accounts.value.filter(a => a.address !== account.address)
+			accounts.value = accounts.value.filter(a => !isSameAccount(a, account))
 
 			// remove the init code for the account
 			removeInitCode(account.address)
 
 			// if the selected account is the one being removed, select the first account in the list
-			if (selectedAccount.value?.address === account.address) {
+			if (selectedAccount.value && isSameAccount(selectedAccount.value, account)) {
 				if (accounts.value.length > 0) {
 					selectedAccount.value = accounts.value[0]
 				} else {

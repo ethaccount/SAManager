@@ -1,17 +1,19 @@
 import TxModal from '@/components/TxModal.vue'
+import { usePaymaster } from '@/lib/paymasters'
 import { UserOpDirector } from '@/lib/UserOpDirector'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { defineStore, storeToRefs } from 'pinia'
-import { Execution, PublicPaymaster, UserOpBuilder, UserOperationReceipt } from 'sendop'
+import { Execution, UserOpBuilder, UserOperationReceipt } from 'sendop'
 import { useModal } from 'vue-final-modal'
-import { useSigner } from './useSigner'
 import { toast } from 'vue-sonner'
 import { SUPPORTED_BUNDLER } from './blockchain/blockchain'
+import { useSigner } from './useSigner'
 
 export enum TransactionStatus {
 	Closed = 'Closed',
-	Estimation = 'Estimation',
+	Initial = 'Initial',
+	PreparingPaymaster = 'PreparingPaymaster',
 	Estimating = 'Estimating',
 	Sign = 'Sign',
 	Signing = 'Signing',
@@ -52,25 +54,21 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 			},
 		})
 		open()
-		status.value = TransactionStatus.Estimation
+		status.value = TransactionStatus.Initial
 	}
 
-	const { bundler, selectedChainId, client, fetchGasPrice, setEntryPointAddress, selectedBundler } = useBlockchain()
+	const { bundler, selectedChainId, client, fetchGasPrice, selectedBundler } = useBlockchain()
 	const { selectedAccount, accountVMethods } = useAccount()
 	const { selectedSignerType } = useSigner()
 
-	const paymasters = [
-		{ id: 'none', name: 'No Paymaster', description: 'Pay gas fees with native tokens' },
-		{ id: 'public', name: 'Public Paymaster', description: 'Use public paymaster for gas sponsorship' },
-	] as const
-
-	const selectedPaymaster = ref<(typeof paymasters)[number]['id']>('public')
+	const paymasterHook = usePaymaster()
+	const { selectedPaymaster, isValidPermitAmount, isSigningPermit, resetUsdcData, buildPaymasterData } = paymasterHook
 
 	const status = ref<TransactionStatus>(TransactionStatus.Closed)
 
-	// Auto switch to 'none' if 'public' paymaster is selected and bundler is etherspot in estimation status
+	// Auto switch to 'none' if 'public' paymaster is selected and bundler is etherspot in initial status
 	watch(status, () => {
-		if (status.value === TransactionStatus.Estimation) {
+		if (status.value === TransactionStatus.Initial) {
 			if (selectedPaymaster.value === 'public' && selectedBundler.value === SUPPORTED_BUNDLER.ETHERSPOT) {
 				selectedPaymaster.value = 'none'
 				toast.info('Public Paymaster cannot be used with Etherspot Bundler')
@@ -78,8 +76,17 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 		}
 	})
 
+	const canSignPermit = computed(() => {
+		return (
+			selectedPaymaster.value === 'usdc' &&
+			isValidPermitAmount.value &&
+			!isSigningPermit.value &&
+			(status.value === TransactionStatus.Initial || status.value === TransactionStatus.PreparingPaymaster)
+		)
+	})
+
 	const canEstimate = computed(() => {
-		if (status.value !== TransactionStatus.Estimation) return false
+		if (status.value !== TransactionStatus.Initial) return false
 		if (!selectedPaymaster.value) return false
 		return true
 	})
@@ -97,6 +104,14 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 	const userOp = ref<UserOpBuilder | null>(null)
 	const opHash = ref<string | null>(null)
 	const opReceipt = ref<UserOperationReceipt | null>(null)
+
+	function resetTxModal() {
+		status.value = TransactionStatus.Closed
+		userOp.value = null
+		opHash.value = null
+		opReceipt.value = null
+		resetUsdcData()
+	}
 
 	async function handleEstimate(executions: Execution[], initCode?: string) {
 		if (!selectedAccount.value) {
@@ -133,21 +148,13 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 			})
 		}
 
-		if (selectedPaymaster.value === 'public') {
-			op.setPaymaster({
-				paymaster: await PublicPaymaster.getPaymaster(),
-				paymasterData: await PublicPaymaster.getPaymasterData(),
-				paymasterPostOpGasLimit: await PublicPaymaster.getPaymasterPostOpGasLimit(),
-			})
+		// Set paymaster data based on selected paymaster
+		const paymasterData = await buildPaymasterData()
+		if (paymasterData) {
+			op.setPaymaster(paymasterData)
 		}
 
 		op.setGasPrice(await fetchGasPrice())
-
-		// Set entry point address in blockchain store for correct etherspot bundler selection
-		if (!op.entryPointAddress) {
-			throw new Error('[handleEstimate] No entry point address in user operation')
-		}
-		setEntryPointAddress(op.entryPointAddress)
 
 		try {
 			await op.estimateGas()
@@ -198,29 +205,22 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 		}
 	}
 
-	function reset() {
-		status.value = TransactionStatus.Closed
-		userOp.value = null
-		opHash.value = null
-		opReceipt.value = null
-	}
-
 	return {
-		openModal,
-		closeModal: close,
-		reset,
-		handleEstimate,
-		handleSign,
-		handleSend,
 		userOp,
-		selectedPaymaster,
-		paymasters,
 		canEstimate,
 		canSign,
 		canSend,
 		status,
 		opHash,
 		opReceipt,
+		canSignPermit,
+		openModal,
+		closeModal: close,
+		resetTxModal,
+		handleEstimate,
+		handleSign,
+		handleSend,
+		...paymasterHook,
 	}
 })
 

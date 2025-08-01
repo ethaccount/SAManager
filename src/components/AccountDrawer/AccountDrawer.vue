@@ -47,7 +47,11 @@ const accountList = computed<(ImportedAccount & { isCrossChain: boolean })[]>(()
 					isCrossChain: cur.category === 'Smart Account' && hasInitCode(cur.address),
 				}
 
-				if (!acc.some(a => isSameAddress(a.address, account.address))) {
+				// Regular accounts: always add (no deduplication needed)
+				// Cross-chain accounts: only add if not already present (deduplicate)
+				if (!account.isCrossChain) {
+					acc.push(account)
+				} else if (!acc.some(a => isSameAddress(a.address, account.address))) {
 					acc.push(account)
 				}
 
