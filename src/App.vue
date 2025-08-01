@@ -10,8 +10,8 @@ import { useSigner } from '@/stores/useSigner'
 import { VueDappModal } from '@vue-dapp/modal'
 import { ModalsContainer } from 'vue-final-modal'
 import { Toaster } from 'vue-sonner'
-import { useBackend } from './stores/useBackend'
 import { useAccount } from './stores/account/useAccount'
+import { useBackend } from './stores/useBackend'
 
 const route = useRoute()
 

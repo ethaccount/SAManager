@@ -1,5 +1,6 @@
 import type { ErrorCode, ethers, EthersError } from 'ethers'
 import { isError } from 'ethers'
+import { displayChainName } from '@/stores/blockchain/blockchain'
 
 export function isEthersError(error: unknown): error is EthersError {
 	const validErrorCodes: ErrorCode[] = [
@@ -85,6 +86,39 @@ export function parseError(unknownError: unknown): Error {
 			err = new Error(String(unknownError))
 	}
 	return err
+}
+
+/**
+ * Checks if an error indicates a chain ID mismatch.
+ * @param error The error to check
+ * @returns true if it's a chain mismatch error, false otherwise
+ */
+export function isChainMismatchError(error: unknown): boolean {
+	if (error instanceof Error) {
+		if (isEthersError(error)) {
+			const errorMsg = getEthersErrorMsg(error)
+			return /Provided chainId "\d+" must match the active chainId "\d+"/.test(errorMsg)
+		}
+	}
+	return false
+}
+
+/**
+ * Gets a user-friendly message for chain mismatch errors.
+ * @param error The chain mismatch error
+ * @returns A formatted user-friendly message
+ */
+export function getChainMismatchErrorMessage(error: unknown): string {
+	if (error instanceof Error && isEthersError(error)) {
+		const errorMsg = getEthersErrorMsg(error)
+		const chainMismatchMatch = errorMsg.match(/Provided chainId "(\d+)" must match the active chainId "(\d+)"/)
+		if (chainMismatchMatch) {
+			const expectedChainId = chainMismatchMatch[1]
+			const currentChainName = displayChainName(Number(expectedChainId))
+			return `Please switch your EOA Wallet network to ${currentChainName} to sign the user operation`
+		}
+	}
+	return 'Chain mismatch error'
 }
 
 // ================================ Error classes =================================

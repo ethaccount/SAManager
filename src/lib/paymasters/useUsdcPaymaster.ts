@@ -26,7 +26,7 @@ import {
 } from 'sendop'
 import { sign1271 } from '../accounts/account-specific'
 import { AccountRegistry } from '../accounts/registry'
-import { isUserRejectedError } from '../error'
+import { getChainMismatchErrorMessage, isChainMismatchError, isUserRejectedError } from '../error'
 import { getTokenAddress } from '../tokens'
 import { USDC_PAYMASTER_V07_ADDRESSES, USDC_PAYMASTER_V08_ADDRESSES } from './constants'
 import { PaymasterData } from './types'
@@ -281,6 +281,11 @@ export function useUsdcPaymaster() {
 
 				if (error instanceof Error && error.message.includes('could not decode result data')) {
 					throw new Error('Invalid permit signature: Account may not be deployed')
+				}
+
+				// Chain mismatch error - show user-friendly message
+				if (isChainMismatchError(error)) {
+					throw new Error(getChainMismatchErrorMessage(error))
 				}
 
 				throw error
