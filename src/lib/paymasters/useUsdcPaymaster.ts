@@ -69,10 +69,10 @@ export function useUsdcPaymaster() {
 		}
 
 		// Check entry point version and supported chains
-		if (currentEntryPointAddress.value === ENTRY_POINT_V07_ADDRESS) {
+		if (isSameAddress(currentEntryPointAddress.value, ENTRY_POINT_V07_ADDRESS)) {
 			// v0.7 only supports Base and Arbitrum (and their testnets)
 			return selectedChainId.value in USDC_PAYMASTER_V07_ADDRESSES
-		} else if (currentEntryPointAddress.value === ENTRY_POINT_V08_ADDRESS) {
+		} else if (isSameAddress(currentEntryPointAddress.value, ENTRY_POINT_V08_ADDRESS)) {
 			// v0.8 supports all 5 chains and their testnets
 			return selectedChainId.value in USDC_PAYMASTER_V08_ADDRESSES
 		}
@@ -85,9 +85,9 @@ export function useUsdcPaymaster() {
 			return null
 		}
 
-		if (currentEntryPointAddress.value === ENTRY_POINT_V07_ADDRESS) {
+		if (isSameAddress(currentEntryPointAddress.value, ENTRY_POINT_V07_ADDRESS)) {
 			return USDC_PAYMASTER_V07_ADDRESSES[selectedChainId.value as keyof typeof USDC_PAYMASTER_V07_ADDRESSES]
-		} else if (currentEntryPointAddress.value === ENTRY_POINT_V08_ADDRESS) {
+		} else if (isSameAddress(currentEntryPointAddress.value, ENTRY_POINT_V08_ADDRESS)) {
 			return USDC_PAYMASTER_V08_ADDRESSES[selectedChainId.value as keyof typeof USDC_PAYMASTER_V08_ADDRESSES]
 		}
 

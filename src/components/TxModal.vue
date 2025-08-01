@@ -61,7 +61,8 @@ const { selectedChainId, explorerUrl } = useBlockchain()
 const { selectedAccount, selectedAccountInitCodeData, isAccountAccessible } = useAccount()
 const { selectSigner, selectedSigner } = useSigner()
 const { selectedCredentialDisplay, isLogin } = usePasskey()
-
+const { isDeployed, getCode, loading: isLoadingCode } = useGetCode()
+const { currentEntryPointAddress, setEntryPointAddress } = useBlockchain()
 const {
 	userOp,
 	opReceipt,
@@ -92,16 +93,21 @@ const {
 	usdcBalance,
 } = useTxModal()
 
-const { isDeployed, getCode, loading: isLoadingCode } = useGetCode()
-const { currentEntryPointAddress, setEntryPointAddress } = useBlockchain()
+const txModalErrorMessage = ref<string | null>(null)
+
+// Expansion state for executions
+const expandedExecutions = ref(new Set<number>())
+// Expansion state for permit USDC section
+const isPermitSectionExpanded = ref(false)
+// UserOp preview state
+const showUserOpPreview = ref(false)
 
 // When the TxModal is opened
 onMounted(async () => {
 	// Check if account is connected
 	if (!isAccountAccessible.value) {
 		emit('close')
-		toast.error('Account not connected')
-		return
+		throw new Error('Account not connected')
 	}
 
 	if (!selectedAccount.value) {
@@ -144,38 +150,11 @@ watchImmediate(selectedPaymaster, async newPaymaster => {
 		}
 	}
 
-	// from usdc paymaster to other paymaster
+	// When selecting other paymaster from usdc paymaster, reset the status to initial
 	if (status.value === TransactionStatus.PreparingPaymaster && newPaymaster !== 'usdc') {
 		status.value = TransactionStatus.Initial
 	}
 })
-
-const error = ref<string | null>(null)
-
-// Expansion state for executions
-const expandedExecutions = ref(new Set<number>())
-
-function toggleExecutionExpansion(index: number) {
-	if (expandedExecutions.value.has(index)) {
-		expandedExecutions.value.delete(index)
-	} else {
-		expandedExecutions.value.add(index)
-	}
-}
-
-// Expansion state for permit USDC section
-const isPermitSectionExpanded = ref(false)
-
-function togglePermitSectionExpansion() {
-	isPermitSectionExpanded.value = !isPermitSectionExpanded.value
-}
-
-// UserOp preview state
-const showUserOpPreview = ref(false)
-
-function toggleUserOpPreview() {
-	showUserOpPreview.value = !showUserOpPreview.value
-}
 
 watchImmediate(status, (newStatus, oldStatus) => {
 	// Auto send when signing is done
@@ -190,6 +169,22 @@ watchImmediate(status, (newStatus, oldStatus) => {
 		isPermitSectionExpanded.value = false
 	}
 })
+
+function toggleExecutionExpansion(index: number) {
+	if (expandedExecutions.value.has(index)) {
+		expandedExecutions.value.delete(index)
+	} else {
+		expandedExecutions.value.add(index)
+	}
+}
+
+function togglePermitSectionExpansion() {
+	isPermitSectionExpanded.value = !isPermitSectionExpanded.value
+}
+
+function toggleUserOpPreview() {
+	showUserOpPreview.value = !showUserOpPreview.value
+}
 
 function handleError(e: unknown, prefix?: string) {
 	console.error(getErrorChainMessage(e, prefix))
@@ -207,15 +202,24 @@ function handleError(e: unknown, prefix?: string) {
 	const msg = getErrorMsg(e, prefix)
 	const errHex = extractHexString(msg)
 	if (errHex && parseContractError(errHex)) {
-		error.value = replaceHexString(msg, parseContractError(errHex, true))
+		txModalErrorMessage.value = replaceHexString(msg, parseContractError(errHex, true))
 	} else {
-		error.value = msg
+		txModalErrorMessage.value = msg
+	}
+}
+
+async function onClickSignPermit() {
+	await handleSignUsdcPermit()
+
+	// only when the data is set, users can start estimating the gas
+	if (usdcPaymasterData.value) {
+		status.value = TransactionStatus.Initial
 	}
 }
 
 async function onClickEstimate() {
 	try {
-		error.value = null
+		txModalErrorMessage.value = null
 		status.value = TransactionStatus.Estimating
 
 		if (!selectedAccount.value) {
@@ -242,7 +246,7 @@ async function onClickEstimate() {
 
 async function onClickSign() {
 	try {
-		error.value = null
+		txModalErrorMessage.value = null
 		status.value = TransactionStatus.Signing
 		await handleSign()
 		status.value = TransactionStatus.Send
@@ -272,14 +276,14 @@ async function onClickSign() {
 			msg = ''
 		}
 
-		error.value = msg
+		txModalErrorMessage.value = msg
 		status.value = TransactionStatus.Sign
 	}
 }
 
 async function onClickSend() {
 	try {
-		error.value = null
+		txModalErrorMessage.value = null
 		status.value = TransactionStatus.Sending
 
 		await handleSend()
@@ -356,15 +360,6 @@ const hasUsdcAllowance = computed(() => {
 const hasUsdcBalance = computed(() => {
 	return usdcBalance.value !== null && usdcBalance.value > 0n
 })
-
-async function onClickSignPermit() {
-	await handleSignUsdcPermit()
-
-	// only when the data is set, users can start estimating the gas
-	if (usdcPaymasterData.value) {
-		status.value = TransactionStatus.Initial
-	}
-}
 
 // Computed property for maximum possible fee calculation
 const maxPossibleFee = computed(() => {
@@ -835,8 +830,8 @@ const shouldShowEffectiveFee = computed(() => {
 				class="space-y-2 px-4 py-4 border-t border-border"
 			>
 				<!-- Error message display -->
-				<div v-if="error" class="error-section max-h-[100px] overflow-y-auto">
-					{{ error }}
+				<div v-if="txModalErrorMessage" class="error-section max-h-[100px] overflow-y-auto">
+					{{ txModalErrorMessage }}
 				</div>
 
 				<!-- Fee Display -->
@@ -891,8 +886,8 @@ const shouldShowEffectiveFee = computed(() => {
 								View on Explorer
 								<ExternalLink class="w-4 h-4" />
 							</a>
-							<p v-if="error" class="mt-2 text-sm text-muted-foreground">
-								{{ error }}
+							<p v-if="txModalErrorMessage" class="mt-2 text-sm text-muted-foreground">
+								{{ txModalErrorMessage }}
 							</p>
 						</div>
 					</template>

@@ -7,7 +7,7 @@ import {
 	SUPPORTED_NODE,
 	TESTNET_CHAIN_ID,
 } from '@/stores/blockchain/blockchain'
-import { JsonRpcProvider } from 'ethers'
+import { getAddress, JsonRpcProvider } from 'ethers'
 import { publicNode, PublicNodeChain } from 'evm-providers'
 import { defineStore } from 'pinia'
 import {
@@ -81,10 +81,10 @@ export const useBlockchainStore = defineStore(
 				case SUPPORTED_BUNDLER.ALCHEMY:
 					return getAlchemyUrl(selectedChainId.value)
 				case SUPPORTED_BUNDLER.ETHERSPOT:
-					switch (currentEntryPointAddress.value) {
-						case ENTRY_POINT_V07_ADDRESS:
+					switch (getAddress(currentEntryPointAddress.value)) {
+						case getAddress(ENTRY_POINT_V07_ADDRESS):
 							return getEtherspotTestnetUrl(selectedChainId.value, 'v0.7')
-						case ENTRY_POINT_V08_ADDRESS:
+						case getAddress(ENTRY_POINT_V08_ADDRESS):
 							return getEtherspotTestnetUrl(selectedChainId.value, 'v0.8')
 						default:
 							throw new Error(`Invalid entry point address: ${currentEntryPointAddress.value}`)
