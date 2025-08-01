@@ -209,7 +209,7 @@ function handleError(e: unknown, prefix?: string) {
 }
 
 async function onClickSignPermit() {
-	await handleSignUsdcPermit()
+	await handleSignUsdcPermit(isDeployed.value)
 
 	// only when the data is set, users can start estimating the gas
 	if (usdcPaymasterData.value) {
@@ -361,6 +361,17 @@ const hasUsdcBalance = computed(() => {
 	return usdcBalance.value !== null && usdcBalance.value > 0n
 })
 
+// Show max fee when userOp exists and transaction is estimated or completed
+const shouldShowMaxFee = computed(() => {
+	return (
+		userOp.value &&
+		status.value !== TransactionStatus.Initial &&
+		status.value !== TransactionStatus.Estimating &&
+		status.value !== TransactionStatus.PreparingPaymaster &&
+		status.value !== TransactionStatus.Failed
+	)
+})
+
 // Computed property for maximum possible fee calculation
 const maxPossibleFee = computed(() => {
 	if (!userOp.value) return null
@@ -381,19 +392,8 @@ const maxPossibleFee = computed(() => {
 	return {
 		wei: maxFeeWei,
 		gwei: maxFeeGwei,
-		formatted: maxFeeGwei.toFixed(2), // 2 decimal places for gwei display
+		formatted: Number(maxFeeGwei.toFixed(0)).toLocaleString(),
 	}
-})
-
-// Show max fee when userOp exists and transaction is estimated or completed
-const shouldShowMaxFee = computed(() => {
-	return (
-		userOp.value &&
-		status.value !== TransactionStatus.Initial &&
-		status.value !== TransactionStatus.Estimating &&
-		status.value !== TransactionStatus.PreparingPaymaster &&
-		status.value !== TransactionStatus.Failed
-	)
 })
 
 // Computed property for effective transaction fee (actual fee paid)
@@ -406,7 +406,7 @@ const effectiveTransactionFee = computed(() => {
 		return {
 			wei: opReceipt.value.actualGasCost,
 			gwei: actualGasCostGwei,
-			formatted: actualGasCostGwei.toFixed(2), // 2 decimal places for gwei display
+			formatted: Number(actualGasCostGwei.toFixed(0)).toLocaleString(),
 		}
 	}
 
@@ -836,10 +836,10 @@ const shouldShowEffectiveFee = computed(() => {
 
 				<!-- Fee Display -->
 				<div class="flex flex-col text-xs px-2">
-					<!-- Max Possible Fee -->
+					<!-- Possible Fee -->
 					<div v-if="shouldShowMaxFee && maxPossibleFee" class="flex items-center justify-between">
-						<span class="text-muted-foreground">Max Possible Fee</span>
-						<span class="">{{ maxPossibleFee.formatted }} Gwei</span>
+						<span class="text-muted-foreground">Possible Gas Fee</span>
+						<span>&lt; {{ maxPossibleFee.formatted }} Gwei</span>
 					</div>
 
 					<!-- Effective Fee -->
@@ -847,7 +847,7 @@ const shouldShowEffectiveFee = computed(() => {
 						v-if="shouldShowEffectiveFee && effectiveTransactionFee"
 						class="flex items-center justify-between"
 					>
-						<span class="text-muted-foreground">Effective Fee</span>
+						<span class="text-muted-foreground">Effective Gas Fee</span>
 						<span class="">{{ effectiveTransactionFee.formatted }} Gwei</span>
 					</div>
 				</div>

@@ -189,7 +189,7 @@ export function useUsdcPaymaster() {
 		return permitSignaturePart !== '0'.repeat(permitSignaturePart.length)
 	})
 
-	async function handleSignUsdcPermit() {
+	async function handleSignUsdcPermit(isDeployed: boolean) {
 		try {
 			isSigningPermit.value = true
 
@@ -263,16 +263,17 @@ export function useUsdcPaymaster() {
 					},
 				})
 
-				// check if the permit sig is valid
-				const contract = IERC1271__factory.connect(selectedAccount.value.address, client.value)
-				try {
-					const result = await contract.isValidSignature(TypedDataEncoder.hash(...typedData), permitSig)
-					if (result !== ERC1271_MAGICVALUE) {
-						throw new Error(`Invalid permit signature`)
+				// check if the permit sig is valid only if the account is deployed
+				if (isDeployed) {
+					const contract = IERC1271__factory.connect(selectedAccount.value.address, client.value)
+					try {
+						const result = await contract.isValidSignature(TypedDataEncoder.hash(...typedData), permitSig)
+						if (result !== ERC1271_MAGICVALUE) {
+							throw new Error(`Invalid permit signature`)
+						}
+					} catch (error) {
+						throw error
 					}
-				} catch (error) {
-					console.error(error)
-					throw new Error(`Invalid permit signature`)
 				}
 			} catch (error) {
 				// User rejected signing on browser wallet or passkey. Don't show error message
