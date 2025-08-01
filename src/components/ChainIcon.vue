@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { CHAIN_ICONS } from '@/stores/blockchain/chain-icons'
-import { isTestnet } from '@/stores/blockchain/blockchain'
+import { isTestnet } from '@/stores/blockchain/chains'
 
 interface Props {
 	chainId: string

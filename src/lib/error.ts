@@ -1,6 +1,6 @@
 import type { ErrorCode, ethers, EthersError } from 'ethers'
 import { isError } from 'ethers'
-import { displayChainName } from '@/stores/blockchain/blockchain'
+import { displayChainName } from '@/stores/blockchain/chains'
 
 export function isEthersError(error: unknown): error is EthersError {
 	const validErrorCodes: ErrorCode[] = [

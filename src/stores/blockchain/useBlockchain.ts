@@ -6,7 +6,7 @@ import {
 	SUPPORTED_ENTRY_POINT,
 	SUPPORTED_NODE,
 	TESTNET_CHAIN_ID,
-} from '@/stores/blockchain/blockchain'
+} from '@/stores/blockchain/chains'
 import { getAddress, JsonRpcProvider } from 'ethers'
 import { publicNode, PublicNodeChain } from 'evm-providers'
 import { defineStore } from 'pinia'

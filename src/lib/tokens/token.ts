@@ -1,4 +1,4 @@
-import { CHAIN_ID, TESTNET_CHAIN_ID } from '@/stores/blockchain/blockchain'
+import { CHAIN_ID, TESTNET_CHAIN_ID } from '@/stores/blockchain/chains'
 import { getAddress } from 'ethers'
 
 export type Token = {

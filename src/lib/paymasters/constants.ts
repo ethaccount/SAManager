@@ -1,4 +1,4 @@
-import { MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from '@/stores/blockchain/blockchain'
+import { MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from '@/stores/blockchain/chains'
 
 export const SUPPORTED_PAYMASTERS = {
 	none: { id: 'none', name: 'None', description: 'Use native tokens in the account to pay gas fees' },

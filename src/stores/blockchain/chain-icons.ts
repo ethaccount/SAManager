@@ -1,4 +1,4 @@
-import { MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from './blockchain'
+import { MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from './chains'
 import ethereum from '@/assets/chains/ethereum.svg'
 import polygon from '@/assets/chains/polygon.svg'
 import optimism from '@/assets/chains/optimism.svg'

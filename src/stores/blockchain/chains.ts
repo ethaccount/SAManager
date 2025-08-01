@@ -19,7 +19,7 @@ export enum TESTNET_CHAIN_ID {
 	POLYGON_AMOY = '80002',
 }
 
-export const CHAIN_NAME: { [key: string]: string } = {
+export const CHAIN_NAME: { [key in CHAIN_ID]: string } = {
 	// Mainnet
 	[MAINNET_CHAIN_ID.ETHEREUM]: 'Ethereum',
 	[MAINNET_CHAIN_ID.POLYGON]: 'Polygon',
@@ -35,6 +35,7 @@ export const CHAIN_NAME: { [key: string]: string } = {
 	[TESTNET_CHAIN_ID.POLYGON_AMOY]: 'Polygon Amoy',
 } as const
 
+// TODO: add mainnet explorer url
 export const EXPLORER_URL: { [key: string]: string } = {
 	[TESTNET_CHAIN_ID.LOCAL]: 'http://localhost:3000',
 	[TESTNET_CHAIN_ID.SEPOLIA]: 'https://sepolia.etherscan.io',

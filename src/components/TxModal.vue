@@ -18,7 +18,7 @@ import {
 import { useGetCode } from '@/lib/useGetCode'
 import { deserializeValidationMethod } from '@/lib/validations'
 import { useAccount } from '@/stores/account/useAccount'
-import { displayChainName, getEntryPointAddress, isTestnet } from '@/stores/blockchain/blockchain'
+import { displayChainName, getEntryPointAddress, isTestnet } from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'

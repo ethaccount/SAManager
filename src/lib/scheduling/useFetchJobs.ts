@@ -1,6 +1,6 @@
 import { getToken, NATIVE_TOKEN_ADDRESS, Token } from '@/lib/tokens/token'
 import { useAccount } from '@/stores/account/useAccount'
-import type { CHAIN_ID } from '@/stores/blockchain/blockchain'
+import type { CHAIN_ID } from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { JsonRpcProvider } from 'ethers'
 import { ADDRESS, isSameAddress, IERC20__factory, ScheduledOrders__factory, ScheduledTransfers__factory } from 'sendop'

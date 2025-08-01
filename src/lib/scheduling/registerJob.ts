@@ -1,6 +1,6 @@
 import { apiRegisterJob } from '@/api/backend/registerJob'
 import { AccountId } from '@/lib/accounts'
-import { CHAIN_ID } from '@/stores/blockchain/blockchain'
+import { CHAIN_ID } from '@/stores/blockchain/chains'
 import { JsonRpcProvider } from 'ethers'
 import { ADDRESS, ENTRY_POINT_V07_ADDRESS, ERC4337Bundler, Execution, INTERFACES, UserOpBuilder } from 'sendop'
 import { UserOpDirector } from '../UserOpDirector'

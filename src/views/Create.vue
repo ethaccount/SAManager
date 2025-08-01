@@ -23,7 +23,7 @@ import {
 	WebAuthnValidatorVMethod,
 } from '@/lib/validations'
 import { useAccounts } from '@/stores/account/useAccounts'
-import { displayChainName } from '@/stores/blockchain/blockchain'
+import { displayChainName } from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
 import { usePasskey } from '@/stores/passkey/usePasskey'

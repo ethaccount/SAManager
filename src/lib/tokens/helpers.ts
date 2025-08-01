@@ -1,7 +1,7 @@
 import { IERC20__factory, isSameAddress } from 'sendop'
 import { formatUnits } from 'ethers'
 import { getToken, NATIVE_TOKEN_ADDRESS } from './token'
-import type { CHAIN_ID } from '@/stores/blockchain/blockchain'
+import type { CHAIN_ID } from '@/stores/blockchain/chains'
 import type { JsonRpcProvider } from 'ethers'
 
 export interface TokenBalanceCheckParams {

@@ -1,6 +1,6 @@
 import { Contract, getAddress, Interface, JsonRpcProvider } from 'ethers'
 import { getToken, Token } from '../tokens/token'
-import { CHAIN_ID } from '@/stores/blockchain/blockchain'
+import { CHAIN_ID } from '@/stores/blockchain/chains'
 import { isSameAddress } from 'sendop'
 
 export const SWAP_ROUTER = '0x65669fE35312947050C450Bd5d36e6361F85eC12'

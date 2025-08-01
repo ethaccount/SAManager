@@ -7,7 +7,7 @@ import { defineStore, storeToRefs } from 'pinia'
 import { Execution, UserOpBuilder, UserOperationReceipt } from 'sendop'
 import { useModal } from 'vue-final-modal'
 import { toast } from 'vue-sonner'
-import { SUPPORTED_BUNDLER } from './blockchain/blockchain'
+import { SUPPORTED_BUNDLER } from './blockchain/chains'
 import { useSigner } from './useSigner'
 
 export enum TransactionStatus {

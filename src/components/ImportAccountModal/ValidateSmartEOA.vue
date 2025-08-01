@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 import { AccountId } from '@/lib/accounts'
-import { displayChainName } from '@/stores/blockchain/blockchain'
+import { displayChainName } from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
 import { ArrowLeft, CheckCircle2, Loader2, XCircle } from 'lucide-vue-next'

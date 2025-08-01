@@ -1,6 +1,6 @@
 import { Methods, RPCPayload } from '@/lib/browser/types'
 import { useAccount } from '@/stores/account/useAccount'
-import { displayChainName } from '@/stores/blockchain/blockchain'
+import { displayChainName } from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { useTxModal, type TxModalExecution } from '@/stores/useTxModal'
 import { getAddress, isAddress } from 'ethers'

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import NetworkIcon from '@/components/ChainIcon.vue'
-import { MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from '@/stores/blockchain/blockchain'
+import { MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from '@/stores/blockchain/chains'
 
 const chainIds = [
 	MAINNET_CHAIN_ID.ETHEREUM,

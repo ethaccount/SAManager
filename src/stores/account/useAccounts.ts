@@ -7,7 +7,7 @@ import {
 import { ImportedAccount, isSameAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useInitCode } from '@/stores/account/useInitCode'
-import { CHAIN_ID } from '@/stores/blockchain/blockchain'
+import { CHAIN_ID } from '@/stores/blockchain/chains'
 import { JSONParse, JSONStringify } from 'json-with-bigint'
 import { isSameAddress } from 'sendop'
 import { getAuthenticatorIdHash } from '../passkey/passkeyNoRp'

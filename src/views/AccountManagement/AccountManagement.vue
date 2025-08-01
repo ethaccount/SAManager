@@ -9,7 +9,7 @@ import {
 	getVMethodValidatorAddress,
 } from '@/lib/validations/helpers'
 import { useAccount } from '@/stores/account/useAccount'
-import { displayChainName } from '@/stores/blockchain/blockchain'
+import { displayChainName } from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { shortenAddress } from '@vue-dapp/core'
 import { ArrowLeft, Loader2 } from 'lucide-vue-next'
