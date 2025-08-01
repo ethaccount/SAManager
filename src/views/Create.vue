@@ -126,7 +126,7 @@ watchImmediate(selectedValidationMethod, () => {
 	}
 })
 
-const saltInput = ref<number | null>(null)
+const saltInput = ref<number | undefined>(undefined)
 const computedSalt = computed(() => {
 	if (!saltInput.value) return env.APP_SALT
 	return toBytes32(BigInt(saltInput.value))
@@ -445,7 +445,7 @@ function onClickPasskeyLogout() {
 					<!-- salt input -->
 					<div v-if="showMoreOptions" class="flex flex-col gap-1.5">
 						<Label for="custom-salt">Custom Salt (Optional)</Label>
-						<input
+						<Input
 							id="custom-salt"
 							v-model="saltInput"
 							type="number"

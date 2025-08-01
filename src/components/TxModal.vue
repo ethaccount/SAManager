@@ -1,11 +1,20 @@
 <script setup lang="ts">
+import { fetchEthUsdPrice } from '@/api/etherscan'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import Address from '@/components/utils/Address.vue'
 import { AccountRegistry } from '@/lib/accounts'
 import { addressToName } from '@/lib/addressToName'
-import { getErrorChainMessage, getErrorMsg, getEthersErrorMsg, isEthersError, isUserRejectedError } from '@/lib/error'
+import {
+	getChainMismatchErrorMessage,
+	getErrorChainMessage,
+	getErrorMsg,
+	getEthersErrorMsg,
+	isChainMismatchError,
+	isEthersError,
+	isUserRejectedError,
+} from '@/lib/error'
 import { useGetCode } from '@/lib/useGetCode'
 import { deserializeValidationMethod } from '@/lib/validations'
 import { useAccount } from '@/stores/account/useAccount'
@@ -102,6 +111,12 @@ const isPermitSectionExpanded = ref(false)
 // UserOp preview state
 const showUserOpPreview = ref(false)
 
+const ethUsdPrice = ref<number | null>(null)
+
+async function updateEthUsdPrice() {
+	ethUsdPrice.value = await fetchEthUsdPrice()
+}
+
 // When the TxModal is opened
 onMounted(async () => {
 	// Check if account is connected
@@ -130,6 +145,8 @@ onMounted(async () => {
 	const entryPointVersion = AccountRegistry.getEntryPointVersion(selectedAccount.value.accountId)
 	const entryPointAddress = getEntryPointAddress(entryPointVersion)
 	setEntryPointAddress(entryPointAddress)
+
+	await updateEthUsdPrice()
 })
 
 onUnmounted(() => {
@@ -241,6 +258,8 @@ async function onClickEstimate() {
 	} catch (e: unknown) {
 		handleError(e, 'Failed to estimate gas')
 		status.value = TransactionStatus.Initial
+	} finally {
+		await updateEthUsdPrice()
 	}
 }
 
@@ -257,18 +276,14 @@ async function onClickSign() {
 		let msg = ''
 
 		if (isEthersError(e)) {
-			const errorMsg = getEthersErrorMsg(e, prefix)
-			// Check for chain ID mismatch error
-			const chainMismatchMatch = errorMsg.match(/Provided chainId "(\d+)" must match the active chainId "(\d+)"/)
-			if (chainMismatchMatch) {
-				const expectedChainId = chainMismatchMatch[1]
-				const currentChainName = displayChainName(Number(expectedChainId))
-				msg = `Please switch your EOA Wallet network to ${currentChainName} to sign the user operation`
-			} else {
-				msg = errorMsg
-			}
+			msg = getEthersErrorMsg(e, prefix)
 		} else {
 			msg = getErrorMsg(e, prefix)
+		}
+
+		// Chain mismatch error - show user-friendly message
+		if (isChainMismatchError(e)) {
+			msg = getChainMismatchErrorMessage(e)
 		}
 
 		// User rejected signing on browser wallet or passkey. Don't show error message
@@ -300,6 +315,8 @@ async function onClickSend() {
 	} catch (e: unknown) {
 		handleError(e, 'Failed to send user operation')
 		status.value = TransactionStatus.Initial
+	} finally {
+		await updateEthUsdPrice()
 	}
 }
 
@@ -389,10 +406,16 @@ const maxPossibleFee = computed(() => {
 	const maxFeeWei = maxTotalGas * BigInt(op.maxFeePerGas)
 	const maxFeeGwei = Number(maxFeeWei) / 1e9 // Convert wei to Gwei
 
+	const maxFeeEth = Number(formatEther(maxFeeWei))
+	const usdValue = ethUsdPrice.value ? maxFeeEth * ethUsdPrice.value : null
+
 	return {
 		wei: maxFeeWei,
 		gwei: maxFeeGwei,
 		formatted: Number(maxFeeGwei.toFixed(0)).toLocaleString(),
+		eth: maxFeeEth,
+		usd: usdValue,
+		usdFormatted: usdValue ? `$${usdValue.toFixed(4)}` : null,
 	}
 })
 
@@ -403,10 +426,16 @@ const effectiveTransactionFee = computed(() => {
 	// Use actualGasCost if available, otherwise calculate from actualGasUsed
 	if (opReceipt.value.actualGasCost) {
 		const actualGasCostGwei = Number(opReceipt.value.actualGasCost) / 1e9 // Convert wei to Gwei
+		const actualGasCostEth = Number(formatEther(opReceipt.value.actualGasCost))
+		const usdValue = ethUsdPrice.value ? actualGasCostEth * ethUsdPrice.value : null
+
 		return {
 			wei: opReceipt.value.actualGasCost,
 			gwei: actualGasCostGwei,
 			formatted: Number(actualGasCostGwei.toFixed(0)).toLocaleString(),
+			eth: actualGasCostEth,
+			usd: usdValue,
+			usdFormatted: usdValue ? `$${usdValue.toFixed(4)}` : null,
 		}
 	}
 
@@ -839,7 +868,9 @@ const shouldShowEffectiveFee = computed(() => {
 					<!-- Possible Fee -->
 					<div v-if="shouldShowMaxFee && maxPossibleFee" class="flex items-center justify-between">
 						<span class="text-muted-foreground">Possible Gas Fee</span>
-						<span>&lt; {{ maxPossibleFee.formatted }} Gwei</span>
+						<div class="text-right">
+							<div>&lt; {{ maxPossibleFee.formatted }} Gwei ({{ maxPossibleFee.usdFormatted }})</div>
+						</div>
 					</div>
 
 					<!-- Effective Fee -->
@@ -848,7 +879,13 @@ const shouldShowEffectiveFee = computed(() => {
 						class="flex items-center justify-between"
 					>
 						<span class="text-muted-foreground">Effective Gas Fee</span>
-						<span class="">{{ effectiveTransactionFee.formatted }} Gwei</span>
+						<div class="text-right">
+							<div>
+								{{ effectiveTransactionFee.formatted }} Gwei ({{
+									effectiveTransactionFee.usdFormatted
+								}})
+							</div>
+						</div>
 					</div>
 				</div>
 

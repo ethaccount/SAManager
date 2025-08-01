@@ -1,12 +1,10 @@
 // Frontend env usage
 export const env: {
 	APP_SALT: string
-	VITE_PASSKEY_RP_URL: string // TODO: remove
 	CLOUDFLARE_ANALYTICS_TOKEN: string
 	SESSION_SIGNER_ADDRESS: string
 } = {
 	APP_SALT: '',
-	VITE_PASSKEY_RP_URL: '',
 	CLOUDFLARE_ANALYTICS_TOKEN: '',
 	SESSION_SIGNER_ADDRESS: '',
 }

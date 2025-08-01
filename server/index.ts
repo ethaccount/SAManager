@@ -1,4 +1,4 @@
-import { alchemy, pimlico, tenderly, TenderlyChain, AlchemyChain, PimlicoChain } from 'evm-providers'
+import { alchemy, AlchemyChain, pimlico, PimlicoChain, tenderly, TenderlyChain } from 'evm-providers'
 
 export interface Env {
 	ALCHEMY_API_KEY: string
@@ -11,6 +11,7 @@ export interface Env {
 	TENDERLY_API_KEY_POLYGON_AMOY: string
 	BACKEND_URL: string
 	ETHERSPOT_API_KEY: string
+	ETHERSCAN_API_KEY: string
 
 	// Frontend env usage
 	API_SECRET: string
@@ -38,6 +39,7 @@ function validateEnv(env: Env) {
 	if (!env.TENDERLY_API_KEY_POLYGON_AMOY) throw new Error('Missing TENDERLY_API_KEY_POLYGON_AMOY')
 	if (!env.BACKEND_URL) throw new Error('Missing BACKEND_URL')
 	if (!env.ETHERSPOT_API_KEY) throw new Error('Missing ETHERSPOT_API_KEY')
+	if (!env.ETHERSCAN_API_KEY) throw new Error('Missing ETHERSCAN_API_KEY')
 
 	// Frontend env usage
 	if (!env.API_SECRET) throw new Error('Missing API_SECRET')
@@ -121,12 +123,12 @@ export default {
 		if (url.pathname === '/api/provider') {
 			const chainId = url.searchParams.get('chainId')
 			if (!chainId) {
-				return Response.json({ error: 'Chain ID is required' }, { status: 400 })
+				return Response.json({ error: '[SAManager server] Chain ID is required' }, { status: 400 })
 			}
 
 			const provider = url.searchParams.get('provider')
 			if (!provider) {
-				return Response.json({ error: 'Provider is required' }, { status: 400 })
+				return Response.json({ error: '[SAManager server] Provider is required' }, { status: 400 })
 			}
 
 			const chainIdNum = Number(chainId)
@@ -154,33 +156,47 @@ export default {
 					break
 			}
 
-			try {
-				const upstreamRequest = new Request(providerUrl, {
-					method: request.method,
-					headers: request.headers,
-					body: request.body,
-					redirect: 'manual',
-				})
+			return proxyRequest(request, providerUrl)
+		}
 
-				const upstreamResponse = await fetch(upstreamRequest)
+		if (url.pathname === '/etherscan') {
+			// Create the base URL with API key
+			const etherscanUrl = new URL(`https://api.etherscan.io/v2/api`)
+			etherscanUrl.searchParams.set('apikey', env.ETHERSCAN_API_KEY)
 
-				// @note Remove content-encoding header when proxying streamed responses
-				// For alchmey, this is essential to avoid truncatation of the response
-				const responseHeaders = new Headers(upstreamResponse.headers)
-				responseHeaders.delete('content-encoding')
+			// Append all original query parameters
+			url.searchParams.forEach((value, key) => {
+				etherscanUrl.searchParams.set(key, value)
+			})
 
-				return new Response(upstreamResponse.body, {
-					status: upstreamResponse.status,
-					headers: responseHeaders,
-				})
-			} catch (e: unknown) {
-				return Response.json(
-					{ error: `Failed to proxy provider request: ${(e as Error).message}` },
-					{ status: 500 },
-				)
-			}
+			return proxyRequest(request, etherscanUrl.toString())
 		}
 
 		return new Response(null, { status: 404 })
 	},
+}
+
+async function proxyRequest(request: Request, url: string) {
+	try {
+		const upstreamRequest = new Request(url, {
+			method: request.method,
+			headers: request.headers,
+			body: request.body,
+			redirect: 'manual',
+		})
+
+		const upstreamResponse = await fetch(upstreamRequest)
+
+		// @note Remove content-encoding header when proxying streamed responses
+		// For alchmey, this is essential to avoid truncatation of the response
+		const responseHeaders = new Headers(upstreamResponse.headers)
+		responseHeaders.delete('content-encoding')
+
+		return new Response(upstreamResponse.body, {
+			status: upstreamResponse.status,
+			headers: responseHeaders,
+		})
+	} catch (e: unknown) {
+		return Response.json({ error: `Failed to proxy provider request: ${(e as Error).message}` }, { status: 500 })
+	}
 }
