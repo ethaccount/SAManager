@@ -3,7 +3,7 @@ import { alchemy, AlchemyChain, pimlico, PimlicoChain, tenderly, TenderlyChain }
 export interface Env {
 	ALCHEMY_API_KEY: string
 	PIMLICO_API_KEY: string
-	APP_SALT: string
+	API_SECRET: string
 	TENDERLY_API_KEY_SEPOLIA: string
 	TENDERLY_API_KEY_OPTIMISM_SEPOLIA: string
 	TENDERLY_API_KEY_ARBITRUM_SEPOLIA: string
@@ -14,13 +14,15 @@ export interface Env {
 	ETHERSCAN_API_KEY: string
 
 	// Frontend env usage
-	API_SECRET: string
+	ENVIRONMENT: string
+	APP_SALT: string
 	CLOUDFLARE_ANALYTICS_TOKEN: string
 	SESSION_SIGNER_ADDRESS: string
 }
 
 // Frontend env usage
 export type EnvResponse = {
+	ENVIRONMENT: string
 	APP_SALT: string
 	CLOUDFLARE_ANALYTICS_TOKEN: string
 	SESSION_SIGNER_ADDRESS: string
@@ -31,7 +33,7 @@ let envValidated = false
 function validateEnv(env: Env) {
 	if (!env.ALCHEMY_API_KEY) throw new Error('Missing ALCHEMY_API_KEY')
 	if (!env.PIMLICO_API_KEY) throw new Error('Missing PIMLICO_API_KEY')
-	if (!env.APP_SALT) throw new Error('Missing APP_SALT')
+	if (!env.API_SECRET) throw new Error('Missing API_SECRET')
 	if (!env.TENDERLY_API_KEY_SEPOLIA) throw new Error('Missing TENDERLY_API_KEY_SEPOLIA')
 	if (!env.TENDERLY_API_KEY_OPTIMISM_SEPOLIA) throw new Error('Missing TENDERLY_API_KEY_OPTIMISM_SEPOLIA')
 	if (!env.TENDERLY_API_KEY_ARBITRUM_SEPOLIA) throw new Error('Missing TENDERLY_API_KEY_ARBITRUM_SEPOLIA')
@@ -42,7 +44,8 @@ function validateEnv(env: Env) {
 	if (!env.ETHERSCAN_API_KEY) throw new Error('Missing ETHERSCAN_API_KEY')
 
 	// Frontend env usage
-	if (!env.API_SECRET) throw new Error('Missing API_SECRET')
+	if (!env.ENVIRONMENT) throw new Error('Missing ENVIRONMENT')
+	if (!env.APP_SALT) throw new Error('Missing APP_SALT')
 	if (!env.CLOUDFLARE_ANALYTICS_TOKEN) throw new Error('Missing CLOUDFLARE_ANALYTICS_TOKEN')
 	if (!env.SESSION_SIGNER_ADDRESS) throw new Error('Missing SESSION_SIGNER_ADDRESS')
 }
@@ -66,6 +69,7 @@ function getTenderlyApiKey(chainId: number, env: Env): string | null {
 
 export default {
 	async fetch(request: Request, env: Env): Promise<Response> {
+		console.log('env', env.ENVIRONMENT)
 		if (!envValidated) {
 			try {
 				validateEnv(env)
@@ -80,6 +84,7 @@ export default {
 		if (url.pathname === '/env.json') {
 			// Frontend env usage
 			const envResponse: EnvResponse = {
+				ENVIRONMENT: env.ENVIRONMENT,
 				APP_SALT: env.APP_SALT,
 				CLOUDFLARE_ANALYTICS_TOKEN: env.CLOUDFLARE_ANALYTICS_TOKEN,
 				SESSION_SIGNER_ADDRESS: env.SESSION_SIGNER_ADDRESS,

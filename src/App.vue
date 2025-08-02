@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useChainIdRoute } from '@/app/useChainIdRoute'
 import { useCrossChainAutoImport } from '@/app/useCrossChainAutoImport'
-import { useSetupEnv } from '@/app/useSetupEnv'
+import { env, useSetupEnv } from '@/app/useSetupEnv'
 import { useSetupPasskey } from '@/app/useSetupPasskey'
 import { useSetupVueDapp } from '@/app/useSetupVueDapp'
 import { usePasskey } from '@/stores/passkey/usePasskey'
@@ -22,15 +22,21 @@ const { selectSigner } = useSigner()
 useChainIdRoute()
 useSetupVueDapp()
 useCrossChainAutoImport()
-useSetupPasskey()
-useSetupEnv()
+
+// NOTE: onMounted hooks are not guaranteed to execute in registration order
+const { setupPasskey } = useSetupPasskey()
+const { setupEnv } = useSetupEnv()
+
+onMounted(async () => {
+	await setupEnv()
+	console.info('ENVIRONMENT', env.ENVIRONMENT)
+
+	await checkBackendHealth()
+	await setupPasskey()
+})
 
 const { checkBackendHealth } = useBackend()
 const { accountVMethods } = useAccount()
-
-onMounted(async () => {
-	await checkBackendHealth()
-})
 
 // Auto-select signer when connected
 watchImmediate([isEOAWalletConnected, isLogin], ([eoaWalletConnected, passkeyConnected]) => {

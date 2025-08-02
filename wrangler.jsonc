@@ -13,12 +13,16 @@
 	"observability": {
 		"enabled": true,
 	},
-	"routes": [
-		{
-			"pattern": "testnet.samanager.xyz",
-			"custom_domain": true,
+	"env": {
+		"staging": {
+			"routes": ["testnet.samanager.xyz/*"],
+			"vars": { "ENVIRONMENT": "staging" },
 		},
-	],
+		"production": {
+			"routes": ["samanager.xyz/*"],
+			"vars": { "ENVIRONMENT": "production" },
+		},
+	},
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement

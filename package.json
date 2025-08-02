@@ -17,9 +17,12 @@
 		"ethereum"
 	],
 	"scripts": {
-		"dev": "vite",
+		"dev": "pnpm run dev:staging",
+		"dev:staging": "CLOUDFLARE_ENV=staging vite dev",
+		"dev:production": "CLOUDFLARE_ENV=production vite dev",
+		"build:staging": "CLOUDFLARE_ENV=staging vue-tsc --noEmit && pnpm run lint && vite build",
+		"build:production": "CLOUDFLARE_ENV=production vue-tsc --noEmit && pnpm run lint && vite build",
 		"test": "vitest --run",
-		"build": "vue-tsc --noEmit && pnpm run lint && vite build",
 		"preview": "vite preview",
 		"clean": "rm -rf dist && rm -rf node_modules",
 		"typecheck": "vue-tsc --noEmit",

@@ -1,16 +1,18 @@
 // Frontend env usage
 export const env: {
+	ENVIRONMENT: string
 	APP_SALT: string
 	CLOUDFLARE_ANALYTICS_TOKEN: string
 	SESSION_SIGNER_ADDRESS: string
 } = {
+	ENVIRONMENT: '',
 	APP_SALT: '',
 	CLOUDFLARE_ANALYTICS_TOKEN: '',
 	SESSION_SIGNER_ADDRESS: '',
 }
 
 export function useSetupEnv() {
-	onMounted(async () => {
+	async function setupEnv() {
 		try {
 			const response = await fetch('/env.json')
 			const data = await response.json()
@@ -24,9 +26,17 @@ export function useSetupEnv() {
 			if (!env.APP_SALT) {
 				throw new Error('APP_SALT is not set')
 			}
+
+			if (!env.ENVIRONMENT) {
+				throw new Error('ENVIRONMENT is not set')
+			}
 		} catch (err: unknown) {
 			console.error(err)
 			throw err
 		}
-	})
+	}
+
+	return {
+		setupEnv,
+	}
 }
