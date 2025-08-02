@@ -16,9 +16,11 @@
 	"env": {
 		"production": {
 			"routes": ["samanager.xyz/*"],
+			"vars": { "ENVIRONMENT": "production" },
 		},
 		"staging": {
 			"routes": ["testnet.samanager.xyz/*"],
+			"vars": { "ENVIRONMENT": "staging" },
 		},
 	},
 	/**
