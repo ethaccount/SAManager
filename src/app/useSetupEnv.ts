@@ -2,12 +2,10 @@
 export const env: {
 	ENVIRONMENT: string
 	APP_SALT: string
-	CLOUDFLARE_ANALYTICS_TOKEN: string
 	SESSION_SIGNER_ADDRESS: string
 } = {
 	ENVIRONMENT: '',
 	APP_SALT: '',
-	CLOUDFLARE_ANALYTICS_TOKEN: '',
 	SESSION_SIGNER_ADDRESS: '',
 }
 

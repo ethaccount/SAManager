@@ -16,7 +16,6 @@ export interface Env {
 	// Frontend env usage
 	ENVIRONMENT: string
 	APP_SALT: string
-	CLOUDFLARE_ANALYTICS_TOKEN: string
 	SESSION_SIGNER_ADDRESS: string
 }
 
@@ -24,7 +23,6 @@ export interface Env {
 export type EnvResponse = {
 	ENVIRONMENT: string
 	APP_SALT: string
-	CLOUDFLARE_ANALYTICS_TOKEN: string
 	SESSION_SIGNER_ADDRESS: string
 }
 
@@ -46,7 +44,6 @@ function validateEnv(env: Env) {
 	// Frontend env usage
 	if (!env.ENVIRONMENT) throw new Error('Missing ENVIRONMENT')
 	if (!env.APP_SALT) throw new Error('Missing APP_SALT')
-	if (!env.CLOUDFLARE_ANALYTICS_TOKEN) throw new Error('Missing CLOUDFLARE_ANALYTICS_TOKEN')
 	if (!env.SESSION_SIGNER_ADDRESS) throw new Error('Missing SESSION_SIGNER_ADDRESS')
 }
 
@@ -86,7 +83,6 @@ export default {
 			const envResponse: EnvResponse = {
 				ENVIRONMENT: env.ENVIRONMENT,
 				APP_SALT: env.APP_SALT,
-				CLOUDFLARE_ANALYTICS_TOKEN: env.CLOUDFLARE_ANALYTICS_TOKEN,
 				SESSION_SIGNER_ADDRESS: env.SESSION_SIGNER_ADDRESS,
 			}
 			return Response.json(envResponse)
