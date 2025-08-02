@@ -25,4 +25,6 @@ dist-ssr
 
 .env
 .dev.vars
+.dev.vars.staging
+.dev.vars.production
 .wrangler
