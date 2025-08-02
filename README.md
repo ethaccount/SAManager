@@ -1,6 +1,6 @@
 # Smart Account Manager
 
-[SAManager](https://testnet.samanager.xyz/) is an open web wallet that aims to enable interoperability across different smart contract account implementations.
+SAManager is an open web wallet that aims to enable interoperability across different smart contract account implementations.
 
 By leveraging ERC-4337 and various account providers, it allows users to access their smart accounts using EOAs or Passkeys to authenticate their accounts.
 
@@ -10,6 +10,10 @@ Smart accounts can be decentralized and are not locked into specific wallet prov
 - [Documentation](https://hackmd.io/@ZtktAkBVTlOtaS8TkcZO2g/HkiPnQM8eg)
 - TypeScript library [sendop](https://github.com/ethaccount/sendop)
 - [Backend repository](https://github.com/ethaccount/SAManager-backend)
+
+## Apps
+- Mainnet https://samanager.xyz
+- Testnet: https://testnet.samanager.xyz
 
 ## Contributing
 
