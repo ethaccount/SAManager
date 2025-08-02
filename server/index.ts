@@ -66,7 +66,6 @@ function getTenderlyApiKey(chainId: number, env: Env): string | null {
 
 export default {
 	async fetch(request: Request, env: Env): Promise<Response> {
-		console.log('env', env.ENVIRONMENT)
 		if (!envValidated) {
 			try {
 				validateEnv(env)

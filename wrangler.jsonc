@@ -14,13 +14,11 @@
 		"enabled": true,
 	},
 	"env": {
-		"staging": {
-			"routes": ["testnet.samanager.xyz/*"],
-			"vars": { "ENVIRONMENT": "staging" },
-		},
 		"production": {
 			"routes": ["samanager.xyz/*"],
-			"vars": { "ENVIRONMENT": "production" },
+		},
+		"staging": {
+			"routes": ["testnet.samanager.xyz/*"],
 		},
 	},
 	/**
