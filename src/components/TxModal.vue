@@ -155,6 +155,11 @@ onUnmounted(() => {
 
 // This cannot be placed in useTxModal because it needs to be executed immediately when the TxModal is mounted
 watchImmediate(selectedPaymaster, async newPaymaster => {
+	// If the selected paymaster is not supported, switch to the first supported paymaster
+	if (!paymasters.value.some(paymaster => paymaster.id === newPaymaster)) {
+		selectedPaymaster.value = paymasters.value[0].id
+	}
+
 	if (status.value === TransactionStatus.Initial) {
 		if (newPaymaster === 'usdc') {
 			status.value = TransactionStatus.PreparingPaymaster

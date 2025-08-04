@@ -2,16 +2,26 @@ import { PublicPaymaster } from 'sendop'
 import { SUPPORTED_PAYMASTERS } from './constants'
 import { PaymasterData } from './types'
 import { useUsdcPaymaster } from './useUsdcPaymaster'
+import { usePublicPaymaster } from './usePublicPaymaster'
 
 export function usePaymaster() {
 	const usdcPaymasterHook = useUsdcPaymaster()
 	const { isUsdcPaymasterSupported, usdcPaymasterData } = usdcPaymasterHook
 
-	// state
-	const selectedPaymaster = ref<keyof typeof SUPPORTED_PAYMASTERS>('public')
+	const publicPaymasterHook = usePublicPaymaster()
+	const { isPublicPaymasterSupported } = publicPaymasterHook
+
+	const selectedPaymaster = ref<keyof typeof SUPPORTED_PAYMASTERS>(
+		isPublicPaymasterSupported.value ? 'public' : 'none',
+	)
 
 	const paymasters = computed(() => {
 		const excludedPaymasters: (keyof typeof SUPPORTED_PAYMASTERS)[] = []
+
+		// exclude public paymaster if not supported
+		if (!isPublicPaymasterSupported.value) {
+			excludedPaymasters.push('public')
+		}
 
 		// exclude USDC paymaster if not supported
 		if (!isUsdcPaymasterSupported.value) {
@@ -43,5 +53,6 @@ export function usePaymaster() {
 		selectedPaymaster,
 		buildPaymasterData,
 		...usdcPaymasterHook,
+		...publicPaymasterHook,
 	}
 }

@@ -15,6 +15,7 @@ import {
 	ENTRY_POINT_V08_ADDRESS,
 	EntryPointVersion,
 	ERC4337Bundler,
+	ERC4337BundlerOptions,
 	fetchGasPriceAlchemy,
 	fetchGasPricePimlico,
 } from 'sendop'
@@ -89,6 +90,8 @@ export const useBlockchainStore = defineStore(
 						default:
 							throw new Error(`Invalid entry point address: ${currentEntryPointAddress.value}`)
 					}
+				case SUPPORTED_BUNDLER.CANDIDE:
+					return getCandideUrl(selectedChainId.value)
 				default:
 					return getAlchemyUrl(selectedChainId.value)
 			}
@@ -115,6 +118,10 @@ export const useBlockchainStore = defineStore(
 			}
 		}
 
+		function getCandideUrl(chainId: CHAIN_ID) {
+			return `${window.location.origin}/api/provider?chainId=${chainId}&provider=candide`
+		}
+
 		const client = computed(
 			() => new JsonRpcProvider(rpcUrl.value, Number(selectedChainId.value), { staticNetwork: true }),
 		)
@@ -136,9 +143,16 @@ export const useBlockchainStore = defineStore(
 
 		const bundler = computed<ERC4337Bundler>(() => {
 			// disables pre-fetching eth_chainId (Note that ethersport bundler does not support eth_chainId)
-			return new ERC4337Bundler(bundlerUrl.value, Number(selectedChainId.value), {
+			const options: ERC4337BundlerOptions = {
 				staticNetwork: true,
-			})
+			}
+
+			// Candide doesn't support RPC batching
+			if (selectedBundler.value === SUPPORTED_BUNDLER.CANDIDE) {
+				options.batchMaxCount = 1
+			}
+
+			return new ERC4337Bundler(bundlerUrl.value, Number(selectedChainId.value), options)
 		})
 
 		function switchChain(chainId: CHAIN_ID) {
@@ -151,6 +165,9 @@ export const useBlockchainStore = defineStore(
 					return await fetchGasPricePimlico(getPimlicoUrl(selectedChainId.value))
 				case SUPPORTED_BUNDLER.ALCHEMY:
 					return await fetchGasPriceAlchemy(getAlchemyUrl(selectedChainId.value))
+				case SUPPORTED_BUNDLER.CANDIDE:
+					// use Pimlico for gas prices (alchemy may fail when using candide)
+					return await fetchGasPricePimlico(getPimlicoUrl(selectedChainId.value))
 				default:
 					return await fetchGasPriceAlchemy(getAlchemyUrl(selectedChainId.value))
 			}
