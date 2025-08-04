@@ -5,8 +5,9 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "samanager",
-	"compatibility_date": "2025-05-08",
+	"compatibility_date": "2025-08-04",
 	"main": "server/index.ts",
+	"workers_dev": false,
 	"assets": {
 		"not_found_handling": "single-page-application",
 	},
@@ -15,10 +16,12 @@
 	},
 	"env": {
 		"production": {
+			"name": "samanager-production",
 			"routes": ["samanager.xyz/*"],
 			"vars": { "ENVIRONMENT": "production" },
 		},
 		"staging": {
+			"name": "samanager-staging",
 			"routes": ["testnet.samanager.xyz/*"],
 			"vars": { "ENVIRONMENT": "staging" },
 		},
