@@ -1,7 +1,7 @@
 {
 	"name": "smart-account-manager",
 	"private": true,
-	"version": "0.4.7",
+	"version": "0.4.8",
 	"type": "module",
 	"repository": "https://github.com/ethaccount/SAManager",
 	"author": "Johnson Chen <https://x.com/johnson86tw>",
