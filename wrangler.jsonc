@@ -3,7 +3,7 @@
  * https://developers.cloudflare.com/workers/wrangler/configuration/
  */
 {
-	"name": "samanager-default",
+	"name": "samanager-staging",
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"compatibility_date": "2025-07-05",
 	"main": "server/index.ts",
