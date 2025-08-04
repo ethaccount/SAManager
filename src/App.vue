@@ -2,7 +2,6 @@
 import { useChainIdRoute } from '@/app/useChainIdRoute'
 import { useCrossChainAutoImport } from '@/app/useCrossChainAutoImport'
 import { env, useSetupEnv } from '@/app/useSetupEnv'
-import { useSetupPasskey } from '@/app/useSetupPasskey'
 import { useSetupVueDapp } from '@/app/useSetupVueDapp'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
@@ -24,7 +23,7 @@ useSetupVueDapp()
 useCrossChainAutoImport()
 
 // NOTE: onMounted hooks are not guaranteed to execute in registration order
-const { setupPasskey } = useSetupPasskey()
+const { setupPasskey } = usePasskey()
 const { setupEnv } = useSetupEnv()
 
 onMounted(async () => {
