@@ -11,48 +11,55 @@ import { cloudflare } from '@cloudflare/vite-plugin'
 // import { analyzer } from 'vite-bundle-analyzer'
 
 // https://vitejs.dev/config/
-export default defineConfig({
-	plugins: [
-		vue({
-			template: {
-				compilerOptions: {
-					isCustomElement: tag => tag === 'feedback-button',
-				},
-			},
-		}),
-		nodePolyfills(),
-		AutoImport({
-			dts: 'src/auto-import.d.ts',
-			imports: ['vue', 'vue-router', 'pinia', '@vueuse/core', 'vitest'],
-			eslintrc: {
-				enabled: true,
-			},
-		}),
-		Components({
-			dts: 'src/components.d.ts',
-		}),
-		htmlPlugin(htmlConfig),
-		cloudflare(),
-		// analyzer(),
-	],
-	resolve: {
-		alias: {
-			'@': fileURLToPath(new URL('./src', import.meta.url)),
-		},
-	},
-	build: {
-		rollupOptions: {
-			output: {
-				manualChunks: (id: string) => {
-					// only create manual chunks for client build to prevent from empty chunks
-					if (process.env.SSR) return undefined
+export default defineConfig(configEnv => {
+	const isProduction = configEnv.mode === 'production'
 
-					if (id.includes('sendop')) return 'sendop'
-					if (id.includes('ethers')) return 'ethers'
-					if (id.includes('radix-vue')) return 'radix-vue'
-					if (id.includes('@vueuse/core')) return '@vueuse/core'
+	return {
+		plugins: [
+			vue({
+				template: {
+					compilerOptions: {
+						isCustomElement: tag => tag === 'feedback-button',
+					},
+				},
+			}),
+
+			nodePolyfills(),
+			AutoImport({
+				dts: 'src/auto-import.d.ts',
+				imports: ['vue', 'vue-router', 'pinia', '@vueuse/core', 'vitest'],
+				eslintrc: {
+					enabled: true,
+				},
+			}),
+			Components({
+				dts: 'src/components.d.ts',
+			}),
+			htmlPlugin(htmlConfig),
+			cloudflare({
+				configPath: isProduction ? 'wrangler.production.jsonc' : 'wrangler.staging.jsonc',
+			}),
+			// analyzer(),
+		],
+		resolve: {
+			alias: {
+				'@': fileURLToPath(new URL('./src', import.meta.url)),
+			},
+		},
+		build: {
+			rollupOptions: {
+				output: {
+					manualChunks: (id: string) => {
+						// only create manual chunks for client build to prevent from empty chunks
+						if (process.env.SSR) return undefined
+
+						if (id.includes('sendop')) return 'sendop'
+						if (id.includes('ethers')) return 'ethers'
+						if (id.includes('radix-vue')) return 'radix-vue'
+						if (id.includes('@vueuse/core')) return '@vueuse/core'
+					},
 				},
 			},
 		},
-	},
+	}
 })

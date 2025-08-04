@@ -18,10 +18,10 @@
 	],
 	"scripts": {
 		"dev": "pnpm run dev:staging",
-		"dev:staging": "CLOUDFLARE_ENV=staging vite dev",
-		"dev:production": "CLOUDFLARE_ENV=production vite dev",
-		"build:staging": "CLOUDFLARE_ENV=staging vue-tsc --noEmit && pnpm run lint && vite build",
-		"build:production": "CLOUDFLARE_ENV=production vue-tsc --noEmit && pnpm run lint && vite build",
+		"dev:staging": "CLOUDFLARE_ENV=staging vite dev --mode staging",
+		"dev:production": "CLOUDFLARE_ENV=production vite dev --mode production",
+		"build:staging": "CLOUDFLARE_ENV=staging vue-tsc --noEmit && pnpm run lint && vite build --mode staging",
+		"build:production": "CLOUDFLARE_ENV=production vue-tsc --noEmit && pnpm run lint && vite build --mode production",
 		"test": "vitest --run",
 		"preview": "vite preview",
 		"clean": "rm -rf dist && rm -rf node_modules",
@@ -65,7 +65,7 @@
 	},
 	"devDependencies": {
 		"@babel/helpers": "^7.27.1",
-		"@cloudflare/vite-plugin": ">=1.6.0",
+		"@cloudflare/vite-plugin": "^1.11.0",
 		"@types/node": "^22.10.6",
 		"@vitejs/plugin-vue": "^5.2.1",
 		"@vitest/eslint-plugin": "^1.2.1",
@@ -88,7 +88,7 @@
 		"vite-plugin-node-polyfills": "^0.23.0",
 		"vitest": "^3.1.4",
 		"vue-tsc": "^2.2.8",
-		"wrangler": "^4.24.0"
+		"wrangler": "^4.27.0"
 	},
 	"pnpm": {
 		"overrides": {
