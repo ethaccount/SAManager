@@ -27,6 +27,8 @@ function displayBundlerName(bundler: SUPPORTED_BUNDLER) {
 			return 'Alchemy'
 		case SUPPORTED_BUNDLER.ETHERSPOT:
 			return 'Etherspot'
+		case SUPPORTED_BUNDLER.CANDIDE:
+			return 'Candide'
 		default:
 			return 'Unknown'
 	}

@@ -1,5 +1,5 @@
 import { useAccount } from '@/stores/account/useAccount'
-import { useBlockchain } from '@/stores/blockchain/useBlockchain'
+import { useBlockchain } from '@/stores/blockchain'
 import { useSigner } from '@/stores/useSigner'
 import {
 	concat,
@@ -24,8 +24,7 @@ import {
 	isSameAddress,
 	TypedData,
 } from 'sendop'
-import { sign1271 } from '../accounts/account-specific'
-import { AccountRegistry } from '../accounts/registry'
+import { AccountRegistry, sign1271 } from '../accounts'
 import { getChainMismatchErrorMessage, isChainMismatchError, isUserRejectedError } from '../error'
 import { getTokenAddress } from '../tokens'
 import { USDC_PAYMASTER_V07_ADDRESSES, USDC_PAYMASTER_V08_ADDRESSES } from './constants'

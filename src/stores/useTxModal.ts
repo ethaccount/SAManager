@@ -6,8 +6,6 @@ import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { defineStore, storeToRefs } from 'pinia'
 import { Execution, UserOpBuilder, UserOperationReceipt } from 'sendop'
 import { useModal } from 'vue-final-modal'
-import { toast } from 'vue-sonner'
-import { SUPPORTED_BUNDLER } from './blockchain/chains'
 import { useSigner } from './useSigner'
 
 export enum TransactionStatus {
@@ -57,7 +55,7 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 		status.value = TransactionStatus.Initial
 	}
 
-	const { bundler, selectedChainId, client, fetchGasPrice, selectedBundler } = useBlockchain()
+	const { bundler, selectedChainId, client, fetchGasPrice } = useBlockchain()
 	const { selectedAccount, accountVMethods } = useAccount()
 	const { selectedSignerType } = useSigner()
 
@@ -65,16 +63,6 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 	const { selectedPaymaster, isValidPermitAmount, isSigningPermit, resetUsdcData, buildPaymasterData } = paymasterHook
 
 	const status = ref<TransactionStatus>(TransactionStatus.Closed)
-
-	// Auto switch to 'none' if 'public' paymaster is selected and bundler is etherspot in initial status
-	watch(status, () => {
-		if (status.value === TransactionStatus.Initial) {
-			if (selectedPaymaster.value === 'public' && selectedBundler.value === SUPPORTED_BUNDLER.ETHERSPOT) {
-				selectedPaymaster.value = 'none'
-				toast.info('Public Paymaster cannot be used with Etherspot Bundler')
-			}
-		}
-	})
 
 	const canSignPermit = computed(() => {
 		return (

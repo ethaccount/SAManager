@@ -11,6 +11,7 @@ export interface Env {
 	TENDERLY_API_KEY_POLYGON_AMOY: string
 	BACKEND_URL: string
 	ETHERSPOT_API_KEY: string
+	CANDIDE_API_KEY: string
 	ETHERSCAN_API_KEY: string
 
 	// Frontend env usage
@@ -39,6 +40,7 @@ function validateEnv(env: Env) {
 	if (!env.TENDERLY_API_KEY_POLYGON_AMOY) throw new Error('Missing TENDERLY_API_KEY_POLYGON_AMOY')
 	if (!env.BACKEND_URL) throw new Error('Missing BACKEND_URL')
 	if (!env.ETHERSPOT_API_KEY) throw new Error('Missing ETHERSPOT_API_KEY')
+	if (!env.CANDIDE_API_KEY) throw new Error('Missing CANDIDE_API_KEY')
 	if (!env.ETHERSCAN_API_KEY) throw new Error('Missing ETHERSCAN_API_KEY')
 
 	// Frontend env usage
@@ -153,6 +155,9 @@ export default {
 					break
 				case 'etherspot-v3': // for entrypoint v0.8
 					providerUrl = `https://testnet-rpc.etherspot.io/v3/${chainIdNum}?api-key=${env.ETHERSPOT_API_KEY}`
+					break
+				case 'candide':
+					providerUrl = `https://api.candide.dev/api/v3/${chainIdNum}/${env.CANDIDE_API_KEY}`
 					break
 			}
 

@@ -1,10 +1,25 @@
-import { MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from '@/stores/blockchain/chains'
+import { MAINNET_CHAIN_ID, SUPPORTED_BUNDLER, TESTNET_CHAIN_ID } from '@/stores/blockchain/chains'
 
 export const SUPPORTED_PAYMASTERS = {
 	none: { id: 'none', name: 'None', description: 'Use native tokens in the account to pay gas fees' },
 	public: { id: 'public', name: 'Public Paymaster', description: 'Use public funds to pay gas fees (testnet only)' },
 	usdc: { id: 'usdc', name: 'USDC Paymaster', description: 'Use USDC in the account to pay gas fees' },
 } as const
+
+export const PUBLIC_PAYMASTER_ADDRESSES = {
+	// Testnet
+	[TESTNET_CHAIN_ID.SEPOLIA]: '0xcD1c62f36A99f306948dB76c35Bbc1A639f92ce8',
+	[TESTNET_CHAIN_ID.ARBITRUM_SEPOLIA]: '0xcD1c62f36A99f306948dB76c35Bbc1A639f92ce8',
+	[TESTNET_CHAIN_ID.OPTIMISM_SEPOLIA]: '0xcD1c62f36A99f306948dB76c35Bbc1A639f92ce8',
+	[TESTNET_CHAIN_ID.BASE_SEPOLIA]: '0xcD1c62f36A99f306948dB76c35Bbc1A639f92ce8',
+	[TESTNET_CHAIN_ID.POLYGON_AMOY]: '0xcD1c62f36A99f306948dB76c35Bbc1A639f92ce8',
+} as const
+
+// Bundlers that support public paymasters
+export const PUBLIC_PAYMASTER_SUPPORTED_BUNDLERS: SUPPORTED_BUNDLER[] = [
+	SUPPORTED_BUNDLER.PIMLICO,
+	SUPPORTED_BUNDLER.ALCHEMY,
+]
 
 // USDC Paymaster addresses: https://developers.circle.com/stablecoins/paymaster-addresses
 
