@@ -35,6 +35,18 @@ export default defineConfig({
 		cloudflare(),
 		// analyzer(),
 	],
+	environments: {
+		staging: {
+			define: {
+				ENVIRONMENT: 'staging',
+			},
+		},
+		production: {
+			define: {
+				ENVIRONMENT: 'production',
+			},
+		},
+	},
 	resolve: {
 		alias: {
 			'@': fileURLToPath(new URL('./src', import.meta.url)),

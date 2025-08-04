@@ -88,7 +88,7 @@
 		"vite-plugin-node-polyfills": "^0.23.0",
 		"vitest": "^3.1.4",
 		"vue-tsc": "^2.2.8",
-		"wrangler": "^4.24.0"
+		"wrangler": "^4.27.0"
 	},
 	"pnpm": {
 		"overrides": {
