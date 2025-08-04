@@ -1,7 +1,7 @@
 {
 	"name": "smart-account-manager",
 	"private": true,
-	"version": "0.4.7",
+	"version": "0.4.8",
 	"type": "module",
 	"repository": "https://github.com/ethaccount/SAManager",
 	"author": "Johnson Chen <https://x.com/johnson86tw>",
@@ -88,7 +88,7 @@
 		"vite-plugin-node-polyfills": "^0.23.0",
 		"vitest": "^3.1.4",
 		"vue-tsc": "^2.2.8",
-		"wrangler": "^4.24.0"
+		"wrangler": "^4.27.0"
 	},
 	"pnpm": {
 		"overrides": {

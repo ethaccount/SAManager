@@ -3,10 +3,11 @@
  * https://developers.cloudflare.com/workers/wrangler/configuration/
  */
 {
+	"name": "samanager-default",
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "samanager",
-	"compatibility_date": "2025-05-08",
+	"compatibility_date": "2025-07-05",
 	"main": "server/index.ts",
+	"workers_dev": false,
 	"assets": {
 		"not_found_handling": "single-page-application",
 	},
@@ -15,11 +16,13 @@
 	},
 	"env": {
 		"production": {
-			"routes": ["samanager.xyz/*"],
+			"name": "samanager-production",
+			"route": "samanager.xyz/*",
 			"vars": { "ENVIRONMENT": "production" },
 		},
 		"staging": {
-			"routes": ["testnet.samanager.xyz/*"],
+			"name": "samanager-staging",
+			"route": "testnet.samanager.xyz/*",
 			"vars": { "ENVIRONMENT": "staging" },
 		},
 	},
