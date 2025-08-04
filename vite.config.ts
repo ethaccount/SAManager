@@ -32,7 +32,10 @@ export default defineConfig({
 			dts: 'src/components.d.ts',
 		}),
 		htmlPlugin(htmlConfig),
-		cloudflare(),
+		cloudflare({
+			configPath:
+				process.env.CLOUDFLARE_ENV === 'production' ? 'wrangler.production.jsonc' : 'wrangler.staging.jsonc',
+		}),
 		// analyzer(),
 	],
 	resolve: {
