@@ -1,7 +1,7 @@
-import { IS_DEV } from '@/config'
 import {
 	CHAIN_ID,
 	EXPLORER_URL,
+	MAINNET_CHAIN_ID,
 	SUPPORTED_BUNDLER,
 	SUPPORTED_ENTRY_POINT,
 	SUPPORTED_NODE,
@@ -20,22 +20,32 @@ import {
 	fetchGasPricePimlico,
 } from 'sendop'
 
-export const DEFAULT_CHAIN_ID = TESTNET_CHAIN_ID.SEPOLIA
+export const DEFAULT_CHAIN_ID =
+	import.meta.env.MODE === 'staging' ? TESTNET_CHAIN_ID.BASE_SEPOLIA : MAINNET_CHAIN_ID.BASE
 export const DEFAULT_ENTRY_POINT_VERSION: EntryPointVersion = 'v0.7'
 export const DEFAULT_NODE = SUPPORTED_NODE.ALCHEMY
 export const DEFAULT_BUNDLER = SUPPORTED_BUNDLER.PIMLICO
+
+const SUPPORTED_MAINNET_CHAIN_IDS = [MAINNET_CHAIN_ID.ARBITRUM, MAINNET_CHAIN_ID.BASE]
 
 export const useBlockchainStore = defineStore(
 	'useBlockchainStore',
 	() => {
 		const selectedChainId = ref<CHAIN_ID>(DEFAULT_CHAIN_ID)
-		const chainIdBigInt = computed(() => BigInt(selectedChainId.value))
 
-		const supportedChainIds = computed(() => {
-			if (IS_DEV) {
-				return Object.values(TESTNET_CHAIN_ID)
+		const chainIdBigInt = computed(() => BigInt(selectedChainId.value))
+		const supportedChainIds = computed<CHAIN_ID[]>(() => {
+			switch (import.meta.env.MODE) {
+				case 'staging':
+					if (import.meta.env.PROD) {
+						return Object.values(TESTNET_CHAIN_ID)
+					}
+					return Object.values(TESTNET_CHAIN_ID).filter(id => id !== TESTNET_CHAIN_ID.LOCAL)
+				case 'production':
+					return SUPPORTED_MAINNET_CHAIN_IDS
+				default:
+					throw new Error(`[supportedChainIds] Invalid mode: ${import.meta.env.MODE}`)
 			}
-			return Object.values(TESTNET_CHAIN_ID).filter(id => id !== TESTNET_CHAIN_ID.LOCAL)
 		})
 
 		const supportedNodes = computed(() => {

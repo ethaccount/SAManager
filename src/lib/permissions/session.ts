@@ -1,4 +1,3 @@
-import { env } from '@/app/useSetupEnv'
 import { abiEncode, ADDRESS, getPermissionId, INTERFACES, isSameAddress } from 'sendop'
 import { SessionStruct } from 'sendop/contract-types/SmartSession'
 
@@ -23,14 +22,14 @@ export const SCHEDULED_TRANSFER_ACTION_ID = '0x40e16a6d796f8e99d12e7a1dd44c00475
 export const SCHEDULED_SWAP_ACTION_ID = '0xf16c27867fa317a4f55353ecd45c47adc3fb2baff9551fa397457de390962073'
 
 export function getAppSessionValidatorInitData() {
-	return abiEncode(['uint256', 'address[]'], [1, [env.SESSION_SIGNER_ADDRESS]]) // threshold, signers
+	return abiEncode(['uint256', 'address[]'], [1, [APP_SESSION_SIGNER_ADDRESS]]) // threshold, signers
 }
 
 export function createScheduledTransferSession() {
 	const session: SessionStruct = {
 		sessionValidator: ADDRESS.OwnableValidator,
 		sessionValidatorInitData: getAppSessionValidatorInitData(),
-		salt: env.APP_SALT,
+		salt: APP_SALT,
 		userOpPolicies: [
 			{
 				policy: ADDRESS.SudoPolicy,
@@ -67,7 +66,7 @@ export function createScheduledSwapSession() {
 	const session: SessionStruct = {
 		sessionValidator: ADDRESS.OwnableValidator,
 		sessionValidatorInitData: getAppSessionValidatorInitData(),
-		salt: env.APP_SALT,
+		salt: APP_SALT,
 		userOpPolicies: [
 			{
 				policy: ADDRESS.SudoPolicy,

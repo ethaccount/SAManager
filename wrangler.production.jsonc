@@ -15,13 +15,8 @@
 		"enabled": true,
 	},
 	"routes": [{ "pattern": "samanager.xyz", "custom_domain": true }],
-	"vars": { "ENVIRONMENT": "production" },
 	"env": {
-		"production": {
-			"vars": {
-				"ENVIRONMENT": "production",
-			},
-		},
+		"production": {},
 	},
 
 	/**

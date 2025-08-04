@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { env } from '@/app/useSetupEnv'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -128,7 +127,7 @@ watchImmediate(selectedValidationMethod, () => {
 
 const saltInput = ref<number | undefined>(undefined)
 const computedSalt = computed(() => {
-	if (!saltInput.value) return env.APP_SALT
+	if (!saltInput.value) return APP_SALT
 	return toBytes32(BigInt(saltInput.value))
 })
 
