@@ -29,7 +29,6 @@ import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useSigner } from '@/stores/useSigner'
 import { useTxModal } from '@/stores/useTxModal'
-import { shortenAddress } from '@vue-dapp/core'
 import { concat, getBigInt, hexlify, isAddress } from 'ethers'
 import { AlertCircle, ChevronRight, Power } from 'lucide-vue-next'
 import { toBytes32 } from 'sendop'
@@ -155,8 +154,9 @@ const isImported = computed(() => {
 
 const errMsg = ref<string | null>(null)
 
+// when these states are changed, we need to re-compute the deployment
 watchImmediate(
-	[isValidationAvailable, selectedValidationMethod, isLogin, selectedAccountType, computedSalt],
+	[isValidationAvailable, selectedValidationType, isLogin, selectedAccountType, computedSalt],
 	async () => {
 		deployment.value = null
 		isDeployed.value = false
@@ -185,10 +185,11 @@ watchImmediate(
 			} finally {
 				isComputingAddress.value = false
 			}
-		} else if (!selectedValidationMethod.value) {
+		} else {
 			if (selectedValidationType.value === 'PASSKEY' && isLogin.value && !isFullCredential.value) {
-				errMsg.value =
-					"This passkey's public key is not stored in the frontend, so it can only be used for signing but not for installing a new webauthn validator. To use a passkey with a public key, please create a new one."
+				errMsg.value = `This passkey's public key is not stored in the browser,
+					so it can only be used for signing but not for creating a new account.
+					To use a passkey with a public key, please create a new one.`
 			}
 		}
 	},
@@ -377,15 +378,13 @@ function onClickPasskeyLogout() {
 						<div v-if="isEOAWalletConnected">
 							<div class="flex justify-between">
 								<div class="flex flex-col gap-1">
-									<div class="text-sm text-muted-foreground">
-										{{ wallet.providerInfo?.name }} Connected
-									</div>
-									<div class="text-xs">
-										{{ shortenAddress(address || '') }}
+									<div class="text-sm">{{ wallet.providerInfo?.name }} Connected</div>
+									<div v-if="address" class="text-xs text-muted-foreground">
+										<Address :address="address" text-size="xs" button-size="xs" />
 									</div>
 								</div>
-								<Button variant="ghost" size="icon" @click="disconnect">
-									<Power class="w-4 h-4" />
+								<Button variant="ghost" size="icon" class="h-6 w-6" @click="disconnect">
+									<Power class="w-3.5 h-3.5" />
 								</Button>
 							</div>
 						</div>
@@ -410,13 +409,13 @@ function onClickPasskeyLogout() {
 							<Button variant="outline" size="sm" @click="openConnectPasskeyBoth">Connect</Button>
 						</div>
 						<div v-if="isLogin">
-							<div class="flex justify-between items-center gap-2 text-sm text-muted-foreground">
+							<div class="flex justify-between items-center gap-2 text-sm">
 								<div>Passkey Connected</div>
-								<Button variant="ghost" size="icon" @click="onClickPasskeyLogout">
-									<Power class="w-4 h-4" />
+								<Button variant="ghost" size="icon" class="h-6 w-6" @click="onClickPasskeyLogout">
+									<Power class="w-3.5 h-3.5" />
 								</Button>
 							</div>
-							<div class="text-xs">
+							<div class="text-xs text-muted-foreground">
 								{{ selectedCredentialDisplay }}
 							</div>
 						</div>

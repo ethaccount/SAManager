@@ -4,28 +4,28 @@ export type CHAIN_ID = MAINNET_CHAIN_ID | TESTNET_CHAIN_ID
 
 export enum MAINNET_CHAIN_ID {
 	ETHEREUM = '1',
-	POLYGON = '137',
-	OPTIMISM = '10',
-	ARBITRUM = '42161',
 	BASE = '8453',
+	ARBITRUM = '42161',
+	OPTIMISM = '10',
+	POLYGON = '137',
 }
 
 export enum TESTNET_CHAIN_ID {
 	LOCAL = '1337',
 	SEPOLIA = '11155111',
+	BASE_SEPOLIA = '84532',
 	ARBITRUM_SEPOLIA = '421614',
 	OPTIMISM_SEPOLIA = '11155420',
-	BASE_SEPOLIA = '84532',
 	POLYGON_AMOY = '80002',
 }
 
 export const CHAIN_NAME: { [key in CHAIN_ID]: string } = {
 	// Mainnet
 	[MAINNET_CHAIN_ID.ETHEREUM]: 'Ethereum',
-	[MAINNET_CHAIN_ID.POLYGON]: 'Polygon',
-	[MAINNET_CHAIN_ID.OPTIMISM]: 'Optimism',
-	[MAINNET_CHAIN_ID.ARBITRUM]: 'Arbitrum',
 	[MAINNET_CHAIN_ID.BASE]: 'Base',
+	[MAINNET_CHAIN_ID.ARBITRUM]: 'Arbitrum',
+	[MAINNET_CHAIN_ID.OPTIMISM]: 'Optimism',
+	[MAINNET_CHAIN_ID.POLYGON]: 'Polygon',
 	// Testnet
 	[TESTNET_CHAIN_ID.LOCAL]: 'Local',
 	[TESTNET_CHAIN_ID.SEPOLIA]: 'Sepolia',
@@ -35,8 +35,15 @@ export const CHAIN_NAME: { [key in CHAIN_ID]: string } = {
 	[TESTNET_CHAIN_ID.POLYGON_AMOY]: 'Polygon Amoy',
 } as const
 
-// TODO: add mainnet explorer url
-export const EXPLORER_URL: { [key: string]: string } = {
+export const EXPLORER_URL: { [key in CHAIN_ID]: string } = {
+	// Mainnet
+	[MAINNET_CHAIN_ID.ETHEREUM]: 'https://etherscan.io',
+	[MAINNET_CHAIN_ID.BASE]: 'https://basescan.org/',
+	[MAINNET_CHAIN_ID.ARBITRUM]: 'https://arbiscan.io/',
+	[MAINNET_CHAIN_ID.OPTIMISM]: 'https://optimistic.etherscan.io/',
+	[MAINNET_CHAIN_ID.POLYGON]: 'https://polygonscan.com/',
+
+	// Testnet
 	[TESTNET_CHAIN_ID.LOCAL]: 'http://localhost:3000',
 	[TESTNET_CHAIN_ID.SEPOLIA]: 'https://sepolia.etherscan.io',
 	[TESTNET_CHAIN_ID.ARBITRUM_SEPOLIA]: 'https://sepolia.arbiscan.io',

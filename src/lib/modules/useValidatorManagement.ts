@@ -5,8 +5,8 @@ import { getModuleByValidationMethod } from '@/lib/validations/helpers'
 import { useAccount } from '@/stores/account/useAccount'
 import { useAccounts } from '@/stores/account/useAccounts'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { usePasskey } from '@/stores/passkey/usePasskey'
 import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
+import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { TxModalExecution, useTxModal } from '@/stores/useTxModal'
 import { getBigInt, hexlify } from 'ethers'
@@ -140,15 +140,18 @@ export function useValidatorManagement() {
 	}
 
 	async function installWebAuthnValidator(options?: { onSuccess?: () => Promise<void> }) {
-		const { isLogin, selectedCredential } = usePasskey()
+		const { isLogin, selectedCredential, isFullCredential } = usePasskey()
 		if (!isLogin.value) {
-			toast.info('Login with Passkey to install validator')
 			openConnectPasskeyBoth()
 			return
 		}
 
+		if (isLogin.value && !isFullCredential.value) {
+			throw new Error('Passkey without public key cannot be used to install webauthn validator')
+		}
+
 		if (!selectedCredential.value) {
-			throw new Error('No credential found')
+			throw new Error('[installWebAuthnValidator] No credential found')
 		}
 
 		const credential = selectedCredential.value

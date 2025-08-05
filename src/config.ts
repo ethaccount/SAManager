@@ -12,6 +12,7 @@ export const IS_SCHEDULED_SWAP_DISABLED = IS_PRODUCTION
 export const DEFAULT_ENTRY_POINT_VERSION: EntryPointVersion = 'v0.7'
 export const DEFAULT_NODE = SUPPORTED_NODE.ALCHEMY
 export const DEFAULT_BUNDLER = SUPPORTED_BUNDLER.PIMLICO
+export const SUPPORTED_MAINNET_CHAIN_IDS = [MAINNET_CHAIN_ID.ARBITRUM, MAINNET_CHAIN_ID.BASE]
 
 // Most dapps only support SEPOLIA so we set it as default on testnet
 export const DEFAULT_CHAIN_ID = import.meta.env.MODE === 'staging' ? TESTNET_CHAIN_ID.SEPOLIA : MAINNET_CHAIN_ID.BASE

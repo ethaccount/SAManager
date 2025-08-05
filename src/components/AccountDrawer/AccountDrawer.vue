@@ -242,18 +242,21 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 				</Button>
 			</div>
 
-			<!-- Signers Connection -->
+			<!-- Signers -->
 			<div class="mt-4">
 				<h3 class="text-sm font-medium tracking-wider">Signers</h3>
 				<div class="mt-2 space-y-2">
-					<!-- EOA Wallet Signer -->
+					<!-- EOA Wallet -->
 					<div
 						v-if="isEOAWalletSupported"
-						class="flex flex-col p-2.5 border rounded-lg transition-all cursor-pointer"
-						:class="{ 'bg-secondary/50 border-primary/20': isEOAWalletConnected }"
+						class="flex flex-col p-2.5 border rounded-lg transition-all"
+						:class="{
+							'cursor-pointer': isEOAWalletConnected,
+							'bg-accent border-primary': selectedSigner?.type === 'EOAWallet',
+						}"
 						@click="isEOAWalletConnected && selectSigner('EOAWallet')"
 					>
-						<div v-if="!isEOAWalletConnected" class="flex justify-between items-center">
+						<div v-if="!isEOAWalletConnected" class="pl-2 flex justify-between items-center">
 							<span class="text-sm">EOA Wallet</span>
 							<Button
 								variant="outline"
@@ -264,7 +267,7 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 								Connect
 							</Button>
 						</div>
-						<div v-if="isEOAWalletConnected" class="space-y-1">
+						<div v-if="isEOAWalletConnected">
 							<div class="flex justify-between items-center">
 								<div class="flex items-center gap-1.5 text-xs">
 									<CheckCircle
@@ -281,8 +284,8 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 									<Power class="w-3.5 h-3.5" />
 								</Button>
 							</div>
-							<div class="text-[11px] text-muted-foreground font-mono">
-								{{ shortenAddress(address || '') }}
+							<div v-if="address" class="ml-4 text-xs text-muted-foreground font-mono">
+								<Address :address="address" text-size="xs" button-size="xs" />
 							</div>
 						</div>
 					</div>
@@ -297,14 +300,17 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 						</div>
 					</div>
 
-					<!-- Passkey Signer -->
+					<!-- Passkey -->
 					<div
 						v-if="isPasskeySupported"
-						class="flex flex-col p-2.5 border rounded-lg transition-all cursor-pointer"
-						:class="{ 'bg-secondary/50 border-primary/20': isLogin }"
+						class="flex flex-col p-2.5 border rounded-lg transition-all"
+						:class="{
+							'cursor-pointer': isLogin,
+							'bg-accent border-primary': selectedSigner?.type === 'Passkey',
+						}"
 						@click="isLogin && selectSigner('Passkey')"
 					>
-						<div v-if="!isLogin" class="flex justify-between items-center">
+						<div v-if="!isLogin" class="pl-2 flex justify-between items-center">
 							<span class="text-sm">Passkey</span>
 							<Button
 								variant="outline"
@@ -315,7 +321,7 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 								Connect
 							</Button>
 						</div>
-						<div v-if="isLogin" class="space-y-1">
+						<div v-if="isLogin" class="">
 							<div class="flex justify-between items-center">
 								<div class="flex items-center gap-1.5 text-xs">
 									<CheckCircle
@@ -332,7 +338,7 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 									<Power class="w-3.5 h-3.5" />
 								</Button>
 							</div>
-							<div class="text-[11px] text-muted-foreground">
+							<div class="ml-4 text-xs text-muted-foreground">
 								{{ selectedCredentialDisplay }}
 							</div>
 						</div>
@@ -383,7 +389,7 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 						:key="account.address"
 						class="relative group p-3 rounded-lg border transition-colors hover:bg-accent cursor-pointer overflow-visible"
 						:class="{
-							'bg-accent': isAccountSelected(account),
+							'bg-accent border-primary': isAccountSelected(account),
 						}"
 						@click="onClickSelectAccount(account)"
 					>

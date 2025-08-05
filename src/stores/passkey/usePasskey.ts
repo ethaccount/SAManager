@@ -29,9 +29,9 @@ export const usePasskeyStore = defineStore(
 
 		const selectedCredentialDisplay = computed(() => {
 			if (!isLogin.value) return null
-			if (!isFullCredential.value) return selectedCredentialId.value
+			if (!isFullCredential.value) return 'No public key'
 			if (selectedCredential.value?.username) return selectedCredential.value.username
-			return selectedCredential.value?.credentialId
+			return 'Error: No credential found'
 		})
 
 		async function passkeyRegister(username: string) {
@@ -72,14 +72,8 @@ export const usePasskeyStore = defineStore(
 			}
 		}
 
+		// This function is called in App.vue onMounted
 		async function setupPasskey() {
-			// Only auto recognize as logged in if the selected credential is stored in local storage and is full
-			// Because the full credential has username,
-			// the user can know which credential should be selected when signing transaction
-			if (selectedCredentialId.value && !isFullCredential.value) {
-				resetCredentialId()
-			}
-
 			// Check if passkey is supported by the browser
 			try {
 				if (

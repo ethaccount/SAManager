@@ -15,8 +15,18 @@
 		"enabled": true,
 	},
 	"routes": [{ "pattern": "samanager.xyz", "custom_domain": true }],
+
+	// this is essential to add variables to the cloudflare dashboard
+	"vars": {
+		"ENVIRONMENT": "production",
+	},
+	// this is essential to prevent warning in development
 	"env": {
-		"production": {},
+		"production": {
+			"vars": {
+				"ENVIRONMENT": "production",
+			},
+		},
 	},
 
 	/**

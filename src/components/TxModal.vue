@@ -24,7 +24,6 @@ import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useSigner } from '@/stores/useSigner'
 import { TransactionStatus, TxModalExecution, useTxModal } from '@/stores/useTxModal'
-import { shortenAddress } from '@vue-dapp/core'
 import { formatEther } from 'ethers'
 import { ArrowLeft, ChevronDown, ChevronUp, CircleDot, Code, ExternalLink, Loader2, X } from 'lucide-vue-next'
 import {
@@ -490,17 +489,18 @@ const shouldShowEffectiveFee = computed(() => {
 				<div class="space-y-3">
 					<div class="text-sm font-medium">Signer</div>
 					<div class="space-y-2">
-						<!-- EOA-Owned or SmartEOA -->
+						<!-- EOA Wallet -->
 						<div
 							v-if="showEOAWalletValidationMethod"
 							class="flex flex-col p-2.5 border rounded-lg transition-all"
 							:class="{
 								'cursor-pointer': canSelectSigner,
 								'opacity-50 cursor-not-allowed': signerSelectorDisabled,
+								'border-primary': selectedSigner?.type === 'EOAWallet',
 							}"
 							@click="canSelectSigner && selectSigner('EOAWallet')"
 						>
-							<div class="space-y-1">
+							<div>
 								<div class="flex justify-between items-center">
 									<div class="flex items-center gap-1.5 text-xs">
 										<CircleDot
@@ -514,8 +514,8 @@ const shouldShowEffectiveFee = computed(() => {
 										<span>{{ wallet.providerInfo?.name }} Connected</span>
 									</div>
 								</div>
-								<div class="text-xs text-muted-foreground font-mono">
-									{{ wallet.address ? shortenAddress(wallet.address) : '-' }}
+								<div v-if="wallet.address" class="ml-4 text-xs text-muted-foreground">
+									<Address :address="wallet.address" text-size="xs" button-size="xs" />
 								</div>
 							</div>
 						</div>
@@ -527,10 +527,11 @@ const shouldShowEffectiveFee = computed(() => {
 							:class="{
 								'cursor-pointer': canSelectSigner,
 								'opacity-50 cursor-not-allowed': signerSelectorDisabled,
+								'border-primary': selectedSigner?.type === 'Passkey',
 							}"
 							@click="canSelectSigner && selectSigner('Passkey')"
 						>
-							<div class="space-y-1">
+							<div>
 								<div class="flex justify-between items-center">
 									<div class="flex items-center gap-1.5 text-xs">
 										<CircleDot
@@ -544,7 +545,7 @@ const shouldShowEffectiveFee = computed(() => {
 										<span>Passkey Connected</span>
 									</div>
 								</div>
-								<div class="text-xs text-muted-foreground">
+								<div class="ml-4 text-xs text-muted-foreground">
 									{{ selectedCredentialDisplay }}
 								</div>
 							</div>

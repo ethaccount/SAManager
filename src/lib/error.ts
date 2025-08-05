@@ -2,6 +2,11 @@ import type { ErrorCode, ethers, EthersError } from 'ethers'
 import { isError } from 'ethers'
 import { displayChainName } from '@/stores/blockchain/chains'
 
+export function makeFatalError(message: string) {
+	alert(`Fatal Error: ${message}`)
+	window.location.reload()
+}
+
 export function isEthersError(error: unknown): error is EthersError {
 	const validErrorCodes: ErrorCode[] = [
 		'UNKNOWN_ERROR',
