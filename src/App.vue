@@ -11,6 +11,7 @@ import { Toaster } from 'vue-sonner'
 import { useAccount } from './stores/account/useAccount'
 import { DEFAULT_CHAIN_ID, useBlockchain } from './stores/blockchain'
 import { useBackend } from './stores/useBackend'
+import { useDisclaimerModal } from '@/stores/useDisclaimerModal'
 
 const route = useRoute()
 
@@ -18,6 +19,7 @@ const { selectedChainId, supportedChainIds } = useBlockchain()
 const { isEOAWalletConnected } = useEOAWallet()
 const { isLogin, setupPasskey } = usePasskey()
 const { selectSigner } = useSigner()
+const { showDisclaimerIfNeeded } = useDisclaimerModal()
 
 // NOTE: onMounted hooks are not guaranteed to execute in registration order
 useChainIdRoute()
@@ -35,6 +37,8 @@ onMounted(async () => {
 
 	await checkBackendHealth()
 	await setupPasskey()
+
+	showDisclaimerIfNeeded()
 })
 
 const { checkBackendHealth } = useBackend()

@@ -1,12 +1,17 @@
 import ConfirmModal from './ConfirmModal.vue'
 import { useModal } from 'vue-final-modal'
 
-interface ConfirmModalProps {
+export interface ConfirmModalProps {
 	title?: string
 	message: string
 	confirmText?: string
 	cancelText?: string
-	onResult?: (result: boolean) => void
+	showCloseButton?: boolean
+	clickToClose?: boolean
+	escToClose?: boolean
+	showDontShowAgain?: boolean
+	dontShowAgainText?: string
+	onResult?: (result: boolean, dontShowAgain?: boolean) => void
 }
 
 const defaultProps: ConfirmModalProps = {
@@ -18,15 +23,15 @@ export function useConfirmModal() {
 		component: ConfirmModal,
 		attrs: {
 			...defaultProps,
-			onConfirm: () => {
+			onConfirm: (dontShowAgain?: boolean) => {
 				if (currentProps?.onResult) {
-					currentProps.onResult(true)
+					currentProps.onResult(true, dontShowAgain)
 				}
 				close()
 			},
-			onCancel: () => {
+			onCancel: (dontShowAgain?: boolean) => {
 				if (currentProps?.onResult) {
-					currentProps.onResult(false)
+					currentProps.onResult(false, dontShowAgain)
 				}
 				close()
 			},

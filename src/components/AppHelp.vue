@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { HelpCircle, Settings, MessageCircle, ExternalLink } from 'lucide-vue-next'
+import { IS_STAGING } from '@/config'
 import { toRoute } from '@/lib/router'
+import { ExternalLink, HelpCircle, MessageCircle, Settings } from 'lucide-vue-next'
 import pkg from '../../package.json'
 
 const router = useRouter()
@@ -13,7 +14,11 @@ const onClickAppSettings = () => {
 }
 
 const onClickGithub = () => {
-	window.open(pkg.repository, '_blank')
+	if (IS_STAGING) {
+		window.open(`${pkg.repository}/tree/testnet`, '_blank')
+	} else {
+		window.open(pkg.repository, '_blank')
+	}
 	isOpen.value = false
 }
 
