@@ -20,12 +20,12 @@ export default defineConfig(configEnv => {
 		// Frontend env
 		define: {
 			...(isStaging && {
-				APP_SALT: JSON.stringify('0x760311d7ad7bccd0fdd2e313b47ac301a927e2519ad33a883a89c845baaee200'),
+				APP_SALT: JSON.stringify('0x65a4dadb78fe3704825f49a55b251478c1cb1b682139f9c24d2828ac0410f200'),
 				APP_SESSION_SIGNER_ADDRESS: JSON.stringify('0x70997970C51812dc3A010C7d01b50e0d17dc79C8'),
 			}),
 
 			...(isProduction && {
-				APP_SALT: JSON.stringify('0x760311d7ad7bccd0fdd2e313b47ac301a927e2519ad33a883a89c845baaee200'),
+				APP_SALT: JSON.stringify('0x65a4dadb78fe3704825f49a55b251478c1cb1b682139f9c24d2828ac0410f200'),
 				APP_SESSION_SIGNER_ADDRESS: JSON.stringify('0x70997970C51812dc3A010C7d01b50e0d17dc79C8'),
 			}),
 

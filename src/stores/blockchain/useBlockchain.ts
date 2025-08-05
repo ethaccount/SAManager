@@ -33,9 +33,9 @@ export const useBlockchainStore = defineStore(
 			switch (import.meta.env.MODE) {
 				case 'staging':
 					if (import.meta.env.PROD) {
-						return Object.values(TESTNET_CHAIN_ID)
+						return Object.values(TESTNET_CHAIN_ID).filter(id => id !== TESTNET_CHAIN_ID.LOCAL)
 					}
-					return Object.values(TESTNET_CHAIN_ID).filter(id => id !== TESTNET_CHAIN_ID.LOCAL)
+					return Object.values(TESTNET_CHAIN_ID)
 				case 'production':
 					return SUPPORTED_MAINNET_CHAIN_IDS
 				default:
