@@ -17,8 +17,8 @@ import { AccountCategory } from '@/stores/account/account'
 import { getBigInt, hexlify } from 'ethers'
 import { defineStore, storeToRefs } from 'pinia'
 import { useModal } from 'vue-final-modal'
-import { usePasskey } from './passkey/usePasskey'
 import { getAuthenticatorIdHash } from './passkey/passkeyNoRp'
+import { usePasskey } from './passkey/usePasskey'
 
 // IAM: Import Account Modal
 
@@ -85,24 +85,24 @@ const IAM_CONFIG: Record<IAMStageKey, IAMStage<Component>> = {
 			mode: 'login',
 			onConfirm: () => {
 				// For import, we only need the credentialId. The selectedCredential is not needed.
-				const { selectedCredentialId, selectedCredential } = usePasskey()
+				const { selectedCredentialId, selectedCredential, isFullCredential } = usePasskey()
 				if (!selectedCredentialId.value) {
 					throw new Error('IAMStageKey.CONNECT_PASSKEY: No selectedCredentialId')
 				}
 
-				if (!selectedCredential.value) {
-					throw new Error('IAMStageKey.CONNECT_PASSKEY: No selectedCredential')
-				}
+				const authenticatorIdHash = getAuthenticatorIdHash(selectedCredentialId.value)
 
-				const credential = selectedCredential.value
-				const pubKeyX = getBigInt(hexlify(credential.pubKeyX))
-				const pubKeyY = getBigInt(hexlify(credential.pubKeyY))
-				const vMethod = new WebAuthnValidatorVMethod(
-					getAuthenticatorIdHash(credential.credentialId),
-					pubKeyX,
-					pubKeyY,
-					credential.username,
-				)
+				let vMethod: WebAuthnValidatorVMethod
+
+				if (isFullCredential.value && selectedCredential.value) {
+					const credential = selectedCredential.value
+					const pubKeyX = getBigInt(hexlify(credential.pubKeyX))
+					const pubKeyY = getBigInt(hexlify(credential.pubKeyY))
+
+					vMethod = new WebAuthnValidatorVMethod(authenticatorIdHash, pubKeyX, pubKeyY, credential.username)
+				} else {
+					vMethod = new WebAuthnValidatorVMethod(authenticatorIdHash)
+				}
 
 				useImportAccountModal().updateFormData({
 					category: 'Smart Account',

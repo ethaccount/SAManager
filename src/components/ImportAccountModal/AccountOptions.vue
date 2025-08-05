@@ -78,6 +78,7 @@ onMounted(async () => {
 				}
 
 				addresses = addresses.filter(a => !filteredAddresses.includes(getAddress(a)))
+				addresses = [...new Set(addresses)]
 				break
 			}
 			case 'Passkey': {
@@ -87,7 +88,27 @@ onMounted(async () => {
 					throw new Error('AccountOptions(onMounted): Passkey credential ID not found')
 				}
 				addresses = await fetchWebAuthnRegisteredEvent(tenderlyClient.value, authenticatorIdHash)
+
+				// check if the account is installed
+				const filteredAddresses: string[] = []
+				for (const address of addresses) {
+					const account = IERC7579Account__factory.connect(address, client.value)
+					const isInstalled = await account.isModuleInstalled(
+						ERC7579_MODULE_TYPE.VALIDATOR,
+						ADDRESS.WebAuthnValidator,
+						'0x',
+					)
+
+					if (!isInstalled) {
+						filteredAddresses.push(getAddress(address))
+					}
+				}
+				addresses = addresses.filter(a => !filteredAddresses.includes(getAddress(a)))
+				addresses = [...new Set(addresses)]
 				break
+			}
+			default: {
+				throw new Error(`[AccountOptions#onMounted] Unsupported validation type: ${vType}`)
 			}
 		}
 
