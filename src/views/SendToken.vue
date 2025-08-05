@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { IS_STAGING } from '@/config'
 import { checkTokenBalance } from '@/lib/tokens/helpers'
 import { getToken, getTokens, NATIVE_TOKEN_ADDRESS, TokenTransfer } from '@/lib/tokens/token'
 import { useAccount } from '@/stores/account/useAccount'
@@ -209,6 +210,7 @@ const reviewButtonText = computed(() => {
 
 						<div class="flex gap-2 mt-2">
 							<Button
+								v-if="IS_STAGING"
 								variant="outline"
 								size="sm"
 								@click="onClickSendTestToken(index)"

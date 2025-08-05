@@ -2,25 +2,24 @@
 import { X } from 'lucide-vue-next'
 import { VueFinalModal } from 'vue-final-modal'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { ConfirmModalProps } from './useConfirmModal'
 
-defineProps<{
-	title?: string
-	message: string
-	confirmText?: string
-	cancelText?: string
-}>()
+defineProps<ConfirmModalProps>()
 
 const emit = defineEmits<{
-	confirm: []
-	cancel: []
+	confirm: [dontShowAgain?: boolean]
+	cancel: [dontShowAgain?: boolean]
 }>()
 
+const dontShowAgain = ref(false)
+
 function onConfirm() {
-	emit('confirm')
+	emit('confirm', dontShowAgain.value)
 }
 
 function onCancel() {
-	emit('cancel')
+	emit('cancel', dontShowAgain.value)
 }
 </script>
 
@@ -30,35 +29,51 @@ function onCancel() {
 		content-class="confirm-modal-content"
 		overlay-transition="vfm-fade"
 		content-transition="vfm-fade"
-		:click-to-close="true"
-		:esc-to-close="true"
+		:click-to-close="clickToClose"
+		:esc-to-close="escToClose"
 	>
+		<!-- header -->
 		<div class="flex justify-between items-center">
-			<div class="w-6"></div>
+			<!-- left spacer -->
+			<div class="w-9"></div>
+
 			<div class="text-xl font-semibold">{{ title || 'Confirm' }}</div>
-			<div class="w-6">
-				<Button class="w-7 h-7 hover:bg-destructive/10" variant="ghost" size="icon" @click="onCancel">
+
+			<!-- close button -->
+			<div class="w-9">
+				<Button v-if="showCloseButton" variant="ghost" size="icon" @click="onCancel">
 					<X class="w-4 h-4" />
 				</Button>
 			</div>
 		</div>
 
+		<!-- message -->
 		<div class="py-6">
-			<div class="text-base text-muted-foreground leading-relaxed">{{ message }}</div>
+			<div v-html="message" class="text-base text-muted-foreground leading-relaxed"></div>
 		</div>
 
-		<div class="flex justify-end gap-3">
-			<Button variant="outline" class="px-6" @click="onCancel">
+		<!-- checkbox -->
+		<div v-if="showDontShowAgain" class="flex items-center space-x-2 mb-4">
+			<Checkbox id="dont-show-again" v-model:checked="dontShowAgain" />
+			<label for="dont-show-again" class="text-sm text-muted-foreground cursor-pointer">
+				{{ dontShowAgainText || "Don't show this again" }}
+			</label>
+		</div>
+
+		<!-- actions -->
+		<div class="flex justify-center gap-3">
+			<Button v-if="cancelText" variant="outline" class="px-6" @click="onCancel">
 				{{ cancelText || 'Cancel' }}
 			</Button>
-			<Button variant="destructive" class="px-6" @click="onConfirm">
+
+			<Button v-if="confirmText" variant="destructive" class="px-6" @click="onConfirm">
 				{{ confirmText || 'Confirm' }}
 			</Button>
 		</div>
 	</VueFinalModal>
 </template>
 
-<style lang="css">
+<style>
 .confirm-modal {
 	display: flex;
 	justify-content: center;
@@ -66,28 +81,10 @@ function onCancel() {
 }
 
 .confirm-modal-content {
-	width: 460px;
+	@apply border border-border bg-background p-6 mx-5;
+	width: 420px;
 	display: flex;
 	flex-direction: column;
-	padding: 1.5rem;
-	background: #fff;
-	border-radius: 0.75rem;
-	box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-	border: 1px solid rgb(0 0 0 / 0.1);
-}
-
-.dark .confirm-modal-content {
-	background: hsl(var(--background));
-	border-color: hsl(var(--border));
-}
-
-.vfm-fade-enter-active,
-.vfm-fade-leave-active {
-	transition: opacity 0.2s;
-}
-
-.vfm-fade-enter-from,
-.vfm-fade-leave-to {
-	opacity: 0;
+	border-radius: 0.5rem;
 }
 </style>

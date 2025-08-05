@@ -60,6 +60,7 @@ function onClickClose() {
 	justify-content: center;
 	align-items: center;
 }
+
 .import-account-modal-content {
 	@apply border border-border bg-background p-6 mx-2;
 	width: 420px;

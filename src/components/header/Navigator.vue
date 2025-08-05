@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { DISABLE_SCHEDULING } from '@/config'
+import { DISABLE_SCHEDULING, IS_SCHEDULED_SWAP_DISABLED } from '@/config'
 import { toRoute } from '@/lib/router'
 import { Menu } from 'lucide-vue-next'
 
@@ -128,7 +128,7 @@ const closeSheet = () => {
 				</RouterLink>
 
 				<RouterLink
-					v-if="!DISABLE_SCHEDULING"
+					v-if="!DISABLE_SCHEDULING && !IS_SCHEDULED_SWAP_DISABLED"
 					:to="toRoute('scheduling-swap')"
 					class="transition-colors hover:text-foreground/80 text-foreground/60"
 					:class="{

@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { IS_SCHEDULED_SWAP_DISABLED } from './config'
 
 const router = createRouter({
 	history: createWebHistory(),
@@ -82,11 +83,15 @@ const router = createRouter({
 							name: 'scheduling-transfer',
 							component: () => import('@/views/ScheduleTransfer.vue'),
 						},
-						{
-							path: '/:chainId/scheduling/swap',
-							name: 'scheduling-swap',
-							component: () => import('@/views/ScheduleSwap.vue'),
-						},
+						...(IS_SCHEDULED_SWAP_DISABLED
+							? []
+							: [
+									{
+										path: '/:chainId/scheduling/swap',
+										name: 'scheduling-swap',
+										component: () => import('@/views/ScheduleSwap.vue'),
+									},
+								]),
 						{
 							path: '/:chainId/scheduling/jobs',
 							name: 'scheduling-jobs',

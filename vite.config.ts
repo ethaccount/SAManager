@@ -6,7 +6,7 @@ import Components from 'unplugin-vue-components/vite'
 import { defineConfig } from 'vite'
 import htmlPlugin from 'vite-plugin-html-config'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
-import htmlConfig from './html.config'
+import getHtmlConfig from './html.config'
 
 // import { analyzer } from 'vite-bundle-analyzer'
 
@@ -55,7 +55,7 @@ export default defineConfig(configEnv => {
 			Components({
 				dts: 'src/components.d.ts',
 			}),
-			htmlPlugin(htmlConfig),
+			htmlPlugin(getHtmlConfig(isProduction, isStaging)),
 			cloudflare({
 				configPath: isProduction ? 'wrangler.production.jsonc' : 'wrangler.staging.jsonc',
 			}),

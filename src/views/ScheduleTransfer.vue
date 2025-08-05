@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { IS_STAGING } from '@/config'
 import {
 	DEFAULT_FREQUENCY,
 	getFrequencyOptions,
@@ -22,13 +23,24 @@ const { selectedChainId } = useBlockchain()
 const availableTokens = computed(() => getTokens(selectedChainId.value))
 
 function getDefaultTransfer(): ScheduleTransfer {
-	return {
-		recipient: '0xd78B5013757Ea4A7841811eF770711e6248dC282',
-		amount: '0.0001',
-		tokenAddress: getTokenAddress(selectedChainId.value, 'SAM') || '',
-		frequency: DEFAULT_FREQUENCY,
-		times: 3,
-		startDate: now(getLocalTimeZone()),
+	if (IS_STAGING) {
+		return {
+			recipient: '0xd78B5013757Ea4A7841811eF770711e6248dC282',
+			amount: '0.0001',
+			tokenAddress: getTokenAddress(selectedChainId.value, 'SAM') || '',
+			frequency: DEFAULT_FREQUENCY,
+			times: 3,
+			startDate: now(getLocalTimeZone()),
+		}
+	} else {
+		return {
+			recipient: '',
+			amount: '0',
+			tokenAddress: getTokenAddress(selectedChainId.value, 'ETH') || '',
+			frequency: DEFAULT_FREQUENCY,
+			times: 3,
+			startDate: now(getLocalTimeZone()),
+		}
 	}
 }
 

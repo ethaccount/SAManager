@@ -1,4 +1,4 @@
-import { CHAIN_ID, TESTNET_CHAIN_ID } from '@/stores/blockchain/chains'
+import { CHAIN_ID, MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from '@/stores/blockchain/chains'
 import { getAddress } from 'ethers'
 
 export type Token = {
@@ -48,6 +48,16 @@ const BASE_TOKEN_METADATA = {
 
 // Chain-specific token addresses
 const CHAIN_TOKEN_ADDRESSES = {
+	[MAINNET_CHAIN_ID.ARBITRUM]: {
+		NATIVE: NATIVE_TOKEN_ADDRESS,
+		WETH: getAddress('0x82aF49447D8a07e3bd95BD0d56f35241523fBab1'),
+		USDC: getAddress('0xaf88d065e77c8cC2239327C5EDb3A432268e5831'),
+	},
+	[MAINNET_CHAIN_ID.BASE]: {
+		NATIVE: NATIVE_TOKEN_ADDRESS,
+		WETH: getAddress('0x4200000000000000000000000000000000000006'),
+		USDC: getAddress('0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'),
+	},
 	[TESTNET_CHAIN_ID.SEPOLIA]: {
 		NATIVE: NATIVE_TOKEN_ADDRESS,
 		SAM: SAM_TOKEN_ADDRESS,
