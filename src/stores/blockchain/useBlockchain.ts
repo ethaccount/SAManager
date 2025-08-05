@@ -1,8 +1,7 @@
-import { DEFAULT_CHAIN_ID } from '@/config'
+import { DEFAULT_BUNDLER, DEFAULT_CHAIN_ID, DEFAULT_NODE, SUPPORTED_MAINNET_CHAIN_IDS } from '@/config'
 import {
 	CHAIN_ID,
 	EXPLORER_URL,
-	MAINNET_CHAIN_ID,
 	SUPPORTED_BUNDLER,
 	SUPPORTED_ENTRY_POINT,
 	SUPPORTED_NODE,
@@ -19,9 +18,6 @@ import {
 	fetchGasPriceAlchemy,
 	fetchGasPricePimlico,
 } from 'sendop'
-import { DEFAULT_BUNDLER, DEFAULT_NODE } from '@/config'
-
-const SUPPORTED_MAINNET_CHAIN_IDS = [MAINNET_CHAIN_ID.ARBITRUM, MAINNET_CHAIN_ID.BASE]
 
 export const useBlockchainStore = defineStore(
 	'useBlockchainStore',

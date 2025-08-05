@@ -1,57 +1,8 @@
 import { alchemy, AlchemyChain, pimlico, PimlicoChain, tenderly, TenderlyChain } from 'evm-providers'
-
-export interface Env {
-	ALCHEMY_API_KEY: string
-	PIMLICO_API_KEY: string
-	ETHERSPOT_API_KEY: string
-	CANDIDE_API_KEY: string
-	ETHERSCAN_API_KEY: string
-
-	BACKEND_URL: string
-	API_SECRET: string
-
-	TENDERLY_API_KEY_SEPOLIA: string
-	TENDERLY_API_KEY_OPTIMISM_SEPOLIA: string
-	TENDERLY_API_KEY_ARBITRUM_SEPOLIA: string
-	TENDERLY_API_KEY_BASE_SEPOLIA: string
-	TENDERLY_API_KEY_POLYGON_AMOY: string
-}
+import { Env, validateEnv } from './env'
+import { getTenderlyApiKey } from './getTenderlyApiKey'
 
 let envValidated = false
-
-function validateEnv(env: Env) {
-	if (!env.ALCHEMY_API_KEY) throw new Error('Missing ALCHEMY_API_KEY')
-	if (!env.PIMLICO_API_KEY) throw new Error('Missing PIMLICO_API_KEY')
-	if (!env.ETHERSPOT_API_KEY) throw new Error('Missing ETHERSPOT_API_KEY')
-	if (!env.CANDIDE_API_KEY) throw new Error('Missing CANDIDE_API_KEY')
-	if (!env.ETHERSCAN_API_KEY) throw new Error('Missing ETHERSCAN_API_KEY')
-
-	if (!env.BACKEND_URL) throw new Error('Missing BACKEND_URL')
-	if (!env.API_SECRET) throw new Error('Missing API_SECRET')
-
-	if (!env.TENDERLY_API_KEY_SEPOLIA) throw new Error('Missing TENDERLY_API_KEY_SEPOLIA')
-	if (!env.TENDERLY_API_KEY_OPTIMISM_SEPOLIA) throw new Error('Missing TENDERLY_API_KEY_OPTIMISM_SEPOLIA')
-	if (!env.TENDERLY_API_KEY_ARBITRUM_SEPOLIA) throw new Error('Missing TENDERLY_API_KEY_ARBITRUM_SEPOLIA')
-	if (!env.TENDERLY_API_KEY_BASE_SEPOLIA) throw new Error('Missing TENDERLY_API_KEY_BASE_SEPOLIA')
-	if (!env.TENDERLY_API_KEY_POLYGON_AMOY) throw new Error('Missing TENDERLY_API_KEY_POLYGON_AMOY')
-}
-
-function getTenderlyApiKey(chainId: number, env: Env): string | null {
-	switch (chainId) {
-		case 11155111: // SEPOLIA
-			return env.TENDERLY_API_KEY_SEPOLIA
-		case 11155420: // OPTIMISM_SEPOLIA
-			return env.TENDERLY_API_KEY_OPTIMISM_SEPOLIA
-		case 421614: // ARBITRUM_SEPOLIA
-			return env.TENDERLY_API_KEY_ARBITRUM_SEPOLIA
-		case 84532: // BASE_SEPOLIA
-			return env.TENDERLY_API_KEY_BASE_SEPOLIA
-		case 80002: // POLYGON_AMOY
-			return env.TENDERLY_API_KEY_POLYGON_AMOY
-		default:
-			return null
-	}
-}
 
 export default {
 	async fetch(request: Request, env: Env): Promise<Response> {
@@ -65,6 +16,10 @@ export default {
 		}
 
 		const url = new URL(request.url)
+
+		if (url.pathname === '/health') {
+			return Response.json({ status: 'ok' }, { status: 200 })
+		}
 
 		if (url.pathname.startsWith('/backend')) {
 			// Proxy requests to backend service

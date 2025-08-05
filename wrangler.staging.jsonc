@@ -15,8 +15,18 @@
 		"enabled": true,
 	},
 	"routes": [{ "pattern": "testnet.samanager.xyz", "custom_domain": true }],
+
+	// this is essential to add variables to the cloudflare dashboard
+	"vars": {
+		"ENVIRONMENT": "staging",
+	},
+	// this is essential to prevent warning in development
 	"env": {
-		"staging": {},
+		"staging": {
+			"vars": {
+				"ENVIRONMENT": "staging",
+			},
+		},
 	},
 
 	/**

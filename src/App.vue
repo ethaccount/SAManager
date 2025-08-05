@@ -13,6 +13,7 @@ import { DEFAULT_CHAIN_ID } from './config'
 import { useAccount } from './stores/account/useAccount'
 import { useBlockchain } from './stores/blockchain'
 import { useBackend } from './stores/useBackend'
+import { makeFatalError } from './lib/error'
 
 const route = useRoute()
 
@@ -30,6 +31,14 @@ useCrossChainAutoImport()
 onMounted(async () => {
 	console.info('APP_SALT', APP_SALT)
 	console.info('APP_SESSION_SIGNER_ADDRESS', APP_SESSION_SIGNER_ADDRESS)
+
+	// check worker health
+	const workerHealth = await fetch('/health')
+	const res = await workerHealth.json()
+	if (res.status !== 'ok') {
+		makeFatalError(`${res.error || 'Worker health check failed'}`)
+		return
+	}
 
 	// reset selectedChainId when it is not supported because it may be stored in localStorage
 	if (!supportedChainIds.value.includes(selectedChainId.value)) {
