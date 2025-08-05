@@ -1,5 +1,5 @@
 import { useConfirmModal } from '@/components/ConfirmModal/useConfirmModal'
-import { IS_PRODUCTION } from '@/config'
+import { IS_PRODUCTION, TESTNET_URL } from '@/config'
 import { defineStore, storeToRefs } from 'pinia'
 
 export const useDisclaimerModalStore = defineStore(
@@ -15,7 +15,7 @@ export const useDisclaimerModalStore = defineStore(
 
 			const disclaimerMessage = `This application is experimental.
             <span class="font-bold">Please use at your own risk.</span> <br><br>
-            You can try the <a href="https://testnet.samanager.xyz" target="_blank" class="text-blue-500">testnet version</a> to explore the features safely.`
+            You can try the <a href="${TESTNET_URL}" target="_blank" class="text-blue-500">testnet version</a> to explore the features safely.`
 
 			openModal({
 				title: 'Disclaimer',
@@ -33,7 +33,7 @@ export const useDisclaimerModalStore = defineStore(
 						}
 					} else {
 						// Redirect to testnet
-						window.open('https://testnet.samanager.xyz', '_blank')
+						window.open(TESTNET_URL, '_blank')
 					}
 				},
 			})

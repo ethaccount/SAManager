@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { IS_STAGING } from '@/config'
+import { IS_PRODUCTION, IS_STAGING, MAINNET_URL, TESTNET_URL } from '@/config'
 import { toRoute } from '@/lib/router'
-import { ExternalLink, HelpCircle, MessageCircle, Settings } from 'lucide-vue-next'
+import { ExternalLink, Globe, HelpCircle, MessageCircle, Settings } from 'lucide-vue-next'
 import pkg from '../../package.json'
 
 const router = useRouter()
@@ -18,6 +18,15 @@ const onClickGithub = () => {
 		window.open(`${pkg.repository}/tree/testnet`, '_blank')
 	} else {
 		window.open(pkg.repository, '_blank')
+	}
+	isOpen.value = false
+}
+
+const onClickEnvironmentSwitch = () => {
+	if (IS_STAGING) {
+		window.open(MAINNET_URL, '_blank')
+	} else if (IS_PRODUCTION) {
+		window.open(TESTNET_URL, '_blank')
 	}
 	isOpen.value = false
 }
@@ -65,7 +74,7 @@ onClickOutside(menu, () => {
 			<!-- GitHub Link -->
 			<button
 				@click="onClickGithub"
-				class="w-full px-4 py-2 flex items-center gap-2 hover:bg-accent hover:text-accent-foreground rounded-b-lg border-t border-border"
+				class="w-full px-4 py-2 flex items-center gap-2 hover:bg-accent hover:text-accent-foreground border-t border-border"
 			>
 				<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
 					<path
@@ -75,6 +84,17 @@ onClickOutside(menu, () => {
 					/>
 				</svg>
 				<span>GitHub</span>
+				<ExternalLink class="w-4 h-4" />
+			</button>
+
+			<!-- Environment Switch -->
+			<button
+				v-if="IS_STAGING || IS_PRODUCTION"
+				@click="onClickEnvironmentSwitch"
+				class="w-full px-4 py-2 flex items-center gap-2 hover:bg-accent hover:text-accent-foreground border-t border-border"
+			>
+				<Globe class="w-4 h-4" />
+				<span>{{ IS_STAGING ? 'Mainnet' : 'Testnet' }}</span>
 				<ExternalLink class="w-4 h-4" />
 			</button>
 
