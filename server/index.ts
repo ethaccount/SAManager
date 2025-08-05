@@ -3,28 +3,18 @@ import { alchemy, AlchemyChain, pimlico, PimlicoChain, tenderly, TenderlyChain }
 export interface Env {
 	ALCHEMY_API_KEY: string
 	PIMLICO_API_KEY: string
+	ETHERSPOT_API_KEY: string
+	CANDIDE_API_KEY: string
+	ETHERSCAN_API_KEY: string
+
+	BACKEND_URL: string
 	API_SECRET: string
+
 	TENDERLY_API_KEY_SEPOLIA: string
 	TENDERLY_API_KEY_OPTIMISM_SEPOLIA: string
 	TENDERLY_API_KEY_ARBITRUM_SEPOLIA: string
 	TENDERLY_API_KEY_BASE_SEPOLIA: string
 	TENDERLY_API_KEY_POLYGON_AMOY: string
-	BACKEND_URL: string
-	ETHERSPOT_API_KEY: string
-	CANDIDE_API_KEY: string
-	ETHERSCAN_API_KEY: string
-
-	// Frontend env usage
-	ENVIRONMENT: string
-	APP_SALT: string
-	SESSION_SIGNER_ADDRESS: string
-}
-
-// Frontend env usage
-export type EnvResponse = {
-	ENVIRONMENT: string
-	APP_SALT: string
-	SESSION_SIGNER_ADDRESS: string
 }
 
 let envValidated = false
@@ -32,21 +22,18 @@ let envValidated = false
 function validateEnv(env: Env) {
 	if (!env.ALCHEMY_API_KEY) throw new Error('Missing ALCHEMY_API_KEY')
 	if (!env.PIMLICO_API_KEY) throw new Error('Missing PIMLICO_API_KEY')
+	if (!env.ETHERSPOT_API_KEY) throw new Error('Missing ETHERSPOT_API_KEY')
+	if (!env.CANDIDE_API_KEY) throw new Error('Missing CANDIDE_API_KEY')
+	if (!env.ETHERSCAN_API_KEY) throw new Error('Missing ETHERSCAN_API_KEY')
+
+	if (!env.BACKEND_URL) throw new Error('Missing BACKEND_URL')
 	if (!env.API_SECRET) throw new Error('Missing API_SECRET')
+
 	if (!env.TENDERLY_API_KEY_SEPOLIA) throw new Error('Missing TENDERLY_API_KEY_SEPOLIA')
 	if (!env.TENDERLY_API_KEY_OPTIMISM_SEPOLIA) throw new Error('Missing TENDERLY_API_KEY_OPTIMISM_SEPOLIA')
 	if (!env.TENDERLY_API_KEY_ARBITRUM_SEPOLIA) throw new Error('Missing TENDERLY_API_KEY_ARBITRUM_SEPOLIA')
 	if (!env.TENDERLY_API_KEY_BASE_SEPOLIA) throw new Error('Missing TENDERLY_API_KEY_BASE_SEPOLIA')
 	if (!env.TENDERLY_API_KEY_POLYGON_AMOY) throw new Error('Missing TENDERLY_API_KEY_POLYGON_AMOY')
-	if (!env.BACKEND_URL) throw new Error('Missing BACKEND_URL')
-	if (!env.ETHERSPOT_API_KEY) throw new Error('Missing ETHERSPOT_API_KEY')
-	if (!env.CANDIDE_API_KEY) throw new Error('Missing CANDIDE_API_KEY')
-	if (!env.ETHERSCAN_API_KEY) throw new Error('Missing ETHERSCAN_API_KEY')
-
-	// Frontend env usage
-	if (!env.ENVIRONMENT) throw new Error('Missing ENVIRONMENT')
-	if (!env.APP_SALT) throw new Error('Missing APP_SALT')
-	if (!env.SESSION_SIGNER_ADDRESS) throw new Error('Missing SESSION_SIGNER_ADDRESS')
 }
 
 function getTenderlyApiKey(chainId: number, env: Env): string | null {
@@ -78,16 +65,6 @@ export default {
 		}
 
 		const url = new URL(request.url)
-
-		if (url.pathname === '/env.json') {
-			// Frontend env usage
-			const envResponse: EnvResponse = {
-				ENVIRONMENT: env.ENVIRONMENT,
-				APP_SALT: env.APP_SALT,
-				SESSION_SIGNER_ADDRESS: env.SESSION_SIGNER_ADDRESS,
-			}
-			return Response.json(envResponse)
-		}
 
 		if (url.pathname.startsWith('/backend')) {
 			// Proxy requests to backend service
