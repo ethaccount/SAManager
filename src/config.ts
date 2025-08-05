@@ -9,12 +9,13 @@ export const IS_STAGING = import.meta.env.MODE === 'staging'
 export const TESTNET_URL = 'https://testnet.samanager.xyz'
 export const MAINNET_URL = 'https://samanager.xyz'
 export const IS_SCHEDULED_SWAP_DISABLED = IS_PRODUCTION
-export const DEFAULT_CHAIN_ID =
-	import.meta.env.MODE === 'staging' ? TESTNET_CHAIN_ID.BASE_SEPOLIA : MAINNET_CHAIN_ID.BASE
 export const DEFAULT_ENTRY_POINT_VERSION: EntryPointVersion = 'v0.7'
 export const DEFAULT_NODE = SUPPORTED_NODE.ALCHEMY
 export const DEFAULT_BUNDLER = SUPPORTED_BUNDLER.PIMLICO
+
+// Most dapps only support SEPOLIA so we set it as default on testnet
+export const DEFAULT_CHAIN_ID = import.meta.env.MODE === 'staging' ? TESTNET_CHAIN_ID.SEPOLIA : MAINNET_CHAIN_ID.BASE
 export const DEFAULT_BROWSER_URL =
 	import.meta.env.MODE === 'staging'
-		? `https://swap.cow.fi/#/${TESTNET_CHAIN_ID.BASE_SEPOLIA}/swap/ETH/0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`
+		? `https://swap.cow.fi/#/${TESTNET_CHAIN_ID.SEPOLIA}/swap/ETH/0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`
 		: `https://swap.cow.fi/#/${MAINNET_CHAIN_ID.BASE}/swap/ETH/0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`
