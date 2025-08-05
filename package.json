@@ -18,8 +18,8 @@
 	],
 	"scripts": {
 		"dev": "pnpm run dev:staging",
-		"dev:staging": "CLOUDFLARE_ENV=staging vite dev --mode staging",
-		"dev:production": "CLOUDFLARE_ENV=production vite dev --mode production",
+		"dev:staging": "CLOUDFLARE_ENV=staging vite dev --mode staging --port 5173",
+		"dev:production": "CLOUDFLARE_ENV=production vite dev --mode production --port 5174",
 		"build:staging": "CLOUDFLARE_ENV=staging vue-tsc --noEmit && pnpm run lint && vite build --mode staging",
 		"build:production": "CLOUDFLARE_ENV=production vue-tsc --noEmit && pnpm run lint && vite build --mode production",
 		"test": "vitest --run",
