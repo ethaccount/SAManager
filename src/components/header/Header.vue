@@ -1,7 +1,8 @@
 <script lang="ts" setup>
+import { IS_STAGING } from '@/config'
 import { toRoute } from '@/lib/router'
-import { RouterLink } from 'vue-router'
 import { breakpointsTailwind } from '@vueuse/core'
+import { RouterLink } from 'vue-router'
 
 const breakpoints = useBreakpoints(breakpointsTailwind)
 </script>
@@ -12,10 +13,15 @@ const breakpoints = useBreakpoints(breakpointsTailwind)
 	>
 		<div class="h-[56px] flex w-full max-w-6xl mx-auto justify-between items-center">
 			<div class="flex items-center gap-2 sm:gap-6">
-				<!-- SAManager -->
 				<RouterLink :to="toRoute('home')" class="flex items-center gap-2">
-					<div class="font-semibold text-lg" :class="{ 'text-md': breakpoints.isSmaller('sm') }">
+					<div class="relative font-semibold text-lg" :class="{ 'text-md': breakpoints.isSmaller('sm') }">
 						SAManager
+						<span
+							v-if="IS_STAGING"
+							class="absolute -top-2.5 -right-0 text-[8px] text-yellow-700 dark:text-yellow-400"
+						>
+							TESTNET
+						</span>
 					</div>
 				</RouterLink>
 
