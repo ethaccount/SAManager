@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { DEFAULT_BROWSER_URL } from '@/config'
 import { useSafeApps } from '@/lib/browser/useSafeApps'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
@@ -10,11 +11,10 @@ const router = useRouter()
 const { selectedAccount } = useAccount()
 const { selectedChainId } = useBlockchain()
 
-const defaultUrl = `https://swap.cow.fi/#/11155111/swap/ETH/0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`
-const currentUrl = ref(defaultUrl)
-const urlInput = ref(defaultUrl)
+const currentUrl = ref(DEFAULT_BROWSER_URL)
+const urlInput = ref(DEFAULT_BROWSER_URL)
 const iframe = ref<HTMLIFrameElement>()
-const history = ref<string[]>([defaultUrl])
+const history = ref<string[]>([DEFAULT_BROWSER_URL])
 const historyIndex = ref(0)
 const isLoading = ref(true)
 
@@ -104,7 +104,7 @@ function initializeFromRoute() {
 			urlInput.value = url
 
 			// Initialize history with the current URL
-			if (history.value.length === 1 && history.value[0] === defaultUrl) {
+			if (history.value.length === 1 && history.value[0] === DEFAULT_BROWSER_URL) {
 				history.value = [url]
 			} else if (!history.value.includes(url)) {
 				history.value.push(url)

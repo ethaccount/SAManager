@@ -1,3 +1,4 @@
+import { DEFAULT_CHAIN_ID } from '@/config'
 import {
 	CHAIN_ID,
 	EXPLORER_URL,
@@ -13,18 +14,12 @@ import { defineStore } from 'pinia'
 import {
 	ENTRY_POINT_V07_ADDRESS,
 	ENTRY_POINT_V08_ADDRESS,
-	EntryPointVersion,
 	ERC4337Bundler,
 	ERC4337BundlerOptions,
 	fetchGasPriceAlchemy,
 	fetchGasPricePimlico,
 } from 'sendop'
-
-export const DEFAULT_CHAIN_ID =
-	import.meta.env.MODE === 'staging' ? TESTNET_CHAIN_ID.BASE_SEPOLIA : MAINNET_CHAIN_ID.BASE
-export const DEFAULT_ENTRY_POINT_VERSION: EntryPointVersion = 'v0.7'
-export const DEFAULT_NODE = SUPPORTED_NODE.ALCHEMY
-export const DEFAULT_BUNDLER = SUPPORTED_BUNDLER.PIMLICO
+import { DEFAULT_BUNDLER, DEFAULT_NODE } from '@/config'
 
 const SUPPORTED_MAINNET_CHAIN_IDS = [MAINNET_CHAIN_ID.ARBITRUM, MAINNET_CHAIN_ID.BASE]
 

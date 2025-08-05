@@ -3,15 +3,16 @@ import { useChainIdRoute } from '@/app/useChainIdRoute'
 import { useCrossChainAutoImport } from '@/app/useCrossChainAutoImport'
 import { useSetupVueDapp } from '@/app/useSetupVueDapp'
 import { usePasskey } from '@/stores/passkey/usePasskey'
+import { useDisclaimerModal } from '@/stores/useDisclaimerModal'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useSigner } from '@/stores/useSigner'
 import { VueDappModal } from '@vue-dapp/modal'
 import { ModalsContainer } from 'vue-final-modal'
 import { Toaster } from 'vue-sonner'
+import { DEFAULT_CHAIN_ID } from './config'
 import { useAccount } from './stores/account/useAccount'
-import { DEFAULT_CHAIN_ID, useBlockchain } from './stores/blockchain'
+import { useBlockchain } from './stores/blockchain'
 import { useBackend } from './stores/useBackend'
-import { useDisclaimerModal } from '@/stores/useDisclaimerModal'
 
 const route = useRoute()
 

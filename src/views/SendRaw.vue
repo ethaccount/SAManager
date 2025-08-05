@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { IS_STAGING } from '@/config'
 import { useAccount } from '@/stores/account/useAccount'
 import { useTxModal } from '@/stores/useTxModal'
 import { Interface, isAddress, parseEther } from 'ethers'
@@ -149,6 +150,7 @@ async function onClickSend() {
 
 						<div class="flex gap-2 mt-2">
 							<Button
+								v-if="IS_STAGING"
 								variant="outline"
 								size="sm"
 								@click="onClickMintTestToken(index)"
