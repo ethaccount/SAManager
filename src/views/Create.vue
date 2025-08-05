@@ -155,8 +155,9 @@ const isImported = computed(() => {
 
 const errMsg = ref<string | null>(null)
 
+// when these states are changed, we need to re-compute the deployment
 watchImmediate(
-	[isValidationAvailable, selectedValidationMethod, isLogin, selectedAccountType, computedSalt],
+	[isValidationAvailable, selectedValidationType, isLogin, selectedAccountType, computedSalt],
 	async () => {
 		deployment.value = null
 		isDeployed.value = false
@@ -185,10 +186,11 @@ watchImmediate(
 			} finally {
 				isComputingAddress.value = false
 			}
-		} else if (!selectedValidationMethod.value) {
+		} else {
 			if (selectedValidationType.value === 'PASSKEY' && isLogin.value && !isFullCredential.value) {
-				errMsg.value =
-					"This passkey's public key is not stored in the frontend, so it can only be used for signing but not for installing a new webauthn validator. To use a passkey with a public key, please create a new one."
+				errMsg.value = `This passkey's public key is not stored in the browser,
+					so it can only be used for signing but not for creating a new account.
+					To use a passkey with a public key, please create a new one.`
 			}
 		}
 	},
