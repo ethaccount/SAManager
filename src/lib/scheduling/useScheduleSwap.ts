@@ -253,36 +253,44 @@ export function useScheduleSwap() {
 				chainId: selectedChainId.value,
 			})
 
-			// Step 3: Check module and session status
+			// Step 3: Check native token balance
+			const nativeBalance = await client.value.getBalance(selectedAccount.address)
+			if (nativeBalance === 0n) {
+				throw new Error(
+					'Insufficient native token balance. Account must have native tokens to process scheduled transactions.',
+				)
+			}
+
+			// Step 4: Check module and session status
 			const moduleStatus = await checkModuleStatus(selectedAccount)
 
-			// Step 4: Build SmartSession executions
+			// Step 5: Build SmartSession executions
 			const { executions: smartSessionExecutions, permissionId } = buildSmartSessionExecutions(
 				moduleStatus,
 				selectedAccount,
 			)
 
-			// Step 5: Create schedule swap configuration and order data
+			// Step 6: Create schedule swap configuration and order data
 			const scheduledOrdersOrderData = createScheduledOrdersOrderData(config)
 
-			// Step 6: Build ScheduledOrders executions
+			// Step 7: Build ScheduledOrders executions
 			const scheduledOrdersExecutions = buildScheduledOrdersExecutions(
 				moduleStatus,
 				selectedAccount.accountId,
 				scheduledOrdersOrderData,
 			)
 
-			// Step 7: Build Rhinestone Attester executions (for Kernel accounts)
+			// Step 8: Build Rhinestone Attester executions (for Kernel accounts)
 			const rhinestoneExecutions = buildRhinestoneAttesterExecutions(moduleStatus.isRhinestoneAttesterTrusted)
 
-			// Step 8: Combine all executions
+			// Step 9: Combine all executions
 			const executions: TxModalExecution[] = [
 				...rhinestoneExecutions,
 				...smartSessionExecutions,
 				...scheduledOrdersExecutions,
 			]
 
-			// Step 9: Get job ID and open transaction modal
+			// Step 10: Get job ID and open transaction modal
 			const jobId = await getJobId(selectedAccount.address)
 
 			useTxModal().openModal({
