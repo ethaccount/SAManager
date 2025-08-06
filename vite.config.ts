@@ -21,12 +21,12 @@ export default defineConfig(configEnv => {
 		define: {
 			...(isStaging && {
 				APP_SALT: JSON.stringify('0x65a4dadb78fe3704825f49a55b251478c1cb1b682139f9c24d2828ac0410f200'),
-				APP_SESSION_SIGNER_ADDRESS: JSON.stringify('0x70997970C51812dc3A010C7d01b50e0d17dc79C8'),
+				APP_SESSION_SIGNER_ADDRESS: JSON.stringify('0xD9030071966102689a8bb6b71A8C2Fc56D1d26a5'),
 			}),
 
 			...(isProduction && {
 				APP_SALT: JSON.stringify('0x65a4dadb78fe3704825f49a55b251478c1cb1b682139f9c24d2828ac0410f200'),
-				APP_SESSION_SIGNER_ADDRESS: JSON.stringify('0x70997970C51812dc3A010C7d01b50e0d17dc79C8'),
+				APP_SESSION_SIGNER_ADDRESS: JSON.stringify('0xD9030071966102689a8bb6b71A8C2Fc56D1d26a5'),
 			}),
 
 			// Must put below the values in staging and production to override them
