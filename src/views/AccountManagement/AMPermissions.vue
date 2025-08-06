@@ -43,7 +43,6 @@ async function onClickRemoveSession(permissionId: string) {
 				},
 			],
 			onSuccess: async () => {
-				toast.success('Session removed successfully')
 				// Reload sessions to update the UI
 				await loadSessions(props.selectedAccount.address)
 			},
