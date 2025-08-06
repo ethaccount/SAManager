@@ -73,7 +73,7 @@ export const usePasskeyStore = defineStore(
 		}
 
 		// This function is called in App.vue onMounted
-		async function setupPasskey() {
+		async function checkPasskeySupport() {
 			// Check if passkey is supported by the browser
 			try {
 				if (
@@ -103,7 +103,7 @@ export const usePasskeyStore = defineStore(
 			resetCredentialId,
 			isFullCredential,
 			selectedCredentialDisplay,
-			setupPasskey,
+			checkPasskeySupport,
 		}
 	},
 	{

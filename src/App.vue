@@ -19,9 +19,11 @@ const route = useRoute()
 
 const { selectedChainId, supportedChainIds } = useBlockchain()
 const { isEOAWalletConnected } = useEOAWallet()
-const { isLogin, setupPasskey } = usePasskey()
+const { isLogin, checkPasskeySupport } = usePasskey()
 const { selectSigner } = useSigner()
 const { showDisclaimerIfNeeded } = useDisclaimerModal()
+const { checkBackendHealth } = useBackend()
+const { accountVMethods } = useAccount()
 
 // NOTE: onMounted hooks are not guaranteed to execute in registration order
 useChainIdRoute()
@@ -32,27 +34,26 @@ onMounted(async () => {
 	console.info('APP_SALT', APP_SALT)
 	console.info('APP_SESSION_SIGNER_ADDRESS', APP_SESSION_SIGNER_ADDRESS)
 
-	// check worker health
-	const workerHealth = await fetch('/health')
-	const res = await workerHealth.json()
-	if (res.status !== 'ok') {
-		makeFatalError(`${res.error || 'Worker health check failed'}`)
-		return
-	}
+	showDisclaimerIfNeeded()
 
 	// reset selectedChainId when it is not supported because it may be stored in localStorage
 	if (!supportedChainIds.value.includes(selectedChainId.value)) {
 		selectedChainId.value = DEFAULT_CHAIN_ID
 	}
 
-	await checkBackendHealth()
-	await setupPasskey()
-
-	showDisclaimerIfNeeded()
+	await checkPasskeySupport()
+	await checkWorkerHealth()
+	await checkBackendHealth() // This may take a while for cold start so put it last
 })
 
-const { checkBackendHealth } = useBackend()
-const { accountVMethods } = useAccount()
+async function checkWorkerHealth() {
+	const workerHealth = await fetch('/health')
+	const res = await workerHealth.json()
+	if (res.status !== 'ok') {
+		makeFatalError(`${res.error || 'Worker health check failed'}`)
+		return
+	}
+}
 
 // Auto-select signer when connected
 watchImmediate([isEOAWalletConnected, isLogin], ([eoaWalletConnected, passkeyConnected]) => {
