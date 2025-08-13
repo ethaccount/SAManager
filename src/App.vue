@@ -9,15 +9,15 @@ import { useSigner } from '@/stores/useSigner'
 import { VueDappModal } from '@vue-dapp/modal'
 import { ModalsContainer } from 'vue-final-modal'
 import { Toaster } from 'vue-sonner'
-import { DEFAULT_CHAIN_ID } from './config'
+import { DEFAULT_CHAIN_ID, SUPPORTED_CHAIN_IDS } from './config'
+import { makeFatalError } from './lib/error'
 import { useAccount } from './stores/account/useAccount'
 import { useBlockchain } from './stores/blockchain'
 import { useBackend } from './stores/useBackend'
-import { makeFatalError } from './lib/error'
 
 const route = useRoute()
 
-const { selectedChainId, supportedChainIds } = useBlockchain()
+const { selectedChainId } = useBlockchain()
 const { isEOAWalletConnected } = useEOAWallet()
 const { isLogin, checkPasskeySupport } = usePasskey()
 const { selectSigner } = useSigner()
@@ -37,7 +37,7 @@ onMounted(async () => {
 	showDisclaimerIfNeeded()
 
 	// reset selectedChainId when it is not supported because it may be stored in localStorage
-	if (!supportedChainIds.value.includes(selectedChainId.value)) {
+	if (!SUPPORTED_CHAIN_IDS.includes(selectedChainId.value)) {
 		selectedChainId.value = DEFAULT_CHAIN_ID
 	}
 
