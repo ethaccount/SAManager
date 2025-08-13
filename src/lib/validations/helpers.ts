@@ -1,4 +1,3 @@
-import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
 import { getOwnableValidator } from '@rhinestone/module-sdk'
 import { ERC7579_MODULE_TYPE, ERC7579Module, getECDSAValidator, getWebAuthnValidator } from 'sendop'
 import { ValidationMethodRegistry } from './registry'
@@ -51,7 +50,8 @@ export function getModuleByValidationMethod(validation: ValidationMethod): ERC75
 			return getWebAuthnValidator({
 				pubKeyX: webAuthnData.pubKeyX,
 				pubKeyY: webAuthnData.pubKeyY,
-				authenticatorIdHash: getAuthenticatorIdHash(validation.identifier),
+				// Fix: The vMethod identifier is the authenticatorIdHash. Don't hash it again.
+				authenticatorIdHash: validation.identifier,
 			})
 		}
 		case 'OwnableValidator': {
