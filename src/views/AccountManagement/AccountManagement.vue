@@ -237,6 +237,18 @@ const showSwitchToCorrectChain = computed(() => {
 						>
 							Permissions
 						</RouterLink>
+
+						<RouterLink
+							:to="toRoute('account-multichain', { address: selectedAccount.address })"
+							class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+							:class="
+								$route.name === 'account-multichain'
+									? 'border-primary text-primary'
+									: 'border-transparent text-muted-foreground hover:text-foreground'
+							"
+						>
+							Multichain
+						</RouterLink>
 					</div>
 
 					<div class="mt-6">

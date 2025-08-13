@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// Mock data for cross-chain accounts
 const crossChainAccounts = [
 	{ chain: 'Sepolia', address: '0x1234...5678' },
 	{ chain: 'Base', address: '0xabcd...efgh' },
@@ -10,7 +9,7 @@ const crossChainAccounts = [
 <template>
 	<Card>
 		<CardHeader>
-			<CardTitle>Cross-chain Deployments</CardTitle>
+			<CardTitle>Multichain Deployments</CardTitle>
 			<CardDescription>Your account deployments across different networks</CardDescription>
 		</CardHeader>
 		<CardContent>
@@ -26,12 +25,12 @@ const crossChainAccounts = [
 								<div class="font-medium">{{ account.chain }}</div>
 								<div class="text-sm text-muted-foreground">{{ account.address }}</div>
 							</div>
+
+							<div class="pt-4">
+								<Button class="w-full">Deploy to Another Chain</Button>
+							</div>
 						</div>
 					</div>
-				</div>
-
-				<div class="pt-4">
-					<Button class="w-full">Deploy to Another Chain</Button>
 				</div>
 			</div>
 		</CardContent>

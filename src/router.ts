@@ -64,6 +64,11 @@ const router = createRouter({
 									name: 'account-permissions',
 									component: () => import('@/views/AccountManagement/AMPermissions.vue'),
 								},
+								{
+									path: 'multichain',
+									name: 'account-multichain',
+									component: () => import('@/views/AccountManagement/AMMultichain.vue'),
+								},
 							],
 						},
 						// Send
