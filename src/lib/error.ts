@@ -40,6 +40,9 @@ export function isEthersError(error: unknown): error is EthersError {
 	return false
 }
 
+/**
+ * Checks if an error indicates a user rejection from browser wallet or passkey.
+ */
 export function isUserRejectedError(error: unknown): boolean {
 	if (error instanceof Error) {
 		if (isEthersError(error)) {
@@ -47,7 +50,14 @@ export function isUserRejectedError(error: unknown): boolean {
 				return true
 			}
 		}
-		if (error.message.includes('The operation either timed out or was not allowed')) {
+		if (
+			// desktop chrome error
+			error.message.includes('The operation either timed out or was not allowed') ||
+			// mobile chrome error
+			error.message.includes(
+				'The request is not allowed by the user agent or the platform in the current context, possibly because the user denied permission.',
+			)
+		) {
 			return true
 		}
 	}
