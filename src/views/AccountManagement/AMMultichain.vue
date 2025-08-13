@@ -188,7 +188,7 @@ async function onClickDeploy(chainId: CHAIN_ID) {
 					<div class="space-y-2">
 						<!-- Network Icon and Name -->
 						<div class="flex items-center space-x-2">
-							<ChainIcon :chain-id="deployment.chainId" :size="24" />
+							<ChainIcon :chain-id="deployment.chainId" :size="24" :show-tooltip="false" />
 							<div class="text-sm font-medium">{{ deployment.chainName }}</div>
 							<div
 								v-if="deployment.isLoading"
