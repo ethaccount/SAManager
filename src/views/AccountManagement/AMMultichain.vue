@@ -46,15 +46,16 @@ interface ChainDeploymentInfo {
 const chainDeployments = ref<ChainDeploymentInfo[]>([])
 const isLoadingDeployments = ref(false)
 
-onMounted(async () => {
-	await updateChainDeployments()
-})
-
-watch(
+watchImmediate(
 	() => props.selectedAccount,
 	async (newAccount, oldAccount) => {
-		// only re-initialize when the account address changes
-		if (!isSameAddress(newAccount.address, oldAccount.address)) {
+		if (!oldAccount) {
+			// update chain deployments when the component is mounted
+			await updateChainDeployments()
+			return
+		}
+		// update chain deployments when the selected account address changes
+		if (newAccount && !isSameAddress(newAccount.address, oldAccount.address)) {
 			await updateChainDeployments()
 		}
 	},
@@ -104,6 +105,28 @@ async function updateChainDeployments() {
 	isLoadingDeployments.value = false
 }
 
+async function updateChainDeployment(targetChainId: CHAIN_ID) {
+	const deployment = chainDeployments.value.find(d => d.chainId === targetChainId)
+	if (!deployment) return
+
+	deployment.isLoading = true
+	deployment.error = null
+
+	try {
+		const code = await fetchAccountCode(deployment.address, deployment.chainId)
+		if (deployment.isSmartEOA) {
+			deployment.delegateAddress = extractDelegateAddress(code)
+		} else {
+			deployment.isDeployed = code !== '0x' && code !== ''
+		}
+	} catch (error) {
+		deployment.isDeployed = false
+		deployment.error = `Failed to check deployment for ${deployment.chainName}: ${error instanceof Error ? error.message : String(error)}`
+	} finally {
+		deployment.isLoading = false
+	}
+}
+
 async function onClickDeploy(chainId: CHAIN_ID) {
 	try {
 		// Get the init code data for this account address
@@ -138,7 +161,7 @@ async function onClickDeploy(chainId: CHAIN_ID) {
 			onSuccess: async () => {
 				// Update the deployment status when the transaction succeeds
 				// TODO: After transaction success, eth_getCode may not reflect deployment immediately due to block confirmation delay.
-				await updateChainDeployments()
+				await updateChainDeployment(chainId)
 			},
 		})
 	} catch (error) {
@@ -177,7 +200,6 @@ async function onClickDeploy(chainId: CHAIN_ID) {
 						<div v-if="!deployment.isLoading">
 							<!-- Error State -->
 							<div v-if="deployment.error" class="flex items-center space-x-1.5">
-								<div class="w-1.5 h-1.5 rounded-full bg-red-500"></div>
 								<span class="text-xs text-red-600">{{ deployment.error }}</span>
 							</div>
 

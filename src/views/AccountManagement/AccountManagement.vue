@@ -208,11 +208,12 @@ const showSwitchToCorrectChain = computed(() => {
 					</div>
 				</div>
 
-				<div v-if="loading" class="flex justify-center py-4">
+				<div v-show="loading" class="flex justify-center py-4">
 					<Loader2 class="w-6 h-6 animate-spin text-primary" />
 				</div>
 
-				<div v-if="!loading" class="mt-6">
+				<!-- Note: Must use v-show so that the RouterView will not mount again when the selectedAccount changes -->
+				<div v-show="!loading" class="mt-6">
 					<div class="flex border-b">
 						<RouterLink
 							:to="toRoute('account-modules', { address: selectedAccount.address })"
