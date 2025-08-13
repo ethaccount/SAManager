@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useChainIdRoute } from '@/app/useChainIdRoute'
-import { useCrossChainAutoImport } from '@/app/useCrossChainAutoImport'
+import { useMultichainAutoImport } from '@/app/useMultichainAutoImport'
 import { useSetupVueDapp } from '@/app/useSetupVueDapp'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useDisclaimerModal } from '@/stores/useDisclaimerModal'
@@ -28,7 +28,7 @@ const { accountVMethods } = useAccount()
 // NOTE: onMounted hooks are not guaranteed to execute in registration order
 useChainIdRoute()
 useSetupVueDapp()
-useCrossChainAutoImport()
+useMultichainAutoImport()
 
 onMounted(async () => {
 	console.info('APP_SALT', APP_SALT)

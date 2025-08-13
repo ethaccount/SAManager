@@ -43,13 +43,13 @@ export const useAccountStore = defineStore(
 			return selectedAccount.value.category === 'Smart EOA'
 		})
 
-		const isCrossChain = computed<boolean>(() => {
+		const isMultichain = computed<boolean>(() => {
 			const account = selectedAccount.value
 			if (!account) return false
-			return checkIsCrossChain(account)
+			return checkIsMultichain(account)
 		})
 
-		function checkIsCrossChain(account: ImportedAccount) {
+		function checkIsMultichain(account: ImportedAccount) {
 			if (account.category !== 'Smart Account') return false
 			return hasInitCode(account.address)
 		}
@@ -64,12 +64,12 @@ export const useAccountStore = defineStore(
 			selectedAccount,
 			selectedAccountInitCodeData,
 			accountVMethods,
-			isCrossChain,
+			isMultichain,
 			isAccountAccessible,
 			isModular,
 			isSmartEOA,
 			isChainIdMatching,
-			checkIsCrossChain,
+			checkIsMultichain,
 		}
 	},
 	{

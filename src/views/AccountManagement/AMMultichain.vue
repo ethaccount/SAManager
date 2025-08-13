@@ -22,7 +22,7 @@ const props = defineProps<{
 	isModular: boolean
 }>()
 
-const { isCrossChain, isSmartEOA } = useAccount()
+const { isMultichain, isSmartEOA } = useAccount()
 const { importAccount, selectAccount, isAccountImported } = useAccounts()
 const { getInitCodeData } = useInitCode()
 const { selectedChainId, switchChain } = useBlockchain()
@@ -38,7 +38,7 @@ interface ChainDeploymentInfo {
 	isDeployed: boolean
 	delegateAddress: string | null
 	isLoading: boolean
-	isCrossChain: boolean
+	isMultichain: boolean
 	isSmartEOA: boolean
 	error: string | null
 }
@@ -75,7 +75,7 @@ async function updateChainDeployments() {
 			isDeployed: false,
 			delegateAddress: null,
 			isLoading: true,
-			isCrossChain: isCrossChain.value,
+			isMultichain: isMultichain.value,
 			isSmartEOA: isSmartEOA.value,
 			error: null,
 		})
@@ -229,7 +229,7 @@ async function onClickDeploy(chainId: CHAIN_ID) {
 					<!-- Right part: Deploy button (centered) -->
 					<div class="flex items-center justify-center">
 						<Button
-							v-if="deployment.isCrossChain && !deployment.isDeployed"
+							v-if="deployment.isMultichain && !deployment.isDeployed"
 							@click="onClickDeploy(deployment.chainId)"
 							size="sm"
 							variant="outline"

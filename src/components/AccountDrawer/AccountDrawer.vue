@@ -32,24 +32,24 @@ function onClickCloseSidebar() {
 
 const { accounts } = useAccounts()
 const { hasInitCode } = useInitCode()
-const { selectedAccount, isAccountAccessible, isChainIdMatching, isCrossChain } = useAccount()
+const { selectedAccount, isAccountAccessible, isChainIdMatching, isMultichain } = useAccount()
 const { wallet, address, isEOAWalletConnected, disconnect, isEOAWalletSupported } = useEOAWallet()
 const { isLogin, resetCredentialId, selectedCredentialDisplay, isPasskeySupported } = usePasskey()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 const { selectSigner, selectedSigner } = useSigner()
 
-const accountList = computed<(ImportedAccount & { isCrossChain: boolean })[]>(() =>
+const accountList = computed<(ImportedAccount & { isMultichain: boolean })[]>(() =>
 	accounts.value
 		.reduce(
 			(acc, cur) => {
 				const account = {
 					...cur,
-					isCrossChain: cur.category === 'Smart Account' && hasInitCode(cur.address),
+					isMultichain: cur.category === 'Smart Account' && hasInitCode(cur.address),
 				}
 
 				// Regular accounts: always add (no deduplication needed)
-				// Cross-chain accounts: only add if not already present (deduplicate)
-				if (!account.isCrossChain) {
+				// Multichain accounts: only add if not already present (deduplicate)
+				if (!account.isMultichain) {
 					acc.push(account)
 				} else if (!acc.some(a => isSameAddress(a.address, account.address))) {
 					acc.push(account)
@@ -57,7 +57,7 @@ const accountList = computed<(ImportedAccount & { isCrossChain: boolean })[]>(()
 
 				return acc
 			},
-			[] as (ImportedAccount & { isCrossChain: boolean })[],
+			[] as (ImportedAccount & { isMultichain: boolean })[],
 		)
 		.sort((a, b) => {
 			// Put selected account at the top
@@ -70,24 +70,24 @@ const accountList = computed<(ImportedAccount & { isCrossChain: boolean })[]>(()
 		}),
 )
 
-function isAccountSelected(account: ImportedAccount & { isCrossChain: boolean }) {
+function isAccountSelected(account: ImportedAccount & { isMultichain: boolean }) {
 	return (
 		selectedAccount.value &&
 		isSameAddress(account.address, selectedAccount.value.address) &&
-		(account.chainId === selectedAccount.value.chainId || account.isCrossChain)
+		(account.chainId === selectedAccount.value.chainId || account.isMultichain)
 	)
 }
 
-function onClickSelectAccount(account: ImportedAccount & { isCrossChain: boolean }) {
+function onClickSelectAccount(account: ImportedAccount & { isMultichain: boolean }) {
 	const { selectedChainId } = useBlockchain()
 	const { isAccountImported, selectAccount, importAccount } = useAccounts()
 
-	if (account.isCrossChain) {
-		// Auto import account if it's cross chain, and there's no account imported for this chain
+	if (account.isMultichain) {
+		// Auto import account if it's multichain, and there's no account imported for this chain
 		const isImported = isAccountImported(account.address, selectedChainId.value)
 		if (!isImported) {
-			// import the account with current chainId if it's cross chain and not imported
-			const { isCrossChain, ...acc } = account // eslint-disable-line @typescript-eslint/no-unused-vars
+			// import the account with current chainId if it's multichain and not imported
+			const { isMultichain, ...acc } = account // eslint-disable-line @typescript-eslint/no-unused-vars
 
 			importAccount({
 				...acc,
@@ -201,8 +201,8 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 
 									<!-- chain -->
 									<div class="flex items-center gap-2 text-xs">
-										<div v-if="isCrossChain">
-											<span class="text-xs text-muted-foreground">Cross Chain</span>
+										<div v-if="isMultichain">
+											<span class="text-xs text-muted-foreground">Multichain</span>
 										</div>
 										<div v-else class="flex items-center gap-2">
 											<div>
@@ -396,10 +396,10 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 						<div>
 							<div class="flex justify-between items-center mb-1">
 								<span class="text-xs truncate">{{ shortenAddress(account.address) }}</span>
-								<span v-if="!account.isCrossChain" class="text-xs text-muted-foreground">
+								<span v-if="!account.isMultichain" class="text-xs text-muted-foreground">
 									{{ displayChainName(account.chainId) }}
 								</span>
-								<span v-else class="text-xs text-muted-foreground">Cross Chain</span>
+								<span v-else class="text-xs text-muted-foreground">Multichain</span>
 								<!-- <span class="text-xs text-muted-foreground">{{ account.type }}</span> -->
 							</div>
 							<div class="flex justify-between items-center text-xs text-muted-foreground">

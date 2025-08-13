@@ -15,7 +15,7 @@ import { shortenAddress } from '@vue-dapp/core'
 import { ArrowLeft, Loader2 } from 'lucide-vue-next'
 
 const router = useRouter()
-const { selectedAccount, isModular, isChainIdMatching, isCrossChain } = useAccount()
+const { selectedAccount, isModular, isChainIdMatching, isMultichain } = useAccount()
 const { getCode, isDeployed, loading } = useGetCode()
 
 // Timing: App loaded, Account changed
@@ -36,7 +36,7 @@ function onClickSwitchToCorrectChain() {
 }
 
 const showSwitchToCorrectChain = computed(() => {
-	return !isCrossChain.value && !isChainIdMatching.value
+	return !isMultichain.value && !isChainIdMatching.value
 })
 </script>
 
@@ -73,7 +73,7 @@ const showSwitchToCorrectChain = computed(() => {
 					</div>
 
 					<!-- Chain -->
-					<div v-if="!isCrossChain">
+					<div v-if="!isMultichain">
 						<div class="flex items-center gap-2 text-sm">
 							<ChainIcon :chain-id="selectedAccount.chainId" :size="20" />
 							<div>
@@ -115,12 +115,12 @@ const showSwitchToCorrectChain = computed(() => {
 							</Tooltip>
 						</TooltipProvider>
 
-						<!-- Cross-chain tag -->
-						<TooltipProvider v-if="isCrossChain">
+						<!-- Multichain tag -->
+						<TooltipProvider v-if="isMultichain">
 							<Tooltip>
 								<TooltipTrigger asChild>
 									<div class="flex items-center gap-1">
-										<div class="text-xs rounded-full px-2.5 py-0.5 bg-green-800">Cross Chain</div>
+										<div class="text-xs rounded-full px-2.5 py-0.5 bg-green-800">Multichain</div>
 									</div>
 								</TooltipTrigger>
 								<TooltipContent> The account can be used on all supported chains</TooltipContent>
