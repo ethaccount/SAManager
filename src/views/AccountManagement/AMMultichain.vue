@@ -1,13 +1,20 @@
 <script setup lang="ts">
 import { fetchAccountCode } from '@/api/etherscan'
 import ChainIcon from '@/components/ChainIcon.vue'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import Address from '@/components/utils/Address.vue'
 import { SUPPORTED_CHAIN_IDS } from '@/config'
 import { extractDelegateAddress } from '@/lib/7702'
+import { addressToName } from '@/lib/addressToName'
 import { ImportedAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
+import { useAccounts } from '@/stores/account/useAccounts'
+import { useInitCode } from '@/stores/account/useInitCode'
 import { CHAIN_ID, CHAIN_NAME } from '@/stores/blockchain/chains'
-import { ADDRESS } from 'sendop'
+import { useBlockchain } from '@/stores/blockchain/useBlockchain'
+import { useTxModal } from '@/stores/useTxModal'
+import { isSameAddress } from 'sendop'
 
 const props = defineProps<{
 	selectedAccount: ImportedAccount
@@ -16,16 +23,12 @@ const props = defineProps<{
 }>()
 
 const { isCrossChain, isSmartEOA } = useAccount()
-
-// Delegate address to account ID mapping
-const DELEGATE_ADDRESS_TO_ACCOUNT_ID: Record<string, string> = {
-	[ADDRESS.Simple7702AccountV08]: 'infinitism.Simple7702Account.0.8.0',
-	'0x000000009B1D0aF20D8C6d0A44e162d11F9b8f00': 'Uniswap.Calibur.1.0.0',
-	'0x63c0c19a282a1B52b07dD5a65b58948A07DAE32B': 'MetaMask.EIP7702StatelessDeleGator.1.3.0',
-}
+const { importAccount, selectAccount, isAccountImported } = useAccounts()
+const { getInitCodeData } = useInitCode()
+const { selectedChainId, switchChain } = useBlockchain()
 
 function getDelegateAccountId(delegateAddress: string): string | null {
-	return DELEGATE_ADDRESS_TO_ACCOUNT_ID[delegateAddress] || null
+	return addressToName(delegateAddress) || null
 }
 
 interface ChainDeploymentInfo {
@@ -43,18 +46,21 @@ interface ChainDeploymentInfo {
 const chainDeployments = ref<ChainDeploymentInfo[]>([])
 const isLoadingDeployments = ref(false)
 
-onMounted(() => {
-	initializeChainDeployments()
+onMounted(async () => {
+	await updateChainDeployments()
 })
 
 watch(
 	() => props.selectedAccount,
-	() => {
-		initializeChainDeployments()
+	async (newAccount, oldAccount) => {
+		// only re-initialize when the account address changes
+		if (!isSameAddress(newAccount.address, oldAccount.address)) {
+			await updateChainDeployments()
+		}
 	},
 )
 
-async function initializeChainDeployments() {
+async function updateChainDeployments() {
 	isLoadingDeployments.value = true
 
 	const deployments: ChainDeploymentInfo[] = []
@@ -98,9 +104,51 @@ async function initializeChainDeployments() {
 	isLoadingDeployments.value = false
 }
 
-async function deployToChain(chainId: CHAIN_ID) {
-	// TODO: Implement deployment logic
-	console.log(`Deploy to chain ${chainId}`)
+async function onClickDeploy(chainId: CHAIN_ID) {
+	try {
+		// Get the init code data for this account address
+		const initCodeData = getInitCodeData(props.selectedAccount.address)
+		if (!initCodeData) {
+			throw new Error(`No init code found for account ${props.selectedAccount.address}`)
+		}
+
+		// Switch to the target chain if needed
+		if (selectedChainId.value !== chainId) {
+			switchChain(chainId)
+		}
+
+		// Import account to the target chain if not already imported
+		if (!isAccountImported(props.selectedAccount.address, chainId)) {
+			importAccount(
+				{
+					accountId: props.selectedAccount.accountId,
+					category: props.selectedAccount.category,
+					address: props.selectedAccount.address,
+					chainId: chainId,
+					vMethods: props.selectedAccount.vMethods,
+				},
+				initCodeData.initCode,
+			)
+		}
+
+		// Select the account on the target chain
+		selectAccount(props.selectedAccount.address, chainId)
+
+		useTxModal().openModal({
+			onSuccess: async () => {
+				// Update the deployment status when the transaction succeeds
+				// TODO: After transaction success, eth_getCode may not reflect deployment immediately due to block confirmation delay.
+				await updateChainDeployments()
+			},
+		})
+	} catch (error) {
+		console.error('Failed to deploy to chain:', error)
+		// Update the specific deployment with error state
+		const deployment = chainDeployments.value.find(d => d.chainId === chainId)
+		if (deployment) {
+			deployment.error = `Deployment failed: ${error instanceof Error ? error.message : String(error)}`
+		}
+	}
 }
 </script>
 
@@ -182,7 +230,7 @@ async function deployToChain(chainId: CHAIN_ID) {
 					<div class="flex items-center justify-center">
 						<Button
 							v-if="deployment.isCrossChain && !deployment.isDeployed"
-							@click="deployToChain(deployment.chainId)"
+							@click="onClickDeploy(deployment.chainId)"
 							size="sm"
 							variant="outline"
 						>
