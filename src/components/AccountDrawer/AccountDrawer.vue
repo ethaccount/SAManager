@@ -107,10 +107,8 @@ function onClickDeleteAccount(account: ImportedAccount) {
 		message: 'Are you sure you want to delete this account? This action cannot be undone.',
 		confirmText: 'Delete',
 		cancelText: 'Cancel',
-		onResult: confirmed => {
-			if (confirmed) {
-				useAccounts().removeAccount(account)
-			}
+		onConfirm: () => {
+			useAccounts().removeAccount(account)
 		},
 	})
 }

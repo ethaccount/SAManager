@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button'
-import { TrashIcon, CopyIcon, CheckIcon } from 'lucide-vue-next'
 import { useConfirmModal } from '@/components/ConfirmModal/useConfirmModal'
+import { Button } from '@/components/ui/button'
+import { CheckIcon, CopyIcon, TrashIcon } from 'lucide-vue-next'
 
 interface StorageItem {
 	key: string
@@ -54,10 +54,8 @@ async function onClickDelete(key: string) {
 		message: 'Are you sure you want to delete this item? This action cannot be undone.',
 		confirmText: 'Delete',
 		cancelText: 'Cancel',
-		onResult: confirmed => {
-			if (confirmed) {
-				removeItem(key)
-			}
+		onConfirm: () => {
+			removeItem(key)
 		},
 	})
 }

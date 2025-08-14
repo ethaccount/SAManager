@@ -11,24 +11,31 @@ const router = createRouter({
 				{
 					path: '/:chainId',
 					children: [
-						// Test
-						{
-							path: '/:chainId/test',
-							children: [
-								{
-									path: '/:chainId/test/test',
-									component: () => import('@/views/test/Test.vue'),
-								},
-								{
-									path: '/:chainId/test/connect',
-									component: () => import('@/views/test/Connect.vue'),
-								},
-								{
-									path: '/:chainId/test/chain-icons',
-									component: () => import('@/views/test/chain-icons.vue'),
-								},
-							],
-						},
+						...(import.meta.env.PROD
+							? []
+							: [
+									{
+										path: '/:chainId/test',
+										children: [
+											{
+												path: '/:chainId/test/test',
+												component: () => import('@/views/test/Test.vue'),
+											},
+											{
+												path: '/:chainId/test/connect',
+												component: () => import('@/views/test/Connect.vue'),
+											},
+											{
+												path: '/:chainId/test/chain-icons',
+												component: () => import('@/views/test/chain-icons.vue'),
+											},
+											{
+												path: '/:chainId/test/modal',
+												component: () => import('@/views/test/TestModal.vue'),
+											},
+										],
+									},
+								]),
 						// Settings
 						{
 							path: '/:chainId/settings',

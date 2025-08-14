@@ -20,21 +20,21 @@ export const useDisclaimerModalStore = defineStore(
 			openModal({
 				title: 'Disclaimer',
 				message: disclaimerMessage,
+				htmlMessage: true,
 				confirmText: 'I Understand, Continue',
+				cancelText: 'Go to Testnet',
 				showCloseButton: false,
 				clickToClose: false,
 				escToClose: false,
 				showDontShowAgain: true,
 				dontShowAgainText: "Don't show this disclaimer again",
-				onResult: (accepted, dontShowAgain) => {
-					if (accepted) {
-						if (dontShowAgain) {
-							hasAcceptedDisclaimer.value = true
-						}
-					} else {
-						// Redirect to testnet
-						window.open(TESTNET_URL, '_blank')
+				onConfirm: (dontShowAgain?: boolean) => {
+					if (dontShowAgain) {
+						hasAcceptedDisclaimer.value = true
 					}
+				},
+				onCancel: () => {
+					window.open(TESTNET_URL, '_self')
 				},
 			})
 		}
