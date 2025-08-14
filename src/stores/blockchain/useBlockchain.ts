@@ -1,4 +1,4 @@
-import { DEFAULT_BUNDLER, DEFAULT_CHAIN_ID, DEFAULT_NODE, SUPPORTED_MAINNET_CHAIN_IDS } from '@/config'
+import { DEFAULT_BUNDLER, DEFAULT_CHAIN_ID, DEFAULT_NODE } from '@/config'
 import {
 	CHAIN_ID,
 	EXPLORER_URL,
@@ -25,19 +25,6 @@ export const useBlockchainStore = defineStore(
 		const selectedChainId = ref<CHAIN_ID>(DEFAULT_CHAIN_ID)
 
 		const chainIdBigInt = computed(() => BigInt(selectedChainId.value))
-		const supportedChainIds = computed<CHAIN_ID[]>(() => {
-			switch (import.meta.env.MODE) {
-				case 'staging':
-					if (import.meta.env.PROD) {
-						return Object.values(TESTNET_CHAIN_ID).filter(id => id !== TESTNET_CHAIN_ID.LOCAL)
-					}
-					return Object.values(TESTNET_CHAIN_ID)
-				case 'production':
-					return SUPPORTED_MAINNET_CHAIN_IDS
-				default:
-					throw new Error(`[supportedChainIds] Invalid mode: ${import.meta.env.MODE}`)
-			}
-		})
 
 		const supportedNodes = computed(() => {
 			return Object.values(SUPPORTED_NODE)
@@ -177,7 +164,6 @@ export const useBlockchainStore = defineStore(
 		return {
 			selectedChainId,
 			currentEntryPointAddress,
-			supportedChainIds,
 			rpcUrl,
 			explorerUrl,
 			client,

@@ -27,31 +27,37 @@ export type TxModalExecution = Execution & {
 }
 
 export const useTxModalStore = defineStore('useTxModalStore', () => {
-	// Keep in sync with TxModal props and emits
-	const defaultProps: InstanceType<typeof TxModal>['$props'] = {
-		executions: [],
-		onClose: () => close(),
-		onExecuted: () => {},
-		onSuccess: () => {},
-		onFailed: () => {},
-	}
-
 	const { open, close, patchOptions } = useModal({
 		component: TxModal,
-		attrs: {
-			...defaultProps,
-		},
-		slots: {},
 	})
 
-	function openModal(props?: InstanceType<typeof TxModal>['$props']) {
+	const defaultProps: InstanceType<typeof TxModal>['$props'] = {
+		executions: [],
+	}
+
+	function openModal(props: InstanceType<typeof TxModal>['$props']) {
 		patchOptions({
 			attrs: {
-				...defaultProps, // must set default props to clear the props
-				...props,
+				...defaultProps, // set default props to clear the props
+				...props, // override default props
+				onClose: () => {
+					props?.onClose?.()
+					close()
+				},
+				onExecuted: () => {
+					props?.onExecuted?.()
+				},
+				onSuccess: () => {
+					props?.onSuccess?.()
+				},
+				onFailed: () => {
+					props?.onFailed?.()
+				},
 			},
 		})
+
 		open()
+
 		status.value = TransactionStatus.Initial
 	}
 
