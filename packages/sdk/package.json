@@ -1,0 +1,51 @@
+{
+	"name": "samanager-sdk",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"repository": "https://github.com/ethaccount/SAManager",
+	"author": "Johnson Chen <https://x.com/johnson86tw>",
+	"license": "AGPL-3.0-only",
+	"description": "",
+	"homepage": "https://samanager.xyz",
+	"keywords": [
+		"ERC-4337",
+		"smart accounts",
+		"web3",
+		"blockchain",
+		"wallet",
+		"ethereum"
+	],
+	"scripts": {
+		"build": "bun typecheck && vite build",
+		"watch": "bun run build --w",
+		"test": "vitest --run",
+		"typecheck": "tsc -p tsconfig.json --noEmit",
+		"prepare": "bun husky"
+	},
+	"files": [
+		"dist",
+		"src",
+		"tsconfig.json"
+	],
+	"main": "./dist/index.js",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		},
+		"./contract-types": {
+			"types": "./dist/contract-types.d.ts",
+			"import": "./dist/contract-types.js"
+		}
+	},
+	"devDependencies": {
+		"husky": "^9.1.7",
+		"rollup-plugin-visualizer": "^6.0.3",
+		"vite": "^7.1.2",
+		"vite-plugin-dts": "^4.5.4",
+		"vitest": "^3.2.4"
+	}
+}
