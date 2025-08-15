@@ -264,6 +264,10 @@ importers:
         version: 2.2.8(typescript@5.8.3)
 
   packages/sdk:
+    dependencies:
+      mitt:
+        specifier: ^3.0.1
+        version: 3.0.1
     devDependencies:
       husky:
         specifier: ^9.1.7

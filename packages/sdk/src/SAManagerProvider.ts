@@ -1,13 +1,19 @@
-import type { EIP1193Provider, EIP6963ProviderDetail } from '@vue-dapp/core'
+import type { ProviderEventMap, ProviderInterface, RequestArguments } from './types'
 
-const SAManagerProvider: EIP1193Provider = {
-	request: async ({ method, params }) => {
+export class SAManagerProvider implements ProviderInterface {
+	private samanagerUrl: string
+
+	constructor({ samanagerUrl }: { samanagerUrl: string }) {
+		this.samanagerUrl = samanagerUrl
+	}
+
+	async request({ method, params }: RequestArguments) {
 		console.log('request', method, params)
 		switch (method) {
 			case 'eth_requestAccounts':
 				const popup = window.open(
-					'http://localhost:5173', // Your wallet app URL
-					'wallet-connect',
+					this.samanagerUrl, // Your wallet app URL
+					'connect',
 					'width=600,height=600,scrollbars=yes,resizable=yes',
 				)
 				if (!popup) {
@@ -21,29 +27,25 @@ const SAManagerProvider: EIP1193Provider = {
 			default:
 				throw new Error(`Method ${method} not supported`)
 		}
-	},
-	on: (event, handler) => {
+	}
+
+	async disconnect(): Promise<void> {
+		// TODO: Implement wallet disconnect logic
+		console.log('disconnect called')
+	}
+
+	emit<K extends keyof ProviderEventMap>(event: K, payload: ProviderEventMap[K]): void {
+		// TODO: Implement event emission logic
+		console.log('emit', event, payload)
+	}
+
+	on<K extends keyof ProviderEventMap>(event: K, handler: (payload: ProviderEventMap[K]) => void): void {
 		console.log('on', event, handler)
-	},
-	removeListener: (event, handler) => {
+		// TODO: Implement event listener registration
+	}
+
+	removeListener<K extends keyof ProviderEventMap>(event: K, handler: (payload: ProviderEventMap[K]) => void): void {
 		console.log('removeListener', event, handler)
-	},
-}
-
-export const SAManagerProviderDetail: EIP6963ProviderDetail = {
-	info: {
-		uuid: crypto.randomUUID(),
-		name: 'SAManager',
-		icon: 'https://samanager.xyz/favicon_io/favicon-32x32.png',
-		rdns: 'xyz.samanager',
-	},
-	provider: SAManagerProvider,
-}
-
-export function announceEIP6963Provider() {
-	window.dispatchEvent(
-		new CustomEvent('eip6963:announceProvider', {
-			detail: SAManagerProviderDetail,
-		}),
-	)
+		// TODO: Implement event listener removal
+	}
 }
