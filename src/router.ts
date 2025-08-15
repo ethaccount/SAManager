@@ -11,24 +11,31 @@ const router = createRouter({
 				{
 					path: '/:chainId',
 					children: [
-						// Test
-						{
-							path: '/:chainId/test',
-							children: [
-								{
-									path: '/:chainId/test/test',
-									component: () => import('@/views/test/Test.vue'),
-								},
-								{
-									path: '/:chainId/test/connect',
-									component: () => import('@/views/test/Connect.vue'),
-								},
-								{
-									path: '/:chainId/test/chain-icons',
-									component: () => import('@/views/test/chain-icons.vue'),
-								},
-							],
-						},
+						...(import.meta.env.PROD
+							? []
+							: [
+									{
+										path: '/:chainId/test',
+										children: [
+											{
+												path: '/:chainId/test/test',
+												component: () => import('@/views/test/Test.vue'),
+											},
+											{
+												path: '/:chainId/test/connect',
+												component: () => import('@/views/test/Connect.vue'),
+											},
+											{
+												path: '/:chainId/test/chain-icons',
+												component: () => import('@/views/test/chain-icons.vue'),
+											},
+											{
+												path: '/:chainId/test/modal',
+												component: () => import('@/views/test/TestModal.vue'),
+											},
+										],
+									},
+								]),
 						// Settings
 						{
 							path: '/:chainId/settings',
@@ -63,6 +70,11 @@ const router = createRouter({
 									path: 'permissions',
 									name: 'account-permissions',
 									component: () => import('@/views/AccountManagement/AMPermissions.vue'),
+								},
+								{
+									path: 'multichain',
+									name: 'account-multichain',
+									component: () => import('@/views/AccountManagement/AMMultichain.vue'),
 								},
 							],
 						},

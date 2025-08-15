@@ -1,15 +1,40 @@
 <script setup lang="ts">
-import { X } from 'lucide-vue-next'
-import { VueFinalModal } from 'vue-final-modal'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { ConfirmModalProps } from './useConfirmModal'
+import { X } from 'lucide-vue-next'
+import { VueFinalModal } from 'vue-final-modal'
 
-defineProps<ConfirmModalProps>()
+withDefaults(
+	defineProps<{
+		title?: string
+		message?: string
+		htmlMessage?: boolean
+		confirmText?: string
+		cancelText?: string
+		showCloseButton?: boolean
+		clickToClose?: boolean
+		escToClose?: boolean
+		showDontShowAgain?: boolean
+		dontShowAgainText?: string
+	}>(),
+	{
+		title: 'Confirm',
+		message: '',
+		htmlMessage: false,
+		confirmText: 'Confirm',
+		cancelText: 'Cancel',
+		showCloseButton: false,
+		clickToClose: false,
+		escToClose: false,
+		showDontShowAgain: false,
+		dontShowAgainText: "Don't show this again",
+	},
+)
 
 const emit = defineEmits<{
-	confirm: [dontShowAgain?: boolean]
-	cancel: [dontShowAgain?: boolean]
+	confirm: [dontShowAgain: boolean]
+	cancel: []
+	close: []
 }>()
 
 const dontShowAgain = ref(false)
@@ -19,7 +44,11 @@ function onConfirm() {
 }
 
 function onCancel() {
-	emit('cancel', dontShowAgain.value)
+	emit('cancel')
+}
+
+function onClose() {
+	emit('close')
 }
 </script>
 
@@ -37,11 +66,11 @@ function onCancel() {
 			<!-- left spacer -->
 			<div class="w-9"></div>
 
-			<div class="text-xl font-semibold">{{ title || 'Confirm' }}</div>
+			<div class="text-xl font-semibold">{{ title }}</div>
 
 			<!-- close button -->
 			<div class="w-9">
-				<Button v-if="showCloseButton" variant="ghost" size="icon" @click="onCancel">
+				<Button v-if="showCloseButton" variant="ghost" size="icon" @click="onClose">
 					<X class="w-4 h-4" />
 				</Button>
 			</div>
@@ -49,25 +78,26 @@ function onCancel() {
 
 		<!-- message -->
 		<div class="py-6">
-			<div v-html="message" class="text-base text-muted-foreground leading-relaxed"></div>
+			<div v-if="htmlMessage" v-html="message" class="text-base text-muted-foreground leading-relaxed"></div>
+			<div v-else class="text-base text-muted-foreground leading-relaxed">{{ message }}</div>
 		</div>
 
 		<!-- checkbox -->
 		<div v-if="showDontShowAgain" class="flex items-center space-x-2 mb-4">
 			<Checkbox id="dont-show-again" v-model:checked="dontShowAgain" />
 			<label for="dont-show-again" class="text-sm text-muted-foreground cursor-pointer">
-				{{ dontShowAgainText || "Don't show this again" }}
+				{{ dontShowAgainText }}
 			</label>
 		</div>
 
 		<!-- actions -->
 		<div class="flex justify-center gap-3">
 			<Button v-if="cancelText" variant="outline" class="px-6" @click="onCancel">
-				{{ cancelText || 'Cancel' }}
+				{{ cancelText }}
 			</Button>
 
 			<Button v-if="confirmText" variant="destructive" class="px-6" @click="onConfirm">
-				{{ confirmText || 'Confirm' }}
+				{{ confirmText }}
 			</Button>
 		</div>
 	</VueFinalModal>

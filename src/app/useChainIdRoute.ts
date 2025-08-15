@@ -26,7 +26,7 @@ export function useChainIdRoute() {
 		router.replace({ params: { chainId: selectedChainId.value } })
 
 		// Reload page when selectedChainId changes except for the excluded routes
-		const excludedRouteNames = ['browser']
+		const excludedRouteNames = ['browser', 'account-multichain']
 		if (excludedRouteNames.includes(route.name as string)) {
 			return
 		}

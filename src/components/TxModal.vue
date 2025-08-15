@@ -144,8 +144,6 @@ onMounted(async () => {
 	const entryPointVersion = AccountRegistry.getEntryPointVersion(selectedAccount.value.accountId)
 	const entryPointAddress = getEntryPointAddress(entryPointVersion)
 	setEntryPointAddress(entryPointAddress)
-
-	await updateEthUsdPrice()
 })
 
 onUnmounted(() => {

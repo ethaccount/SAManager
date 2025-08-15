@@ -10,14 +10,14 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { SUPPORTED_CHAIN_IDS } from '@/config'
 import { CHAIN_ID, displayChainName, SUPPORTED_BUNDLER, SUPPORTED_NODE } from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { Check } from 'lucide-vue-next'
 
 const isOpen = ref(false)
 
-const { selectedChainId, supportedChainIds, selectedNode, selectedBundler, supportedBundlers, supportedNodes } =
-	useBlockchain()
+const { selectedChainId, selectedNode, selectedBundler, supportedBundlers, supportedNodes } = useBlockchain()
 
 function displayBundlerName(bundler: SUPPORTED_BUNDLER) {
 	switch (bundler) {
@@ -85,7 +85,7 @@ function onClickNetworkSelector() {
 			<DropdownMenuSeparator />
 			<DropdownMenuGroup class="space-y-1">
 				<DropdownMenuItem
-					v-for="id in supportedChainIds"
+					v-for="id in SUPPORTED_CHAIN_IDS"
 					:key="id"
 					class="cursor-pointer"
 					:class="selectedChainId === id ? 'bg-accent font-medium' : ''"
