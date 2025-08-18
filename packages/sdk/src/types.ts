@@ -37,3 +37,6 @@ export interface ProviderInterface {
 	on<K extends keyof ProviderEventMap>(event: K, handler: (payload: ProviderEventMap[K]) => void): void
 	removeListener<K extends keyof ProviderEventMap>(event: K, handler: (payload: ProviderEventMap[K]) => void): void
 }
+
+export type Address = string
+export type HexString = string
