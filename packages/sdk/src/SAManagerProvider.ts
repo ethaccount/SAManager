@@ -33,15 +33,24 @@ export class SAManagerProvider implements ProviderInterface {
 		this.accounts = []
 	}
 
+	/**
+	 * request() → handshake() (if needed) → sendRequestToPopup()
+	 * sendRequestToPopup: sendEncryptedRequest() -> decryptResponseMessage() → handleResponse()
+	 */
 	async request(request: RequestArguments) {
-		const correlationId = correlationIds.get(request)
-		console.log('[SAManagerProvider#request]', { method: request.method, correlationId })
+		// Checks if a shared secret exists. If not, it will perform a handshake
+		const sharedSecret = await this.keyManager.getSharedSecret()
+		if (!sharedSecret) {
+			await this.handshake(request)
+		}
 
-		try {
-			const result = await this._request(request)
-			return result
-		} catch (error) {
-			throw error
+		switch (request.method) {
+			case 'eth_requestAccounts': {
+				await this.sendRequestToPopup(request)
+				return this.accounts
+			}
+			default:
+				throw standardErrors.provider.unauthorized()
 		}
 	}
 
@@ -75,32 +84,16 @@ export class SAManagerProvider implements ProviderInterface {
 		return true
 	}
 
-	async _request(request: RequestArguments) {
-		// Check if we need to handshake first
-		const sharedSecret = await this.keyManager.getSharedSecret()
-		if (!sharedSecret) {
-			await this.handshake(request)
-		}
-
-		switch (request.method) {
-			case 'eth_requestAccounts': {
-				await this.sendRequestToPopup(request)
-				return this.accounts
-			}
-
-			default:
-				throw standardErrors.provider.unauthorized()
-		}
-	}
-
 	private async handshake(args: RequestArguments) {
 		const correlationId = correlationIds.get(args)
 
 		try {
+			// 1. Wait for popup to load
 			// Open the popup before constructing the request message.
 			// This is to ensure that the popup is not blocked by some browsers (i.e. Safari)
 			await this.communicator.waitForPopupLoaded?.()
 
+			// 2. Create handshake message with original request embedded
 			const handshakeMessage = await this.createRequestMessage(
 				{
 					handshake: {
@@ -110,6 +103,8 @@ export class SAManagerProvider implements ProviderInterface {
 				},
 				correlationId,
 			)
+
+			// 3. Send handshake (includes our public key in sender field)
 			const response: RPCResponseMessage = await this.communicator.postRequestAndWaitForResponse(handshakeMessage)
 
 			// store peer's public key
@@ -117,12 +112,9 @@ export class SAManagerProvider implements ProviderInterface {
 				throw response.content.failure
 			}
 
+			// 4. Extract peer's public key from response.sender
 			const peerPublicKey = await importKeyFromHexString('public', response.sender)
 			await this.keyManager.setPeerPublicKey(peerPublicKey)
-
-			const decrypted = await this.decryptResponseMessage(response)
-
-			this.handleResponse(args, decrypted)
 		} catch (error) {
 			throw error
 		}
@@ -140,11 +132,13 @@ export class SAManagerProvider implements ProviderInterface {
 	}
 
 	private async sendEncryptedRequest(request: RequestArguments): Promise<RPCResponseMessage> {
+		// 1. Get shared secret (derived from key exchange)
 		const sharedSecret = await this.keyManager.getSharedSecret()
 		if (!sharedSecret) {
 			throw standardErrors.provider.unauthorized('No shared secret found when encrypting request')
 		}
 
+		// 2. Encrypt the actual request + chain context
 		const encrypted = await encryptContent(
 			{
 				action: request,
@@ -152,9 +146,12 @@ export class SAManagerProvider implements ProviderInterface {
 			},
 			sharedSecret,
 		)
+
+		// 3. Wrap in message structure
 		const correlationId = correlationIds.get(request)
 		const message = await this.createRequestMessage({ encrypted }, correlationId)
 
+		// 4. Send to popup
 		return this.communicator.postRequestAndWaitForResponse(message)
 	}
 
@@ -183,9 +180,7 @@ export class SAManagerProvider implements ProviderInterface {
 
 		const sharedSecret = await this.keyManager.getSharedSecret()
 		if (!sharedSecret) {
-			throw standardErrors.provider.unauthorized(
-				'Invalid session: no shared secret found when decrypting response',
-			)
+			throw standardErrors.provider.unauthorized('No shared secret found when decrypting response')
 		}
 
 		const response: RPCResponse = await decryptContent(content.encrypted, sharedSecret)

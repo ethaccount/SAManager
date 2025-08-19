@@ -2,6 +2,7 @@ import type { RequestArguments } from '@/types'
 import type { SerializedEthereumRpcError } from '../error/utils'
 import type { Message, MessageID } from './Message'
 
+// protocol level messages
 interface RPCMessage extends Message {
 	id: MessageID
 	correlationId: string | undefined
@@ -15,6 +16,7 @@ export type EncryptedData = {
 	cipherText: ArrayBuffer
 }
 
+// protocol level request messages
 export interface RPCRequestMessage extends RPCMessage {
 	content:
 		| {
@@ -25,6 +27,7 @@ export interface RPCRequestMessage extends RPCMessage {
 		  }
 }
 
+// protocol level response messages
 export interface RPCResponseMessage extends RPCMessage {
 	requestId: MessageID
 	content:
