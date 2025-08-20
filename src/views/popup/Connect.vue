@@ -29,7 +29,7 @@ const { accountList, isAccountSelected, onClickSelectAccount, onClickUnselectAcc
 			<!-- Header with Network Selector -->
 			<div class="flex justify-between items-center mb-6">
 				<h1 class="text-2xl font-bold">Connect Wallet</h1>
-				<NetworkSelector />
+				<NetworkSelector fixed-chain />
 			</div>
 
 			<!-- Selected Account -->
