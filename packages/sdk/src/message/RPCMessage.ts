@@ -4,6 +4,7 @@ import type { Message, MessageID } from './Message'
 
 // protocol level messages
 interface RPCMessage extends Message {
+	target: 'samanager'
 	id: MessageID
 	correlationId: string | undefined
 	sender: string // hex encoded public key of the sender

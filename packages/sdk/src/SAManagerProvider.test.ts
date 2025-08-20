@@ -1,12 +1,11 @@
 import type { Mock, Mocked } from 'vitest'
 import { Communicator } from './Communicator'
-import { SAManagerProvider, type ProviderEventCallback } from './SAManagerProvider'
-import { KeyManager } from './KeyManager'
-import type { EncryptedData, RPCRequestMessage, RPCResponseMessage } from './message'
-import { decryptContent, encryptContent, exportKeyToHexString } from './utils'
-import { importKeyFromHexString } from './utils'
 import { correlationIds } from './correlationIds'
 import { standardErrors } from './error'
+import { KeyManager } from './KeyManager'
+import type { EncryptedData, RPCRequestMessage, RPCResponseMessage } from './message'
+import { SAManagerProvider, type ProviderEventCallback } from './SAManagerProvider'
+import { decryptContent, encryptContent, exportKeyToHexString, importKeyFromHexString } from './utils'
 
 vi.mock('./Communicator', () => ({
 	Communicator: vi.fn(() => ({
@@ -28,6 +27,7 @@ const mockCryptoKey = {} as CryptoKey
 const encryptedData = {} as EncryptedData
 const mockCorrelationId = '2-2-3-4-5'
 const mockSuccessResponse: RPCResponseMessage = {
+	target: 'samanager',
 	id: '1-2-3-4-5',
 	correlationId: mockCorrelationId,
 	requestId: '1-2-3-4-5',
@@ -117,7 +117,7 @@ describe('SAManagerProvider', () => {
 
 			// Verify encryption of actual request
 			expect(encryptContent).toHaveBeenCalledWith(
-				{ action: { method: 'eth_requestAccounts' }, chainId: 1n },
+				{ action: { method: 'eth_requestAccounts' }, chainId: 1 },
 				mockCryptoKey,
 			)
 
@@ -134,6 +134,7 @@ describe('SAManagerProvider', () => {
 		it('should throw an error if failure in response.content during handshake', async () => {
 			const mockError = standardErrors.provider.unauthorized()
 			const mockFailureResponse: RPCResponseMessage = {
+				target: 'samanager',
 				id: '1-2-3-4-5',
 				correlationId: mockCorrelationId,
 				requestId: '1-2-3-4-5',
@@ -150,7 +151,9 @@ describe('SAManagerProvider', () => {
 			const encryptionError = new Error('Encryption failed')
 			;(encryptContent as Mock).mockRejectedValueOnce(encryptionError)
 
-			await expect(provider.request({ method: 'eth_requestAccounts' })).rejects.toThrowError(encryptionError)
+			await expect(provider.request({ method: 'eth_requestAccounts' })).rejects.toThrowError(
+				new Error('Failed to encrypt request', { cause: encryptionError }),
+			)
 		})
 
 		it('should handle decryption error during response', async () => {

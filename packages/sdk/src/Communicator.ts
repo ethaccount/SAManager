@@ -16,9 +16,11 @@ export class Communicator {
 	private readonly url: URL
 	private popup: Window | null = null
 	private listeners = new Map<(_: MessageEvent) => void, { reject: (_: Error) => void }>()
+	private debug = false
 
-	constructor(url: string) {
+	constructor(url: string, debug = false) {
 		this.url = new URL(url)
+		this.debug = debug
 	}
 
 	/**
@@ -57,6 +59,12 @@ export class Communicator {
 			window.addEventListener('message', listener)
 			this.listeners.set(listener, { reject })
 		})
+	}
+
+	private log(...args: any[]): void {
+		if (this.debug) {
+			console.log('[Communicator]', ...args)
+		}
 	}
 
 	/**

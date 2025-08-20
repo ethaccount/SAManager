@@ -3,7 +3,7 @@ import { DEFAULT_ORIGIN } from './constants'
 import { correlationIds } from './correlationIds'
 import { standardErrors } from './error'
 import { KeyManager } from './KeyManager'
-import type { RPCRequestMessage, RPCResponse, RPCResponseMessage } from './message'
+import type { EncryptedData, RPCRequestMessage, RPCResponse, RPCResponseMessage } from './message'
 import type { EthRequestAccountsResponse } from './rpc'
 import type { Address, ProviderEventMap, ProviderInterface, RequestArguments } from './types'
 import { decryptContent, encryptContent, exportKeyToHexString, importKeyFromHexString } from './utils'
@@ -49,7 +49,7 @@ export class SAManagerProvider implements ProviderInterface {
 
 	constructor({ chainId, origin = DEFAULT_ORIGIN, callback, debug = false }: SAManagerProviderOptions) {
 		this.chainId = chainId
-		this.communicator = new Communicator(origin + '/' + this.chainId.toString() + '/connect')
+		this.communicator = new Communicator(origin + '/' + this.chainId.toString() + '/connect', debug)
 		this.keyManager = new KeyManager()
 		this.callback = callback
 		this.debug = debug
@@ -71,7 +71,6 @@ export class SAManagerProvider implements ProviderInterface {
 
 		switch (request.method) {
 			case 'eth_requestAccounts': {
-				this.log('eth_requestAccounts')
 				await this.sendRequestToPopup(request)
 				return this.accounts
 			}
@@ -136,8 +135,6 @@ export class SAManagerProvider implements ProviderInterface {
 				correlationId,
 			)
 
-			this.log('posting handshake message', handshakeMessage)
-
 			// 3. Send handshake (includes our public key in sender field)
 			const response: RPCResponseMessage = await this.communicator.postRequestAndWaitForResponse(handshakeMessage)
 
@@ -174,13 +171,18 @@ export class SAManagerProvider implements ProviderInterface {
 		}
 
 		// 2. Encrypt the actual request + chain context
-		const encrypted = await encryptContent(
-			{
-				action: request,
-				chainId: this.chainId,
-			},
-			sharedSecret,
-		)
+		let encrypted: EncryptedData
+		try {
+			encrypted = await encryptContent(
+				{
+					action: request,
+					chainId: Number(this.chainId),
+				},
+				sharedSecret,
+			)
+		} catch (error) {
+			throw new Error('Failed to encrypt request', { cause: error })
+		}
 
 		// 3. Wrap in message structure
 		const correlationId = correlationIds.get(request)
@@ -197,6 +199,7 @@ export class SAManagerProvider implements ProviderInterface {
 		const publicKey = await exportKeyToHexString('public', await this.keyManager.getOwnPublicKey())
 
 		return {
+			target: 'samanager',
 			id: crypto.randomUUID(),
 			correlationId,
 			sender: publicKey,

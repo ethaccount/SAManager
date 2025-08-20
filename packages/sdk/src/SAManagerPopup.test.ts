@@ -35,7 +35,7 @@ const mockRandomUUID = vi.fn()
 Object.defineProperty(global, 'window', {
 	value: {
 		addEventListener: mockAddEventListener,
-		parent: {
+		opener: {
 			postMessage: mockPostMessage,
 		},
 	},
@@ -58,6 +58,7 @@ const mockPublicKey = '0xPublicKey'
 const mockOrigin = 'https://example.com'
 
 const mockHandshakeMessage: RPCRequestMessage = {
+	target: 'samanager',
 	id: mockRequestId,
 	correlationId: undefined,
 	requestId: mockRequestId,
@@ -67,6 +68,7 @@ const mockHandshakeMessage: RPCRequestMessage = {
 }
 
 const _mockEncryptedMessage: RPCRequestMessage = {
+	target: 'samanager',
 	id: mockRequestId,
 	correlationId: undefined,
 	requestId: mockRequestId,
@@ -112,7 +114,7 @@ describe('SAManagerPopup', () => {
 		_mockMessageEvent = {
 			data: mockHandshakeMessage,
 			origin: mockOrigin,
-			source: window.parent,
+			source: window.opener,
 		} as MessageEvent<RPCRequestMessage>
 
 		// Create mock wallet request handler
@@ -173,7 +175,7 @@ describe('SAManagerPopup', () => {
 			const invalidOriginMessage = {
 				data: mockHandshakeMessage,
 				origin: 'invalid-origin',
-				source: window.parent,
+				source: window.opener,
 			} as MessageEvent<RPCRequestMessage>
 
 			// Act
@@ -191,6 +193,7 @@ describe('SAManagerPopup', () => {
 
 	describe('handleEncryptedRequest', () => {
 		const mockEncryptedMessage: RPCRequestMessage = {
+			target: 'samanager',
 			id: mockRequestId,
 			correlationId: undefined,
 			requestId: mockRequestId,
@@ -217,7 +220,7 @@ describe('SAManagerPopup', () => {
 			const messageEvent = {
 				data: mockEncryptedMessage,
 				origin: mockOrigin,
-				source: window.parent,
+				source: window.opener,
 			} as MessageEvent<RPCRequestMessage>
 
 			// Get the latest message handler (from the popup we just created)
@@ -249,7 +252,7 @@ describe('SAManagerPopup', () => {
 			const messageEvent = {
 				data: mockEncryptedMessage,
 				origin: mockOrigin,
-				source: window.parent,
+				source: window.opener,
 			} as MessageEvent<RPCRequestMessage>
 
 			const messageHandler = mockAddEventListener.mock.calls.find(
@@ -513,7 +516,7 @@ describe('SAManagerPopup', () => {
 			const messageEvent = {
 				data: mockHandshakeMessage,
 				origin: mockOrigin,
-				source: window.parent,
+				source: window.opener,
 			} as MessageEvent<RPCRequestMessage>
 
 			// Get the event handler that was registered
@@ -554,7 +557,7 @@ describe('SAManagerPopup', () => {
 			const messageEvent = {
 				data: mockHandshakeMessage,
 				origin: mockOrigin,
-				source: window.parent,
+				source: window.opener,
 			} as MessageEvent<RPCRequestMessage>
 
 			const messageHandler = mockAddEventListener.mock.calls.find(
@@ -592,7 +595,7 @@ describe('SAManagerPopup', () => {
 			const messageEvent = {
 				data: mockHandshakeMessage,
 				origin: mockOrigin,
-				source: window.parent,
+				source: window.opener,
 			} as MessageEvent<RPCRequestMessage>
 
 			const messageHandler = mockAddEventListener.mock.calls.find(
@@ -626,7 +629,7 @@ describe('SAManagerPopup', () => {
 			const messageEvent = {
 				data: mockHandshakeMessage,
 				origin: mockOrigin,
-				source: window.parent,
+				source: window.opener,
 			} as MessageEvent<RPCRequestMessage>
 
 			const messageHandler = mockAddEventListener.mock.calls.find(
@@ -666,7 +669,7 @@ describe('SAManagerPopup', () => {
 			const messageEvent = {
 				data: nonHandshakeMessage,
 				origin: mockOrigin,
-				source: window.parent,
+				source: window.opener,
 			} as MessageEvent<RPCRequestMessage>
 
 			const messageHandler = mockAddEventListener.mock.calls.find(

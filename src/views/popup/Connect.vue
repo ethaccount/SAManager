@@ -12,8 +12,8 @@ import { displayChainName } from '@/stores/blockchain/chains'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useSigner } from '@/stores/useSigner'
-import { AlertCircle, CheckCircle, CircleDot, Power, X } from 'lucide-vue-next'
 import { SAManagerPopup } from '@samanager/sdk'
+import { AlertCircle, CheckCircle, CircleDot, Power, X } from 'lucide-vue-next'
 
 const { selectedAccount, isAccountAccessible, isChainIdMatching, isMultichain } = useAccount()
 const { wallet, address, isEOAWalletConnected, disconnect, isEOAWalletSupported } = useEOAWallet()
@@ -23,15 +23,13 @@ const { selectSigner, selectedSigner } = useSigner()
 const { accountList, isAccountSelected, onClickSelectAccount, onClickUnselectAccount } = useAccountList()
 
 const route = useRoute()
-
-const chainId = route.query.chainId as string
+const chainId = route.params.chainId as string
 if (chainId) {
-	const popup = new SAManagerPopup({
+	new SAManagerPopup({
 		debug: true,
 		chainId: BigInt(chainId),
 		walletRequestHandler: async (method, params) => {
-			console.log('method', method)
-			console.log('params', params)
+			console.log('walletRequestHandler', method, params)
 		},
 	})
 }

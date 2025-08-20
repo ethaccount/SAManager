@@ -38,6 +38,10 @@ export class SAManagerPopup {
 	 */
 	private setupListener() {
 		window.addEventListener('message', async event => {
+			if (event.data.target !== 'samanager') {
+				return
+			}
+
 			// Store parent origin from first valid message
 			if (!this.parentOrigin && this.isValidOrigin(event.origin)) {
 				this.parentOrigin = event.origin
@@ -54,8 +58,11 @@ export class SAManagerPopup {
 			try {
 				if (this.isHandshakeMessage(message)) {
 					await this.handleHandshake(message, event.origin)
+					this.log('handshake completed')
 				} else if (this.isEncryptedMessage(message)) {
 					await this.handleEncryptedRequest(message, event.origin)
+				} else {
+					this.log('received unknown message', message)
 				}
 			} catch (error) {
 				console.error('Error processing message:', error)
@@ -81,7 +88,7 @@ export class SAManagerPopup {
 			const response = await this.createEncryptedResponse(message.id, {
 				result: { value: 'handshake_complete' },
 			})
-			window.parent.postMessage(response, origin)
+			window.opener.postMessage(response, origin)
 		} catch (error) {
 			await this.sendErrorResponse(message.id, error, origin)
 		}
@@ -105,7 +112,7 @@ export class SAManagerPopup {
 			const decryptedRequest: RPCRequest = await decryptContent(message.content.encrypted, sharedSecret)
 
 			// 2. Update chain context if needed
-			this.updateChain(decryptedRequest.chainId)
+			this.updateChain(BigInt(decryptedRequest.chainId))
 
 			// 3. Process the decrypted request using the provided handler
 			const result = await this.walletRequestHandler(
@@ -115,7 +122,7 @@ export class SAManagerPopup {
 
 			// 4. Create and send encrypted response
 			const response = await this.createEncryptedResponse(message.id, { result: { value: result } })
-			window.parent.postMessage(response, origin)
+			window.opener.postMessage(response, origin)
 		} catch (error) {
 			await this.sendErrorResponse(message.id, error, origin)
 		}
@@ -131,6 +138,7 @@ export class SAManagerPopup {
 		const ownPublicKey = await exportKeyToHexString('public', await this.keyManager.getOwnPublicKey())
 
 		return {
+			target: 'samanager',
 			id: crypto.randomUUID() as `${string}-${string}-${string}-${string}-${string}`,
 			correlationId: undefined,
 			requestId: requestId as `${string}-${string}-${string}-${string}-${string}`,
@@ -144,6 +152,7 @@ export class SAManagerPopup {
 		try {
 			const ownPublicKey = await exportKeyToHexString('public', await this.keyManager.getOwnPublicKey())
 			const errorResponse: RPCResponseMessage = {
+				target: 'samanager',
 				id: crypto.randomUUID() as `${string}-${string}-${string}-${string}-${string}`,
 				correlationId: undefined,
 				requestId: requestId as `${string}-${string}-${string}-${string}-${string}`,
@@ -152,7 +161,7 @@ export class SAManagerPopup {
 				timestamp: new Date(),
 			}
 
-			window.parent.postMessage(errorResponse, origin)
+			window.opener.postMessage(errorResponse, origin)
 		} catch (responseError) {
 			console.error('Failed to send error response:', responseError)
 		}
@@ -167,7 +176,7 @@ export class SAManagerPopup {
 		}
 
 		// Use '*' initially since we don't know parent origin yet
-		window.parent.postMessage(loadedMessage, '*')
+		window.opener.postMessage(loadedMessage, '*')
 	}
 
 	private updateChain(chainId: bigint): void {
