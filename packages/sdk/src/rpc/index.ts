@@ -1,1 +1,2 @@
-export * from './eth_requestAccounts'
+export * from './eip1193'
+export * from './eip5792'

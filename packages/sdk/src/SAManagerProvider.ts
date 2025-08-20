@@ -4,7 +4,7 @@ import { correlationIds } from './correlationIds'
 import { standardErrors } from './error'
 import { KeyManager } from './KeyManager'
 import type { RPCRequestMessage, RPCResponse, RPCResponseMessage } from './message'
-import type { EthRequestAccountsResponse } from './rpc/eth_requestAccounts'
+import type { EthRequestAccountsResponse } from './rpc'
 import type { Address, ProviderEventMap, ProviderInterface, RequestArguments } from './types'
 import { decryptContent, encryptContent, exportKeyToHexString, importKeyFromHexString } from './utils'
 
