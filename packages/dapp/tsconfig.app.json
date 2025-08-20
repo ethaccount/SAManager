@@ -21,8 +21,7 @@
 		"noFallthroughCasesInSwitch": true,
 		"baseUrl": ".",
 		"paths": {
-			"@/*": ["./src/*"],
-			"samanager-sdk": ["../sdk/src"]
+			"@/*": ["./src/*"]
 		},
 		"noImplicitAny": false, // prevents error in router.ts when importing component
 		"types": ["vitest/globals"]

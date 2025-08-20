@@ -27,8 +27,7 @@ export default defineConfig({
 			entry: {
 				index: 'src/index.ts',
 			},
-			formats: ['es'], // only ES modules
-			fileName: (_format, entryName) => `${entryName}.js`,
+			formats: ['es'],
 		},
 		outDir: 'dist',
 	},

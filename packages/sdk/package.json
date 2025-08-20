@@ -1,5 +1,5 @@
 {
-	"name": "samanager-sdk",
+	"name": "@samanager/sdk",
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
@@ -23,7 +23,8 @@
 		"typecheck": "tsc -p tsconfig.json --noEmit",
 		"lint": "eslint src/",
 		"lint:fix": "eslint src/ --fix",
-		"prepare": "bun husky"
+		"prepare": "bun husky",
+		"check": "pnpm typecheck && pnpm lint"
 	},
 	"files": [
 		"dist",

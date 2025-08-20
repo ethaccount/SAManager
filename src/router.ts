@@ -54,6 +54,12 @@ const router = createRouter({
 							name: 'create',
 							component: () => import('@/views/Create.vue'),
 						},
+						// Connect
+						{
+							path: '/:chainId/connect',
+							name: 'connect',
+							component: () => import('@/views/popup/Connect.vue'),
+						},
 						// Account Management
 						{
 							path: '/:chainId/:address',
@@ -114,11 +120,6 @@ const router = createRouter({
 							path: '/:chainId/browser',
 							name: 'browser',
 							component: () => import('@/views/Browser.vue'),
-						},
-						{
-							path: '/:chainId/connect',
-							name: 'connect',
-							component: () => import('@/views/popup/Connect.vue'),
 						},
 					],
 				},

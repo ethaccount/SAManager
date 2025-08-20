@@ -1,4 +1,5 @@
-import type { Communicator } from './Communicator'
+import { Communicator } from './Communicator'
+import { DEFAULT_ORIGIN } from './constants'
 import { correlationIds } from './correlationIds'
 import { standardErrors } from './error'
 import { KeyManager } from './KeyManager'
@@ -9,25 +10,43 @@ import { decryptContent, encryptContent, exportKeyToHexString, importKeyFromHexS
 
 export type ProviderEventCallback = ProviderInterface['emit']
 
+export type SAManagerProviderOptions = {
+	chainId: bigint
+	origin?: string
+	callback?: ProviderEventCallback
+}
+
+export function announceSAManagerProvider({ chainId, origin, callback }: SAManagerProviderOptions) {
+	window.dispatchEvent(
+		new CustomEvent('eip6963:announceProvider', {
+			detail: {
+				info: {
+					uuid: crypto.randomUUID(),
+					name: 'SAManager',
+					icon: 'https://samanager.xyz/favicon_io/favicon-32x32.png',
+					rdns: 'xyz.samanager',
+				},
+				provider: new SAManagerProvider({
+					chainId,
+					origin,
+					callback,
+				}),
+			},
+		}),
+	)
+}
+
 export class SAManagerProvider implements ProviderInterface {
 	private readonly communicator: Communicator
 	private readonly keyManager: KeyManager
-	private callback: ProviderEventCallback | null
+	private callback: ProviderEventCallback | undefined
 
 	private accounts: Address[]
 	private chainId: bigint
 
-	constructor({
-		chainId,
-		communicator,
-		callback,
-	}: {
-		chainId: bigint
-		communicator: Communicator
-		callback: ProviderEventCallback | null
-	}) {
+	constructor({ chainId, origin = DEFAULT_ORIGIN, callback }: SAManagerProviderOptions) {
 		this.chainId = chainId
-		this.communicator = communicator
+		this.communicator = new Communicator(origin + '/' + this.chainId.toString() + '/connect')
 		this.keyManager = new KeyManager()
 		this.callback = callback
 		this.accounts = []

@@ -1,6 +1,5 @@
-import type { EncryptedData } from '@/message'
-import type { RPCRequest, RPCResponse } from '@/message'
-import { hexStringToUint8Array, uint8ArrayToHex } from '@/utils'
+import type { EncryptedData, RPCRequest, RPCResponse } from '@/message'
+import { hexStringToUint8Array, uint8ArrayToHex } from './conversion'
 
 export async function generateKeyPair(): Promise<CryptoKeyPair> {
 	return crypto.subtle.generateKey(

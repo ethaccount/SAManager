@@ -22,6 +22,8 @@ vi.mock('./utils', () => ({
 	importKeyFromHexString: vi.fn(),
 }))
 
+const MOCK_URL = 'http://localhost:3000/connect'
+
 const mockCryptoKey = {} as CryptoKey
 const encryptedData = {} as EncryptedData
 const mockCorrelationId = '2-2-3-4-5'
@@ -41,7 +43,8 @@ describe('SAManagerProvider', () => {
 	let mockKeyManager: Mocked<KeyManager>
 
 	beforeEach(async () => {
-		mockCommunicator = new Communicator() as Mocked<Communicator>
+		mockCommunicator = new Communicator(MOCK_URL) as Mocked<Communicator>
+		;(Communicator as Mock).mockImplementation(() => mockCommunicator)
 		mockCommunicator.waitForPopupLoaded.mockResolvedValue({} as Window)
 		mockCommunicator.postRequestAndWaitForResponse.mockResolvedValue(mockSuccessResponse)
 
@@ -53,11 +56,11 @@ describe('SAManagerProvider', () => {
 		;(importKeyFromHexString as Mock).mockResolvedValue(mockCryptoKey)
 		;(exportKeyToHexString as Mock).mockResolvedValueOnce('0xPublicKey')
 		;(encryptContent as Mock).mockResolvedValue(encryptedData)
+
 		vi.spyOn(correlationIds, 'get').mockReturnValue(mockCorrelationId)
 
 		provider = new SAManagerProvider({
 			chainId: 1n,
-			communicator: mockCommunicator,
 			callback: mockCallback,
 		})
 	})

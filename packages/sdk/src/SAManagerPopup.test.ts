@@ -207,6 +207,12 @@ describe('SAManagerPopup', () => {
 			// Arrange
 			const mockWalletHandler = vi.fn().mockResolvedValue(['0x742d35Cc6634C0532925a3b8D1D8c8D7C94b5b8B'])
 
+			// Create the popup instance with the mock handler
+			new SAManagerPopup({
+				chainId: 1n,
+				walletRequestHandler: mockWalletHandler,
+			})
+
 			// Act
 			const messageEvent = {
 				data: mockEncryptedMessage,
@@ -224,7 +230,7 @@ describe('SAManagerPopup', () => {
 			// Assert
 			expect(mockKeyManager.getSharedSecret).toHaveBeenCalled()
 			expect(decryptContent).toHaveBeenCalledWith(encryptedData, mockCryptoKey)
-			expect(mockWalletHandler).toHaveBeenCalledWith('eth_requestAccounts', [])
+			expect(mockWalletHandler).toHaveBeenCalledWith('eth_requestAccounts', []) // Now this will pass
 			expect(encryptContent).toHaveBeenCalledWith(
 				{ result: { value: ['0x742d35Cc6634C0532925a3b8D1D8c8D7C94b5b8B'] } },
 				mockCryptoKey,

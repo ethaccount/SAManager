@@ -1,6 +1,6 @@
 import { type Mock, vi } from 'vitest'
 import { Communicator } from './Communicator'
-import { DEFAULT_URL, VERSION } from './constants'
+import { VERSION } from './constants'
 import type { Message, MessageID } from './message'
 import { openPopup } from './popup'
 
@@ -21,6 +21,7 @@ const popupLoadedMessage = {
 	data: { event: 'PopupLoaded' },
 }
 
+const MOCK_URL = 'http://localhost:3000/connect'
 /**
  * Queues a message event to be dispatched after a delay.
  *
@@ -30,7 +31,7 @@ const popupLoadedMessage = {
  */
 function queueMessageEvent({
 	data,
-	origin = new URL(DEFAULT_URL).origin,
+	origin = new URL(MOCK_URL).origin,
 }: {
 	data: Record<string, any>
 	origin?: string
@@ -49,11 +50,8 @@ describe('Communicator', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
 
-		// url defaults to DEFAULT_URL
-		communicator = new Communicator({
-			url: DEFAULT_URL,
-		})
-		urlOrigin = new URL(DEFAULT_URL).origin
+		communicator = new Communicator(MOCK_URL)
+		urlOrigin = new URL(MOCK_URL).origin
 
 		mockPopup = {
 			postMessage: vi.fn(),
@@ -140,7 +138,7 @@ describe('Communicator', () => {
 
 			const popup = await communicator.waitForPopupLoaded()
 
-			expect(openPopup).toHaveBeenCalledWith(new URL(DEFAULT_URL))
+			expect(openPopup).toHaveBeenCalledWith(new URL(MOCK_URL))
 			expect(mockPopup.postMessage).toHaveBeenNthCalledWith(
 				1,
 				{

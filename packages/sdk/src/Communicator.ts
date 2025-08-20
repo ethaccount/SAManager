@@ -1,12 +1,7 @@
-import { DEFAULT_URL } from './constants'
 import { VERSION } from './constants.js'
 import { standardErrors } from './error'
 import type { ConfigMessage, Message, MessageID } from './message'
 import { closePopup, openPopup } from './popup.js'
-
-export type CommunicatorOptions = {
-	url?: string
-}
 
 /**
  * Communicates with a popup window for Coinbase keys.coinbase.com (or another url)
@@ -22,7 +17,7 @@ export class Communicator {
 	private popup: Window | null = null
 	private listeners = new Map<(_: MessageEvent) => void, { reject: (_: Error) => void }>()
 
-	constructor({ url = DEFAULT_URL }: CommunicatorOptions = {}) {
+	constructor(url: string) {
 		this.url = new URL(url)
 	}
 

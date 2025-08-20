@@ -14,7 +14,8 @@ export default defineConfig({
 		nodePolyfills(),
 		AutoImport({
 			dts: 'src/auto-import.d.ts',
-			imports: ['vue', 'vue-router', 'pinia', '@vueuse/core', 'vitest'],
+			ignore: ['h'], // Don't auto-import Vue's h function. Prevents naming conflict with the SDK's h variable.
+			imports: ['vue', 'vue-router', 'pinia', '@vueuse/core'],
 			eslintrc: {
 				enabled: true,
 			},
@@ -26,7 +27,6 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			'@': fileURLToPath(new URL('./src', import.meta.url)),
-			'samanager-sdk': fileURLToPath(new URL('../sdk/src', import.meta.url)),
 		},
 	},
 })

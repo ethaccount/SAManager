@@ -3,14 +3,16 @@ import { BrowserWalletConnector, useVueDapp } from '@vue-dapp/core'
 import { useVueDappModal, VueDappModal } from '@vue-dapp/modal'
 import '@vue-dapp/modal/dist/style.css'
 import { announceSAManagerProvider } from 'samanager-sdk'
-import { nextTick, onMounted } from 'vue'
 
 const { wallet, isConnected, addConnectors, watchWalletChanged, watchDisconnect, disconnect } = useVueDapp()
 
 addConnectors([new BrowserWalletConnector()])
 
 // Announce SAManager as an EIP-6963 provider
-announceSAManagerProvider({ samanagerUrl: 'http://localhost:5173' })
+announceSAManagerProvider({
+	chainId: 11155111n,
+	origin: 'http://localhost:5173',
+})
 
 watchWalletChanged(async wallet => {
 	console.log('wallet', wallet)
@@ -53,10 +55,10 @@ function onClickConnectButton() {
 		disconnect()
 	} else {
 		useVueDappModal().open()
-		// Auto-click SAManager after modal opens
-		nextTick(() => {
-			setTimeout(autoClickSAManager, 100) // Small delay to ensure modal is rendered
-		})
+		// // Auto-click SAManager after modal opens
+		// nextTick(() => {
+		// 	setTimeout(autoClickSAManager, 100) // Small delay to ensure modal is rendered
+		// })
 	}
 }
 
