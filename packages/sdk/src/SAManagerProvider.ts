@@ -84,8 +84,8 @@ export class SAManagerProvider implements ProviderInterface {
 		return true
 	}
 
-	private async handshake(args: RequestArguments) {
-		const correlationId = correlationIds.get(args)
+	private async handshake(request: RequestArguments) {
+		const correlationId = correlationIds.get(request)
 
 		try {
 			// 1. Wait for popup to load
@@ -97,8 +97,8 @@ export class SAManagerProvider implements ProviderInterface {
 			const handshakeMessage = await this.createRequestMessage(
 				{
 					handshake: {
-						method: args.method,
-						params: args.params ?? [],
+						method: request.method,
+						params: request.params ?? [],
 					},
 				},
 				correlationId,
