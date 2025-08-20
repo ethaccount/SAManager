@@ -11,15 +11,26 @@ export class SAManagerPopup {
 	private readonly keyManager: KeyManager
 	private readonly walletRequestHandler: WalletRequestHandler
 	private parentOrigin: string | null = null
+	private debug: boolean
 
-	constructor({ chainId, walletRequestHandler }: { chainId: bigint; walletRequestHandler: WalletRequestHandler }) {
+	constructor({
+		chainId,
+		walletRequestHandler,
+		debug = false,
+	}: {
+		chainId: bigint
+		walletRequestHandler: WalletRequestHandler
+		debug?: boolean
+	}) {
 		this.chainId = chainId
 		this.keyManager = new KeyManager()
 		this.walletRequestHandler = walletRequestHandler
+		this.debug = debug
 
 		this.setupListener()
 		// Notify parent that popup is ready to receive messages
 		this.notifyParentLoaded()
+		if (debug) this.log('SAManagerPopup initialized')
 	}
 
 	/**
@@ -164,6 +175,12 @@ export class SAManagerPopup {
 			this.chainId = chainId
 			// In a real implementation, this might trigger UI updates
 			console.log('Chain updated to:', chainId.toString())
+		}
+	}
+
+	private log(...args: any[]): void {
+		if (this.debug) {
+			console.log('[SAManagerPopup]', ...args)
 		}
 	}
 

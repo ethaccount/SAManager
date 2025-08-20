@@ -33,6 +33,7 @@
 		"check": "pnpm typecheck && pnpm lint"
 	},
 	"dependencies": {
+		"@samanager/sdk": "workspace:*",
 		"@internationalized/date": "^3.7.0",
 		"@noble/curves": "^1.8.1",
 		"@rhinestone/module-sdk": "^0.2.10",

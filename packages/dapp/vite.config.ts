@@ -27,6 +27,7 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			'@': fileURLToPath(new URL('./src', import.meta.url)),
+			'@samanager/sdk': fileURLToPath(new URL('../sdk/src/index.ts', import.meta.url)),
 		},
 	},
 })

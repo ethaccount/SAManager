@@ -1,17 +1,22 @@
 <script setup lang="ts">
+import { announceSAManagerProvider } from '@samanager/sdk'
 import { BrowserWalletConnector, useVueDapp } from '@vue-dapp/core'
 import { useVueDappModal, VueDappModal } from '@vue-dapp/modal'
 import '@vue-dapp/modal/dist/style.css'
-import { announceSAManagerProvider } from 'samanager-sdk'
 
-const { wallet, isConnected, addConnectors, watchWalletChanged, watchDisconnect, disconnect } = useVueDapp()
+const { wallet, isConnected, connectors, addConnectors, watchWalletChanged, watchDisconnect, disconnect } = useVueDapp()
 
-addConnectors([new BrowserWalletConnector()])
+onMounted(() => {
+	if (!connectors.value.find(connector => connector.name === 'BrowserWallet')) {
+		addConnectors([new BrowserWalletConnector()])
+	}
 
-// Announce SAManager as an EIP-6963 provider
-announceSAManagerProvider({
-	chainId: 11155111n,
-	origin: 'http://localhost:5173',
+	// Announce SAManager as an EIP-6963 provider
+	announceSAManagerProvider({
+		debug: true,
+		chainId: 11155111n,
+		origin: 'http://localhost:5173',
+	})
 })
 
 watchWalletChanged(async wallet => {

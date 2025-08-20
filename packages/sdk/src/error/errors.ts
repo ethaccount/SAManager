@@ -1,7 +1,7 @@
-import type { Address } from '@/types'
+import type { Address } from '../types'
 import { standardErrorCodes } from './constants'
-import { getMessageFromCode } from './utils'
 import type { ErrorResponse } from './types'
+import { getMessageFromCode } from './utils'
 
 export function isErrorResponse(response: unknown): response is ErrorResponse {
 	return (response as ErrorResponse).errorMessage !== undefined

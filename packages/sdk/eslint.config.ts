@@ -30,6 +30,6 @@ export default [
 		},
 	},
 	{
-		ignores: ['node_modules/**', 'dist/**', '**/*.d.ts'],
+		ignores: ['node_modules/**', 'dist/**', '*.d.ts', 'stats.html', 'vite.config.js', 'vitest.config.ts'],
 	},
 ]

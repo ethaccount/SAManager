@@ -28,11 +28,7 @@
 		"declaration": true,
 		"declarationMap": true,
 
-		// resolve @
 		"baseUrl": ".",
-		"paths": {
-			"@/*": ["./src/*"]
-		},
 		"types": ["node", "vitest/globals"]
 	},
 	"include": ["src/**/*.ts", "test/**/*.ts", "script/**/*.ts"]

@@ -1,4 +1,4 @@
-import type { Address, HexString } from '@/types'
+import type { Address, HexString } from '../types'
 
 export type Web3Response<M = string> = SuccessResponse<M> | ErrorResponse
 

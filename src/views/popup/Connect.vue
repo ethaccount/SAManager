@@ -13,14 +13,32 @@ import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useSigner } from '@/stores/useSigner'
 import { AlertCircle, CheckCircle, CircleDot, Power, X } from 'lucide-vue-next'
+import { SAManagerPopup } from '@samanager/sdk'
 
 const { selectedAccount, isAccountAccessible, isChainIdMatching, isMultichain } = useAccount()
 const { wallet, address, isEOAWalletConnected, disconnect, isEOAWalletSupported } = useEOAWallet()
 const { isLogin, resetCredentialId, selectedCredentialDisplay, isPasskeySupported } = usePasskey()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 const { selectSigner, selectedSigner } = useSigner()
-
 const { accountList, isAccountSelected, onClickSelectAccount, onClickUnselectAccount } = useAccountList()
+
+const route = useRoute()
+
+const chainId = route.query.chainId as string
+if (chainId) {
+	const popup = new SAManagerPopup({
+		debug: true,
+		chainId: BigInt(chainId),
+		walletRequestHandler: async (method, params) => {
+			console.log('method', method)
+			console.log('params', params)
+		},
+	})
+}
+
+function onClickConnect() {
+	console.log('onClickConnect')
+}
 </script>
 
 <template>
@@ -83,7 +101,7 @@ const { accountList, isAccountSelected, onClickSelectAccount, onClickUnselectAcc
 					</div>
 				</div>
 				<div class="mt-4">
-					<Button class="w-full" :disabled="!selectedAccount || !isAccountAccessible">
+					<Button class="w-full" :disabled="!selectedAccount || !isAccountAccessible" @click="onClickConnect">
 						{{ selectedAccount ? 'Connect' : 'Select an account to connect' }}
 					</Button>
 				</div>

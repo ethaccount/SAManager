@@ -1,4 +1,4 @@
-import type { Address } from '@/types'
+import type { Address } from '../types'
 
 // eth_requestAccounts
 export type EthRequestAccountsRequest = {

@@ -1,12 +1,8 @@
-import { defineConfig } from 'vite'
-import path from 'path'
-import dts from 'vite-plugin-dts'
 import { visualizer } from 'rollup-plugin-visualizer'
+import { defineConfig } from 'vite'
+import dts from 'vite-plugin-dts'
 
 export default defineConfig({
-	resolve: {
-		alias: { '@': path.resolve(__dirname, 'src') },
-	},
 	plugins: [
 		dts({
 			tsconfigPath: './tsconfig.json',

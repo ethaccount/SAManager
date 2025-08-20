@@ -14,9 +14,10 @@ export type SAManagerProviderOptions = {
 	chainId: bigint
 	origin?: string
 	callback?: ProviderEventCallback
+	debug?: boolean
 }
 
-export function announceSAManagerProvider({ chainId, origin, callback }: SAManagerProviderOptions) {
+export function announceSAManagerProvider({ chainId, origin, callback, debug }: SAManagerProviderOptions) {
 	window.dispatchEvent(
 		new CustomEvent('eip6963:announceProvider', {
 			detail: {
@@ -30,6 +31,7 @@ export function announceSAManagerProvider({ chainId, origin, callback }: SAManag
 					chainId,
 					origin,
 					callback,
+					debug,
 				}),
 			},
 		}),
@@ -40,16 +42,19 @@ export class SAManagerProvider implements ProviderInterface {
 	private readonly communicator: Communicator
 	private readonly keyManager: KeyManager
 	private callback: ProviderEventCallback | undefined
+	private debug: boolean
 
 	private accounts: Address[]
 	private chainId: bigint
 
-	constructor({ chainId, origin = DEFAULT_ORIGIN, callback }: SAManagerProviderOptions) {
+	constructor({ chainId, origin = DEFAULT_ORIGIN, callback, debug = false }: SAManagerProviderOptions) {
 		this.chainId = chainId
 		this.communicator = new Communicator(origin + '/' + this.chainId.toString() + '/connect')
 		this.keyManager = new KeyManager()
 		this.callback = callback
+		this.debug = debug
 		this.accounts = []
+		if (debug) this.log('SAManagerProvider initialized')
 	}
 
 	/**
@@ -57,6 +62,7 @@ export class SAManagerProvider implements ProviderInterface {
 	 * sendRequestToPopup: sendEncryptedRequest() -> decryptResponseMessage() → handleResponse()
 	 */
 	async request(request: RequestArguments) {
+		this.log('request', request)
 		// Checks if a shared secret exists. If not, it will perform a handshake
 		const sharedSecret = await this.keyManager.getSharedSecret()
 		if (!sharedSecret) {
@@ -65,6 +71,7 @@ export class SAManagerProvider implements ProviderInterface {
 
 		switch (request.method) {
 			case 'eth_requestAccounts': {
+				this.log('eth_requestAccounts')
 				await this.sendRequestToPopup(request)
 				return this.accounts
 			}
@@ -75,25 +82,31 @@ export class SAManagerProvider implements ProviderInterface {
 
 	async disconnect(): Promise<void> {
 		// TODO: Implement wallet disconnect logic
-		console.log('disconnect called')
+		this.log('disconnect called')
 	}
 
 	emit<K extends keyof ProviderEventMap>(event: K, payload: ProviderEventMap[K]): void {
 		// TODO: Implement event emission logic
-		console.log('emit', event, payload)
+		this.log('emit', event, payload)
 	}
 
 	on<K extends keyof ProviderEventMap>(event: K, handler: (payload: ProviderEventMap[K]) => void): void {
-		console.log('on', event, handler)
+		this.log('on', event, handler)
 		// TODO: Implement event listener registration
 	}
 
 	removeListener<K extends keyof ProviderEventMap>(event: K, handler: (payload: ProviderEventMap[K]) => void): void {
-		console.log('removeListener', event, handler)
+		this.log('removeListener', event, handler)
 		// TODO: Implement event listener removal
 	}
 
 	// =============================== PRIVATE METHODS ===============================
+
+	private log(...args: any[]): void {
+		if (this.debug) {
+			console.log('[SAManagerProvider]', ...args)
+		}
+	}
 
 	private updateChain(chainId: bigint): boolean {
 		if (chainId !== this.chainId) {
@@ -123,6 +136,8 @@ export class SAManagerProvider implements ProviderInterface {
 				correlationId,
 			)
 
+			this.log('posting handshake message', handshakeMessage)
+
 			// 3. Send handshake (includes our public key in sender field)
 			const response: RPCResponseMessage = await this.communicator.postRequestAndWaitForResponse(handshakeMessage)
 
@@ -134,6 +149,7 @@ export class SAManagerProvider implements ProviderInterface {
 			// 4. Extract peer's public key from response.sender
 			const peerPublicKey = await importKeyFromHexString('public', response.sender)
 			await this.keyManager.setPeerPublicKey(peerPublicKey)
+			this.log('handshake completed')
 		} catch (error) {
 			throw error
 		}

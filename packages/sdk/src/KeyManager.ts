@@ -1,5 +1,5 @@
 import { keyStorage } from './KeyStorage.js'
-import { deriveSharedSecret, exportKeyToHexString, generateKeyPair, importKeyFromHexString } from '@/utils'
+import { deriveSharedSecret, exportKeyToHexString, generateKeyPair, importKeyFromHexString } from './utils'
 
 interface StorageItem {
 	storageKey: string

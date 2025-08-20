@@ -3,5 +3,6 @@ export function uint8ArrayToHex(value: Uint8Array) {
 }
 
 export function hexStringToUint8Array(hexString: string): Uint8Array {
+	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 	return new Uint8Array(hexString.match(/.{1,2}/g)!.map(byte => Number.parseInt(byte, 16)))
 }

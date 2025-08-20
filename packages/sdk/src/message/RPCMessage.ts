@@ -1,5 +1,5 @@
-import type { RequestArguments } from '@/types'
 import type { SerializedEthereumRpcError } from '../error/utils'
+import type { RequestArguments } from '../types'
 import type { Message, MessageID } from './Message'
 
 // protocol level messages
