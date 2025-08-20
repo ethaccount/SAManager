@@ -8,11 +8,12 @@ import { AccountRegistry } from '@/lib/accounts'
 import { useAccountList } from '@/lib/accounts/useAccountList'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
 import { useAccount } from '@/stores/account/useAccount'
+import { useBlockchain } from '@/stores/blockchain'
 import { displayChainName } from '@/stores/blockchain/chains'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useSigner } from '@/stores/useSigner'
-import { SAManagerPopup } from '@samanager/sdk'
+import { SAManagerPopup, standardErrors } from '@samanager/sdk'
 import { AlertCircle, CheckCircle, CircleDot, Power, X } from 'lucide-vue-next'
 
 const { selectedAccount, isAccountAccessible, isChainIdMatching, isMultichain } = useAccount()
@@ -22,26 +23,76 @@ const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 const { selectSigner, selectedSigner } = useSigner()
 const { accountList, isAccountSelected, onClickSelectAccount, onClickUnselectAccount } = useAccountList()
 
+type PendingRequest = {
+	method: string
+	params: unknown[]
+	resolve: (value: unknown) => void
+	reject: (reason?: unknown) => void
+}
+
+const pendingRequest = ref<PendingRequest | null>(null)
+
 const route = useRoute()
 const chainId = route.params.chainId as string
+
 if (chainId) {
 	new SAManagerPopup({
 		debug: true,
 		chainId: BigInt(chainId),
 		walletRequestHandler: async (method, params) => {
 			console.log('walletRequestHandler', method, params)
+
+			switch (method) {
+				case 'eth_chainId': {
+					return new Promise(async (resolve, _) => {
+						const { client } = useBlockchain()
+						const chainId = await client.value.send('eth_chainId', [])
+						resolve(chainId)
+					})
+				}
+				case 'eth_requestAccounts': {
+					if (!selectedAccount.value) {
+						throw standardErrors.provider.userRejectedRequest()
+					}
+					return new Promise((resolve, reject) => {
+						pendingRequest.value = { method, params, resolve, reject }
+					})
+				}
+				default: {
+					throw standardErrors.provider.unsupportedMethod({
+						message: `Method ${method} not supported`,
+					})
+				}
+			}
 		},
 	})
 }
 
 function onClickConnect() {
-	console.log('onClickConnect')
+	try {
+		if (!pendingRequest.value) {
+			throw new Error('No pending request')
+		}
+		console.log('onClickConnect')
+		if (!selectedAccount.value) {
+			throw standardErrors.provider.userRejectedRequest()
+		} else {
+			pendingRequest.value.resolve([selectedAccount.value.address])
+		}
+	} catch (error) {
+		console.error('Error onClickConnect', error)
+		pendingRequest.value?.reject(error)
+	} finally {
+		pendingRequest.value = null
+		window.close()
+	}
 }
 </script>
 
 <template>
 	<CenterStageLayout>
-		<div class="w-full max-w-2xl mx-auto p-6 space-y-6">
+		<!-- eth_requestAccounts -->
+		<div v-if="pendingRequest?.method === 'eth_requestAccounts'" class="w-full max-w-2xl mx-auto p-6 space-y-6">
 			<!-- Header with Network Selector -->
 			<div class="flex justify-between items-center mb-6">
 				<h1 class="text-2xl font-bold">Connect Wallet</h1>

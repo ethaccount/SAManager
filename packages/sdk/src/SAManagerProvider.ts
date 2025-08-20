@@ -6,7 +6,7 @@ import { KeyManager } from './KeyManager'
 import type { EncryptedData, RPCRequestMessage, RPCResponse, RPCResponseMessage } from './message'
 import type { EthRequestAccountsResponse } from './rpc'
 import type { Address, ProviderEventMap, ProviderInterface, RequestArguments } from './types'
-import { decryptContent, encryptContent, exportKeyToHexString, importKeyFromHexString } from './utils'
+import { bigIntToHex, decryptContent, encryptContent, exportKeyToHexString, importKeyFromHexString } from './utils'
 
 export type ProviderEventCallback = ProviderInterface['emit']
 
@@ -48,6 +48,7 @@ export class SAManagerProvider implements ProviderInterface {
 	private chainId: bigint
 
 	constructor({ chainId, origin = DEFAULT_ORIGIN, callback, debug = false }: SAManagerProviderOptions) {
+		// check if the chainId is supported in SAManager
 		this.chainId = chainId
 		this.communicator = new Communicator(origin + '/' + this.chainId.toString() + '/connect', debug)
 		this.keyManager = new KeyManager()
@@ -70,12 +71,21 @@ export class SAManagerProvider implements ProviderInterface {
 		}
 
 		switch (request.method) {
+			case 'eth_chainId': {
+				// Direct return the chainId set in the constructor
+				return this.handleResponse(request, {
+					result: {
+						value: bigIntToHex(this.chainId),
+					},
+				})
+			}
 			case 'eth_requestAccounts': {
 				await this.sendRequestToPopup(request)
+				this.log('requestAccounts completed', this.accounts)
 				return this.accounts
 			}
 			default:
-				throw standardErrors.provider.unauthorized()
+				await this.sendRequestToPopup(request)
 		}
 	}
 
@@ -110,7 +120,7 @@ export class SAManagerProvider implements ProviderInterface {
 	private updateChain(chainId: bigint): boolean {
 		if (chainId !== this.chainId) {
 			this.chainId = chainId
-			this.callback?.('chainChanged', chainId.toString(16))
+			this.callback?.('chainChanged', bigIntToHex(chainId))
 		}
 		return true
 	}
@@ -238,9 +248,8 @@ export class SAManagerProvider implements ProviderInterface {
 				this.callback?.('accountsChanged', accounts)
 				break
 			}
-			default:
-				break
 		}
+
 		return result.value
 	}
 }
