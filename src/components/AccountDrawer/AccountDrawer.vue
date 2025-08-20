@@ -2,14 +2,11 @@
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { AccountRegistry } from '@/lib/accounts'
+import { useAccountList } from '@/lib/accounts/useAccountList'
 import { toRoute } from '@/lib/router'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
-import { ImportedAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
-import { useAccounts } from '@/stores/account/useAccounts'
-import { useInitCode } from '@/stores/account/useInitCode'
 import { displayChainName } from '@/stores/blockchain/chains'
-import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useImportAccountModal } from '@/stores/useImportAccountModal'
@@ -17,10 +14,7 @@ import { useSigner } from '@/stores/useSigner'
 import { shortenAddress } from '@vue-dapp/core'
 import { breakpointsTailwind } from '@vueuse/core'
 import { AlertCircle, ArrowRight, CheckCircle, CircleDot, Download, Plus, Power, X } from 'lucide-vue-next'
-import { isSameAddress } from 'sendop'
 import { VueFinalModal } from 'vue-final-modal'
-import { useRouter } from 'vue-router'
-import { useConfirmModal } from '../ConfirmModal/useConfirmModal'
 
 const emit = defineEmits<{
 	(e: 'close'): void
@@ -30,94 +24,15 @@ function onClickCloseSidebar() {
 	emit('close')
 }
 
-const { accounts } = useAccounts()
-const { hasInitCode } = useInitCode()
+const router = useRouter()
+
 const { selectedAccount, isAccountAccessible, isChainIdMatching, isMultichain } = useAccount()
 const { wallet, address, isEOAWalletConnected, disconnect, isEOAWalletSupported } = useEOAWallet()
 const { isLogin, resetCredentialId, selectedCredentialDisplay, isPasskeySupported } = usePasskey()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 const { selectSigner, selectedSigner } = useSigner()
-
-const accountList = computed<(ImportedAccount & { isMultichain: boolean })[]>(() =>
-	accounts.value
-		.reduce(
-			(acc, cur) => {
-				const account = {
-					...cur,
-					isMultichain: cur.category === 'Smart Account' && hasInitCode(cur.address),
-				}
-
-				// Regular accounts: always add (no deduplication needed)
-				// Multichain accounts: only add if not already present (deduplicate)
-				if (!account.isMultichain) {
-					acc.push(account)
-				} else if (!acc.some(a => isSameAddress(a.address, account.address))) {
-					acc.push(account)
-				}
-
-				return acc
-			},
-			[] as (ImportedAccount & { isMultichain: boolean })[],
-		)
-		.sort((a, b) => {
-			// Put selected account at the top
-			const aIsSelected = isAccountSelected(a)
-			const bIsSelected = isAccountSelected(b)
-
-			if (aIsSelected && !bIsSelected) return -1
-			if (!aIsSelected && bIsSelected) return 1
-			return 0
-		}),
-)
-
-function isAccountSelected(account: ImportedAccount & { isMultichain: boolean }) {
-	return (
-		selectedAccount.value &&
-		isSameAddress(account.address, selectedAccount.value.address) &&
-		(account.chainId === selectedAccount.value.chainId || account.isMultichain)
-	)
-}
-
-function onClickSelectAccount(account: ImportedAccount & { isMultichain: boolean }) {
-	const { selectedChainId } = useBlockchain()
-	const { isAccountImported, selectAccount, importAccount } = useAccounts()
-
-	if (account.isMultichain) {
-		// Auto import account if it's multichain, and there's no account imported for this chain
-		const isImported = isAccountImported(account.address, selectedChainId.value)
-		if (!isImported) {
-			// import the account with current chainId if it's multichain and not imported
-			const { isMultichain, ...acc } = account // eslint-disable-line @typescript-eslint/no-unused-vars
-
-			importAccount({
-				...acc,
-				chainId: selectedChainId.value,
-			})
-		}
-		selectAccount(account.address, selectedChainId.value)
-	} else {
-		selectAccount(account.address, account.chainId)
-	}
-}
-
-function onClickDeleteAccount(account: ImportedAccount) {
-	const { openModal } = useConfirmModal()
-	openModal({
-		title: 'Delete Account',
-		message: 'Are you sure you want to delete this account? This action cannot be undone.',
-		confirmText: 'Delete',
-		cancelText: 'Cancel',
-		onConfirm: () => {
-			useAccounts().removeAccount(account)
-		},
-	})
-}
-
-function onClickUnselectAccount() {
-	useAccounts().unselectAccount()
-}
-
-const router = useRouter()
+const { accountList, isAccountSelected, onClickSelectAccount, onClickDeleteAccount, onClickUnselectAccount } =
+	useAccountList()
 
 function onClickAccountManagement() {
 	if (!selectedAccount.value) return

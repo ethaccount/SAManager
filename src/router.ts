@@ -115,6 +115,11 @@ const router = createRouter({
 							name: 'browser',
 							component: () => import('@/views/Browser.vue'),
 						},
+						{
+							path: '/:chainId/connect',
+							name: 'connect',
+							component: () => import('@/views/popup/Connect.vue'),
+						},
 					],
 				},
 			],

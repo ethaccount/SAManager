@@ -87,8 +87,14 @@ const mode = useColorMode()
 </script>
 
 <template>
-	<Header />
-	<MainLayout />
+	<div v-if="route.name === 'connect'">
+		<RouterView />
+	</div>
+
+	<div v-else>
+		<Header />
+		<MainLayout />
+	</div>
 
 	<AppHelp v-if="route.name !== 'browser'" class="fixed bottom-4 left-4" />
 
