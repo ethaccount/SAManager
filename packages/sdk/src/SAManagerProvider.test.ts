@@ -5,20 +5,29 @@ import { standardErrors } from './error'
 import { KeyManager } from './KeyManager'
 import type { EncryptedData, RPCRequestMessage, RPCResponseMessage } from './message'
 import { SAManagerProvider, type ProviderEventCallback } from './SAManagerProvider'
-import { decryptContent, encryptContent, exportKeyToHexString, importKeyFromHexString } from './utils'
+import { bigIntToHex, decryptContent, encryptContent, exportKeyToHexString, importKeyFromHexString } from './utils'
 
 vi.mock('./Communicator', () => ({
 	Communicator: vi.fn(() => ({
 		postRequestAndWaitForResponse: vi.fn(),
 		waitForPopupLoaded: vi.fn(),
+		disconnect: vi.fn(),
 	})),
 }))
-vi.mock('./KeyManager')
+vi.mock('./KeyManager', () => ({
+	KeyManager: vi.fn(() => ({
+		getSharedSecret: vi.fn(),
+		setPeerPublicKey: vi.fn(),
+		getOwnPublicKey: vi.fn(),
+		clear: vi.fn(),
+	})),
+}))
 vi.mock('./utils', () => ({
 	decryptContent: vi.fn(),
 	encryptContent: vi.fn(),
 	exportKeyToHexString: vi.fn(),
 	importKeyFromHexString: vi.fn(),
+	bigIntToHex: vi.fn(),
 }))
 
 const MOCK_URL = 'http://localhost:3000/connect'
@@ -43,7 +52,7 @@ describe('SAManagerProvider', () => {
 	let mockKeyManager: Mocked<KeyManager>
 
 	beforeEach(async () => {
-		mockCommunicator = new Communicator(MOCK_URL) as Mocked<Communicator>
+		mockCommunicator = new Communicator({ url: MOCK_URL }) as Mocked<Communicator>
 		;(Communicator as Mock).mockImplementation(() => mockCommunicator)
 		mockCommunicator.waitForPopupLoaded.mockResolvedValue({} as Window)
 		mockCommunicator.postRequestAndWaitForResponse.mockResolvedValue(mockSuccessResponse)
@@ -56,6 +65,7 @@ describe('SAManagerProvider', () => {
 		;(importKeyFromHexString as Mock).mockResolvedValue(mockCryptoKey)
 		;(exportKeyToHexString as Mock).mockResolvedValueOnce('0xPublicKey')
 		;(encryptContent as Mock).mockResolvedValue(encryptedData)
+		;(bigIntToHex as Mock).mockReturnValue('0x1')
 
 		vi.spyOn(correlationIds, 'get').mockReturnValue(mockCorrelationId)
 
@@ -72,16 +82,19 @@ describe('SAManagerProvider', () => {
 		// Clear communicator mocks
 		mockCommunicator.waitForPopupLoaded.mockClear()
 		mockCommunicator.postRequestAndWaitForResponse.mockClear()
+		mockCommunicator.disconnect.mockClear()
 
 		// Clear key manager mocks
 		mockKeyManager.getSharedSecret.mockClear()
 		mockKeyManager.setPeerPublicKey.mockClear()
+		mockKeyManager.clear.mockClear()
 
 		// Clear utility function mocks
 		;(importKeyFromHexString as Mock).mockClear()
 		;(exportKeyToHexString as Mock).mockClear()
 		;(encryptContent as Mock).mockClear()
 		;(decryptContent as Mock).mockClear()
+		;(bigIntToHex as Mock).mockClear()
 
 		// Clear correlation IDs spy
 		vi.restoreAllMocks()
@@ -182,6 +195,55 @@ describe('SAManagerProvider', () => {
 			await expect(provider.request({ method: 'eth_requestAccounts' })).rejects.toThrowError(
 				standardErrors.provider.unauthorized('No shared secret found when decrypting response'),
 			)
+		})
+	})
+
+	describe('eth_chainId', () => {
+		it('should handle eth_chainId without requiring popup', async () => {
+			const result = await provider.request({ method: 'eth_chainId' })
+
+			expect(result).toBe('0x1') // chainId 1n converted to hex
+
+			// Verify no popup interaction occurred
+			expect(mockCommunicator.waitForPopupLoaded).not.toHaveBeenCalled()
+			expect(mockCommunicator.postRequestAndWaitForResponse).not.toHaveBeenCalled()
+			expect(mockKeyManager.getSharedSecret).not.toHaveBeenCalled()
+		})
+	})
+
+	describe('popup management', () => {
+		it('should close the popup after the request is sent', async () => {
+			;(decryptContent as Mock).mockResolvedValueOnce({ result: { value: ['0xAddress'] } })
+
+			await provider.request({ method: 'eth_requestAccounts' })
+
+			// Verify disconnect is called to close popup
+			expect(mockCommunicator.disconnect).toHaveBeenCalledTimes(1)
+		})
+	})
+
+	describe('disconnect', () => {
+		it('should clear accounts when disconnect is called', async () => {
+			// First populate accounts
+			;(decryptContent as Mock).mockResolvedValueOnce({ result: { value: ['0xAddress'] } })
+			await provider.request({ method: 'eth_requestAccounts' })
+			expect(provider['accounts']).toEqual(['0xAddress'])
+
+			// Then call disconnect
+			await provider.disconnect()
+
+			// Verify accounts are cleared
+			expect(provider['accounts']).toEqual([])
+		})
+	})
+
+	describe('handlePopupDisconnect', () => {
+		it('should clear keyManager when popup disconnects', () => {
+			// Call the private method directly
+			provider['handlePopupDisconnect']()
+
+			// Verify keyManager.clear() was called
+			expect(mockKeyManager.clear).toHaveBeenCalledTimes(1)
 		})
 	})
 })

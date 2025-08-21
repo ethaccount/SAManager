@@ -14,7 +14,7 @@ import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useSigner } from '@/stores/useSigner'
 import { SAManagerPopup, standardErrors } from '@samanager/sdk'
-import { AlertCircle, CheckCircle, CircleDot, Power, X } from 'lucide-vue-next'
+import { AlertCircle, CheckCircle, CircleDot, Loader2, Power, X } from 'lucide-vue-next'
 
 const { selectedAccount, isAccountAccessible, isChainIdMatching, isMultichain } = useAccount()
 const { wallet, address, isEOAWalletConnected, disconnect, isEOAWalletSupported } = useEOAWallet()
@@ -30,43 +30,60 @@ type PendingRequest = {
 	reject: (reason?: unknown) => void
 }
 
+const error = ref<string | null>(null)
 const pendingRequest = ref<PendingRequest | null>(null)
+const isLoading = ref(false)
 
 const route = useRoute()
 const chainId = route.params.chainId as string
 
-if (chainId) {
-	new SAManagerPopup({
-		debug: true,
-		chainId: BigInt(chainId),
-		walletRequestHandler: async (method, params) => {
-			console.log('walletRequestHandler', method, params)
-
-			switch (method) {
-				case 'eth_chainId': {
-					return new Promise(async (resolve, _) => {
-						const { client } = useBlockchain()
-						const chainId = await client.value.send('eth_chainId', [])
-						resolve(chainId)
-					})
-				}
-				case 'eth_requestAccounts': {
-					if (!selectedAccount.value) {
-						throw standardErrors.provider.userRejectedRequest()
-					}
-					return new Promise((resolve, reject) => {
-						pendingRequest.value = { method, params, resolve, reject }
-					})
-				}
-				default: {
-					throw standardErrors.provider.unsupportedMethod({
-						message: `Method ${method} not supported`,
-					})
-				}
-			}
-		},
-	})
+if (!chainId) {
+	window.close()
 }
+
+new SAManagerPopup({
+	debug: true,
+	chainId: BigInt(chainId),
+	walletRequestHandler: async (method, params) => {
+		console.log('request', method, params)
+
+		switch (method) {
+			case 'eth_chainId':
+			case 'eth_getBlockByNumber': {
+				return new Promise(async (resolve, reject) => {
+					try {
+						isLoading.value = true
+						pendingRequest.value = { method, params, resolve, reject }
+
+						// await new Promise(resolve => setTimeout(resolve, 10000000))
+						const { client } = useBlockchain()
+						const block = await client.value.send(method, params)
+						resolve(block)
+					} catch (err) {
+						console.error('Error getting block', err)
+						error.value = err instanceof Error ? err.message : 'Failed to process request'
+						reject(standardErrors.rpc.internal(error.value))
+					} finally {
+						isLoading.value = false
+					}
+				})
+			}
+			case 'eth_requestAccounts': {
+				if (!selectedAccount.value) {
+					throw standardErrors.provider.userRejectedRequest()
+				}
+				return new Promise((resolve, reject) => {
+					pendingRequest.value = { method, params, resolve, reject }
+				})
+			}
+			default: {
+				throw standardErrors.provider.unsupportedMethod({
+					message: `Method ${method} not supported`,
+				})
+			}
+		}
+	},
+})
 
 function onClickConnect() {
 	try {
@@ -79,12 +96,12 @@ function onClickConnect() {
 		} else {
 			pendingRequest.value.resolve([selectedAccount.value.address])
 		}
-	} catch (error) {
-		console.error('Error onClickConnect', error)
-		pendingRequest.value?.reject(error)
+	} catch (err) {
+		pendingRequest.value?.reject(
+			standardErrors.rpc.internal(err instanceof Error ? err.message : 'Failed to connect'),
+		)
 	} finally {
 		pendingRequest.value = null
-		window.close()
 	}
 }
 </script>
@@ -302,6 +319,54 @@ function onClickConnect() {
 					<!-- Empty State -->
 					<div v-if="accountList.length === 0" class="text-center py-8 text-muted-foreground">
 						<p>No accounts found</p>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div v-else class="w-full max-w-2xl mx-auto p-6 space-y-6">
+			<!-- Header -->
+			<div class="flex justify-between items-center mb-6">
+				<div class="flex items-center gap-2">
+					<h1 class="text-xl font-bold">Processing Request</h1>
+					<Loader2 v-if="isLoading" class="w-5 h-5 animate-spin text-primary" />
+				</div>
+
+				<NetworkSelector fixed-chain />
+			</div>
+
+			<!-- Request Details -->
+			<div class="space-y-4">
+				<div class="p-4 border rounded-lg bg-accent/5">
+					<div class="space-y-3 text-sm">
+						<div>
+							<span class="font-medium text-muted-foreground">Method:</span>
+							<div class="mt-1 p-2 bg-background rounded border font-mono text-sm">
+								{{ pendingRequest?.method }}
+							</div>
+						</div>
+
+						<div>
+							<span class="font-medium text-muted-foreground">Parameters:</span>
+							<div
+								class="mt-1 p-2 bg-background rounded border font-mono text-sm max-h-32 overflow-y-auto"
+							>
+								<pre>{{ JSON.stringify(pendingRequest?.params, null, 2) }}</pre>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Error Display -->
+				<div
+					v-if="error"
+					class="p-4 border border-red-200 rounded-lg bg-red-50 dark:bg-red-950 dark:border-red-800"
+				>
+					<div class="flex items-center gap-2 mb-2">
+						<AlertCircle class="w-5 h-5 text-red-500" />
+						<h3 class="font-semibold text-red-700 dark:text-red-300">Error</h3>
+					</div>
+					<div class="text-red-600 dark:text-red-400 text-sm font-mono">
+						{{ error }}
 					</div>
 				</div>
 			</div>

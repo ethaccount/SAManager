@@ -17,10 +17,12 @@ export class Communicator {
 	private popup: Window | null = null
 	private listeners = new Map<(_: MessageEvent) => void, { reject: (_: Error) => void }>()
 	private debug = false
+	private onDisconnectCallback?: () => void
 
-	constructor(url: string, debug = false) {
+	constructor({ url, debug = false, onDisconnect }: { url: string; debug?: boolean; onDisconnect?: () => void }) {
 		this.url = new URL(url)
 		this.debug = debug
+		this.onDisconnectCallback = onDisconnect
 	}
 
 	/**
@@ -70,16 +72,19 @@ export class Communicator {
 	/**
 	 * Closes the popup, rejects all requests and clears the listeners
 	 */
-	private disconnect = () => {
+	disconnect = () => {
 		// Note: keys popup handles closing itself. this is a fallback.
 		closePopup(this.popup)
 		this.popup = null
 
 		this.listeners.forEach(({ reject }, listener) => {
-			reject(standardErrors.provider.userRejectedRequest('Request rejected'))
+			reject(standardErrors.provider.userRejectedRequest())
 			window.removeEventListener('message', listener)
 		})
 		this.listeners.clear()
+
+		// Notify parent about disconnection
+		this.onDisconnectCallback?.()
 	}
 
 	/**

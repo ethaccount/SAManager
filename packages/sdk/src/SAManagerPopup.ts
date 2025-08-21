@@ -30,6 +30,9 @@ export class SAManagerPopup {
 		this.setupListener()
 		// Notify parent that popup is ready to receive messages
 		this.notifyParentLoaded()
+		// Set up unload detection
+		this.setupUnloadDetection()
+
 		if (debug) this.log('SAManagerPopup initialized')
 	}
 
@@ -177,6 +180,63 @@ export class SAManagerPopup {
 
 		// Use '*' initially since we don't know parent origin yet
 		window.opener.postMessage(loadedMessage, '*')
+	}
+
+	private notifyParentUnload() {
+		if (!window.opener || window.opener.closed) {
+			return // Parent window no longer available
+		}
+
+		const unloadMessage = {
+			event: 'PopupUnload',
+			id: crypto.randomUUID() as `${string}-${string}-${string}-${string}-${string}`,
+			timestamp: new Date(),
+		}
+
+		try {
+			// Send to known parent origin if available, otherwise use '*'
+			const targetOrigin = this.parentOrigin || '*'
+			window.opener.postMessage(unloadMessage, targetOrigin)
+			this.log('Popup unload notification sent')
+		} catch (error) {
+			// Ignore errors if parent window is unavailable
+			this.log('Failed to send unload notification:', error)
+		}
+	}
+
+	/**
+	 * Set up unload detection to notify parent when popup closes
+	 */
+	private unloadNotified = false
+	private setupUnloadDetection() {
+		// Use multiple events for maximum reliability across browsers
+		const handleUnload = () => {
+			if (!this.unloadNotified) {
+				this.unloadNotified = true
+				this.notifyParentUnload()
+			}
+		}
+
+		// beforeunload: Fires before the page unloads (most reliable)
+		window.addEventListener('beforeunload', handleUnload)
+
+		// pagehide: Fires when page is hidden (covers more cases than unload)
+		// window.addEventListener('pagehide', handleUnload)
+
+		// unload: Traditional unload event (backup)
+		window.addEventListener('unload', handleUnload)
+
+		// visibilitychange: Detect when popup window loses focus completely
+		// document.addEventListener('visibilitychange', () => {
+		// 	if (document.visibilityState === 'hidden') {
+		// 		// Small delay to differentiate between tab switching and actual close
+		// 		setTimeout(() => {
+		// 			if (document.visibilityState === 'hidden') {
+		// 				handleUnload()
+		// 			}
+		// 		}, 100)
+		// 	}
+		// })
 	}
 
 	private updateChain(chainId: bigint): void {

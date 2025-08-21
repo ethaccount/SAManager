@@ -50,7 +50,7 @@ describe('Communicator', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
 
-		communicator = new Communicator(MOCK_URL)
+		communicator = new Communicator({ url: MOCK_URL })
 		urlOrigin = new URL(MOCK_URL).origin
 
 		mockPopup = {

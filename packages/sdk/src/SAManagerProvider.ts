@@ -48,9 +48,13 @@ export class SAManagerProvider implements ProviderInterface {
 	private chainId: bigint
 
 	constructor({ chainId, origin = DEFAULT_ORIGIN, callback, debug = false }: SAManagerProviderOptions) {
-		// check if the chainId is supported in SAManager
+		// TODO: check if the chainId is supported in SAManager
 		this.chainId = chainId
-		this.communicator = new Communicator(origin + '/' + this.chainId.toString() + '/connect', debug)
+		this.communicator = new Communicator({
+			url: origin + '/' + this.chainId.toString() + '/connect',
+			onDisconnect: () => this.handlePopupDisconnect(),
+			debug,
+		})
 		this.keyManager = new KeyManager()
 		this.callback = callback
 		this.debug = debug
@@ -64,12 +68,8 @@ export class SAManagerProvider implements ProviderInterface {
 	 */
 	async request(request: RequestArguments) {
 		this.log('request', request)
-		// Checks if a shared secret exists. If not, it will perform a handshake
-		const sharedSecret = await this.keyManager.getSharedSecret()
-		if (!sharedSecret) {
-			await this.handshake(request)
-		}
 
+		// // Handle methods that don't require popup/encryption
 		switch (request.method) {
 			case 'eth_chainId': {
 				// Direct return the chainId set in the constructor
@@ -79,33 +79,59 @@ export class SAManagerProvider implements ProviderInterface {
 					},
 				})
 			}
-			case 'eth_requestAccounts': {
-				await this.sendRequestToPopup(request)
-				this.log('requestAccounts completed', this.accounts)
-				return this.accounts
+		}
+
+		try {
+			// Checks if a shared secret exists. If not, it will perform a handshake
+			const sharedSecret = await this.keyManager.getSharedSecret()
+			if (!sharedSecret) {
+				this.log('handshake needed')
+				await this.handshake(request)
+			} else {
+				this.log('handshake not needed')
 			}
-			default:
-				await this.sendRequestToPopup(request)
+
+			let result: unknown
+
+			switch (request.method) {
+				case 'eth_requestAccounts': {
+					await this.sendRequestToPopup(request)
+					result = this.accounts
+					break
+				}
+				default:
+					result = await this.sendRequestToPopup(request)
+			}
+
+			this.log('request completed', result)
+
+			return result
+		} catch (error) {
+			throw error
+		} finally {
+			// Make sure the popup is disconnected even when the request fails
+			this.communicator.disconnect()
 		}
 	}
 
 	async disconnect(): Promise<void> {
 		// TODO: Implement wallet disconnect logic
 		this.log('disconnect called')
+		this.accounts = []
 	}
 
 	emit<K extends keyof ProviderEventMap>(event: K, payload: ProviderEventMap[K]): void {
 		// TODO: Implement event emission logic
-		this.log('emit', event, payload)
+		this.log('emit:', event, payload)
 	}
 
 	on<K extends keyof ProviderEventMap>(event: K, handler: (payload: ProviderEventMap[K]) => void): void {
-		this.log('on', event, handler)
+		this.log('on:', event)
 		// TODO: Implement event listener registration
 	}
 
 	removeListener<K extends keyof ProviderEventMap>(event: K, handler: (payload: ProviderEventMap[K]) => void): void {
-		this.log('removeListener', event, handler)
+		this.log('removeListener:', event)
 		// TODO: Implement event listener removal
 	}
 
@@ -123,6 +149,14 @@ export class SAManagerProvider implements ProviderInterface {
 			this.callback?.('chainChanged', bigIntToHex(chainId))
 		}
 		return true
+	}
+
+	/**
+	 * Handle popup disconnect - clear shared secret and reset state
+	 */
+	private handlePopupDisconnect(): void {
+		this.log('handlePopupDisconnect: popup disconnected, clearing shared secret')
+		this.keyManager.clear()
 	}
 
 	private async handshake(request: RequestArguments) {
@@ -163,13 +197,15 @@ export class SAManagerProvider implements ProviderInterface {
 	}
 
 	private async sendRequestToPopup(request: RequestArguments) {
+		this.log('sendRequestToPopup')
+
 		// Open the popup before constructing the request message.
 		// This is to ensure that the popup is not blocked by some browsers (i.e. Safari)
 		await this.communicator.waitForPopupLoaded?.()
 
+		this.log('sendRequestToPopup: sendEncryptedRequest')
 		const response = await this.sendEncryptedRequest(request)
 		const decrypted = await this.decryptResponseMessage(response)
-
 		return this.handleResponse(request, decrypted)
 	}
 
