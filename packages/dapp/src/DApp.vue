@@ -6,7 +6,7 @@ import '@vue-dapp/modal/dist/style.css'
 
 const { wallet, isConnected, connectors, addConnectors, watchWalletChanged, watchDisconnect, disconnect } = useVueDapp()
 
-const DAPP_CHAIN_ID = 11155111n
+const DAPP_CHAIN_ID = 84532n
 
 onMounted(() => {
 	if (!connectors.value.find(connector => connector.name === 'BrowserWallet')) {

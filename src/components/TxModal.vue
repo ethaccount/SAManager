@@ -53,6 +53,8 @@ const canClose = computed(() => {
 	overflow: hidden;
 }
 
+/* Is the following needed? */
+
 :deep(.select-content) {
 	@apply w-[var(--radix-select-trigger-width)];
 }

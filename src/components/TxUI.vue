@@ -39,6 +39,7 @@ import TxModalUOPreview from './TxModalOpPreview.vue'
 
 const props = withDefaults(defineProps<TxUIProps>(), {
 	executions: () => [],
+	useModalSpecificStyle: true,
 })
 
 const emit = defineEmits<TxUIEmits>()
@@ -440,6 +441,7 @@ const shouldShowEffectiveFee = computed(() => {
 	<div class="flex flex-col h-full">
 		<!-- Header -->
 		<div class="flex justify-between items-center border-b border-border px-4 py-1">
+			<!-- Preview Button -->
 			<Button
 				variant="ghost"
 				size="icon"
@@ -450,7 +452,9 @@ const shouldShowEffectiveFee = computed(() => {
 				<ArrowLeft v-if="showUserOpPreview" class="w-4 h-4" />
 				<Code v-else class="w-4 h-4" />
 			</Button>
+			<!-- Title -->
 			<div class="font-medium">{{ showUserOpPreview ? 'UserOp Preview' : 'Transaction' }}</div>
+			<!-- Close Button -->
 			<Button variant="ghost" size="icon" :disabled="!canClose" @click="onClickClose">
 				<X class="w-4 h-4" />
 			</Button>
@@ -460,7 +464,14 @@ const shouldShowEffectiveFee = computed(() => {
 		<TxModalUOPreview v-show="showUserOpPreview" :user-op="userOp" />
 
 		<!-- Content -->
-		<div v-show="!showUserOpPreview" class="flex-1 mt-2 space-y-6 overflow-y-auto max-h-[420px] px-4 pt-2 pb-4">
+		<div
+			v-show="!showUserOpPreview"
+			class="flex-1 mt-2 space-y-6 px-4 pt-2 pb-4"
+			:class="{
+				'overflow-y-auto': useModalSpecificStyle,
+				'max-h-[420px]': useModalSpecificStyle,
+			}"
+		>
 			<!-- Signer -->
 			<div class="space-y-3">
 				<div class="text-sm font-medium">Signer</div>
@@ -831,7 +842,14 @@ const shouldShowEffectiveFee = computed(() => {
 			class="space-y-2 px-4 py-4 border-t border-border"
 		>
 			<!-- Error message display -->
-			<div v-if="txModalErrorMessage" class="error-section max-h-[100px] overflow-y-auto">
+			<div
+				v-if="txModalErrorMessage"
+				class="error-section"
+				:class="{
+					'overflow-y-auto': useModalSpecificStyle,
+					'max-h-[100px]': useModalSpecificStyle,
+				}"
+			>
 				{{ txModalErrorMessage }}
 			</div>
 

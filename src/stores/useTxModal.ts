@@ -24,6 +24,7 @@ export enum TransactionStatus {
 
 export type TxUIProps = {
 	executions?: TxModalExecution[]
+	useModalSpecificStyle?: boolean
 }
 
 export type TxUIEmits = {

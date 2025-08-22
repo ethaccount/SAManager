@@ -139,21 +139,15 @@ const executions = computed(() => {
 	})
 })
 
-function handleTxClose() {
-	pendingRequest.value = null
+function onClickTxClose() {
+	pendingRequest.value?.reject(standardErrors.provider.userRejectedRequest())
 }
 
-function handleTxExecuted() {
-	pendingRequest.value = null
-}
+function handleTxExecuted() {}
 
-function handleTxSuccess() {
-	pendingRequest.value = null
-}
+function handleTxSuccess() {}
 
-function handleTxFailed() {
-	pendingRequest.value = null
-}
+function handleTxFailed() {}
 </script>
 
 <template>
@@ -167,7 +161,7 @@ function handleTxFailed() {
 		<WalletSendCalls
 			v-else-if="pendingRequest?.method === 'wallet_sendCalls'"
 			:executions="executions"
-			@close="handleTxClose"
+			@close="onClickTxClose"
 			@executed="handleTxExecuted"
 			@success="handleTxSuccess"
 			@failed="handleTxFailed"
