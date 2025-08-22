@@ -1,11 +1,5 @@
 <script setup lang="ts">
-import { TransactionStatus, TxUIEmits, TxUIProps, useTxModal } from '@/stores/useTxModal'
-
-withDefaults(defineProps<TxUIProps>(), {
-	executions: () => [],
-})
-
-const emit = defineEmits<TxUIEmits>()
+import { TransactionStatus, useTxModal } from '@/stores/useTxModal'
 
 const { status } = useTxModal()
 
@@ -16,14 +10,7 @@ onMounted(() => {
 </script>
 
 <template>
-	<TxUI
-		:executions="executions"
-		:use-modal-specific-style="false"
-		@close="emit('close')"
-		@executed="emit('executed')"
-		@success="emit('success')"
-		@failed="emit('failed')"
-	/>
+	<TxUI :use-modal-specific-style="false" v-bind="$attrs" v-on="$attrs" />
 </template>
 
 <style lang="css" scoped></style>

@@ -143,6 +143,12 @@ function onClickTxClose() {
 	pendingRequest.value?.reject(standardErrors.provider.userRejectedRequest())
 }
 
+function handleTxSent(hash: string) {
+	pendingRequest.value?.resolve({
+		id: hash,
+	})
+}
+
 function handleTxExecuted() {}
 
 function handleTxSuccess() {}
@@ -158,10 +164,12 @@ function handleTxFailed() {}
 			@connect="onClickConnect"
 			@reject="onClickReject"
 		/>
+		<!-- wallet_sendCalls -->
 		<WalletSendCalls
 			v-else-if="pendingRequest?.method === 'wallet_sendCalls'"
 			:executions="executions"
 			@close="onClickTxClose"
+			@sent="handleTxSent"
 			@executed="handleTxExecuted"
 			@success="handleTxSuccess"
 			@failed="handleTxFailed"

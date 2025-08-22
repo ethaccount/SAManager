@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { TransactionStatus, TxUIEmits, TxUIProps, useTxModal } from '@/stores/useTxModal'
+import { TxUIEmits, TxUIProps, useTxModal } from '@/stores/useTxModal'
 import { VueFinalModal } from 'vue-final-modal'
 
 withDefaults(defineProps<TxUIProps>(), {
@@ -8,12 +8,7 @@ withDefaults(defineProps<TxUIProps>(), {
 
 const emit = defineEmits<TxUIEmits>()
 
-const { status } = useTxModal()
-
-// Determine if modal can be closed
-const canClose = computed(() => {
-	return status.value !== TransactionStatus.Sending && status.value !== TransactionStatus.Pending
-})
+const { canClose } = useTxModal()
 </script>
 
 <template>

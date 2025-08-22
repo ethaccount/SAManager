@@ -76,10 +76,12 @@ const {
 	usdcAddress,
 	isSigningPermit,
 	canSignPermit,
+	canClose,
 	handleSignUsdcPermit,
 	handleEstimate,
 	handleSign,
-	handleSend,
+	sendUserOp,
+	waitUserOp,
 	resetTxModal,
 	checkUsdcBalanceAndAllowance,
 	usdcPaymasterData,
@@ -288,10 +290,17 @@ async function onClickSign() {
 
 async function onClickSend() {
 	try {
-		txModalErrorMessage.value = null
-		status.value = TransactionStatus.Sending
+		if (!userOp.value) {
+			throw new Error('[waitUserOp] User operation not built')
+		}
+		const op = userOp.value
 
-		await handleSend()
+		txModalErrorMessage.value = null
+
+		await sendUserOp()
+		emit('sent', op.hash())
+
+		await waitUserOp()
 
 		emit('executed')
 
@@ -335,11 +344,6 @@ const showPasskeyValidationMethod = computed(() => {
 	if (!selectedAccount.value) return false
 	if (!isLogin.value) return false
 	return selectedAccount.value.vMethods.some(v => deserializeValidationMethod(v).signerType === 'Passkey')
-})
-
-// Computed property to determine if modal can be closed
-const canClose = computed(() => {
-	return status.value !== TransactionStatus.Sending && status.value !== TransactionStatus.Pending
 })
 
 const paymasterSelectorDisabled = computed(() => {

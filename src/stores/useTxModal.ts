@@ -29,6 +29,7 @@ export type TxUIProps = {
 
 export type TxUIEmits = {
 	(e: 'close'): void
+	(e: 'sent', hash: string): void
 	(e: 'executed'): void // when status is success or failed
 	(e: 'success'): void
 	(e: 'failed'): void
@@ -89,6 +90,11 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 			!isSigningPermit.value &&
 			(status.value === TransactionStatus.Initial || status.value === TransactionStatus.PreparingPaymaster)
 		)
+	})
+
+	// Determine if modal can be closed
+	const canClose = computed(() => {
+		return status.value !== TransactionStatus.Sending && status.value !== TransactionStatus.Pending
 	})
 
 	const canEstimate = computed(() => {
@@ -190,16 +196,22 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 		// Notice to formate signature if needed
 	}
 
-	async function handleSend() {
+	async function sendUserOp() {
 		if (!userOp.value) {
-			throw new Error('[handleSend] User operation not built')
+			throw new Error('[sendUserOp] User operation not built')
 		}
 		const op = userOp.value
 
+		status.value = TransactionStatus.Sending
 		await op.send()
-
-		// Wait for the transaction to be mined
 		status.value = TransactionStatus.Pending
+	}
+
+	async function waitUserOp() {
+		if (!userOp.value) {
+			throw new Error('[waitUserOp] User operation not built')
+		}
+		const op = userOp.value
 		const receipt = await op.wait()
 
 		opReceipt.value = receipt
@@ -220,12 +232,14 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 		opHash,
 		opReceipt,
 		canSignPermit,
+		canClose,
 		openModal,
 		closeModal: close,
 		resetTxModal,
 		handleEstimate,
 		handleSign,
-		handleSend,
+		sendUserOp,
+		waitUserOp,
 		...paymasterHook,
 	}
 })
