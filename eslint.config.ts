@@ -44,6 +44,7 @@ export default defineConfigWithVueTs(
 			'dist/**',
 			'.wrangler/**',
 			'**/*.d.ts',
+			'packages/**',
 
 			// shadcn-vue
 			'src/lib/utils.ts',
