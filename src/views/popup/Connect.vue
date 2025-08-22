@@ -60,6 +60,7 @@ new SAManagerPopup({
 						break
 					}
 					case 'wallet_getCapabilities': {
+						// await new Promise(resolve => setTimeout(resolve, 10000000))
 						const capabilities = (await handleGetCapabilities(
 							params as WalletGetCapabilitiesRequest['params'],
 						)) as WalletGetCapabilitiesResponse
@@ -67,6 +68,7 @@ new SAManagerPopup({
 						break
 					}
 					case 'wallet_getCallsStatus': {
+						// await new Promise(resolve => setTimeout(resolve, 10000000))
 						result = (await handleGetCallsStatus(
 							params as WalletGetCallsStatusRequest['params'],
 						)) as WalletGetCallsStatusResponse
@@ -198,11 +200,18 @@ function handleWalletShowCallsStatusClose() {
 			<!-- Header -->
 			<div class="flex justify-between items-center mb-6">
 				<div class="flex items-center gap-2">
-					<h1 class="text-xl font-bold">Processing Request</h1>
-					<Loader2 v-if="isLoading" class="w-5 h-5 animate-spin text-primary" />
+					<h1 class="text-xl font-bold">{{ pendingRequest?.method }}</h1>
 				</div>
 
 				<NetworkSelector fixed-chain />
+			</div>
+
+			<!-- Loading State -->
+			<div v-if="isLoading" class="p-8 text-center space-y-3">
+				<Loader2 class="w-8 h-8 animate-spin mx-auto text-primary" />
+				<div>
+					<h3 class="font-medium">Processing Request...</h3>
+				</div>
 			</div>
 
 			<!-- Request Details -->

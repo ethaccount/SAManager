@@ -56,7 +56,6 @@ function onClickClose() {
 		<div class="flex justify-between items-center mb-6">
 			<div class="flex items-center gap-2">
 				<h1 class="text-xl font-bold">Call Status</h1>
-				<Loader2 v-if="isLoading" class="w-5 h-5 animate-spin text-primary" />
 			</div>
 
 			<div class="flex items-center gap-3">
@@ -69,7 +68,6 @@ function onClickClose() {
 			<Loader2 class="w-8 h-8 animate-spin mx-auto text-primary" />
 			<div>
 				<h3 class="font-medium">Checking Call Status...</h3>
-				<p class="text-sm text-muted-foreground mt-1">Please wait while we verify your transaction</p>
 			</div>
 		</div>
 
@@ -94,7 +92,6 @@ function onClickClose() {
 				<div v-if="isSuccess" class="flex flex-col items-center justify-center space-y-2">
 					<CheckCircle class="w-12 h-12 text-emerald-500" />
 					<h3 class="text-xl font-semibold text-emerald-500">Call Successful!</h3>
-					<p class="text-sm text-muted-foreground">Your transaction has been executed successfully</p>
 				</div>
 
 				<div v-else class="flex flex-col items-center justify-center space-y-2">

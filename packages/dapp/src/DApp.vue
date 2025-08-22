@@ -187,7 +187,7 @@ async function onClickShowCallsStatus() {
 			<button class="btn" @click="onClickGetBlock">eth_getBlockByNumber</button>
 			<div v-if="getBlockError" class="text-red-500">{{ getBlockError }}</div>
 			<div v-if="block">
-				<div>block: {{ (block as any).hash }}</div>
+				<div>{{ (block as any).hash }}</div>
 			</div>
 		</div>
 
@@ -197,7 +197,7 @@ async function onClickShowCallsStatus() {
 			<button class="btn" @click="onClickGetCapabilities">wallet_getCapabilities</button>
 			<div v-if="capabilitiesError" class="text-red-500">{{ capabilitiesError }}</div>
 			<div v-if="capabilitiesResult">
-				<div>capabilities: {{ capabilitiesResult }}</div>
+				<div>{{ capabilitiesResult }}</div>
 			</div>
 		</div>
 
@@ -207,7 +207,7 @@ async function onClickShowCallsStatus() {
 			<button class="btn" @click="onClickSendCalls">wallet_sendCalls</button>
 			<div v-if="sendCallsError" class="text-red-500">{{ sendCallsError }}</div>
 			<div v-if="sendCallsResult">
-				<div>result: {{ sendCallsResult }}</div>
+				<div>{{ sendCallsResult }}</div>
 			</div>
 		</div>
 
@@ -217,8 +217,7 @@ async function onClickShowCallsStatus() {
 			<button class="btn" @click="onClickGetCallsStatus">wallet_getCallsStatus</button>
 			<div v-if="getCallsStatusError" class="text-red-500">{{ getCallsStatusError }}</div>
 			<div v-if="getCallsStatusResult">
-				<div>status: {{ getCallsStatusResult.status }}</div>
-				<div>receipts: {{ getCallsStatusResult.receipts }}</div>
+				<div>{{ getCallsStatusResult }}</div>
 			</div>
 		</div>
 
@@ -228,7 +227,7 @@ async function onClickShowCallsStatus() {
 			<button class="btn" @click="onClickShowCallsStatus">wallet_showCallsStatus</button>
 			<div v-if="showCallsStatusError" class="text-red-500">{{ showCallsStatusError }}</div>
 			<div v-if="showCallsStatusResult">
-				<div>result: {{ showCallsStatusResult }}</div>
+				<div>{{ showCallsStatusResult }}</div>
 			</div>
 		</div>
 
