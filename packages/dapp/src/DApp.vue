@@ -20,6 +20,8 @@ onMounted(() => {
 		chainId: DAPP_CHAIN_ID,
 		origin: 'http://localhost:5173',
 	})
+
+	onClickConnectButton()
 })
 
 watchWalletChanged(async wallet => {
@@ -30,51 +32,27 @@ watchDisconnect(() => {
 	console.log('disconnect')
 })
 
-// Function to auto-click SAManager wallet option
-const autoClickSAManager = () => {
-	const checkAndClick = () => {
-		// Look for the modal
-		const modal = document.getElementById('vd-modal') || document.querySelector('.vd-modal-column')
-		if (modal) {
-			// Find all wallet blocks
-			const walletBlocks = modal.querySelectorAll('.vd-wallet-block')
-
-			// Look for SAManager specifically
-			for (const block of walletBlocks) {
-				const walletName = block.querySelector('div')?.textContent?.trim()
-
-				// Check if this is SAManager by name
-				if (walletName === 'SAManager') {
-					console.log('Auto-clicking SAManager wallet')
-					;(block as HTMLElement).click()
-					return true
-				}
-			}
-		}
-		return false
-	}
-
-	// Try immediately
-	if (checkAndClick()) return
-}
-
 function onClickConnectButton() {
 	if (isConnected.value) {
 		disconnect()
 	} else {
 		useVueDappModal().open()
-		// // Auto-click SAManager after modal opens
+		// Auto-click SAManager after modal opens
 		// nextTick(() => {
 		// 	setTimeout(autoClickSAManager, 100) // Small delay to ensure modal is rendered
 		// })
 	}
 }
 
-const error = ref<string | null>(null)
+const getBlockError = ref<string | null>(null)
 const block = ref(null)
+const sendCallsError = ref<string | null>(null)
+const sendCallsResult = ref(null)
+const capabilitiesError = ref<string | null>(null)
+const capabilitiesResult = ref(null)
 
 async function onClickGetBlock() {
-	error.value = null
+	getBlockError.value = null
 	block.value = null
 	if (wallet.status === 'connected' && provider.value) {
 		try {
@@ -84,16 +62,66 @@ async function onClickGetBlock() {
 			})
 		} catch (err: unknown) {
 			console.error('Error getting block', err)
-			error.value = err && typeof err === 'object' && 'message' in err ? (err.message as string) : 'Unknown error'
+			getBlockError.value =
+				err && typeof err === 'object' && 'message' in err ? (err.message as string) : 'Unknown error'
 		}
 	} else {
-		error.value = 'Wallet not connected'
+		getBlockError.value = 'Wallet not connected'
 	}
 }
 
-onMounted(() => {
-	onClickConnectButton()
-})
+async function onClickGetCapabilities() {
+	capabilitiesError.value = null
+	capabilitiesResult.value = null
+	if (wallet.status === 'connected' && provider.value && wallet.address) {
+		try {
+			capabilitiesResult.value = await provider.value.request({
+				method: 'wallet_getCapabilities',
+				params: [wallet.address, [`0x${DAPP_CHAIN_ID.toString(16)}`]],
+			})
+		} catch (err: unknown) {
+			console.error('Error getting capabilities', err)
+			capabilitiesError.value =
+				err && typeof err === 'object' && 'message' in err ? (err.message as string) : 'Unknown error'
+		}
+	} else {
+		capabilitiesError.value = 'Wallet not connected'
+	}
+}
+
+async function onClickSendCalls() {
+	sendCallsError.value = null
+	sendCallsResult.value = null
+	if (wallet.status === 'connected' && provider.value && wallet.address) {
+		try {
+			sendCallsResult.value = await provider.value.request({
+				method: 'wallet_sendCalls',
+				params: [
+					{
+						version: '1.0',
+						chainId: `0x${DAPP_CHAIN_ID.toString(16)}`,
+						from: wallet.address,
+						atomicRequired: true,
+						calls: [
+							{
+								to: '0x96e44D241D3A6B069C3DF4e69DE28Ea098805b18',
+								value: 0n,
+								data: '0xd09de08a',
+							},
+						],
+						capabilities: {},
+					},
+				],
+			})
+		} catch (err: unknown) {
+			console.error('Error sending calls', err)
+			sendCallsError.value =
+				err && typeof err === 'object' && 'message' in err ? (err.message as string) : 'Unknown error'
+		}
+	} else {
+		sendCallsError.value = 'Wallet not connected'
+	}
+}
 </script>
 
 <template>
@@ -117,9 +145,29 @@ onMounted(() => {
 
 		<div>
 			<button class="btn" @click="onClickGetBlock">eth_getBlockByNumber</button>
-			<div v-if="error" class="text-red-500">{{ error }}</div>
+			<div v-if="getBlockError" class="text-red-500">{{ getBlockError }}</div>
 			<div v-if="block">
 				<div>block: {{ (block as any).hash }}</div>
+			</div>
+		</div>
+
+		<br />
+
+		<div>
+			<button class="btn" @click="onClickGetCapabilities">wallet_getCapabilities</button>
+			<div v-if="capabilitiesError" class="text-red-500">{{ capabilitiesError }}</div>
+			<div v-if="capabilitiesResult">
+				<div>capabilities: {{ capabilitiesResult }}</div>
+			</div>
+		</div>
+
+		<br />
+
+		<div>
+			<button class="btn" @click="onClickSendCalls">wallet_sendCalls</button>
+			<div v-if="sendCallsError" class="text-red-500">{{ sendCallsError }}</div>
+			<div v-if="sendCallsResult">
+				<div>result: {{ sendCallsResult }}</div>
 			</div>
 		</div>
 
