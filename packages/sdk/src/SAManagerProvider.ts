@@ -1,5 +1,5 @@
 import { Communicator } from './Communicator'
-import { DEFAULT_ORIGIN } from './constants'
+import { DEFAULT_ORIGIN, ICON_DATA_URI } from './constants'
 import { correlationIds } from './correlationIds'
 import { standardErrors } from './error'
 import { KeyManager } from './KeyManager'
@@ -94,13 +94,24 @@ export class SAManagerProvider implements ProviderInterface {
 			let result: unknown
 
 			switch (request.method) {
+				case 'eth_getBlockByNumber': {
+					result = await this.sendRequestToPopup(request)
+					break
+				}
 				case 'eth_requestAccounts': {
 					await this.sendRequestToPopup(request)
 					result = this.accounts
 					break
 				}
-				default:
+				case 'eth_sendCalls': {
+					if (!this.hasAccount()) {
+						throw standardErrors.provider.disconnected('No account found. Please connect wallet.')
+					}
 					result = await this.sendRequestToPopup(request)
+					break
+				}
+				default:
+					throw standardErrors.provider.unsupportedMethod(`Unsupported method: ${request.method}`)
 			}
 
 			this.log('request completed', result)
@@ -149,6 +160,10 @@ export class SAManagerProvider implements ProviderInterface {
 			this.callback?.('chainChanged', bigIntToHex(chainId))
 		}
 		return true
+	}
+
+	private hasAccount(): boolean {
+		return this.accounts.length > 0
 	}
 
 	/**
@@ -277,7 +292,9 @@ export class SAManagerProvider implements ProviderInterface {
 
 		if ('error' in result) throw result.error
 
+		// handle specific request methods
 		switch (request.method) {
+			// Store accounts
 			case 'eth_requestAccounts': {
 				const accounts = result.value as EthRequestAccountsResponse
 				this.accounts = accounts
@@ -297,7 +314,7 @@ export function announceSAManagerProvider({ chainId, origin, callback, debug }: 
 				info: {
 					uuid: crypto.randomUUID(),
 					name: 'SAManager',
-					icon: 'https://samanager.xyz/favicon_io/favicon-32x32.png',
+					icon: ICON_DATA_URI,
 					rdns: 'xyz.samanager',
 				},
 				provider: new SAManagerProvider({
