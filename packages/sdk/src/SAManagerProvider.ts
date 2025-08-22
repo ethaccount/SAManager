@@ -86,7 +86,10 @@ export class SAManagerProvider implements ProviderInterface {
 					this.updateAccounts(result as EthRequestAccountsResponse)
 					break
 				}
-				case 'eth_sendCalls': {
+				case 'wallet_getCapabilities':
+				case 'wallet_sendCalls':
+				case 'wallet_getCallsStatus':
+				case 'wallet_showCallsStatus': {
 					// Check if there is an account connected
 					if (!this.hasAccount()) {
 						throw standardErrors.provider.disconnected('No account found. Please connect wallet.')

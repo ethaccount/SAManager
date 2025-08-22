@@ -13,8 +13,9 @@ import { displayChainName } from '@/stores/blockchain/chains'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useSigner } from '@/stores/useSigner'
-import { SAManagerPopup, standardErrors } from '@samanager/sdk'
+import { SAManagerPopup, standardErrors, WalletGetCapabilitiesRequest } from '@samanager/sdk'
 import { AlertCircle, CheckCircle, CircleDot, Loader2, Power, X } from 'lucide-vue-next'
+import { handleGetCapabilities } from './handleGetCapabilities'
 
 const { selectedAccount, isAccountAccessible, isChainIdMatching, isMultichain } = useAccount()
 const { wallet, address, isEOAWalletConnected, disconnect, isEOAWalletSupported } = useEOAWallet()
@@ -47,41 +48,56 @@ new SAManagerPopup({
 	walletRequestHandler: async (method, params) => {
 		console.log('request', method, params)
 
-		switch (method) {
-			case 'eth_chainId':
-			case 'eth_getBlockByNumber': {
-				return new Promise(async (resolve, reject) => {
-					try {
-						isLoading.value = true
-						pendingRequest.value = { method, params, resolve, reject }
+		return new Promise(async (resolve, reject) => {
+			pendingRequest.value = { method, params, resolve, reject }
+			isLoading.value = true
+			let result
+			let shouldResolveImmediately = true
 
+			try {
+				switch (method) {
+					case 'eth_chainId':
+					case 'eth_getBlockByNumber': {
 						// await new Promise(resolve => setTimeout(resolve, 10000000))
 						const { client } = useBlockchain()
-						const block = await client.value.send(method, params)
-						resolve(block)
-					} catch (err) {
-						console.error('Error getting block', err)
-						error.value = err instanceof Error ? err.message : 'Failed to process request'
-						reject(standardErrors.rpc.internal(error.value))
-					} finally {
-						isLoading.value = false
+						result = await client.value.send(method, params)
+						break
 					}
-				})
-			}
-			case 'eth_requestAccounts': {
-				if (!selectedAccount.value) {
-					throw standardErrors.provider.userRejectedRequest()
+					case 'wallet_getCapabilities': {
+						const capabilities = handleGetCapabilities(params as WalletGetCapabilitiesRequest['params'])
+						result = capabilities
+						break
+					}
+					// Method that requires user interaction
+					case 'eth_requestAccounts':
+					case 'wallet_sendCalls':
+					case 'wallet_showCallsStatus': {
+						shouldResolveImmediately = false
+						break
+					}
+
+					default: {
+						throw standardErrors.provider.unsupportedMethod({
+							message: `Method ${method} not supported`,
+						})
+					}
 				}
-				return new Promise((resolve, reject) => {
-					pendingRequest.value = { method, params, resolve, reject }
-				})
+
+				if (shouldResolveImmediately) {
+					resolve(result)
+				}
+				// For eth_requestAccounts, the promise remains pending until user clicks connect
+			} catch (err) {
+				console.error('Error processing request', err)
+				error.value = err instanceof Error ? err.message : 'Failed to process request'
+				reject(standardErrors.rpc.internal(error.value))
+			} finally {
+				if (shouldResolveImmediately) {
+					isLoading.value = false
+					pendingRequest.value = null
+				}
 			}
-			default: {
-				throw standardErrors.provider.unsupportedMethod({
-					message: `Method ${method} not supported`,
-				})
-			}
-		}
+		})
 	},
 })
 
@@ -101,6 +117,22 @@ function onClickConnect() {
 			standardErrors.rpc.internal(err instanceof Error ? err.message : 'Failed to connect'),
 		)
 	} finally {
+		isLoading.value = false
+		pendingRequest.value = null
+	}
+}
+
+function onClickReject() {
+	try {
+		if (!pendingRequest.value) {
+			throw new Error('No pending request')
+		}
+		console.log('onClickReject')
+		pendingRequest.value.reject(standardErrors.provider.userRejectedRequest())
+	} catch (err) {
+		console.error('Error rejecting request:', err)
+	} finally {
+		isLoading.value = false
 		pendingRequest.value = null
 	}
 }
@@ -166,10 +198,11 @@ function onClickConnect() {
 						</div>
 					</div>
 				</div>
-				<div class="mt-4">
+				<div class="mt-4 space-y-3">
 					<Button class="w-full" :disabled="!selectedAccount || !isAccountAccessible" @click="onClickConnect">
 						{{ selectedAccount ? 'Connect' : 'Select an account to connect' }}
 					</Button>
+					<Button variant="outline" class="w-full" @click="onClickReject"> Cancel </Button>
 				</div>
 			</div>
 
@@ -323,6 +356,7 @@ function onClickConnect() {
 				</div>
 			</div>
 		</div>
+		<!-- other requests -->
 		<div v-else class="w-full max-w-2xl mx-auto p-6 space-y-6">
 			<!-- Header -->
 			<div class="flex justify-between items-center mb-6">
