@@ -65,8 +65,7 @@ async function onClickGetBlock() {
 			})
 		} catch (err: unknown) {
 			console.error('Error getting block', err)
-			getBlockError.value =
-				err && typeof err === 'object' && 'message' in err ? (err.message as string) : 'Unknown error'
+			getBlockError.value = err instanceof Error ? err.message : 'Failed to get block'
 		}
 	} else {
 		getBlockError.value = 'Wallet not connected'
@@ -84,8 +83,7 @@ async function onClickGetCapabilities() {
 			})
 		} catch (err: unknown) {
 			console.error('Error getting capabilities', err)
-			capabilitiesError.value =
-				err && typeof err === 'object' && 'message' in err ? (err.message as string) : 'Unknown error'
+			capabilitiesError.value = err instanceof Error ? err.message : 'Failed to get capabilities'
 		}
 	} else {
 		capabilitiesError.value = 'Wallet not connected'
@@ -117,9 +115,8 @@ async function onClickSendCalls() {
 				],
 			})
 		} catch (err: unknown) {
-			console.error('Error sending calls', err)
-			sendCallsError.value =
-				err && typeof err === 'object' && 'message' in err ? (err.message as string) : 'Unknown error'
+			console.error(err)
+			sendCallsError.value = err instanceof Error ? err.message : 'Failed to send calls'
 		}
 	} else {
 		sendCallsError.value = 'Wallet not connected'
@@ -137,8 +134,7 @@ async function onClickGetCallsStatus() {
 			})
 		} catch (err: unknown) {
 			console.error('Error getting calls status', err)
-			getCallsStatusError.value =
-				err && typeof err === 'object' && 'message' in err ? (err.message as string) : 'Unknown error'
+			getCallsStatusError.value = err instanceof Error ? err.message : 'Failed to get calls status'
 		}
 	} else if (!sendCallsResult.value) {
 		getCallsStatusError.value = 'No sendCalls result available'
@@ -158,8 +154,7 @@ async function onClickShowCallsStatus() {
 			})
 		} catch (err: unknown) {
 			console.error('Error showing calls status', err)
-			showCallsStatusError.value =
-				err && typeof err === 'object' && 'message' in err ? (err.message as string) : 'Unknown error'
+			showCallsStatusError.value = err instanceof Error ? err.message : 'Failed to show calls status'
 		}
 	} else if (!sendCallsResult.value) {
 		showCallsStatusError.value = 'No sendCalls result available'
@@ -179,7 +174,7 @@ async function onClickShowCallsStatus() {
 
 		<div>status: {{ wallet.status }}</div>
 		<div>isConnected: {{ isConnected }}</div>
-		<div>error: {{ wallet.error }}</div>
+		<div>error: {{ wallet.error instanceof Error ? wallet.error.message : wallet.error }}</div>
 
 		<div v-if="isConnected">
 			<div>chainId: {{ wallet.chainId }}</div>

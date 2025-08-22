@@ -1,7 +1,7 @@
 import { Communicator } from './Communicator'
 import { DEFAULT_ORIGIN, ICON_DATA_URI, SUPPORTED_CHAIN_IDS } from './constants'
 import { correlationIds } from './correlationIds'
-import { standardErrors } from './error'
+import { deserializeError, standardErrors } from './error'
 import { KeyManager } from './KeyManager'
 import type { EncryptedData, RPCRequestMessage, RPCResponse, RPCResponseMessage } from './message'
 import type { EthRequestAccountsResponse } from './rpc'
@@ -200,7 +200,7 @@ export class SAManagerProvider implements ProviderInterface {
 
 			// store peer's public key
 			if ('failure' in response.content) {
-				throw response.content.failure
+				throw deserializeError(response.content.failure)
 			}
 
 			// 4. Extract peer's public key from response.sender
@@ -275,7 +275,7 @@ export class SAManagerProvider implements ProviderInterface {
 
 		// throw protocol level error
 		if ('failure' in content) {
-			throw content.failure
+			throw deserializeError(content.failure)
 		}
 
 		const sharedSecret = await this.keyManager.getSharedSecret()
@@ -290,7 +290,7 @@ export class SAManagerProvider implements ProviderInterface {
 
 	private async handleResponse(_request: RequestArguments, decrypted: RPCResponse) {
 		const result = decrypted.result
-		if ('error' in result) throw result.error
+		if ('error' in result) throw deserializeError(result.error)
 		return result.value
 	}
 }

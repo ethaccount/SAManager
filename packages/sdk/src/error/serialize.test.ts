@@ -1,7 +1,7 @@
-import { standardErrorCodes } from './constants.js'
-import { standardErrors } from './errors.js'
-import { serializeError } from './serialize.js'
-import type { Web3Response } from './types.js'
+import { standardErrorCodes } from './constants'
+import { standardErrors } from './errors'
+import { serializeError } from './serialize'
+import type { Web3Response } from './types'
 
 describe('serializeError', () => {
 	test('with ErrorResponse object', () => {

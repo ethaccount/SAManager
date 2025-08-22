@@ -129,7 +129,7 @@ type CustomErrorArg<T> = ServerErrorOptions<T>
 
 type EthErrorsArg<T> = EthereumErrorOptions<T> | string
 
-class EthereumRpcError<T> extends Error {
+export class EthereumRpcError<T> extends Error {
 	code: number
 
 	data?: T
@@ -150,7 +150,7 @@ class EthereumRpcError<T> extends Error {
 	}
 }
 
-class EthereumProviderError<T> extends EthereumRpcError<T> {
+export class EthereumProviderError<T> extends EthereumRpcError<T> {
 	/**
 	 * Create an Ethereum Provider JSON-RPC error.
 	 * `code` must be an integer in the 1000 <= 4999 range.

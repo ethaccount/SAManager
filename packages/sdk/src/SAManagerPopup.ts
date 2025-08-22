@@ -1,4 +1,4 @@
-import { serialize, standardErrors } from './error'
+import { serializeError, standardErrors } from './error'
 import { KeyManager } from './KeyManager'
 import type { EncryptedData, RPCRequest, RPCRequestMessage, RPCResponse, RPCResponseMessage } from './message'
 import type { RequestArguments } from './types'
@@ -160,7 +160,7 @@ export class SAManagerPopup {
 				correlationId: undefined,
 				requestId: requestId as `${string}-${string}-${string}-${string}-${string}`,
 				sender: ownPublicKey,
-				content: { failure: serialize(error) },
+				content: { failure: serializeError(error) },
 				timestamp: new Date(),
 			}
 

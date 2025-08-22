@@ -1,7 +1,7 @@
-import { standardErrorCodes } from './constants.js'
-import { isErrorResponse } from './errors.js'
-import type { Web3Response } from './types.js'
-import { serialize } from './utils.js'
+import { standardErrorCodes } from './constants'
+import { EthereumProviderError, EthereumRpcError, isErrorResponse } from './errors'
+import type { Web3Response } from './types'
+import { serialize, type SerializedEthereumRpcError } from './utils'
 
 /**
  * Serializes an error to a format that is compatible with the Ethereum JSON RPC error format.
@@ -14,6 +14,18 @@ export function serializeError(error: unknown) {
 	return {
 		...serialized,
 	}
+}
+
+export function deserializeError(serialized: SerializedEthereumRpcError): Error {
+	const { code, message, data, stack } = serialized
+
+	const isProviderError = code >= 1000 && code <= 4999
+	const error = isProviderError
+		? new EthereumProviderError(code, message, data)
+		: new EthereumRpcError(code, message, data)
+
+	if (stack) error.stack = stack
+	return error
 }
 
 /**
