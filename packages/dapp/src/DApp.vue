@@ -105,7 +105,7 @@ async function onClickSendCalls() {
 						calls: [
 							{
 								to: '0x96e44D241D3A6B069C3DF4e69DE28Ea098805b18',
-								value: 0n,
+								value: '0x0',
 								data: '0xd09de08a',
 							},
 						],

@@ -3,10 +3,11 @@ import NetworkSelector from '@/components/header/NetworkSelector.vue'
 import CenterStageLayout from '@/components/layout/CenterStageLayout.vue'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain'
-import { SAManagerPopup, standardErrors, WalletGetCapabilitiesRequest } from '@samanager/sdk'
+import { SAManagerPopup, standardErrors, WalletGetCapabilitiesRequest, WalletSendCallsRequest } from '@samanager/sdk'
 import { AlertCircle, Loader2 } from 'lucide-vue-next'
 import EthRequestAccounts from './EthRequestAccounts.vue'
 import { handleGetCapabilities } from './handleGetCapabilities'
+import WalletSendCalls from './WalletSendCalls.vue'
 
 const { selectedAccount } = useAccount()
 
@@ -87,6 +88,8 @@ new SAManagerPopup({
 	},
 })
 
+// ================================ eth_requestAccounts ================================
+
 function onClickConnect() {
 	try {
 		if (!pendingRequest.value) {
@@ -122,6 +125,35 @@ function onClickReject() {
 		pendingRequest.value = null
 	}
 }
+
+// ================================ wallet_sendCalls ================================
+
+const executions = computed(() => {
+	const params = pendingRequest.value?.params as WalletSendCallsRequest['params']
+	return params[0].calls.map(call => {
+		return {
+			to: call.to ?? '',
+			data: call.data ?? '',
+			value: BigInt(call.value ?? 0n),
+		}
+	})
+})
+
+function handleTxClose() {
+	pendingRequest.value = null
+}
+
+function handleTxExecuted() {
+	pendingRequest.value = null
+}
+
+function handleTxSuccess() {
+	pendingRequest.value = null
+}
+
+function handleTxFailed() {
+	pendingRequest.value = null
+}
 </script>
 
 <template>
@@ -131,6 +163,14 @@ function onClickReject() {
 			v-if="pendingRequest?.method === 'eth_requestAccounts'"
 			@connect="onClickConnect"
 			@reject="onClickReject"
+		/>
+		<WalletSendCalls
+			v-else-if="pendingRequest?.method === 'wallet_sendCalls'"
+			:executions="executions"
+			@close="handleTxClose"
+			@executed="handleTxExecuted"
+			@success="handleTxSuccess"
+			@failed="handleTxFailed"
 		/>
 		<!-- other requests -->
 		<div v-else class="w-full max-w-2xl mx-auto p-6 space-y-6">
