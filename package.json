@@ -34,13 +34,13 @@
 		"check": "pnpm typecheck && pnpm lint"
 	},
 	"dependencies": {
-		"@samanager/sdk": "workspace:*",
 		"@internationalized/date": "^3.7.0",
 		"@noble/curves": "^1.8.1",
 		"@rhinestone/module-sdk": "^0.2.10",
+		"@samanager/sdk": "workspace:*",
 		"@tanstack/vue-table": "^8.21.3",
 		"@vee-validate/zod": "^4.15.0",
-		"@vue-dapp/core": "1.5.8",
+		"@vue-dapp/core": "1.5.9-beta.0",
 		"@vue-dapp/modal": "1.5.8",
 		"@vueuse/core": "^12.4.0",
 		"class-variance-authority": "^0.7.1",

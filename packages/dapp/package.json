@@ -17,7 +17,7 @@
 	},
 	"dependencies": {
 		"@samanager/sdk": "workspace:*",
-		"@vue-dapp/core": "1.5.8",
+		"@vue-dapp/core": "1.5.9-beta.0",
 		"@vue-dapp/modal": "1.5.8",
 		"@vueuse/core": "^12.4.0",
 		"pinia": "3.0.1",

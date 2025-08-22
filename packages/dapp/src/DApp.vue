@@ -4,8 +4,7 @@ import { BrowserWalletConnector, useVueDapp } from '@vue-dapp/core'
 import { useVueDappModal, VueDappModal } from '@vue-dapp/modal'
 import '@vue-dapp/modal/dist/style.css'
 
-const { wallet, provider, isConnected, connectors, addConnectors, watchWalletChanged, watchDisconnect, disconnect } =
-	useVueDapp()
+const { wallet, isConnected, connectors, addConnectors, watchWalletChanged, watchDisconnect, disconnect } = useVueDapp()
 
 const DAPP_CHAIN_ID = 11155111n
 
@@ -54,9 +53,9 @@ const capabilitiesResult = ref(null)
 async function onClickGetBlock() {
 	getBlockError.value = null
 	block.value = null
-	if (wallet.status === 'connected' && provider.value) {
+	if (wallet.status === 'connected' && wallet.provider) {
 		try {
-			block.value = await provider.value.request({
+			block.value = await wallet.provider.request({
 				method: 'eth_getBlockByNumber',
 				params: ['latest', false],
 			})
@@ -73,9 +72,9 @@ async function onClickGetBlock() {
 async function onClickGetCapabilities() {
 	capabilitiesError.value = null
 	capabilitiesResult.value = null
-	if (wallet.status === 'connected' && provider.value && wallet.address) {
+	if (wallet.status === 'connected' && wallet.provider && wallet.address) {
 		try {
-			capabilitiesResult.value = await provider.value.request({
+			capabilitiesResult.value = await wallet.provider.request({
 				method: 'wallet_getCapabilities',
 				params: [wallet.address, [`0x${DAPP_CHAIN_ID.toString(16)}`]],
 			})
@@ -92,9 +91,9 @@ async function onClickGetCapabilities() {
 async function onClickSendCalls() {
 	sendCallsError.value = null
 	sendCallsResult.value = null
-	if (wallet.status === 'connected' && provider.value && wallet.address) {
+	if (wallet.status === 'connected' && wallet.provider && wallet.address) {
 		try {
-			sendCallsResult.value = await provider.value.request({
+			sendCallsResult.value = await wallet.provider.request({
 				method: 'wallet_sendCalls',
 				params: [
 					{
