@@ -96,7 +96,7 @@ const mode = useColorMode()
 		<MainLayout />
 	</div>
 
-	<AppHelp v-if="route.name !== 'browser'" class="fixed bottom-4 left-4" />
+	<AppHelp v-if="route.name !== 'browser' && route.name !== 'connect'" class="fixed bottom-4 left-4" />
 
 	<VueDappModal :dark="mode === 'dark'" autoConnect />
 	<ModalsContainer />

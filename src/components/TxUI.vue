@@ -840,14 +840,9 @@ const shouldShowEffectiveFee = computed(() => {
 			</div>
 		</div>
 
-		<!-- Footer -->
-		<div
-			v-show="!showUserOpPreview && status !== TransactionStatus.PreparingPaymaster"
-			class="space-y-2 px-4 py-4 border-t border-border"
-		>
-			<!-- Error message display -->
+		<!-- Error message display -->
+		<div v-if="txModalErrorMessage" class="border-t border-border p-4">
 			<div
-				v-if="txModalErrorMessage"
 				class="error-section"
 				:class="{
 					'overflow-y-auto': useModalSpecificStyle,
@@ -856,7 +851,13 @@ const shouldShowEffectiveFee = computed(() => {
 			>
 				{{ txModalErrorMessage }}
 			</div>
+		</div>
 
+		<!-- Footer -->
+		<div
+			v-show="!showUserOpPreview && status !== TransactionStatus.PreparingPaymaster"
+			class="sticky bottom-0 bg-background space-y-2 px-4 py-4 border-t border-border"
+		>
 			<!-- Fee Display -->
 			<div class="flex flex-col text-xs px-2">
 				<!-- Possible Fee -->
@@ -920,7 +921,7 @@ const shouldShowEffectiveFee = computed(() => {
 			</div>
 
 			<!-- ============================ Action buttons ============================ -->
-			<div class="space-y-2">
+			<div>
 				<div v-if="isLoadingCode" class="flex justify-center py-4">
 					<Loader2 class="w-6 h-6 animate-spin text-primary" />
 				</div>
