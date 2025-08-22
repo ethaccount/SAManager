@@ -75,6 +75,50 @@ describe('SAManagerProvider', () => {
 		})
 	})
 
+	describe('constructor', () => {
+		it('should initialize successfully with all supported chainIds', () => {
+			// Test all supported mainnet chains
+			const supportedChains = [
+				1n, // ETHEREUM
+				8453n, // BASE
+				// 42161n, // ARBITRUM
+				// 10n, // OPTIMISM
+				// 137n, // POLYGON
+
+				// Testnet chains
+				11155111n, // SEPOLIA
+				84532n, // BASE_SEPOLIA
+				421614n, // ARBITRUM_SEPOLIA
+				11155420n, // OPTIMISM_SEPOLIA
+				80002n, // POLYGON_AMOY
+			]
+
+			supportedChains.forEach(chainId => {
+				expect(
+					() =>
+						new SAManagerProvider({
+							chainId,
+							callback: mockCallback,
+						}),
+				).not.toThrow()
+			})
+		})
+
+		it('should throw error with unsupported chainId', () => {
+			const unsupportedChains = [999999n, 1234n, 56n, 43114n]
+
+			unsupportedChains.forEach(chainId => {
+				expect(
+					() =>
+						new SAManagerProvider({
+							chainId,
+							callback: mockCallback,
+						}),
+				).toThrowError(`Unsupported chainId: ${chainId}`)
+			})
+		})
+	})
+
 	afterEach(async () => {
 		vi.clearAllMocks()
 		vi.resetAllMocks()

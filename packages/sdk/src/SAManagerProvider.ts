@@ -8,6 +8,22 @@ import type { EthRequestAccountsResponse } from './rpc'
 import type { Address, ProviderEventMap, ProviderInterface, RequestArguments } from './types'
 import { bigIntToHex, decryptContent, encryptContent, exportKeyToHexString, importKeyFromHexString } from './utils'
 
+const SUPPORTED_CHAIN_IDS = [
+	// Mainnet
+	'1', // ETHEREUM
+	'8453', // BASE
+	// '42161', // ARBITRUM
+	// '10', // OPTIMISM
+	// '137', // POLYGON
+
+	// Testnet
+	'11155111', // SEPOLIA
+	'84532', // BASE_SEPOLIA
+	'421614', // ARBITRUM_SEPOLIA
+	'11155420', // OPTIMISM_SEPOLIA
+	'80002', // POLYGON_AMOY
+] as const
+
 export type ProviderEventCallback = ProviderInterface['emit']
 
 export type SAManagerProviderOptions = {
@@ -15,27 +31,6 @@ export type SAManagerProviderOptions = {
 	origin?: string
 	callback?: ProviderEventCallback
 	debug?: boolean
-}
-
-export function announceSAManagerProvider({ chainId, origin, callback, debug }: SAManagerProviderOptions) {
-	window.dispatchEvent(
-		new CustomEvent('eip6963:announceProvider', {
-			detail: {
-				info: {
-					uuid: crypto.randomUUID(),
-					name: 'SAManager',
-					icon: 'https://samanager.xyz/favicon_io/favicon-32x32.png',
-					rdns: 'xyz.samanager',
-				},
-				provider: new SAManagerProvider({
-					chainId,
-					origin,
-					callback,
-					debug,
-				}),
-			},
-		}),
-	)
 }
 
 export class SAManagerProvider implements ProviderInterface {
@@ -48,7 +43,12 @@ export class SAManagerProvider implements ProviderInterface {
 	private chainId: bigint
 
 	constructor({ chainId, origin = DEFAULT_ORIGIN, callback, debug = false }: SAManagerProviderOptions) {
-		// TODO: check if the chainId is supported in SAManager
+		// Check if the chainId is supported in SAManager
+		if (!SUPPORTED_CHAIN_IDS.includes(chainId.toString() as any)) {
+			throw standardErrors.provider.unsupportedChain(
+				`Unsupported chainId: ${chainId}. Supported chainIds: ${SUPPORTED_CHAIN_IDS.join(', ')}`,
+			)
+		}
 		this.chainId = chainId
 		this.communicator = new Communicator({
 			url: origin + '/' + this.chainId.toString() + '/connect',
@@ -288,4 +288,25 @@ export class SAManagerProvider implements ProviderInterface {
 
 		return result.value
 	}
+}
+
+export function announceSAManagerProvider({ chainId, origin, callback, debug }: SAManagerProviderOptions) {
+	window.dispatchEvent(
+		new CustomEvent('eip6963:announceProvider', {
+			detail: {
+				info: {
+					uuid: crypto.randomUUID(),
+					name: 'SAManager',
+					icon: 'https://samanager.xyz/favicon_io/favicon-32x32.png',
+					rdns: 'xyz.samanager',
+				},
+				provider: new SAManagerProvider({
+					chainId,
+					origin,
+					callback,
+					debug,
+				}),
+			},
+		}),
+	)
 }
