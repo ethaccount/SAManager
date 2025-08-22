@@ -22,6 +22,17 @@ export enum TransactionStatus {
 	Failed = 'Failed',
 }
 
+export type TxUIProps = {
+	executions?: TxModalExecution[]
+}
+
+export type TxUIEmits = {
+	(e: 'close'): void
+	(e: 'executed'): void // when status is success or failed
+	(e: 'success'): void
+	(e: 'failed'): void
+}
+
 export type TxModalExecution = Execution & {
 	description?: string
 }
