@@ -4,7 +4,7 @@ import { correlationIds } from './correlationIds'
 import { standardErrors } from './error'
 import { KeyManager } from './KeyManager'
 import type { EncryptedData, RPCRequestMessage, RPCResponseMessage } from './message'
-import { SAManagerProvider, type ProviderEventCallback } from './SAManagerProvider'
+import { SAManagerProvider } from './SAManagerProvider'
 import { bigIntToHex, decryptContent, encryptContent, exportKeyToHexString, importKeyFromHexString } from './utils'
 
 vi.mock('./Communicator', () => ({
@@ -48,7 +48,6 @@ const mockSuccessResponse: RPCResponseMessage = {
 describe('SAManagerProvider', () => {
 	let provider: SAManagerProvider
 	let mockCommunicator: Mocked<Communicator>
-	let mockCallback: ProviderEventCallback
 	let mockKeyManager: Mocked<KeyManager>
 
 	beforeEach(async () => {
@@ -57,7 +56,6 @@ describe('SAManagerProvider', () => {
 		mockCommunicator.waitForPopupLoaded.mockResolvedValue({} as Window)
 		mockCommunicator.postRequestAndWaitForResponse.mockResolvedValue(mockSuccessResponse)
 
-		mockCallback = vi.fn()
 		mockKeyManager = new KeyManager() as Mocked<KeyManager>
 		;(KeyManager as Mock).mockImplementation(() => mockKeyManager)
 		mockKeyManager.getSharedSecret.mockResolvedValueOnce(null)
@@ -71,7 +69,6 @@ describe('SAManagerProvider', () => {
 
 		provider = new SAManagerProvider({
 			chainId: 1n,
-			callback: mockCallback,
 		})
 	})
 
@@ -98,7 +95,6 @@ describe('SAManagerProvider', () => {
 					() =>
 						new SAManagerProvider({
 							chainId,
-							callback: mockCallback,
 						}),
 				).not.toThrow()
 			})
@@ -112,7 +108,6 @@ describe('SAManagerProvider', () => {
 					() =>
 						new SAManagerProvider({
 							chainId,
-							callback: mockCallback,
 						}),
 				).toThrowError(`Unsupported chainId: ${chainId}`)
 			})
@@ -147,6 +142,8 @@ describe('SAManagerProvider', () => {
 	describe('eth_requestAccounts with handshake', () => {
 		it('should perform a successful eth_requestAccounts with handshake', async () => {
 			;(decryptContent as Mock).mockResolvedValueOnce({ result: { value: ['0xAddress'] } })
+
+			const emitSpy = vi.spyOn(provider, 'emit')
 
 			expect(provider['accounts']).toEqual([])
 
@@ -185,7 +182,7 @@ describe('SAManagerProvider', () => {
 			expect(mockKeyManager.setPeerPublicKey).toHaveBeenCalledWith(mockCryptoKey)
 			expect(decryptContent).toHaveBeenCalledWith(encryptedData, mockCryptoKey)
 
-			expect(mockCallback).toHaveBeenCalledWith('accountsChanged', ['0xAddress'])
+			expect(emitSpy).toHaveBeenCalledWith('accountsChanged', ['0xAddress'])
 		})
 
 		it('should throw an error if failure in response.content during handshake', async () => {
@@ -268,6 +265,8 @@ describe('SAManagerProvider', () => {
 
 	describe('disconnect', () => {
 		it('should clear accounts when disconnect is called', async () => {
+			const emitSpy = vi.spyOn(provider, 'emit')
+
 			// First populate accounts
 			;(decryptContent as Mock).mockResolvedValueOnce({ result: { value: ['0xAddress'] } })
 			await provider.request({ method: 'eth_requestAccounts' })
@@ -278,6 +277,7 @@ describe('SAManagerProvider', () => {
 
 			// Verify accounts are cleared
 			expect(provider['accounts']).toEqual([])
+			expect(emitSpy).toHaveBeenCalledWith('accountsChanged', [])
 		})
 	})
 

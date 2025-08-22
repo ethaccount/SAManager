@@ -1,5 +1,5 @@
 import { Communicator } from './Communicator'
-import { DEFAULT_ORIGIN, ICON_DATA_URI } from './constants'
+import { DEFAULT_ORIGIN, ICON_DATA_URI, SUPPORTED_CHAIN_IDS } from './constants'
 import { correlationIds } from './correlationIds'
 import { standardErrors } from './error'
 import { KeyManager } from './KeyManager'
@@ -8,41 +8,24 @@ import type { EthRequestAccountsResponse } from './rpc'
 import type { Address, ProviderEventMap, ProviderInterface, RequestArguments } from './types'
 import { bigIntToHex, decryptContent, encryptContent, exportKeyToHexString, importKeyFromHexString } from './utils'
 
-const SUPPORTED_CHAIN_IDS = [
-	// Mainnet
-	'1', // ETHEREUM
-	'8453', // BASE
-	// '42161', // ARBITRUM
-	// '10', // OPTIMISM
-	// '137', // POLYGON
-
-	// Testnet
-	'11155111', // SEPOLIA
-	'84532', // BASE_SEPOLIA
-	'421614', // ARBITRUM_SEPOLIA
-	'11155420', // OPTIMISM_SEPOLIA
-	'80002', // POLYGON_AMOY
-] as const
-
 export type ProviderEventCallback = ProviderInterface['emit']
 
 export type SAManagerProviderOptions = {
 	chainId: bigint
 	origin?: string
-	callback?: ProviderEventCallback
 	debug?: boolean
 }
 
 export class SAManagerProvider implements ProviderInterface {
 	private readonly communicator: Communicator
 	private readonly keyManager: KeyManager
-	private callback: ProviderEventCallback | undefined
 	private debug: boolean
+	private eventHandlers: Map<keyof ProviderEventMap, Set<(payload: any) => void>> = new Map()
 
 	private accounts: Address[]
 	private chainId: bigint
 
-	constructor({ chainId, origin = DEFAULT_ORIGIN, callback, debug = false }: SAManagerProviderOptions) {
+	constructor({ chainId, origin = DEFAULT_ORIGIN, debug = false }: SAManagerProviderOptions) {
 		// Check if the chainId is supported in SAManager
 		if (!SUPPORTED_CHAIN_IDS.includes(chainId.toString() as any)) {
 			throw standardErrors.provider.unsupportedChain(
@@ -56,7 +39,6 @@ export class SAManagerProvider implements ProviderInterface {
 			debug,
 		})
 		this.keyManager = new KeyManager()
-		this.callback = callback
 		this.debug = debug
 		this.accounts = []
 		if (debug) this.log('SAManagerProvider initialized')
@@ -69,7 +51,7 @@ export class SAManagerProvider implements ProviderInterface {
 	async request(request: RequestArguments) {
 		this.log('request', request)
 
-		// // Handle methods that don't require popup/encryption
+		// // Handle methods that don't require popup
 		switch (request.method) {
 			case 'eth_chainId': {
 				// Direct return the chainId set in the constructor
@@ -99,11 +81,13 @@ export class SAManagerProvider implements ProviderInterface {
 					break
 				}
 				case 'eth_requestAccounts': {
-					await this.sendRequestToPopup(request)
-					result = this.accounts
+					result = await this.sendRequestToPopup(request)
+					// Update accounts in the provider
+					this.updateAccounts(result as EthRequestAccountsResponse)
 					break
 				}
 				case 'eth_sendCalls': {
+					// Check if there is an account connected
 					if (!this.hasAccount()) {
 						throw standardErrors.provider.disconnected('No account found. Please connect wallet.')
 					}
@@ -125,25 +109,34 @@ export class SAManagerProvider implements ProviderInterface {
 		}
 	}
 
+	// Dapp will call this method when the user disconnects the wallet
 	async disconnect(): Promise<void> {
-		// TODO: Implement wallet disconnect logic
 		this.log('disconnect called')
-		this.accounts = []
+		this.updateAccounts([])
 	}
 
 	emit<K extends keyof ProviderEventMap>(event: K, payload: ProviderEventMap[K]): void {
-		// TODO: Implement event emission logic
 		this.log('emit:', event, payload)
+		const handlers = this.eventHandlers.get(event)
+		if (handlers) {
+			handlers.forEach(handler => handler(payload))
+		}
 	}
 
 	on<K extends keyof ProviderEventMap>(event: K, handler: (payload: ProviderEventMap[K]) => void): void {
 		this.log('on:', event)
-		// TODO: Implement event listener registration
+		if (!this.eventHandlers.has(event)) {
+			this.eventHandlers.set(event, new Set())
+		}
+		this.eventHandlers.get(event)?.add(handler)
 	}
 
 	removeListener<K extends keyof ProviderEventMap>(event: K, handler: (payload: ProviderEventMap[K]) => void): void {
 		this.log('removeListener:', event)
-		// TODO: Implement event listener removal
+		const handlers = this.eventHandlers.get(event)
+		if (handlers) {
+			handlers.delete(handler)
+		}
 	}
 
 	// =============================== PRIVATE METHODS ===============================
@@ -154,10 +147,15 @@ export class SAManagerProvider implements ProviderInterface {
 		}
 	}
 
+	private updateAccounts(accounts: Address[]): void {
+		this.accounts = accounts
+		this.emit('accountsChanged', accounts)
+	}
+
 	private updateChain(chainId: bigint): boolean {
 		if (chainId !== this.chainId) {
 			this.chainId = chainId
-			this.callback?.('chainChanged', bigIntToHex(chainId))
+			this.emit('chainChanged', bigIntToHex(chainId))
 		}
 		return true
 	}
@@ -167,7 +165,7 @@ export class SAManagerProvider implements ProviderInterface {
 	}
 
 	/**
-	 * Handle popup disconnect - clear shared secret and reset state
+	 * Handle popup disconnect - clear shared secret
 	 */
 	private handlePopupDisconnect(): void {
 		this.log('handlePopupDisconnect: popup disconnected, clearing shared secret')
@@ -287,27 +285,14 @@ export class SAManagerProvider implements ProviderInterface {
 		return response
 	}
 
-	private async handleResponse(request: RequestArguments, decrypted: RPCResponse) {
+	private async handleResponse(_request: RequestArguments, decrypted: RPCResponse) {
 		const result = decrypted.result
-
 		if ('error' in result) throw result.error
-
-		// handle specific request methods
-		switch (request.method) {
-			// Store accounts
-			case 'eth_requestAccounts': {
-				const accounts = result.value as EthRequestAccountsResponse
-				this.accounts = accounts
-				this.callback?.('accountsChanged', accounts)
-				break
-			}
-		}
-
 		return result.value
 	}
 }
 
-export function announceSAManagerProvider({ chainId, origin, callback, debug }: SAManagerProviderOptions) {
+export function announceSAManagerProvider({ chainId, origin, debug }: SAManagerProviderOptions) {
 	window.dispatchEvent(
 		new CustomEvent('eip6963:announceProvider', {
 			detail: {
@@ -320,7 +305,6 @@ export function announceSAManagerProvider({ chainId, origin, callback, debug }: 
 				provider: new SAManagerProvider({
 					chainId,
 					origin,
-					callback,
 					debug,
 				}),
 			},
