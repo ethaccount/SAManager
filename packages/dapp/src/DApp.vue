@@ -75,6 +75,7 @@ const block = ref(null)
 
 async function onClickGetBlock() {
 	error.value = null
+	block.value = null
 	if (wallet.status === 'connected' && provider.value) {
 		try {
 			block.value = await provider.value.request({
@@ -115,10 +116,10 @@ onMounted(() => {
 		<br />
 
 		<div>
-			<button class="btn" @click="onClickGetBlock">Get Block</button>
+			<button class="btn" @click="onClickGetBlock">eth_getBlockByNumber</button>
 			<div v-if="error" class="text-red-500">{{ error }}</div>
 			<div v-if="block">
-				<div>block: {{ block }}</div>
+				<div>block: {{ (block as any).hash }}</div>
 			</div>
 		</div>
 
