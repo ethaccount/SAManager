@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { announceSAManagerProvider } from '@samanager/sdk'
+import { announceSAManagerProvider, WalletGetCallsStatusResponse, WalletSendCallsResponse } from '@samanager/sdk'
 import { BrowserWalletConnector, useVueDapp } from '@vue-dapp/core'
 import { useVueDappModal, VueDappModal } from '@vue-dapp/modal'
 import '@vue-dapp/modal/dist/style.css'
@@ -46,7 +46,11 @@ function onClickConnectButton() {
 const getBlockError = ref<string | null>(null)
 const block = ref(null)
 const sendCallsError = ref<string | null>(null)
-const sendCallsResult = ref(null)
+const sendCallsResult = ref<WalletSendCallsResponse | null>(null)
+const getCallsStatusError = ref<string | null>(null)
+const getCallsStatusResult = ref<WalletGetCallsStatusResponse | null>(null)
+const showCallsStatusError = ref<string | null>(null)
+const showCallsStatusResult = ref(null)
 const capabilitiesError = ref<string | null>(null)
 const capabilitiesResult = ref(null)
 
@@ -121,6 +125,48 @@ async function onClickSendCalls() {
 		sendCallsError.value = 'Wallet not connected'
 	}
 }
+
+async function onClickGetCallsStatus() {
+	getCallsStatusError.value = null
+	getCallsStatusResult.value = null
+	if (wallet.status === 'connected' && wallet.provider && sendCallsResult.value) {
+		try {
+			getCallsStatusResult.value = await wallet.provider.request({
+				method: 'wallet_getCallsStatus',
+				params: [sendCallsResult.value.id],
+			})
+		} catch (err: unknown) {
+			console.error('Error getting calls status', err)
+			getCallsStatusError.value =
+				err && typeof err === 'object' && 'message' in err ? (err.message as string) : 'Unknown error'
+		}
+	} else if (!sendCallsResult.value) {
+		getCallsStatusError.value = 'No sendCalls result available'
+	} else {
+		getCallsStatusError.value = 'Wallet not connected'
+	}
+}
+
+async function onClickShowCallsStatus() {
+	showCallsStatusError.value = null
+	showCallsStatusResult.value = null
+	if (wallet.status === 'connected' && wallet.provider && sendCallsResult.value) {
+		try {
+			showCallsStatusResult.value = await wallet.provider.request({
+				method: 'wallet_showCallsStatus',
+				params: [sendCallsResult.value.id],
+			})
+		} catch (err: unknown) {
+			console.error('Error showing calls status', err)
+			showCallsStatusError.value =
+				err && typeof err === 'object' && 'message' in err ? (err.message as string) : 'Unknown error'
+		}
+	} else if (!sendCallsResult.value) {
+		showCallsStatusError.value = 'No sendCalls result available'
+	} else {
+		showCallsStatusError.value = 'Wallet not connected'
+	}
+}
 </script>
 
 <template>
@@ -167,6 +213,27 @@ async function onClickSendCalls() {
 			<div v-if="sendCallsError" class="text-red-500">{{ sendCallsError }}</div>
 			<div v-if="sendCallsResult">
 				<div>result: {{ sendCallsResult }}</div>
+			</div>
+		</div>
+
+		<br />
+
+		<div>
+			<button class="btn" @click="onClickGetCallsStatus">wallet_getCallsStatus</button>
+			<div v-if="getCallsStatusError" class="text-red-500">{{ getCallsStatusError }}</div>
+			<div v-if="getCallsStatusResult">
+				<div>status: {{ getCallsStatusResult.status }}</div>
+				<div>receipts: {{ getCallsStatusResult.receipts }}</div>
+			</div>
+		</div>
+
+		<br />
+
+		<div>
+			<button class="btn" @click="onClickShowCallsStatus">wallet_showCallsStatus</button>
+			<div v-if="showCallsStatusError" class="text-red-500">{{ showCallsStatusError }}</div>
+			<div v-if="showCallsStatusResult">
+				<div>result: {{ showCallsStatusResult }}</div>
 			</div>
 		</div>
 

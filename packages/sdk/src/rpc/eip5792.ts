@@ -43,16 +43,28 @@ export type WalletGetCallsStatusResponse = {
 	status: number
 	atomic: boolean
 	receipts?: {
+		transactionHash: string
+		transactionIndex: string
+		from: string
+		to: string
+		status: string
+		logsBloom: string
+		blockHash: string
+		blockNumber: string
+		contractAddress: null | string
+		gasUsed: string
+		cumulativeGasUsed: string
+		effectiveGasPrice: string
 		logs: {
-			address: Address
+			logIndex: string
+			transactionIndex: string
+			transactionHash: string
+			blockHash: string
+			blockNumber: string
+			address: string
 			data: string
 			topics: string[]
 		}[]
-		status: string
-		blockHash: string
-		blockNumber: string
-		gasUsed: string
-		transactionHash: string
 	}[]
 	capabilities?: Record<string, unknown>
 }

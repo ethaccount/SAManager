@@ -3,11 +3,20 @@ import NetworkSelector from '@/components/header/NetworkSelector.vue'
 import CenterStageLayout from '@/components/layout/CenterStageLayout.vue'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain'
-import { SAManagerPopup, standardErrors, WalletGetCapabilitiesRequest, WalletSendCallsRequest } from '@samanager/sdk'
+import {
+	SAManagerPopup,
+	standardErrors,
+	WalletGetCallsStatusRequest,
+	WalletGetCallsStatusResponse,
+	WalletGetCapabilitiesRequest,
+	WalletGetCapabilitiesResponse,
+	WalletSendCallsRequest,
+} from '@samanager/sdk'
 import { AlertCircle, Loader2 } from 'lucide-vue-next'
+import { handleGetCallsStatus, handleGetCapabilities } from './eip5792-handlers'
 import EthRequestAccounts from './EthRequestAccounts.vue'
-import { handleGetCapabilities } from './handleGetCapabilities'
 import WalletSendCalls from './WalletSendCalls.vue'
+import WalletShowCallsStatus from './WalletShowCallsStatus.vue'
 
 const { selectedAccount } = useAccount()
 
@@ -51,8 +60,16 @@ new SAManagerPopup({
 						break
 					}
 					case 'wallet_getCapabilities': {
-						const capabilities = handleGetCapabilities(params as WalletGetCapabilitiesRequest['params'])
+						const capabilities = (await handleGetCapabilities(
+							params as WalletGetCapabilitiesRequest['params'],
+						)) as WalletGetCapabilitiesResponse
 						result = capabilities
+						break
+					}
+					case 'wallet_getCallsStatus': {
+						result = (await handleGetCallsStatus(
+							params as WalletGetCallsStatusRequest['params'],
+						)) as WalletGetCallsStatusResponse
 						break
 					}
 					// Method that requires user interaction
@@ -149,11 +166,9 @@ function handleTxSent(hash: string) {
 	})
 }
 
-function handleTxExecuted() {}
-
-function handleTxSuccess() {}
-
-function handleTxFailed() {}
+function handleWalletShowCallsStatusClose() {
+	pendingRequest.value?.resolve(undefined)
+}
 </script>
 
 <template>
@@ -170,11 +185,15 @@ function handleTxFailed() {}
 			:executions="executions"
 			@close="onClickTxClose"
 			@sent="handleTxSent"
-			@executed="handleTxExecuted"
-			@success="handleTxSuccess"
-			@failed="handleTxFailed"
 		/>
-		<!-- other requests -->
+
+		<!-- wallet_showCallsStatus -->
+		<WalletShowCallsStatus
+			v-else-if="pendingRequest?.method === 'wallet_showCallsStatus'"
+			:identifier="<string>pendingRequest?.params[0]"
+			@close="handleWalletShowCallsStatusClose"
+		/>
+
 		<div v-else class="w-full max-w-2xl mx-auto p-6 space-y-6">
 			<!-- Header -->
 			<div class="flex justify-between items-center mb-6">
