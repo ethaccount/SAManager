@@ -864,7 +864,10 @@ const shouldShowEffectiveFee = computed(() => {
 				<div v-if="shouldShowMaxFee && maxPossibleFee" class="flex items-center justify-between">
 					<span class="text-muted-foreground">Possible Gas Fee</span>
 					<div class="text-right">
-						<div>&lt; {{ maxPossibleFee.formatted }} Gwei ({{ maxPossibleFee.usdFormatted }})</div>
+						<div>
+							&lt; {{ maxPossibleFee.formatted }} Gwei
+							<span v-if="maxPossibleFee.usdFormatted">({{ maxPossibleFee.usdFormatted }})</span>
+						</div>
 					</div>
 				</div>
 
@@ -873,7 +876,10 @@ const shouldShowEffectiveFee = computed(() => {
 					<span class="text-muted-foreground">Effective Gas Fee</span>
 					<div class="text-right">
 						<div>
-							{{ effectiveTransactionFee.formatted }} Gwei ({{ effectiveTransactionFee.usdFormatted }})
+							{{ effectiveTransactionFee.formatted }} Gwei
+							<span v-if="effectiveTransactionFee.usdFormatted">
+								({{ effectiveTransactionFee.usdFormatted }})
+							</span>
 						</div>
 					</div>
 				</div>
