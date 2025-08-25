@@ -22,8 +22,8 @@ const router = createRouter({
 												component: () => import('@/views/test/Test.vue'),
 											},
 											{
-												path: '/:chainId/test/connect',
-												component: () => import('@/views/test/Connect.vue'),
+												path: '/:chainId/test/connect-wallet',
+												component: () => import('@/views/test/TestConnectWallet.vue'),
 											},
 											{
 												path: '/:chainId/test/chain-icons',
