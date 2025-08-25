@@ -87,10 +87,16 @@ const mode = useColorMode()
 </script>
 
 <template>
-	<Header />
-	<MainLayout />
+	<div v-if="route.name === 'connect'">
+		<RouterView />
+	</div>
 
-	<AppHelp v-if="route.name !== 'browser'" class="fixed bottom-4 left-4" />
+	<div v-else>
+		<Header />
+		<MainLayout />
+	</div>
+
+	<AppHelp v-if="route.name !== 'browser' && route.name !== 'connect'" class="fixed bottom-4 left-4" />
 
 	<VueDappModal :dark="mode === 'dark'" autoConnect />
 	<ModalsContainer />

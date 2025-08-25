@@ -23,6 +23,7 @@ export const SUPPORTED_CHAIN_IDS = getSupportedChainIds()
 
 function getSupportedChainIds(): CHAIN_ID[] {
 	switch (import.meta.env.MODE) {
+		case 'test':
 		case 'staging':
 			// no local dev needed
 			return Object.values(TESTNET_CHAIN_ID).filter(id => id !== TESTNET_CHAIN_ID.LOCAL)

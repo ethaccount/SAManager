@@ -67,6 +67,7 @@ export default defineConfig(configEnv => {
 		resolve: {
 			alias: {
 				'@': fileURLToPath(new URL('./src', import.meta.url)),
+				'@samanager/sdk': fileURLToPath(new URL('./packages/sdk/src/index.ts', import.meta.url)),
 			},
 		},
 		build: {

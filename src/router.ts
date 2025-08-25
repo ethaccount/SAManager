@@ -22,12 +22,12 @@ const router = createRouter({
 												component: () => import('@/views/test/Test.vue'),
 											},
 											{
-												path: '/:chainId/test/connect',
-												component: () => import('@/views/test/Connect.vue'),
+												path: '/:chainId/test/connect-wallet',
+												component: () => import('@/views/test/TestConnectWallet.vue'),
 											},
 											{
 												path: '/:chainId/test/chain-icons',
-												component: () => import('@/views/test/chain-icons.vue'),
+												component: () => import('@/views/test/TestChainIcons.vue'),
 											},
 											{
 												path: '/:chainId/test/modal',
@@ -53,6 +53,12 @@ const router = createRouter({
 							path: '/:chainId/create',
 							name: 'create',
 							component: () => import('@/views/Create.vue'),
+						},
+						// Connect
+						{
+							path: '/:chainId/connect',
+							name: 'connect',
+							component: () => import('@/views/popup/Connect.vue'),
 						},
 						// Account Management
 						{

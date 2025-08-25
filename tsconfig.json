@@ -22,6 +22,7 @@
 		"baseUrl": ".",
 		"paths": {
 			"@/*": ["./src/*"],
+			"@samanager/sdk": ["packages/sdk/src/index.ts"],
 			"sendop/contract-types/*": ["./node_modules/sendop/src/contract-types/*"]
 		},
 		"noImplicitAny": false, // prevents error in router.ts when importing component

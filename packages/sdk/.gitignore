@@ -1,0 +1,13 @@
+node_modules
+dist
+.env
+
+# for contracts/
+contracts/lib/
+contracts/cache/
+contracts/out/
+contracts/docs/
+contracts/broadcast/
+contracts/dependencies/
+
+deployed-address.txt
