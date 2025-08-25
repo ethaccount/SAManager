@@ -27,7 +27,7 @@ const router = createRouter({
 											},
 											{
 												path: '/:chainId/test/chain-icons',
-												component: () => import('@/views/test/chain-icons.vue'),
+												component: () => import('@/views/test/TestChainIcons.vue'),
 											},
 											{
 												path: '/:chainId/test/modal',
