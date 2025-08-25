@@ -1,12 +1,11 @@
 {
 	"name": "@samanager/sdk",
-	"private": true,
 	"version": "0.0.1",
 	"type": "module",
 	"repository": "https://github.com/ethaccount/SAManager",
 	"author": "Johnson Chen <https://x.com/johnson86tw>",
 	"license": "AGPL-3.0-only",
-	"description": "",
+	"description": "A TypeScript SDK that enables integration of Smart Account Manager into your Dapp",
 	"homepage": "https://samanager.xyz",
 	"keywords": [
 		"ERC-4337",
@@ -16,6 +15,9 @@
 		"wallet",
 		"ethereum"
 	],
+	"publishConfig": {
+		"access": "public"
+	},
 	"scripts": {
 		"build": "pnpm typecheck && vite build",
 		"watch": "pnpm run build --w",
@@ -37,10 +39,6 @@
 		".": {
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js"
-		},
-		"./contract-types": {
-			"types": "./dist/contract-types.d.ts",
-			"import": "./dist/contract-types.js"
 		}
 	},
 	"dependencies": {
