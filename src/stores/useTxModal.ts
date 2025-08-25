@@ -22,6 +22,19 @@ export enum TransactionStatus {
 	Failed = 'Failed',
 }
 
+export type TxUIProps = {
+	executions?: TxModalExecution[]
+	useModalSpecificStyle?: boolean
+}
+
+export type TxUIEmits = {
+	(e: 'close'): void
+	(e: 'sent', hash: string): void
+	(e: 'executed'): void // when status is success or failed
+	(e: 'success'): void
+	(e: 'failed'): void
+}
+
 export type TxModalExecution = Execution & {
 	description?: string
 }
@@ -79,6 +92,11 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 		)
 	})
 
+	// Determine if modal can be closed
+	const canClose = computed(() => {
+		return status.value !== TransactionStatus.Sending && status.value !== TransactionStatus.Pending
+	})
+
 	const canEstimate = computed(() => {
 		if (status.value !== TransactionStatus.Initial) return false
 		if (!selectedPaymaster.value) return false
@@ -108,6 +126,10 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 	}
 
 	async function handleEstimate(executions: Execution[], initCode?: string) {
+		// throw new Error(
+		// 	'Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of "de Finibus Bonorum et Malorum" (The Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a treatise on the theory of ethics, very popular during the Renaissance. The first line of Lorem Ipsum, "Lorem ipsum dolor sit amet..", comes from a line in section 1.10.32.',
+		// )
+
 		if (!selectedAccount.value) {
 			throw new Error('[handleEstimate] Account not selected')
 		}
@@ -178,16 +200,22 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 		// Notice to formate signature if needed
 	}
 
-	async function handleSend() {
+	async function sendUserOp() {
 		if (!userOp.value) {
-			throw new Error('[handleSend] User operation not built')
+			throw new Error('[sendUserOp] User operation not built')
 		}
 		const op = userOp.value
 
+		status.value = TransactionStatus.Sending
 		await op.send()
-
-		// Wait for the transaction to be mined
 		status.value = TransactionStatus.Pending
+	}
+
+	async function waitUserOp() {
+		if (!userOp.value) {
+			throw new Error('[waitUserOp] User operation not built')
+		}
+		const op = userOp.value
 		const receipt = await op.wait()
 
 		opReceipt.value = receipt
@@ -208,12 +236,14 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 		opHash,
 		opReceipt,
 		canSignPermit,
+		canClose,
 		openModal,
 		closeModal: close,
 		resetTxModal,
 		handleEstimate,
 		handleSign,
-		handleSend,
+		sendUserOp,
+		waitUserOp,
 		...paymasterHook,
 	}
 })

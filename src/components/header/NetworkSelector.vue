@@ -15,6 +15,15 @@ import { CHAIN_ID, displayChainName, SUPPORTED_BUNDLER, SUPPORTED_NODE } from '@
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { Check } from 'lucide-vue-next'
 
+const props = withDefaults(
+	defineProps<{
+		fixedChain?: boolean
+	}>(),
+	{
+		fixedChain: false,
+	},
+)
+
 const isOpen = ref(false)
 
 const { selectedChainId, selectedNode, selectedBundler, supportedBundlers, supportedNodes } = useBlockchain()
@@ -46,7 +55,9 @@ function displayNodeName(node: SUPPORTED_NODE) {
 }
 
 function onClickChain(id: CHAIN_ID) {
-	selectedChainId.value = id
+	if (!props.fixedChain) {
+		selectedChainId.value = id
+	}
 }
 
 function onClickBundler(bundler: SUPPORTED_BUNDLER) {
@@ -81,28 +92,30 @@ function onClickNetworkSelector() {
 
 		<DropdownMenuContent class="w-80 max-h-[80vh] overflow-y-auto">
 			<!-- Network Section -->
-			<DropdownMenuLabel>Network</DropdownMenuLabel>
-			<DropdownMenuSeparator />
-			<DropdownMenuGroup class="space-y-1">
-				<DropdownMenuItem
-					v-for="id in SUPPORTED_CHAIN_IDS"
-					:key="id"
-					class="cursor-pointer"
-					:class="selectedChainId === id ? 'bg-accent font-medium' : ''"
-					@click="onClickChain(id)"
-				>
-					<div class="item-container">
-						<div class="flex items-center gap-2">
-							<ChainIcon :chain-id="id" :size="24" :show-tooltip="false" />
-							<span>{{ displayChainName(id) }}</span>
+			<template v-if="!props.fixedChain">
+				<DropdownMenuLabel>Network</DropdownMenuLabel>
+				<DropdownMenuSeparator />
+				<DropdownMenuGroup class="space-y-1">
+					<DropdownMenuItem
+						v-for="id in SUPPORTED_CHAIN_IDS"
+						:key="id"
+						class="cursor-pointer"
+						:class="selectedChainId === id ? 'bg-accent font-medium' : ''"
+						@click="onClickChain(id)"
+					>
+						<div class="item-container">
+							<div class="flex items-center gap-2">
+								<ChainIcon :chain-id="id" :size="24" :show-tooltip="false" />
+								<span>{{ displayChainName(id) }}</span>
+							</div>
+							<Check v-if="selectedChainId === id" class="h-4 w-4" />
 						</div>
-						<Check v-if="selectedChainId === id" class="h-4 w-4" />
-					</div>
-				</DropdownMenuItem>
-			</DropdownMenuGroup>
+					</DropdownMenuItem>
+				</DropdownMenuGroup>
+				<DropdownMenuSeparator />
+			</template>
 
 			<!-- Bundler Section -->
-			<DropdownMenuSeparator />
 			<DropdownMenuLabel>Bundler</DropdownMenuLabel>
 			<DropdownMenuSeparator />
 			<DropdownMenuGroup class="space-y-1">

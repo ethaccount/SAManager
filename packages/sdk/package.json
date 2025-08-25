@@ -1,0 +1,59 @@
+{
+	"name": "@samanager/sdk",
+	"version": "0.0.1",
+	"type": "module",
+	"repository": "https://github.com/ethaccount/SAManager",
+	"author": "Johnson Chen <https://x.com/johnson86tw>",
+	"license": "AGPL-3.0-only",
+	"description": "A TypeScript SDK that enables integration of Smart Account Manager into your Dapp",
+	"homepage": "https://samanager.xyz",
+	"keywords": [
+		"ERC-4337",
+		"smart accounts",
+		"web3",
+		"blockchain",
+		"wallet",
+		"ethereum"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "pnpm typecheck && vite build",
+		"watch": "pnpm run build --w",
+		"test": "vitest --run",
+		"typecheck": "tsc -p tsconfig.json --noEmit",
+		"lint": "eslint src/",
+		"lint:fix": "eslint src/ --fix",
+		"check": "pnpm typecheck && pnpm lint"
+	},
+	"files": [
+		"dist",
+		"src",
+		"tsconfig.json"
+	],
+	"main": "./dist/index.js",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		}
+	},
+	"dependencies": {
+		"mitt": "^3.0.1"
+	},
+	"devDependencies": {
+		"@types/node": "^24.3.0",
+		"@vitest/eslint-plugin": "^1.1.10",
+		"eslint": "^9.15.0",
+		"husky": "^9.1.7",
+		"jsdom": "^26.0.0",
+		"rollup-plugin-visualizer": "^6.0.3",
+		"typescript-eslint": "^8.15.0",
+		"vite": "^7.1.2",
+		"vite-plugin-dts": "^4.5.4",
+		"vitest": "^3.2.4"
+	}
+}
