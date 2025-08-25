@@ -17,13 +17,12 @@
 		"ethereum"
 	],
 	"scripts": {
-		"build": "bun typecheck && vite build",
-		"watch": "bun run build --w",
+		"build": "pnpm typecheck && vite build",
+		"watch": "pnpm run build --w",
 		"test": "vitest --run",
 		"typecheck": "tsc -p tsconfig.json --noEmit",
 		"lint": "eslint src/",
 		"lint:fix": "eslint src/ --fix",
-		"prepare": "bun husky",
 		"check": "pnpm typecheck && pnpm lint"
 	},
 	"files": [
