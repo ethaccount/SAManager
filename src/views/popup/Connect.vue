@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import NetworkSelector from '@/components/header/NetworkSelector.vue'
 import CenterStageLayout from '@/components/layout/CenterStageLayout.vue'
+import { toRoute } from '@/lib/router'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain'
 import {
@@ -32,80 +33,87 @@ const pendingRequest = ref<PendingRequest | null>(null)
 const isLoading = ref(false)
 
 const route = useRoute()
+const router = useRouter()
+
 const chainId = route.params.chainId as string
 
-if (!chainId) {
-	window.close()
+if (window.opener) {
+	if (!chainId) {
+		window.close()
+	}
+
+	new SAManagerPopup({
+		debug: true,
+		chainId: BigInt(chainId),
+		walletRequestHandler: async (method, params) => {
+			console.log('request', method, params)
+
+			return new Promise(async (resolve, reject) => {
+				pendingRequest.value = { method, params, resolve, reject }
+				isLoading.value = true
+				let result
+				let shouldResolveImmediately = true
+
+				try {
+					switch (method) {
+						case 'eth_chainId':
+						case 'eth_getBlockByNumber': {
+							// await new Promise(resolve => setTimeout(resolve, 10000000))
+							const { client } = useBlockchain()
+							result = await client.value.send(method, params)
+							break
+						}
+						case 'wallet_getCapabilities': {
+							// await new Promise(resolve => setTimeout(resolve, 10000000))
+							const capabilities = (await handleGetCapabilities(
+								params as WalletGetCapabilitiesRequest['params'],
+							)) as WalletGetCapabilitiesResponse
+							result = capabilities
+							break
+						}
+						case 'wallet_getCallsStatus': {
+							// await new Promise(resolve => setTimeout(resolve, 10000000))
+							result = (await handleGetCallsStatus(
+								params as WalletGetCallsStatusRequest['params'],
+							)) as WalletGetCallsStatusResponse
+							break
+						}
+						// Method that requires user interaction
+						case 'eth_requestAccounts':
+						case 'wallet_sendCalls':
+						case 'wallet_showCallsStatus': {
+							shouldResolveImmediately = false
+							break
+						}
+
+						default: {
+							throw standardErrors.provider.unsupportedMethod({
+								message: `Method ${method} not supported`,
+							})
+						}
+					}
+
+					if (shouldResolveImmediately) {
+						resolve(result)
+					}
+					// For eth_requestAccounts, the promise remains pending until user clicks connect
+				} catch (err) {
+					console.error('Error processing request', err)
+					error.value = err instanceof Error ? err.message : 'Failed to process request'
+					reject(standardErrors.rpc.internal(error.value))
+				} finally {
+					if (shouldResolveImmediately) {
+						isLoading.value = false
+						pendingRequest.value = null
+					}
+				}
+			})
+		},
+	})
+} else {
+	// Redirect to the home page when this popup route is not opened by a parent window
+	router.replace(toRoute('home'))
 }
-
-new SAManagerPopup({
-	debug: true,
-	chainId: BigInt(chainId),
-	walletRequestHandler: async (method, params) => {
-		console.log('request', method, params)
-
-		return new Promise(async (resolve, reject) => {
-			pendingRequest.value = { method, params, resolve, reject }
-			isLoading.value = true
-			let result
-			let shouldResolveImmediately = true
-
-			try {
-				switch (method) {
-					case 'eth_chainId':
-					case 'eth_getBlockByNumber': {
-						// await new Promise(resolve => setTimeout(resolve, 10000000))
-						const { client } = useBlockchain()
-						result = await client.value.send(method, params)
-						break
-					}
-					case 'wallet_getCapabilities': {
-						// await new Promise(resolve => setTimeout(resolve, 10000000))
-						const capabilities = (await handleGetCapabilities(
-							params as WalletGetCapabilitiesRequest['params'],
-						)) as WalletGetCapabilitiesResponse
-						result = capabilities
-						break
-					}
-					case 'wallet_getCallsStatus': {
-						// await new Promise(resolve => setTimeout(resolve, 10000000))
-						result = (await handleGetCallsStatus(
-							params as WalletGetCallsStatusRequest['params'],
-						)) as WalletGetCallsStatusResponse
-						break
-					}
-					// Method that requires user interaction
-					case 'eth_requestAccounts':
-					case 'wallet_sendCalls':
-					case 'wallet_showCallsStatus': {
-						shouldResolveImmediately = false
-						break
-					}
-
-					default: {
-						throw standardErrors.provider.unsupportedMethod({
-							message: `Method ${method} not supported`,
-						})
-					}
-				}
-
-				if (shouldResolveImmediately) {
-					resolve(result)
-				}
-				// For eth_requestAccounts, the promise remains pending until user clicks connect
-			} catch (err) {
-				console.error('Error processing request', err)
-				error.value = err instanceof Error ? err.message : 'Failed to process request'
-				reject(standardErrors.rpc.internal(error.value))
-			} finally {
-				if (shouldResolveImmediately) {
-					isLoading.value = false
-					pendingRequest.value = null
-				}
-			}
-		})
-	},
-})
 
 // ================================ eth_requestAccounts ================================
 

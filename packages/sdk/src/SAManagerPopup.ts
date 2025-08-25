@@ -12,6 +12,7 @@ export class SAManagerPopup {
 	private readonly walletRequestHandler: WalletRequestHandler
 	private parentOrigin: string | null = null
 	private debug: boolean
+	private opener: WindowProxy
 
 	constructor({
 		chainId,
@@ -22,6 +23,11 @@ export class SAManagerPopup {
 		walletRequestHandler: WalletRequestHandler
 		debug?: boolean
 	}) {
+		if (!window.opener) {
+			throw new Error('[SAManagerPopup] window.opener is not available')
+		}
+
+		this.opener = window.opener
 		this.chainId = chainId
 		this.keyManager = new KeyManager()
 		this.walletRequestHandler = walletRequestHandler
@@ -91,7 +97,7 @@ export class SAManagerPopup {
 			const response = await this.createEncryptedResponse(message.id, {
 				result: { value: 'handshake_complete' },
 			})
-			window.opener.postMessage(response, origin)
+			this.opener.postMessage(response, origin)
 		} catch (error) {
 			await this.sendErrorResponse(message.id, error, origin)
 		}
@@ -125,7 +131,7 @@ export class SAManagerPopup {
 
 			// 4. Create and send encrypted response
 			const response = await this.createEncryptedResponse(message.id, { result: { value: result } })
-			window.opener.postMessage(response, origin)
+			this.opener.postMessage(response, origin)
 		} catch (error) {
 			await this.sendErrorResponse(message.id, error, origin)
 		}
@@ -164,7 +170,7 @@ export class SAManagerPopup {
 				timestamp: new Date(),
 			}
 
-			window.opener.postMessage(errorResponse, origin)
+			this.opener.postMessage(errorResponse, origin)
 		} catch (responseError) {
 			console.error('Failed to send error response:', responseError)
 		}
@@ -179,11 +185,11 @@ export class SAManagerPopup {
 		}
 
 		// Use '*' initially since we don't know parent origin yet
-		window.opener.postMessage(loadedMessage, '*')
+		this.opener.postMessage(loadedMessage, '*')
 	}
 
 	private notifyParentUnload() {
-		if (!window.opener || window.opener.closed) {
+		if (!this.opener || this.opener.closed) {
 			return // Parent window no longer available
 		}
 
@@ -196,7 +202,7 @@ export class SAManagerPopup {
 		try {
 			// Send to known parent origin if available, otherwise use '*'
 			const targetOrigin = this.parentOrigin || '*'
-			window.opener.postMessage(unloadMessage, targetOrigin)
+			this.opener.postMessage(unloadMessage, targetOrigin)
 			this.log('Popup unload notification sent')
 		} catch (error) {
 			// Ignore errors if parent window is unavailable
