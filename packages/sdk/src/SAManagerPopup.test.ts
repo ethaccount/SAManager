@@ -1,5 +1,5 @@
 import type { Mock, Mocked } from 'vitest'
-import { serialize, standardErrors } from './error'
+import { serializeError, standardErrors } from './error'
 import { KeyManager } from './KeyManager'
 import type { EncryptedData, RPCRequestMessage } from './message'
 import { SAManagerPopup } from './SAManagerPopup'
@@ -14,7 +14,7 @@ vi.mock('./utils', () => ({
 	importKeyFromHexString: vi.fn(),
 }))
 vi.mock('./error', () => ({
-	serialize: vi.fn(),
+	serializeError: vi.fn(),
 	standardErrors: {
 		rpc: {
 			invalidRequest: vi.fn(),
@@ -95,7 +95,7 @@ describe('SAManagerPopup', () => {
 		;(exportKeyToHexString as Mock).mockResolvedValue(mockPublicKey)
 		;(encryptContent as Mock).mockResolvedValue(encryptedData)
 		;(decryptContent as Mock).mockResolvedValue({ action: { method: 'eth_requestAccounts' }, chainId: 1n })
-		;(serialize as Mock).mockReturnValue({ code: -1, message: 'Serialized error' })
+		;(serializeError as Mock).mockReturnValue({ code: -1, message: 'Serialized error' })
 
 		// Setup browser API mocks
 		mockRandomUUID.mockReturnValue(mockResponseId)
@@ -138,7 +138,7 @@ describe('SAManagerPopup', () => {
 		;(exportKeyToHexString as Mock).mockClear()
 		;(encryptContent as Mock).mockClear()
 		;(decryptContent as Mock).mockClear()
-		;(serialize as Mock).mockClear()
+		;(serializeError as Mock).mockClear()
 
 		// Clear browser API mocks
 		mockAddEventListener.mockClear()
@@ -329,7 +329,7 @@ describe('SAManagerPopup', () => {
 			await (popup as any).sendErrorResponse(mockRequestId, error, mockOrigin)
 
 			// Assert
-			expect(serialize).toHaveBeenCalledWith(error)
+			expect(serializeError).toHaveBeenCalledWith(error)
 			expect(mockPostMessage).toHaveBeenCalledWith(
 				expect.objectContaining({
 					requestId: mockRequestId,
@@ -567,7 +567,7 @@ describe('SAManagerPopup', () => {
 			await messageHandler(messageEvent)
 
 			// Assert
-			expect(serialize).toHaveBeenCalledWith(importError)
+			expect(serializeError).toHaveBeenCalledWith(importError)
 			expect(mockPostMessage).toHaveBeenCalledWith(
 				expect.objectContaining({
 					id: mockResponseId,
@@ -606,7 +606,7 @@ describe('SAManagerPopup', () => {
 
 			// Assert
 			expect(mockKeyManager.setPeerPublicKey).toHaveBeenCalledWith(mockCryptoKey)
-			expect(serialize).toHaveBeenCalledWith(setPeerError)
+			expect(serializeError).toHaveBeenCalledWith(setPeerError)
 			expect(mockPostMessage).toHaveBeenCalledWith(
 				expect.objectContaining({
 					content: { failure: { code: -1, message: 'Serialized error' } },
@@ -640,7 +640,7 @@ describe('SAManagerPopup', () => {
 
 			// Assert
 			expect(encryptContent).toHaveBeenCalledWith({ result: { value: 'handshake_complete' } }, mockCryptoKey)
-			expect(serialize).toHaveBeenCalledWith(encryptError)
+			expect(serializeError).toHaveBeenCalledWith(encryptError)
 			expect(mockPostMessage).toHaveBeenCalledWith(
 				expect.objectContaining({
 					content: { failure: { code: -1, message: 'Serialized error' } },

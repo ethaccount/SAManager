@@ -23,6 +23,7 @@
 		"build": "pnpm run build:staging",
 		"build:staging": "CLOUDFLARE_ENV=staging vue-tsc --noEmit && pnpm run lint && vite build --mode staging",
 		"build:production": "CLOUDFLARE_ENV=production vue-tsc --noEmit && pnpm run lint && vite build --mode production",
+		"test:sdk": "pnpm -F sdk test",
 		"test": "vitest --run",
 		"preview": "vite preview",
 		"clean": "rm -rf dist && rm -rf node_modules",
