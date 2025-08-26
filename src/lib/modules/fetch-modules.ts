@@ -10,9 +10,12 @@ export async function fetchModules(address: string, client: JsonRpcProvider) {
 		client,
 	)
 
+	const currentBlock = await client.getBlockNumber()
+	const fromBlock = Math.max(0, currentBlock - 10000)
+
 	// Fetch install and uninstall events (using block 0 as starting point)
-	const installEvents = await contract.queryFilter(contract.filters.ModuleInstalled)
-	const uninstallEvents = await contract.queryFilter(contract.filters.ModuleUninstalled)
+	const installEvents = await contract.queryFilter(contract.filters.ModuleInstalled, fromBlock, currentBlock)
+	const uninstallEvents = await contract.queryFilter(contract.filters.ModuleUninstalled, fromBlock, currentBlock)
 
 	// Combine and sort events by block number and transaction index
 	const allEvents = [...installEvents, ...uninstallEvents].sort((a, b) => {

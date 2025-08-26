@@ -213,7 +213,7 @@ const showSwitchToCorrectChain = computed(() => {
 				</div>
 
 				<!-- Note: Must use v-show so that the RouterView will not mount again when the selectedAccount changes -->
-				<div v-show="!loading" class="mt-6">
+				<div v-show="!loading" class="mt-6 mb-[100px]">
 					<div class="flex border-b">
 						<RouterLink
 							:to="toRoute('account-modules', { address: selectedAccount.address })"
@@ -237,6 +237,18 @@ const showSwitchToCorrectChain = computed(() => {
 							"
 						>
 							Permissions
+						</RouterLink>
+
+						<RouterLink
+							:to="toRoute('account-email-recovery', { address: selectedAccount.address })"
+							class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+							:class="
+								$route.name === 'account-email-recovery'
+									? 'border-primary text-primary'
+									: 'border-transparent text-muted-foreground hover:text-foreground'
+							"
+						>
+							Email Recovery
 						</RouterLink>
 
 						<RouterLink

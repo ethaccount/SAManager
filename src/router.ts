@@ -78,6 +78,11 @@ const router = createRouter({
 									component: () => import('@/views/AccountManagement/AMPermissions.vue'),
 								},
 								{
+									path: 'email-recovery',
+									name: 'account-email-recovery',
+									component: () => import('@/views/AccountManagement/AMEmailRecovery.vue'),
+								},
+								{
 									path: 'multichain',
 									name: 'account-multichain',
 									component: () => import('@/views/AccountManagement/AMMultichain.vue'),
