@@ -2,6 +2,7 @@
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { getInstallModuleData } from '@/lib/accounts/account-specific'
 import {
 	checkAcceptanceRequest,
@@ -20,7 +21,7 @@ import { TESTNET_CHAIN_ID } from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import type { TxModalExecution } from '@/stores/useTxModal'
 import { useTxModal } from '@/stores/useTxModal'
-import { AlertTriangle, Loader2 } from 'lucide-vue-next'
+import { AlertTriangle, ChevronDown, ChevronUp, Info, Loader2 } from 'lucide-vue-next'
 import { ADDRESS, ERC7579_MODULE_TYPE, IERC7579Account__factory } from 'sendop'
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
@@ -32,20 +33,36 @@ const props = defineProps<{
 	isModular: boolean
 }>()
 
-// Composables
 const { selectedChainId, switchChain, client } = useBlockchain()
 const { openModal } = useTxModal()
 
-// State management
 const isLoading = ref(false)
 const isMountLoading = ref(true)
 const error = ref<string | null>(null)
+const hasOwnableValidator = ref(false)
+const hasEmailRecoveryExecutor = ref(false)
+
+// Info section collapse state
+const isInfoExpanded = ref(false)
 
 // Email recovery setup state
 const guardianEmail = ref('')
 const timelockValue = ref('6')
 const timelockUnit = ref('hours')
+const expiryValue = ref('14')
+const expiryUnit = ref('days')
 const acceptanceChecked = ref(false)
+
+// Select options
+const timelockItems = [
+	{ value: 'hours', label: 'Hours' },
+	{ value: 'days', label: 'Days' },
+]
+
+const expiryItems = [
+	{ value: 'days', label: 'Days' },
+	{ value: 'weeks', label: 'Weeks' },
+]
 
 // Email recovery request state
 const newOwnerAddress = ref('')
@@ -53,12 +70,26 @@ const recoveryRequested = ref(false)
 const recoveryTimeLeft = ref(0n)
 const canCompleteRecovery = ref(false)
 
-// Module check states
-const hasOwnableValidator = ref(false)
-const hasEmailRecoveryExecutor = ref(false)
-
-// Computed properties
 const isOnBaseSepolia = computed(() => selectedChainId.value === TESTNET_CHAIN_ID.BASE_SEPOLIA)
+
+onMounted(async () => {
+	try {
+		await checkHasOwnableValidator()
+		await checkHasEmailRecoveryExecutor()
+
+		if (hasEmailRecoveryExecutor.value) {
+			await checkAcceptanceStatus()
+
+			if (acceptanceChecked.value) {
+				await checkRecoveryStatus()
+			}
+		}
+	} catch (e) {
+		throw e
+	} finally {
+		isMountLoading.value = false
+	}
+})
 
 async function checkHasOwnableValidator() {
 	if (!props.isModular) {
@@ -105,25 +136,6 @@ async function checkHasEmailRecoveryExecutor() {
 	}
 }
 
-onMounted(async () => {
-	try {
-		await checkHasOwnableValidator()
-		await checkHasEmailRecoveryExecutor()
-
-		if (hasEmailRecoveryExecutor.value) {
-			await checkAcceptanceStatus()
-
-			if (acceptanceChecked.value) {
-				await checkRecoveryStatus()
-			}
-		}
-	} catch (e) {
-		throw e
-	} finally {
-		isMountLoading.value = false
-	}
-})
-
 const canUseEmailRecovery = computed(() => {
 	return isOnBaseSepolia.value && hasOwnableValidator.value
 })
@@ -156,6 +168,14 @@ async function onClickConfigureRecovery() {
 		return
 	}
 
+	// Validate timelock - must be at least 6 hours
+	const timelockSeconds = parseInt(timelockValue.value) * (timelockUnit.value === 'hours' ? 3600 : 86400)
+	if (timelockSeconds < 21600) {
+		// 6 hours in seconds
+		toast.error('Recovery delay must be at least 6 hours')
+		return
+	}
+
 	isLoading.value = true
 	error.value = null
 
@@ -165,6 +185,8 @@ async function onClickConfigureRecovery() {
 			client: client.value,
 			accountAddress: props.selectedAccount.address,
 			email: guardianEmail.value,
+			delay: BigInt(parseInt(timelockValue.value) * (timelockUnit.value === 'hours' ? 3600 : 86400)),
+			expiry: BigInt(parseInt(expiryValue.value) * (expiryUnit.value === 'days' ? 86400 : 7 * 86400)),
 		})
 
 		// Install the email recovery executor module
@@ -187,7 +209,9 @@ async function onClickConfigureRecovery() {
 				)
 
 				hasEmailRecoveryExecutor.value = true
-				toast.success('Email Recovery setup initiated. Please check your email.')
+				toast.success('Email Recovery setup initiated. Please check your email.', {
+					duration: 7000,
+				})
 
 				// Start checking for acceptance
 				checkAcceptanceStatus()
@@ -235,7 +259,9 @@ async function initiateRecovery() {
 			newOwner: newOwnerAddress.value,
 		})
 
-		toast.success('Recovery request sent. Please check your email and follow the instructions.')
+		toast.success('Recovery request sent. Please check your email and follow the instructions.', {
+			duration: 7000,
+		})
 
 		// Start checking recovery status
 		checkRecoveryStatus()
@@ -297,7 +323,7 @@ function onClickCancelRecovery() {
 
 <template>
 	<Card>
-		<div class="space-y-6 p-6">
+		<div class="space-y-4 p-5">
 			<div class="space-y-4">
 				<!-- Title -->
 				<!-- <div class="flex items-center gap-2">
@@ -332,7 +358,7 @@ function onClickCancelRecovery() {
 					</div>
 					<div>
 						<RouterLink :to="toRoute('account-modules', { address: selectedAccount.address })">
-							<Button variant="outline"> Install OwnableValidator </Button>
+							<Button variant="outline"> Go to Modules </Button>
 						</RouterLink>
 					</div>
 				</div>
@@ -358,11 +384,7 @@ function onClickCancelRecovery() {
 					<div v-if="!hasEmailRecoveryExecutor">
 						<div class="space-y-4">
 							<div class="text-center space-y-2">
-								<h4 class="text-lg font-medium">Set Up Guardian Details</h4>
-								<p class="text-sm text-muted-foreground">
-									Choose a Guardian you trust to be enable wallet recovery via email. They'll receive
-									an email request.
-								</p>
+								<h4 class="text-lg font-medium">Set Up Email Recovery</h4>
 							</div>
 
 							<div class="space-y-4">
@@ -377,30 +399,77 @@ function onClickCancelRecovery() {
 								</div>
 
 								<div class="space-y-2">
-									<label class="text-sm font-medium">Timelock</label>
+									<label class="text-sm font-medium">Recovery Delay (Timelock)</label>
 									<div class="flex gap-2">
 										<Input
 											v-model="timelockValue"
 											type="number"
-											min="1"
-											class="flex-1"
+											min="6"
+											class="w-24"
 											:disabled="isLoading"
 										/>
-										<select
-											v-model="timelockUnit"
-											class="px-3 py-2 border border-input bg-background rounded-md text-sm"
-											:disabled="isLoading"
-										>
-											<option value="hours">Hours</option>
-											<option value="days">Days</option>
-										</select>
+										<div class="w-24">
+											<Select v-model="timelockUnit" :disabled="isLoading">
+												<SelectTrigger class="text-sm">
+													<SelectValue placeholder="Select unit">
+														{{
+															timelockItems.find(item => item.value === timelockUnit)
+																?.label
+														}}
+													</SelectValue>
+												</SelectTrigger>
+												<SelectContent>
+													<SelectItem
+														v-for="item in timelockItems"
+														:key="item.value"
+														:value="item.value"
+													>
+														{{ item.label }}
+													</SelectItem>
+												</SelectContent>
+											</Select>
+										</div>
 									</div>
-									<p class="text-xs text-red-500">Recovery delay must be at least 6 hours</p>
+									<p class="text-xs text-muted-foreground">Recovery delay must be at least 6 hours</p>
+								</div>
+
+								<div class="space-y-2">
+									<label class="text-sm font-medium">Recovery Request Expiry</label>
+									<div class="flex gap-2">
+										<Input
+											v-model="expiryValue"
+											type="number"
+											min="1"
+											class="w-24"
+											:disabled="isLoading"
+										/>
+										<div class="w-24">
+											<Select v-model="expiryUnit" :disabled="isLoading">
+												<SelectTrigger class="text-sm">
+													<SelectValue placeholder="Select unit">
+														{{ expiryItems.find(item => item.value === expiryUnit)?.label }}
+													</SelectValue>
+												</SelectTrigger>
+												<SelectContent>
+													<SelectItem
+														v-for="item in expiryItems"
+														:key="item.value"
+														:value="item.value"
+													>
+														{{ item.label }}
+													</SelectItem>
+												</SelectContent>
+											</Select>
+										</div>
+									</div>
+									<p class="text-xs text-muted-foreground">
+										Time after which recovery request expires
+									</p>
 								</div>
 
 								<Button
 									@click="onClickConfigureRecovery"
-									:disabled="!guardianEmail || isLoading"
+									:disabled="!guardianEmail || !timelockValue || !expiryValue || isLoading"
 									:loading="isLoading"
 									class="w-full"
 								>
@@ -489,6 +558,31 @@ function onClickCancelRecovery() {
 							</div>
 						</div>
 					</div>
+				</div>
+			</div>
+
+			<!-- Info Section -->
+			<div class="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+				<!-- Collapsible Header -->
+				<div
+					@click="isInfoExpanded = !isInfoExpanded"
+					class="flex items-center gap-3 p-3 cursor-pointer transition-colors"
+				>
+					<Info class="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+					<h4 class="text-sm font-medium text-blue-900 dark:text-blue-100 flex-1">How it works</h4>
+					<component
+						:is="isInfoExpanded ? ChevronUp : ChevronDown"
+						class="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0"
+					/>
+				</div>
+
+				<!-- Collapsible Content -->
+				<div v-if="isInfoExpanded" class="px-4 pb-4">
+					<p class="text-sm text-blue-800 dark:text-blue-200 pl-8">
+						When a user requests email recovery, the EmailRecoveryExecutor module calls the addOwner
+						function on the OwnableValidator module. This adds a new owner to the account, thereby enabling
+						wallet recovery.
+					</p>
 				</div>
 			</div>
 		</div>

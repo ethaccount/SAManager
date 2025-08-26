@@ -125,7 +125,6 @@ export async function sendAcceptanceRequest(
 		client,
 	)
 	const subject = await contract.acceptanceCommandTemplates()
-	console.log('subject:', subject)
 
 	const templateIdx = 0
 	const handleAcceptanceCommand = (subject[0] as string[]).join(' ').replace('{ethAddr}', accountAddress)
@@ -222,7 +221,6 @@ export async function sendRecoveryRequest({
 }) {
 	// Get recovery command templates
 	const templates = await recoveryCommandTemplates(client)
-	console.log('Templates:', templates)
 
 	// Create recovery data
 	const addOwnerAction = await encodeAddOwner({

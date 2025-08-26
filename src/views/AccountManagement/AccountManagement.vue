@@ -240,18 +240,6 @@ const showSwitchToCorrectChain = computed(() => {
 						</RouterLink>
 
 						<RouterLink
-							:to="toRoute('account-email-recovery', { address: selectedAccount.address })"
-							class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
-							:class="
-								$route.name === 'account-email-recovery'
-									? 'border-primary text-primary'
-									: 'border-transparent text-muted-foreground hover:text-foreground'
-							"
-						>
-							Email Recovery
-						</RouterLink>
-
-						<RouterLink
 							:to="toRoute('account-multichain', { address: selectedAccount.address })"
 							class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
 							:class="
@@ -261,6 +249,18 @@ const showSwitchToCorrectChain = computed(() => {
 							"
 						>
 							Multichain
+						</RouterLink>
+
+						<RouterLink
+							:to="toRoute('account-email-recovery', { address: selectedAccount.address })"
+							class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+							:class="
+								$route.name === 'account-email-recovery'
+									? 'border-primary text-primary'
+									: 'border-transparent text-muted-foreground hover:text-foreground'
+							"
+						>
+							Email Recovery
 						</RouterLink>
 					</div>
 

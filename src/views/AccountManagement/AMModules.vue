@@ -113,7 +113,7 @@ async function onClickUninstall(recordModule: ModuleRecordModule) {
 		} else if (isSameAddress(recordModule.address, DEPRECATED_WEB_AUTHN_VALIDATOR_ADDRESS)) {
 			await uninstallDeprecatedWebAuthnValidator({ onSuccess })
 		} else {
-			throw new Error(`Unsupported module address: ${recordModule.address}`)
+			throw new Error(`Sorry, cannot uninstall this module. Please contact support.`)
 		}
 	} finally {
 		operatingModule.value = null
