@@ -1,10 +1,11 @@
 import { fetchSessions } from '@/api/smartsession/fetchSessions'
+import { TESTNET_CHAIN_ID } from '@/stores/blockchain'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { ADDRESS, SmartSession__factory } from 'sendop'
 import { SessionData } from './session'
 
 export function useSessionList() {
-	const { tenderlyClient } = useBlockchain()
+	const { tenderlyClient, selectedChainId } = useBlockchain()
 
 	const sessions = ref<SessionData[]>([])
 	const loading = ref(false)
@@ -18,16 +19,22 @@ export function useSessionList() {
 		loading.value = true
 
 		try {
-			sessions.value = await fetchSessions(accountAddress, smartsession.value)
+			const currentBlock = await tenderlyClient.value.getBlockNumber()
+			let fromBlock = 0
+			if (selectedChainId.value === TESTNET_CHAIN_ID.BASE_SEPOLIA) {
+				fromBlock = Math.max(0, currentBlock - 10000)
+			}
+			sessions.value = await fetchSessions(accountAddress, smartsession.value, fromBlock, currentBlock)
 		} catch (e: unknown) {
 			console.error('Error loading sessions:', e)
-			error.value = e instanceof Error ? e.message : String(e)
+			error.value = 'Error loading sessions: ' + (e instanceof Error ? e.message : String(e))
 		} finally {
 			loading.value = false
 		}
 	}
 
 	return {
+		error,
 		sessions,
 		loading,
 		expandedSessions,

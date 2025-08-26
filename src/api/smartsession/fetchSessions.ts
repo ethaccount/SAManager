@@ -4,10 +4,15 @@ import { isSameAddress, SmartSession } from 'sendop'
 // event SessionCreated(PermissionId permissionId, address account);
 // event SessionRemoved(PermissionId permissionId, address smartAccount);
 
-export async function fetchSessions(accountAddress: string, smartsession: SmartSession): Promise<SessionData[]> {
+export async function fetchSessions(
+	accountAddress: string,
+	smartsession: SmartSession,
+	fromBlock?: number,
+	toBlock?: number,
+): Promise<SessionData[]> {
 	const [sessionCreatedEvents, sessionRemovedEvents] = await Promise.all([
-		smartsession.queryFilter(smartsession.filters.SessionCreated()),
-		smartsession.queryFilter(smartsession.filters.SessionRemoved()),
+		smartsession.queryFilter(smartsession.filters.SessionCreated(), fromBlock, toBlock),
+		smartsession.queryFilter(smartsession.filters.SessionRemoved(), fromBlock, toBlock),
 	])
 
 	// Create a set of removed permission IDs for this account
