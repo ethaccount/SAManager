@@ -14,7 +14,6 @@ import {
 	sendAcceptanceRequest,
 	sendRecoveryRequest,
 } from '@/lib/email-recovery'
-
 import { toRoute } from '@/lib/router'
 import type { ImportedAccount } from '@/stores/account/account'
 import { TESTNET_CHAIN_ID } from '@/stores/blockchain/chains'

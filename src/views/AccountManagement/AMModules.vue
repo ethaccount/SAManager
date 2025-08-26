@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ACCOUNT_SUPPORTED_INSTALL_VALIDATION } from '@/lib/accounts/account-specific'
 import { addressToName, DEPRECATED_WEB_AUTHN_VALIDATOR_ADDRESS } from '@/lib/addressToName'
+import { EMAIL_RECOVERY_EXECUTOR_ADDRESS, uninstallEmailRecovery } from '@/lib/email-recovery'
 import { MODULE_TYPE_LABELS } from '@/lib/modules/supported-modules'
 import { ModuleRecordModule, useAccountModule } from '@/lib/modules/useAccountModule'
 import { useValidatorManagement } from '@/lib/modules/useValidatorManagement'
@@ -112,6 +113,8 @@ async function onClickUninstall(recordModule: ModuleRecordModule) {
 			await uninstallOwnableValidator({ onSuccess })
 		} else if (isSameAddress(recordModule.address, DEPRECATED_WEB_AUTHN_VALIDATOR_ADDRESS)) {
 			await uninstallDeprecatedWebAuthnValidator({ onSuccess })
+		} else if (isSameAddress(recordModule.address, EMAIL_RECOVERY_EXECUTOR_ADDRESS)) {
+			await uninstallEmailRecovery({ onSuccess })
 		} else {
 			throw new Error(`Sorry, cannot uninstall this module. Please contact support.`)
 		}
