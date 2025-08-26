@@ -20,7 +20,7 @@ import { TESTNET_CHAIN_ID } from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import type { TxModalExecution } from '@/stores/useTxModal'
 import { useTxModal } from '@/stores/useTxModal'
-import { AlertTriangle, ChevronDown, ChevronUp, Info, Loader2 } from 'lucide-vue-next'
+import { ChevronDown, ChevronUp, Info, Loader2 } from 'lucide-vue-next'
 import { ADDRESS, ERC7579_MODULE_TYPE, IERC7579Account__factory } from 'sendop'
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
@@ -323,13 +323,32 @@ function onClickCancelRecovery() {
 <template>
 	<Card>
 		<div class="space-y-4 p-5">
-			<div class="space-y-4">
-				<!-- Title -->
-				<!-- <div class="flex items-center gap-2">
-					<Mail class="w-5 h-5" />
-					<h3 class="text-lg font-medium">Email Recovery</h3>
-				</div> -->
+			<!-- How it works -->
+			<div class="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+				<!-- Collapsible Header -->
+				<div
+					@click="isInfoExpanded = !isInfoExpanded"
+					class="flex items-center gap-3 p-3 cursor-pointer transition-colors hover:bg-blue-50 dark:hover:bg-blue-950/30"
+				>
+					<Info class="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+					<h4 class="text-sm font-medium text-blue-900 dark:text-blue-100 flex-1">How it works</h4>
+					<component
+						:is="isInfoExpanded ? ChevronUp : ChevronDown"
+						class="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0"
+					/>
+				</div>
 
+				<!-- Collapsible Content -->
+				<div v-if="isInfoExpanded" class="pb-4">
+					<p class="text-sm text-blue-800 dark:text-blue-200 pl-8">
+						When a user requests email recovery, the EmailRecoveryExecutor module calls the addOwner
+						function on the OwnableValidator module. This adds a new owner to the account, thereby enabling
+						wallet recovery.
+					</p>
+				</div>
+			</div>
+
+			<div class="space-y-4">
 				<!-- Loading State -->
 				<div v-if="isMountLoading" class="flex items-center justify-center py-8">
 					<Loader2 class="w-6 h-6 animate-spin" />
@@ -339,10 +358,10 @@ function onClickCancelRecovery() {
 				<!-- Network Check -->
 				<div v-else-if="!isOnBaseSepolia" class="space-y-3">
 					<div class="flex items-center gap-2 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-md">
-						<AlertTriangle class="w-4 h-4 text-yellow-500" />
-						<span class="text-sm text-yellow-700 dark:text-yellow-400">
+						<Info class="w-4 h-4 text-yellow-500 flex-shrink-0" />
+						<div class="text-sm text-yellow-700 dark:text-yellow-400">
 							Email recovery is only available on Base Sepolia network
-						</span>
+						</div>
 					</div>
 					<Button variant="outline" @click="onClickSwitchToBaseSepolia"> Switch to Base Sepolia </Button>
 				</div>
@@ -350,10 +369,10 @@ function onClickCancelRecovery() {
 				<!-- OwnableValidator Check -->
 				<div v-else-if="!hasOwnableValidator" class="space-y-3">
 					<div class="flex items-center gap-2 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-md">
-						<AlertTriangle class="w-4 h-4 text-yellow-500" />
-						<span class="text-sm text-yellow-700 dark:text-yellow-400">
+						<Info class="w-4 h-4 text-yellow-500 flex-shrink-0" />
+						<div class="text-sm text-yellow-700 dark:text-yellow-400">
 							Email recovery requires OwnableValidator. Please install it in the Modules section.
-						</span>
+						</div>
 					</div>
 					<div>
 						<RouterLink :to="toRoute('account-modules', { address: selectedAccount.address })">
@@ -557,31 +576,6 @@ function onClickCancelRecovery() {
 							</div>
 						</div>
 					</div>
-				</div>
-			</div>
-
-			<!-- Info Section -->
-			<div class="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
-				<!-- Collapsible Header -->
-				<div
-					@click="isInfoExpanded = !isInfoExpanded"
-					class="flex items-center gap-3 p-3 cursor-pointer transition-colors"
-				>
-					<Info class="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-					<h4 class="text-sm font-medium text-blue-900 dark:text-blue-100 flex-1">How it works</h4>
-					<component
-						:is="isInfoExpanded ? ChevronUp : ChevronDown"
-						class="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0"
-					/>
-				</div>
-
-				<!-- Collapsible Content -->
-				<div v-if="isInfoExpanded" class="px-4 pb-4">
-					<p class="text-sm text-blue-800 dark:text-blue-200 pl-8">
-						When a user requests email recovery, the EmailRecoveryExecutor module calls the addOwner
-						function on the OwnableValidator module. This adds a new owner to the account, thereby enabling
-						wallet recovery.
-					</p>
 				</div>
 			</div>
 		</div>
