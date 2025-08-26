@@ -137,8 +137,9 @@ const showAvailableModules = computed(() => {
 		<div class="space-y-6 p-6">
 			<div v-if="!isDeployed" class="text-sm text-muted-foreground">Account is not deployed</div>
 			<div v-else-if="!isModular" class="text-sm text-muted-foreground">Account is not modular</div>
-			<div v-else-if="loading" class="flex justify-center py-8">
+			<div v-else-if="loading" class="flex justify-center items-center py-8">
 				<Loader2 class="w-6 h-6 animate-spin text-primary" />
+				<span class="ml-2 text-sm text-muted-foreground">Loading modules...</span>
 			</div>
 
 			<!-- is deployed and modular -->

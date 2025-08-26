@@ -150,7 +150,7 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 					class="w-full justify-between"
 					@click="onClickAccountManagement"
 				>
-					Account Management
+					Manage Account
 					<ArrowRight class="w-4 h-4" />
 				</Button>
 			</div>
