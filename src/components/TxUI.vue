@@ -111,7 +111,7 @@ onMounted(async () => {
 	// Check if account is connected
 	if (!isAccountAccessible.value) {
 		emit('close')
-		throw new Error('Account not connected')
+		throw new Error('[TxModal#onMounted] Account not connected')
 	}
 
 	if (!selectedAccount.value) {
