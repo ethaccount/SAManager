@@ -20,6 +20,7 @@ import { TESTNET_CHAIN_ID } from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import type { TxModalExecution } from '@/stores/useTxModal'
 import { useTxModal } from '@/stores/useTxModal'
+import { Interface } from 'ethers'
 import { ChevronDown, ChevronUp, Info, Loader2 } from 'lucide-vue-next'
 import { ADDRESS, ERC7579_MODULE_TYPE, IERC7579Account__factory } from 'sendop'
 import { computed, ref } from 'vue'
@@ -370,15 +371,36 @@ function onClickCancelRecovery() {
 		isLoading.value = true
 		error.value = null
 
+		let execution: TxModalExecution
+
 		if (isRecoveryRequestExpired.value) {
 			// call function cancelExpiredRecovery(address account)
+			execution = {
+				description: 'Cancel Expired Recovery',
+				to: EMAIL_RECOVERY_EXECUTOR_ADDRESS,
+				data: new Interface(['function cancelExpiredRecovery(address account)']).encodeFunctionData(
+					'cancelExpiredRecovery',
+					[props.selectedAccount.address],
+				),
+				value: 0n,
+			}
 		} else {
 			// call function cancelRecovery()
+			execution = {
+				description: 'Cancel Recovery',
+				to: EMAIL_RECOVERY_EXECUTOR_ADDRESS,
+				data: new Interface(['function cancelRecovery()']).encodeFunctionData('cancelRecovery'),
+				value: 0n,
+			}
 		}
 
-		// Reset state
-		resetRecoverySetupState()
-		resetRecoveryRequestState()
+		openModal({
+			executions: [execution],
+			onSuccess: async () => {
+				toast.success('Recovery cancelled successfully!')
+				resetRecoveryRequestState()
+			},
+		})
 	} catch (e) {
 		console.error('Error canceling recovery:', e)
 		error.value = `Error canceling recovery: ${getErrorMessage(e)}`
