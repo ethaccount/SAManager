@@ -454,11 +454,6 @@ function onClickCancelRecovery() {
 					</div>
 				</div>
 
-				<!-- Account not deployed -->
-				<div v-else-if="!isDeployed" class="text-sm text-muted-foreground">
-					Account must be deployed to use email recovery
-				</div>
-
 				<!-- Account not modular -->
 				<div v-else-if="!isModular" class="text-sm text-muted-foreground">
 					Account must be modular to use email recovery
