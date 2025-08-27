@@ -73,24 +73,26 @@ const expiryOptions = [
 
 // request recovery state
 const newOwnerAddress = ref('')
-const recoveryRequested = ref(false)
+const isRecoveryRequestSent = ref(false) // relayer has sent the recovery request email
+const isRecoveryRequestConfirmed = ref(false) // user has confirmed the recovery request email
 const recoveryTimeLeft = ref(0n)
 const recoveryExpiry = ref(0n)
 
 function resetRecoveryRequestState() {
 	newOwnerAddress.value = ''
-	recoveryRequested.value = false
+	isRecoveryRequestSent.value = false
+	isRecoveryRequestConfirmed.value = false
 	recoveryTimeLeft.value = 0n
 	recoveryExpiry.value = 0n
 }
 
 const canCompleteRecovery = computed(() => {
-	if (!recoveryRequested.value) return false
+	if (!isRecoveryRequestConfirmed.value) return false
 	return recoveryTimeLeft.value <= 0n && recoveryExpiry.value > 0n
 })
 
 const isRecoveryRequestExpired = computed(() => {
-	if (!recoveryRequested.value) return false
+	if (!isRecoveryRequestConfirmed.value) return false
 	return recoveryExpiry.value <= 0n
 })
 
@@ -257,9 +259,6 @@ async function onClickConfigureRecovery() {
 				)
 
 				hasEmailRecoveryExecutor.value = true
-				toast.success('Email Recovery setup initiated. Please check your email.', {
-					duration: 7000,
-				})
 
 				// Start checking for acceptance
 				checkAcceptanceStatus()
@@ -307,12 +306,7 @@ async function initiateRecovery() {
 			newOwner: newOwnerAddress.value,
 		})
 
-		toast.success('Recovery request sent. Please check your email and follow the instructions.', {
-			duration: 7000,
-		})
-
-		// Start checking recovery status
-		await fetchRecoveryRequestStatus()
+		isRecoveryRequestSent.value = true
 	} catch (e) {
 		console.error('Error initiating recovery:', e)
 		error.value = `Error initiating recovery: ${getErrorMessage(e)}`
@@ -329,11 +323,11 @@ async function fetchRecoveryRequestStatus() {
 		})
 
 		if (executeAfter === 0n) {
-			recoveryRequested.value = false
+			isRecoveryRequestConfirmed.value = false
 			return
 		}
 
-		recoveryRequested.value = true
+		isRecoveryRequestConfirmed.value = true
 
 		const block = await client.value.getBlock('latest')
 		if (!block) {
@@ -368,7 +362,7 @@ async function completeRecoveryProcess() {
 }
 
 function onClickCancelRecovery() {
-	if (!recoveryRequested.value) {
+	if (!isRecoveryRequestConfirmed.value) {
 		return
 	}
 
@@ -573,7 +567,7 @@ function onClickCancelRecovery() {
 						<div class="space-y-2">
 							<h4 class="text-lg font-medium">Waiting for Guardian Confirmation</h4>
 							<p class="text-sm text-muted-foreground">
-								We've sent an email to your guardian. Please ask them to check their email and confirm.
+								Email Recovery setup initiated. Please check your email and confirm.
 							</p>
 						</div>
 					</div>
@@ -581,7 +575,7 @@ function onClickCancelRecovery() {
 					<!-- Recovery Interface -->
 					<div v-else class="space-y-6">
 						<!-- Recovery Not Started -->
-						<div v-if="!recoveryRequested" class="space-y-4">
+						<div v-if="!isRecoveryRequestConfirmed && !isRecoveryRequestSent" class="space-y-4">
 							<div class="text-center space-y-2">
 								<h4 class="text-lg font-medium">Recover this account</h4>
 							</div>
@@ -620,9 +614,19 @@ function onClickCancelRecovery() {
 						</div>
 
 						<!-- Recovery Request Sent -->
+						<div v-else-if="!isRecoveryRequestConfirmed && isRecoveryRequestSent">
+							<div class="text-center space-y-2">
+								<h4 class="text-lg font-medium">Waiting for Guardian Confirmation</h4>
+								<p class="text-sm text-muted-foreground">
+									Email recovery request sent. Please check your email and confirm.
+								</p>
+							</div>
+						</div>
+
+						<!-- Recovery Request Confirmed -->
 						<div v-else class="space-y-4">
 							<div class="text-center space-y-2">
-								<h4 class="text-lg font-medium">Recover Request Sent</h4>
+								<h4 class="text-lg font-medium">Recover Request Confirmed</h4>
 								<!-- Recovery delay not passed -->
 								<div v-if="recoveryTimeLeft > 0n" class="space-y-2">
 									<p class="text-sm text-muted-foreground">
