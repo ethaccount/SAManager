@@ -9,11 +9,11 @@ import {
 	completeRecovery,
 	createOwnableEmailRecovery,
 	EMAIL_RECOVERY_EXECUTOR_ADDRESS,
-	getRecoveryTimeLeft,
-	isRecoveryRequestExists,
+	getRecoveryRequest,
 	sendAcceptanceRequest,
 	sendRecoveryRequest,
 } from '@/lib/email-recovery'
+import { getErrorMessage } from '@/lib/error'
 import { toRoute } from '@/lib/router'
 import type { ImportedAccount } from '@/stores/account/account'
 import { TESTNET_CHAIN_ID } from '@/stores/blockchain/chains'
@@ -22,7 +22,7 @@ import type { TxModalExecution } from '@/stores/useTxModal'
 import { useTxModal } from '@/stores/useTxModal'
 import { ChevronDown, ChevronUp, Info, Loader2 } from 'lucide-vue-next'
 import { ADDRESS, ERC7579_MODULE_TYPE, IERC7579Account__factory } from 'sendop'
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { toast } from 'vue-sonner'
 
@@ -36,7 +36,7 @@ const { selectedChainId, switchChain, client } = useBlockchain()
 const { openModal } = useTxModal()
 
 const isLoading = ref(false)
-const isMountLoading = ref(true)
+const isLoadingState = ref(true)
 const error = ref<string | null>(null)
 const hasOwnableValidator = ref(false)
 const hasEmailRecoveryExecutor = ref(false)
@@ -52,43 +52,72 @@ const expiryValue = ref('14')
 const expiryUnit = ref('days')
 const acceptanceChecked = ref(false)
 
-// Select options
-const timelockItems = [
+function resetRecoverySetupState() {
+	guardianEmail.value = ''
+	timelockValue.value = '6'
+	timelockUnit.value = 'hours'
+	expiryValue.value = '14'
+	expiryUnit.value = 'days'
+	acceptanceChecked.value = false
+}
+
+const timelockOptions = [
 	{ value: 'hours', label: 'Hours' },
 	{ value: 'days', label: 'Days' },
 ]
 
-const expiryItems = [
+const expiryOptions = [
 	{ value: 'days', label: 'Days' },
 	{ value: 'weeks', label: 'Weeks' },
 ]
 
-// Email recovery request state
+// request recovery state
 const newOwnerAddress = ref('')
 const recoveryRequested = ref(false)
 const recoveryTimeLeft = ref(0n)
-const canCompleteRecovery = ref(false)
+const recoveryExpiry = ref(0n)
+
+function resetRecoveryRequestState() {
+	newOwnerAddress.value = ''
+	recoveryRequested.value = false
+	recoveryTimeLeft.value = 0n
+	recoveryExpiry.value = 0n
+}
+
+const canCompleteRecovery = computed(() => {
+	if (!recoveryRequested.value) return false
+	return recoveryTimeLeft.value <= 0n && recoveryExpiry.value > 0n
+})
+
+const isRecoveryRequestExpired = computed(() => {
+	if (!recoveryRequested.value) return false
+	return recoveryExpiry.value <= 0n
+})
 
 const isOnBaseSepolia = computed(() => selectedChainId.value === TESTNET_CHAIN_ID.BASE_SEPOLIA)
 
-onMounted(async () => {
-	try {
-		await checkHasOwnableValidator()
-		await checkHasEmailRecoveryExecutor()
+watchImmediate(
+	() => props.selectedAccount,
+	async () => {
+		try {
+			isLoadingState.value = true
+			await checkHasOwnableValidator()
+			await checkHasEmailRecoveryExecutor()
 
-		if (hasEmailRecoveryExecutor.value) {
-			await checkAcceptanceStatus()
+			if (hasEmailRecoveryExecutor.value) {
+				await checkAcceptanceStatus()
 
-			if (acceptanceChecked.value) {
-				await checkRecoveryStatus()
+				if (acceptanceChecked.value) {
+					await fetchRecoveryRequestStatus()
+				}
 			}
+		} catch (e) {
+			throw e
+		} finally {
+			isLoadingState.value = false
 		}
-	} catch (e) {
-		throw e
-	} finally {
-		isMountLoading.value = false
-	}
-})
+	},
+)
 
 async function checkHasOwnableValidator() {
 	if (!props.isModular) {
@@ -148,6 +177,26 @@ const recoveryTimeLeftFormatted = computed(() => {
 	const secs = seconds % 60
 
 	if (hours > 0) {
+		return `${hours} Hours, ${minutes} Mins and ${secs} Secs`
+	} else if (minutes > 0) {
+		return `${minutes} Mins and ${secs} Secs`
+	} else {
+		return `${secs} Secs`
+	}
+})
+
+const expiryTimeLeftFormatted = computed(() => {
+	if (recoveryExpiry.value <= 0n) return 'Expired'
+
+	const seconds = Number(recoveryExpiry.value)
+	const days = Math.floor(seconds / 86400)
+	const hours = Math.floor((seconds % 86400) / 3600)
+	const minutes = Math.floor((seconds % 3600) / 60)
+	const secs = seconds % 60
+
+	if (days > 0) {
+		return `${days} Days, ${hours} Hours and ${minutes} Mins`
+	} else if (hours > 0) {
 		return `${hours} Hours, ${minutes} Mins and ${secs} Secs`
 	} else if (minutes > 0) {
 		return `${minutes} Mins and ${secs} Secs`
@@ -263,7 +312,7 @@ async function initiateRecovery() {
 		})
 
 		// Start checking recovery status
-		checkRecoveryStatus()
+		await fetchRecoveryRequestStatus()
 	} catch (e) {
 		error.value = `Failed to initiate recovery: ${e instanceof Error ? e.message : 'Unknown error'}`
 		toast.error(error.value)
@@ -272,20 +321,27 @@ async function initiateRecovery() {
 	}
 }
 
-async function checkRecoveryStatus() {
+async function fetchRecoveryRequestStatus() {
 	try {
-		const exists = await isRecoveryRequestExists(client.value, props.selectedAccount.address)
+		const { executeAfter, executeBefore } = await getRecoveryRequest({
+			client: client.value,
+			accountAddress: props.selectedAccount.address,
+		})
 
-		if (exists) {
-			recoveryRequested.value = true
-			const timeLeft = await getRecoveryTimeLeft(client.value, props.selectedAccount.address)
-			recoveryTimeLeft.value = timeLeft
-
-			if (timeLeft <= 0n) {
-				canCompleteRecovery.value = true
-				toast.success('Recovery delay has passed. You can now complete recovery.')
-			}
+		if (executeAfter === 0n) {
+			recoveryRequested.value = false
+			return
 		}
+
+		recoveryRequested.value = true
+
+		const block = await client.value.getBlock('latest')
+		if (!block) {
+			throw new Error('Failed to get latest block')
+		}
+
+		recoveryTimeLeft.value = executeAfter - BigInt(block.timestamp)
+		recoveryExpiry.value = executeBefore - BigInt(block.timestamp)
 	} catch (e) {
 		throw new Error('Error checking recovery status:', { cause: e })
 	}
@@ -300,11 +356,10 @@ async function completeRecoveryProcess() {
 		toast.success('Recovery completed successfully!')
 
 		// Reset state
-		recoveryRequested.value = false
-		canCompleteRecovery.value = false
-		newOwnerAddress.value = ''
+		resetRecoverySetupState()
+		resetRecoveryRequestState()
 	} catch (e) {
-		error.value = `Failed to complete recovery: ${e instanceof Error ? e.message : 'Unknown error'}`
+		error.value = `Failed to complete recovery: ${getErrorMessage(e)}`
 		throw new Error('Failed to complete recovery:', { cause: e })
 	} finally {
 		isLoading.value = false
@@ -312,11 +367,29 @@ async function completeRecoveryProcess() {
 }
 
 function onClickCancelRecovery() {
-	// TODO: Implement cancel recovery if needed
-	console.log('onClickCancelRecovery')
-	// recoveryRequested.value = false
-	// canCompleteRecovery.value = false
-	// recoveryTimeLeft.value = 0n
+	if (!recoveryRequested.value) {
+		return
+	}
+
+	try {
+		isLoading.value = true
+		error.value = null
+
+		if (isRecoveryRequestExpired.value) {
+			// call function cancelExpiredRecovery(address account)
+		} else {
+			// call function cancelRecovery()
+		}
+
+		// Reset state
+		resetRecoverySetupState()
+		resetRecoveryRequestState()
+	} catch (e) {
+		error.value = `Failed to cancel recovery: ${getErrorMessage(e)}`
+		throw new Error('Failed to cancel recovery:', { cause: e })
+	} finally {
+		isLoading.value = false
+	}
 }
 </script>
 
@@ -350,7 +423,7 @@ function onClickCancelRecovery() {
 
 			<div class="space-y-4">
 				<!-- Loading State -->
-				<div v-if="isMountLoading" class="flex items-center justify-center py-8">
+				<div v-if="isLoadingState" class="flex items-center justify-center py-8">
 					<Loader2 class="w-6 h-6 animate-spin" />
 					<span class="ml-2 text-sm text-muted-foreground">Loading email recovery status...</span>
 				</div>
@@ -431,14 +504,14 @@ function onClickCancelRecovery() {
 												<SelectTrigger class="text-sm">
 													<SelectValue placeholder="Select unit">
 														{{
-															timelockItems.find(item => item.value === timelockUnit)
+															timelockOptions.find(item => item.value === timelockUnit)
 																?.label
 														}}
 													</SelectValue>
 												</SelectTrigger>
 												<SelectContent>
 													<SelectItem
-														v-for="item in timelockItems"
+														v-for="item in timelockOptions"
 														:key="item.value"
 														:value="item.value"
 													>
@@ -465,12 +538,14 @@ function onClickCancelRecovery() {
 											<Select v-model="expiryUnit" :disabled="isLoading">
 												<SelectTrigger class="text-sm">
 													<SelectValue placeholder="Select unit">
-														{{ expiryItems.find(item => item.value === expiryUnit)?.label }}
+														{{
+															expiryOptions.find(item => item.value === expiryUnit)?.label
+														}}
 													</SelectValue>
 												</SelectTrigger>
 												<SelectContent>
 													<SelectItem
-														v-for="item in expiryItems"
+														v-for="item in expiryOptions"
 														:key="item.value"
 														:value="item.value"
 													>
@@ -548,27 +623,46 @@ function onClickCancelRecovery() {
 							</div>
 						</div>
 
-						<!-- Recovery in Progress -->
+						<!-- Recovery Request Sent -->
 						<div v-else class="space-y-4">
 							<div class="text-center space-y-2">
 								<h4 class="text-lg font-medium">Recover Request Sent</h4>
+								<!-- Recovery delay not passed -->
 								<div v-if="recoveryTimeLeft > 0n" class="space-y-2">
 									<p class="text-sm text-muted-foreground">
 										You can recover this account in {{ recoveryTimeLeftFormatted }}.
+									</p>
+									<p class="text-xs text-muted-foreground">
+										Recovery request expires in {{ expiryTimeLeftFormatted }}.
+									</p>
+								</div>
+								<!-- Recovery request expired -->
+								<div v-else-if="isRecoveryRequestExpired">
+									<p class="text-sm text-muted-foreground">
+										Recovery request has expired. Please cancel the recovery request and start a new
+										one.
+									</p>
+								</div>
+								<!-- Recovery ready but not expired -->
+								<div v-else-if="!isRecoveryRequestExpired" class="space-y-2">
+									<p class="text-sm text-muted-foreground">
+										Recovery request expires in {{ expiryTimeLeftFormatted }}.
 									</p>
 								</div>
 							</div>
 
 							<div class="space-y-4 p-4">
 								<div class="flex gap-2">
+									<!-- Cancel -->
 									<Button variant="outline" @click="onClickCancelRecovery" class="flex-1">
 										Cancel Recovery
 									</Button>
+									<!-- Complete -->
 									<Button
+										v-if="canCompleteRecovery"
 										@click="completeRecoveryProcess"
 										:loading="isLoading"
 										class="flex-1"
-										:disabled="!canCompleteRecovery"
 									>
 										Complete Recovery
 									</Button>

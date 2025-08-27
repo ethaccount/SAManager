@@ -37,11 +37,14 @@ const {
 	uninstallOwnableValidator,
 } = useValidatorManagement()
 
-onMounted(async () => {
-	if (!props.isDeployed) return
-	if (!props.isModular) return
-	await fetchAccountModules()
-})
+watchImmediate(
+	() => props.selectedAccount,
+	async () => {
+		if (!props.isDeployed) return
+		if (!props.isModular) return
+		await fetchAccountModules()
+	},
+)
 
 const onlyOneValidator = computed<boolean>(() => {
 	return moduleRecord.value[ERC7579_MODULE_TYPE.VALIDATOR]?.length === 1

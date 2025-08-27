@@ -15,11 +15,14 @@ const props = defineProps<{
 
 const { sessions, loading, expandedSessions, loadSessions, error: loadSessionsError } = useSessionList()
 
-onMounted(async () => {
-	if (!props.isDeployed) return
-	if (!props.isModular) return
-	await loadSessions(props.selectedAccount.address)
-})
+watchImmediate(
+	() => props.selectedAccount,
+	async () => {
+		if (!props.isDeployed) return
+		if (!props.isModular) return
+		await loadSessions(props.selectedAccount.address)
+	},
+)
 
 function toggleSessionExpansion(permissionId: string) {
 	if (expandedSessions.value.has(permissionId)) {

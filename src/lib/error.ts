@@ -3,6 +3,13 @@ import { ProviderRpcError } from '@samanager/sdk'
 import type { ErrorCode, ethers, EthersError } from 'ethers'
 import { isError } from 'ethers'
 
+export function getErrorMessage(e: unknown) {
+	if (e instanceof Error) {
+		return e.message
+	}
+	return JSON.stringify(e)
+}
+
 export function isProviderRpcError(e: unknown): e is ProviderRpcError {
 	return e instanceof Object && 'code' in e && 'message' in e
 }
