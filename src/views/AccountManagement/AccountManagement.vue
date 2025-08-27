@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { IS_STAGING } from '@/config'
 import { AccountRegistry } from '@/lib/accounts'
 import { toRoute } from '@/lib/router'
 import { useGetCode } from '@/lib/useGetCode'
@@ -252,6 +253,7 @@ const showSwitchToCorrectChain = computed(() => {
 						</RouterLink>
 
 						<RouterLink
+							v-if="IS_STAGING"
 							:to="toRoute('account-email-recovery', { address: selectedAccount.address })"
 							class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
 							:class="
