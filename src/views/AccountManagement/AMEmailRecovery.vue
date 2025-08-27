@@ -53,15 +53,6 @@ const expiryValue = ref('14')
 const expiryUnit = ref('days')
 const acceptanceChecked = ref(false)
 
-function resetRecoverySetupState() {
-	guardianEmail.value = ''
-	timelockValue.value = '6'
-	timelockUnit.value = 'hours'
-	expiryValue.value = '14'
-	expiryUnit.value = 'days'
-	acceptanceChecked.value = false
-}
-
 const timelockOptions = [
 	{ value: 'hours', label: 'Hours' },
 	{ value: 'days', label: 'Days' },
@@ -98,6 +89,47 @@ const isRecoveryRequestExpired = computed(() => {
 })
 
 const isOnBaseSepolia = computed(() => selectedChainId.value === TESTNET_CHAIN_ID.BASE_SEPOLIA)
+
+const canUseEmailRecovery = computed(() => {
+	return isOnBaseSepolia.value && hasOwnableValidator.value
+})
+
+const recoveryTimeLeftFormatted = computed(() => {
+	if (recoveryTimeLeft.value <= 0n) return 'Ready'
+
+	const seconds = Number(recoveryTimeLeft.value)
+	const hours = Math.floor(seconds / 3600)
+	const minutes = Math.floor((seconds % 3600) / 60)
+	const secs = seconds % 60
+
+	if (hours > 0) {
+		return `${hours} Hours, ${minutes} Mins and ${secs} Secs`
+	} else if (minutes > 0) {
+		return `${minutes} Mins and ${secs} Secs`
+	} else {
+		return `${secs} Secs`
+	}
+})
+
+const expiryTimeLeftFormatted = computed(() => {
+	if (recoveryExpiry.value <= 0n) return 'Expired'
+
+	const seconds = Number(recoveryExpiry.value)
+	const days = Math.floor(seconds / 86400)
+	const hours = Math.floor((seconds % 86400) / 3600)
+	const minutes = Math.floor((seconds % 3600) / 60)
+	const secs = seconds % 60
+
+	if (days > 0) {
+		return `${days} Days, ${hours} Hours and ${minutes} Mins`
+	} else if (hours > 0) {
+		return `${hours} Hours, ${minutes} Mins and ${secs} Secs`
+	} else if (minutes > 0) {
+		return `${minutes} Mins and ${secs} Secs`
+	} else {
+		return `${secs} Secs`
+	}
+})
 
 watchImmediate(
 	() => props.selectedAccount,
@@ -167,52 +199,55 @@ async function checkHasEmailRecoveryExecutor() {
 	}
 }
 
-const canUseEmailRecovery = computed(() => {
-	return isOnBaseSepolia.value && hasOwnableValidator.value
-})
+async function checkAcceptanceStatus() {
+	if (!hasEmailRecoveryExecutor.value || acceptanceChecked.value) return
 
-const recoveryTimeLeftFormatted = computed(() => {
-	if (recoveryTimeLeft.value <= 0n) return 'Ready'
-
-	const seconds = Number(recoveryTimeLeft.value)
-	const hours = Math.floor(seconds / 3600)
-	const minutes = Math.floor((seconds % 3600) / 60)
-	const secs = seconds % 60
-
-	if (hours > 0) {
-		return `${hours} Hours, ${minutes} Mins and ${secs} Secs`
-	} else if (minutes > 0) {
-		return `${minutes} Mins and ${secs} Secs`
-	} else {
-		return `${secs} Secs`
+	try {
+		const canStart = await checkAcceptanceRequest(
+			client.value,
+			props.selectedAccount.address,
+			ADDRESS.OwnableValidator,
+		)
+		if (canStart) {
+			acceptanceChecked.value = true
+		}
+	} catch (e) {
+		throw new Error('Failed to check acceptance status', { cause: e })
 	}
-})
+}
 
-const expiryTimeLeftFormatted = computed(() => {
-	if (recoveryExpiry.value <= 0n) return 'Expired'
+async function fetchRecoveryRequestStatus() {
+	try {
+		const { executeAfter, executeBefore } = await getRecoveryRequest({
+			client: client.value,
+			accountAddress: props.selectedAccount.address,
+		})
 
-	const seconds = Number(recoveryExpiry.value)
-	const days = Math.floor(seconds / 86400)
-	const hours = Math.floor((seconds % 86400) / 3600)
-	const minutes = Math.floor((seconds % 3600) / 60)
-	const secs = seconds % 60
+		if (executeAfter === 0n) {
+			isRecoveryRequestConfirmed.value = false
+			return
+		}
 
-	if (days > 0) {
-		return `${days} Days, ${hours} Hours and ${minutes} Mins`
-	} else if (hours > 0) {
-		return `${hours} Hours, ${minutes} Mins and ${secs} Secs`
-	} else if (minutes > 0) {
-		return `${minutes} Mins and ${secs} Secs`
-	} else {
-		return `${secs} Secs`
+		isRecoveryRequestConfirmed.value = true
+
+		const block = await client.value.getBlock('latest')
+		if (!block) {
+			throw new Error('Failed to get latest block')
+		}
+
+		recoveryTimeLeft.value = executeAfter - BigInt(block.timestamp)
+		recoveryExpiry.value = executeBefore - BigInt(block.timestamp)
+	} catch (e) {
+		console.error('Error checking recovery status:', e)
+		error.value = `Error checking recovery status: ${getErrorMessage(e)}`
 	}
-})
+}
 
 async function onClickSwitchToBaseSepolia() {
 	switchChain(TESTNET_CHAIN_ID.BASE_SEPOLIA)
 }
 
-async function onClickConfigureRecovery() {
+async function onClickSetupEmailRecovery() {
 	if (!canUseEmailRecovery.value) return
 	if (!guardianEmail.value) {
 		toast.error('Please enter guardian email')
@@ -273,24 +308,7 @@ async function onClickConfigureRecovery() {
 	}
 }
 
-async function checkAcceptanceStatus() {
-	if (!hasEmailRecoveryExecutor.value || acceptanceChecked.value) return
-
-	try {
-		const canStart = await checkAcceptanceRequest(
-			client.value,
-			props.selectedAccount.address,
-			ADDRESS.OwnableValidator,
-		)
-		if (canStart) {
-			acceptanceChecked.value = true
-		}
-	} catch (e) {
-		throw new Error('Failed to check acceptance status', { cause: e })
-	}
-}
-
-async function initiateRecovery() {
+async function onClickSendRecoveryRequest() {
 	if (!newOwnerAddress.value) {
 		toast.error('Please enter new owner address')
 		return
@@ -316,34 +334,7 @@ async function initiateRecovery() {
 	}
 }
 
-async function fetchRecoveryRequestStatus() {
-	try {
-		const { executeAfter, executeBefore } = await getRecoveryRequest({
-			client: client.value,
-			accountAddress: props.selectedAccount.address,
-		})
-
-		if (executeAfter === 0n) {
-			isRecoveryRequestConfirmed.value = false
-			return
-		}
-
-		isRecoveryRequestConfirmed.value = true
-
-		const block = await client.value.getBlock('latest')
-		if (!block) {
-			throw new Error('Failed to get latest block')
-		}
-
-		recoveryTimeLeft.value = executeAfter - BigInt(block.timestamp)
-		recoveryExpiry.value = executeBefore - BigInt(block.timestamp)
-	} catch (e) {
-		console.error('Error checking recovery status:', e)
-		error.value = `Error checking recovery status: ${getErrorMessage(e)}`
-	}
-}
-
-async function completeRecoveryProcess() {
+async function onClickCompleteRecovery() {
 	isLoading.value = true
 	error.value = null
 
@@ -351,8 +342,6 @@ async function completeRecoveryProcess() {
 		await completeRecovery(client.value, props.selectedAccount.address, newOwnerAddress.value)
 		toast.success('Recovery completed successfully!')
 
-		// Reset state
-		resetRecoverySetupState()
 		resetRecoveryRequestState()
 	} catch (e) {
 		console.error('Error completing recovery:', e)
@@ -573,7 +562,7 @@ function onClickCancelRecovery() {
 								</div>
 
 								<Button
-									@click="onClickConfigureRecovery"
+									@click="onClickSetupEmailRecovery"
 									:disabled="!guardianEmail || !timelockValue || !expiryValue || isLoading"
 									:loading="isLoading"
 									class="w-full"
@@ -625,7 +614,7 @@ function onClickCancelRecovery() {
 								</div>
 
 								<Button
-									@click="initiateRecovery"
+									@click="onClickSendRecoveryRequest"
 									:disabled="!newOwnerAddress || isLoading"
 									:loading="isLoading"
 									class="w-full"
@@ -682,7 +671,7 @@ function onClickCancelRecovery() {
 									<!-- Complete -->
 									<Button
 										v-if="canCompleteRecovery"
-										@click="completeRecoveryProcess"
+										@click="onClickCompleteRecovery"
 										:loading="isLoading"
 										class="flex-1"
 									>
