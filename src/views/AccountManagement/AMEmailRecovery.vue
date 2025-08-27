@@ -314,8 +314,8 @@ async function initiateRecovery() {
 		// Start checking recovery status
 		await fetchRecoveryRequestStatus()
 	} catch (e) {
-		error.value = `Failed to initiate recovery: ${e instanceof Error ? e.message : 'Unknown error'}`
-		toast.error(error.value)
+		console.error('Error initiating recovery:', e)
+		error.value = `Error initiating recovery: ${getErrorMessage(e)}`
 	} finally {
 		isLoading.value = false
 	}
@@ -343,7 +343,8 @@ async function fetchRecoveryRequestStatus() {
 		recoveryTimeLeft.value = executeAfter - BigInt(block.timestamp)
 		recoveryExpiry.value = executeBefore - BigInt(block.timestamp)
 	} catch (e) {
-		throw new Error('Error checking recovery status:', { cause: e })
+		console.error('Error checking recovery status:', e)
+		error.value = `Error checking recovery status: ${getErrorMessage(e)}`
 	}
 }
 
@@ -359,8 +360,8 @@ async function completeRecoveryProcess() {
 		resetRecoverySetupState()
 		resetRecoveryRequestState()
 	} catch (e) {
-		error.value = `Failed to complete recovery: ${getErrorMessage(e)}`
-		throw new Error('Failed to complete recovery:', { cause: e })
+		console.error('Error completing recovery:', e)
+		error.value = `Error completing recovery: ${getErrorMessage(e)}`
 	} finally {
 		isLoading.value = false
 	}
@@ -385,8 +386,8 @@ function onClickCancelRecovery() {
 		resetRecoverySetupState()
 		resetRecoveryRequestState()
 	} catch (e) {
-		error.value = `Failed to cancel recovery: ${getErrorMessage(e)}`
-		throw new Error('Failed to cancel recovery:', { cause: e })
+		console.error('Error canceling recovery:', e)
+		error.value = `Error canceling recovery: ${getErrorMessage(e)}`
 	} finally {
 		isLoading.value = false
 	}

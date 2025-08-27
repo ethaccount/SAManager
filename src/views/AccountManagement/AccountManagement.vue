@@ -19,15 +19,20 @@ const router = useRouter()
 const { selectedAccount, isModular, isChainIdMatching, isMultichain } = useAccount()
 const { getCode, isDeployed, loading } = useGetCode()
 
+const isGetCodeFinished = ref(false)
+
 // Timing: App loaded, Account changed
 // Use this instead of onMounted because users might change account with the drawer
 watchImmediate(selectedAccount, async () => {
+	isGetCodeFinished.value = false
+
 	if (selectedAccount.value && isChainIdMatching.value) {
 		// Only redirect if we're on the exact account-management route (not on a child route)
 		if (router.currentRoute.value.name === 'account-management') {
 			router.replace(toRoute('account-modules', { address: selectedAccount.value.address }))
 		}
 		await getCode(selectedAccount.value.address)
+		isGetCodeFinished.value = true
 	}
 })
 
@@ -213,66 +218,69 @@ const showSwitchToCorrectChain = computed(() => {
 					<Loader2 class="w-6 h-6 animate-spin text-primary" />
 				</div>
 
-				<!-- Note: Must use v-show so that the RouterView will not mount again when the selectedAccount changes -->
-				<div v-show="!loading" class="mt-6 mb-[100px]">
-					<div class="flex border-b">
-						<RouterLink
-							:to="toRoute('account-modules', { address: selectedAccount.address })"
-							class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
-							:class="
-								$route.name === 'account-modules'
-									? 'border-primary text-primary'
-									: 'border-transparent text-muted-foreground hover:text-foreground'
-							"
-						>
-							Modules
-						</RouterLink>
+				<!-- Ensure the isDeployed is updated before rendering the RouterView -->
+				<div v-if="isGetCodeFinished">
+					<!-- Note: Must use v-show so that the RouterView will not mount again when the selectedAccount changes -->
+					<div v-show="!loading" class="mt-6 mb-[100px]">
+						<div class="flex border-b">
+							<RouterLink
+								:to="toRoute('account-modules', { address: selectedAccount.address })"
+								class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+								:class="
+									$route.name === 'account-modules'
+										? 'border-primary text-primary'
+										: 'border-transparent text-muted-foreground hover:text-foreground'
+								"
+							>
+								Modules
+							</RouterLink>
 
-						<RouterLink
-							:to="toRoute('account-permissions', { address: selectedAccount.address })"
-							class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
-							:class="
-								$route.name === 'account-permissions'
-									? 'border-primary text-primary'
-									: 'border-transparent text-muted-foreground hover:text-foreground'
-							"
-						>
-							Permissions
-						</RouterLink>
+							<RouterLink
+								:to="toRoute('account-permissions', { address: selectedAccount.address })"
+								class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+								:class="
+									$route.name === 'account-permissions'
+										? 'border-primary text-primary'
+										: 'border-transparent text-muted-foreground hover:text-foreground'
+								"
+							>
+								Permissions
+							</RouterLink>
 
-						<RouterLink
-							:to="toRoute('account-multichain', { address: selectedAccount.address })"
-							class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
-							:class="
-								$route.name === 'account-multichain'
-									? 'border-primary text-primary'
-									: 'border-transparent text-muted-foreground hover:text-foreground'
-							"
-						>
-							Multichain
-						</RouterLink>
+							<RouterLink
+								:to="toRoute('account-multichain', { address: selectedAccount.address })"
+								class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+								:class="
+									$route.name === 'account-multichain'
+										? 'border-primary text-primary'
+										: 'border-transparent text-muted-foreground hover:text-foreground'
+								"
+							>
+								Multichain
+							</RouterLink>
 
-						<RouterLink
-							v-if="IS_STAGING"
-							:to="toRoute('account-email-recovery', { address: selectedAccount.address })"
-							class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
-							:class="
-								$route.name === 'account-email-recovery'
-									? 'border-primary text-primary'
-									: 'border-transparent text-muted-foreground hover:text-foreground'
-							"
-						>
-							Email Recovery
-						</RouterLink>
-					</div>
+							<RouterLink
+								v-if="IS_STAGING"
+								:to="toRoute('account-email-recovery', { address: selectedAccount.address })"
+								class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+								:class="
+									$route.name === 'account-email-recovery'
+										? 'border-primary text-primary'
+										: 'border-transparent text-muted-foreground hover:text-foreground'
+								"
+							>
+								Email Recovery
+							</RouterLink>
+						</div>
 
-					<div class="mt-6">
-						<RouterView
-							v-if="selectedAccount"
-							:selected-account="selectedAccount"
-							:is-deployed="isDeployed"
-							:is-modular="isModular"
-						/>
+						<div class="mt-6">
+							<RouterView
+								v-if="selectedAccount"
+								:selected-account="selectedAccount"
+								:is-deployed="isDeployed"
+								:is-modular="isModular"
+							/>
+						</div>
 					</div>
 				</div>
 			</div>
