@@ -33,7 +33,11 @@ export class ECDSAValidatorVMethod extends ValidationMethodBase {
 	}
 
 	isValidSigner(signer: AppSigner): boolean {
-		return signer.type === this.signerType && isSameAddress(signer.identifier, this.address)
+		return signer.type === this.signerType && this.isValidSignerIdentifier(signer.identifier)
+	}
+
+	isValidSignerIdentifier(identifier: string): boolean {
+		return isSameAddress(identifier, this.address)
 	}
 }
 
@@ -66,7 +70,11 @@ export class WebAuthnValidatorVMethod extends ValidationMethodBase {
 	}
 
 	isValidSigner(signer: AppSigner): boolean {
-		return signer.type === this.signerType && signer.identifier === this.authenticatorIdHash
+		return signer.type === this.signerType && this.isValidSignerIdentifier(signer.identifier)
+	}
+
+	isValidSignerIdentifier(identifier: string): boolean {
+		return identifier === this.authenticatorIdHash
 	}
 }
 
@@ -104,18 +112,23 @@ export class OwnableValidatorVMethod extends ValidationMethodBase {
 
 	isValidSigner(signer: AppSigner): boolean {
 		if (signer.type !== this.signerType) return false
-		return this.addresses.includes(signer.identifier)
+		return this.isValidSignerIdentifier(signer.identifier)
+	}
+
+	isValidSignerIdentifier(identifier: string): boolean {
+		return this.addresses.some(address => isSameAddress(address, identifier))
 	}
 
 	addOwner(owner: string) {
 		if (!isAddress(owner)) throw new Error('[OwnableValidatorVMethod#addOwner] owner is invalid')
-		if (this.addresses.includes(owner)) throw new Error('[OwnableValidatorVMethod#addOwner] owner already exists')
+		if (this.addresses.some(address => isSameAddress(address, owner)))
+			throw new Error('[OwnableValidatorVMethod#addOwner] owner already exists')
 		this.addresses.push(owner)
 	}
 
 	removeOwner(owner: string) {
 		if (!isAddress(owner)) throw new Error('[OwnableValidatorVMethod#removeOwner] owner is invalid')
-		if (!this.addresses.includes(owner))
+		if (!this.addresses.some(address => isSameAddress(address, owner)))
 			throw new Error('[OwnableValidatorVMethod#removeOwner] owner does not exist')
 		this.addresses = this.addresses.filter(address => !isSameAddress(address, owner))
 	}
@@ -142,6 +155,10 @@ export class Simple7702AccountVMethod extends ValidationMethodBase {
 	}
 
 	isValidSigner(signer: AppSigner): boolean {
-		return signer.type === this.signerType && isSameAddress(signer.identifier, this.address)
+		return signer.type === this.signerType && this.isValidSignerIdentifier(signer.identifier)
+	}
+
+	isValidSignerIdentifier(identifier: string): boolean {
+		return isSameAddress(identifier, this.address)
 	}
 }

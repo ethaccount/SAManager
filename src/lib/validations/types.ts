@@ -49,6 +49,7 @@ export interface ValidationMethod {
 
 	serialize(): ValidationMethodData
 	isValidSigner(signer: AppSigner): boolean
+	isValidSignerIdentifier(identifier: string): boolean
 }
 
 export abstract class ValidationMethodBase implements ValidationMethod {
@@ -64,4 +65,5 @@ export abstract class ValidationMethodBase implements ValidationMethod {
 
 	abstract serialize(): ValidationMethodData
 	abstract isValidSigner(signer: AppSigner): boolean
+	abstract isValidSignerIdentifier(identifier: string): boolean
 }
