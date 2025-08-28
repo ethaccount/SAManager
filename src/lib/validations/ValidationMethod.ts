@@ -2,30 +2,38 @@ import { ValidationAPI } from 'sendop'
 import { AppSigner, SignerType } from './Signer'
 
 export type ValidationMethodName = 'ECDSAValidator' | 'OwnableValidator' | 'WebAuthnValidator' | 'Simple7702Account'
-export type ValidationType = 'EOA-Owned' | 'PASSKEY'
+export type ValidationType = 'EOA-Owned' | 'PASSKEY' | 'MULTI-EOA'
 
-// Discriminated union types for different validation method data
+// ValidationMethodData is the data format stored in local storage and can be restored to a ValidationMethod
+export type ValidationMethodData = EOAValidationMethodData | WebAuthnValidationMethodData | MultiEOAValidationMethodData
+
 export interface EOAValidationMethodData {
-	name: 'ECDSAValidator' | 'OwnableValidator' | 'Simple7702Account'
+	name: 'ECDSAValidator' | 'Simple7702Account'
+	type: 'EOA-Owned'
 	address: string
 }
 
 export interface WebAuthnValidationMethodData {
 	name: 'WebAuthnValidator'
+	type: 'PASSKEY'
 	authenticatorIdHash: string
 	pubKeyX?: bigint
 	pubKeyY?: bigint
 	username?: string
 }
 
-export type ValidationMethodData = EOAValidationMethodData | WebAuthnValidationMethodData
+export interface MultiEOAValidationMethodData {
+	name: 'OwnableValidator'
+	type: 'MULTI-EOA'
+	addresses: string[]
+	threshold: number
+}
 
 export interface ValidationMethod {
 	name: ValidationMethodName
 	type: ValidationType
 	signerType: SignerType
 	validationAPI: ValidationAPI
-	identifier: string
 
 	validatorAddress?: string
 	isModule: boolean
@@ -41,15 +49,10 @@ export abstract class ValidationMethodBase implements ValidationMethod {
 	abstract validationAPI: ValidationAPI
 
 	validatorAddress?: string
-
 	get isModule(): boolean {
 		return this.validatorAddress !== undefined
 	}
 
-	constructor(public identifier: string) {}
-
-	// This will be overridden by subclasses with specific return types
 	abstract serialize(): ValidationMethodData
-
 	abstract isValidSigner(signer: AppSigner): boolean
 }

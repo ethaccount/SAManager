@@ -1,4 +1,4 @@
-import { getModuleByValidationMethod, ValidationMethod } from '@/lib/validations'
+import { getModuleByValidationMethod, OwnableValidatorVMethod, ValidationMethod } from '@/lib/validations'
 import { hexlify, JsonRpcProvider, randomBytes } from 'ethers'
 import {
 	AccountAPI,
@@ -74,18 +74,19 @@ export class Safe7579AccountProvider implements AccountProvider {
 	}
 
 	async getDeployment(client: JsonRpcProvider, validation: ValidationMethod, salt: string): Promise<Deployment> {
-		if (!validation.isModule) {
-			throw new Error('[Safe7579AccountProvider] Validation method is not a module')
+		if (validation.name !== 'OwnableValidator') {
+			throw new Error('[Safe7579AccountProvider] Validation method is not OwnableValidator')
 		}
+		const vMethod = validation as OwnableValidatorVMethod
+		const module = getModuleByValidationMethod(vMethod)
 
-		const module = getModuleByValidationMethod(validation)
 		return await Safe7579API.getDeployment({
 			client,
 			salt,
 			creationOptions: {
 				validatorAddress: module.address,
 				validatorInitData: module.initData,
-				owners: [validation.identifier],
+				owners: [vMethod.addresses[0]],
 				ownersThreshold: 1,
 				attesters: [RHINESTONE_ATTESTER_ADDRESS, BICONOMY_ATTESTER_ADDRESS],
 				attestersThreshold: 1,

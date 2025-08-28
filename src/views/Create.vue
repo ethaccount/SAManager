@@ -84,7 +84,7 @@ const selectedValidationMethod = computed<ValidationMethod | null>(() => {
 	switch (selectedValidationType.value) {
 		case 'EOA-Owned': {
 			if (!signer.value) return null
-			const identifier = signer.value.address
+			const signerAddress = signer.value.address
 
 			// get account supported validation method name
 			const validationMethodName = ACCOUNT_SUPPORTED_INITIAL_VALIDATION[selectedAccountType.value]?.find(
@@ -94,9 +94,12 @@ const selectedValidationMethod = computed<ValidationMethod | null>(() => {
 
 			switch (validationMethodName) {
 				case 'ECDSAValidator':
-					return new ECDSAValidatorVMethod(identifier)
+					return new ECDSAValidatorVMethod(signerAddress)
 				case 'OwnableValidator':
-					return new OwnableValidatorVMethod(identifier)
+					return new OwnableValidatorVMethod({
+						addresses: [signerAddress],
+						threshold: 1,
+					})
 				default:
 					return null
 			}

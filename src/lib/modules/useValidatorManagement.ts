@@ -175,7 +175,10 @@ export function useValidatorManagement() {
 			return
 		}
 
-		const validationMethod = new OwnableValidatorVMethod(wallet.address)
+		const validationMethod = new OwnableValidatorVMethod({
+			addresses: [wallet.address],
+			threshold: 1,
+		})
 
 		await installValidatorModule(validationMethod, {
 			description: 'Install OwnableValidator',

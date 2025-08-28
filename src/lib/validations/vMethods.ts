@@ -1,8 +1,9 @@
-import { getAddress } from 'ethers'
+import { getAddress, isAddress } from 'ethers'
 import { ADDRESS, isSameAddress, Simple7702AccountAPI, SingleEOAValidation, WebAuthnValidation } from 'sendop'
 import { AppSigner, SignerType } from './Signer'
 import {
 	EOAValidationMethodData,
+	MultiEOAValidationMethodData,
 	ValidationMethodBase,
 	ValidationMethodName,
 	ValidationType,
@@ -16,19 +17,22 @@ export class ECDSAValidatorVMethod extends ValidationMethodBase {
 	validationAPI = new SingleEOAValidation()
 	validatorAddress = ADDRESS.ECDSAValidator
 
-	constructor(identifier: string) {
-		super(getAddress(identifier))
+	constructor(public address: string) {
+		super()
+		if (!isAddress(address)) throw new Error('[ECDSAValidatorVMethod] address is invalid')
+		this.address = getAddress(address)
 	}
 
 	serialize(): EOAValidationMethodData {
 		return {
 			name: 'ECDSAValidator',
-			address: this.identifier,
+			type: 'EOA-Owned',
+			address: this.address,
 		}
 	}
 
 	isValidSigner(signer: AppSigner): boolean {
-		return signer.type === this.signerType && isSameAddress(signer.identifier, this.identifier)
+		return signer.type === this.signerType && isSameAddress(signer.identifier, this.address)
 	}
 }
 
@@ -40,18 +44,20 @@ export class WebAuthnValidatorVMethod extends ValidationMethodBase {
 	validatorAddress = ADDRESS.WebAuthnValidator
 
 	constructor(
-		identifier: string, // authenticatorIdHash
+		public authenticatorIdHash: string,
 		public pubKeyX?: bigint,
 		public pubKeyY?: bigint,
 		public username?: string,
 	) {
-		super(identifier)
+		super()
+		this.authenticatorIdHash = authenticatorIdHash
 	}
 
 	serialize(): WebAuthnValidationMethodData {
 		return {
 			name: 'WebAuthnValidator',
-			authenticatorIdHash: this.identifier,
+			type: 'PASSKEY',
+			authenticatorIdHash: this.authenticatorIdHash,
 			...(this.pubKeyX !== undefined && { pubKeyX: this.pubKeyX }),
 			...(this.pubKeyY !== undefined && { pubKeyY: this.pubKeyY }),
 			...(this.username !== undefined && { username: this.username }),
@@ -59,30 +65,45 @@ export class WebAuthnValidatorVMethod extends ValidationMethodBase {
 	}
 
 	isValidSigner(signer: AppSigner): boolean {
-		return signer.type === this.signerType && signer.identifier === this.identifier
+		return signer.type === this.signerType && signer.identifier === this.authenticatorIdHash
 	}
 }
 
 export class OwnableValidatorVMethod extends ValidationMethodBase {
 	name: ValidationMethodName = 'OwnableValidator'
-	type: ValidationType = 'EOA-Owned'
+	type: ValidationType = 'MULTI-EOA'
 	signerType: SignerType = 'EOAWallet'
 	validationAPI = new SingleEOAValidation()
 	validatorAddress = ADDRESS.OwnableValidator
 
-	constructor(identifier: string) {
-		super(getAddress(identifier))
+	public addresses: string[]
+	public threshold: number
+
+	constructor({ addresses, threshold }: { addresses: string[]; threshold: number }) {
+		super()
+		if (addresses.length === 0) throw new Error('[OwnableValidatorVMethod] addresses is empty')
+		if (threshold <= 0) throw new Error('[OwnableValidatorVMethod] threshold is less than 1')
+		if (addresses.length !== new Set(addresses).size)
+			throw new Error('[OwnableValidatorVMethod] addresses has duplicates')
+		if (addresses.some(address => !isAddress(address)))
+			throw new Error('[OwnableValidatorVMethod] addresses has invalid addresses')
+
+		this.addresses = addresses
+		this.threshold = threshold
 	}
 
-	serialize(): EOAValidationMethodData {
+	serialize(): MultiEOAValidationMethodData {
 		return {
 			name: 'OwnableValidator',
-			address: this.identifier,
+			type: 'MULTI-EOA',
+			addresses: this.addresses,
+			threshold: this.threshold,
 		}
 	}
 
 	isValidSigner(signer: AppSigner): boolean {
-		return signer.type === this.signerType && isSameAddress(signer.identifier, this.identifier)
+		if (signer.type !== this.signerType) return false
+		return this.addresses.includes(signer.identifier)
 	}
 }
 
@@ -92,18 +113,21 @@ export class Simple7702AccountVMethod extends ValidationMethodBase {
 	signerType: SignerType = 'EOAWallet'
 	validationAPI = new Simple7702AccountAPI()
 
-	constructor(identifier: string) {
-		super(getAddress(identifier))
+	constructor(public address: string) {
+		super()
+		if (!isAddress(address)) throw new Error('[Simple7702AccountVMethod] address is invalid')
+		this.address = getAddress(address)
 	}
 
 	serialize(): EOAValidationMethodData {
 		return {
 			name: 'Simple7702Account',
-			address: this.identifier,
+			type: 'EOA-Owned',
+			address: this.address,
 		}
 	}
 
 	isValidSigner(signer: AppSigner): boolean {
-		return signer.type === this.signerType && isSameAddress(signer.identifier, this.identifier)
+		return signer.type === this.signerType && isSameAddress(signer.identifier, this.address)
 	}
 }

@@ -3,12 +3,7 @@ import { IS_STAGING } from '@/config'
 import { AccountRegistry } from '@/lib/accounts'
 import { toRoute } from '@/lib/router'
 import { useGetCode } from '@/lib/useGetCode'
-import {
-	getVMethodIdentifier,
-	getVMethodName,
-	getVMethodType,
-	getVMethodValidatorAddress,
-} from '@/lib/validations/helpers'
+import { getVMethodName, getVMethodType, getVMethodValidatorAddress } from '@/lib/validations/helpers'
 import { useAccount } from '@/stores/account/useAccount'
 import { displayChainName } from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
@@ -185,14 +180,14 @@ const showSwitchToCorrectChain = computed(() => {
 										</div>
 									</div>
 									<div
-										v-if="getVMethodType(vMethod) === 'EOA-Owned'"
+										v-if="vMethod.type === 'EOA-Owned'"
 										class="flex items-center gap-2 text-xs text-muted-foreground"
 									>
 										<span class="font-medium min-w-0">Owner:</span>
 										<div class="font-mono flex-1 truncate flex items-center gap-1">
-											<span>{{ shortenAddress(getVMethodIdentifier(vMethod)) }}</span>
-											<CopyButton :address="getVMethodIdentifier(vMethod)" size="xs" />
-											<AddressLinkButton :address="getVMethodIdentifier(vMethod)" size="xs" />
+											<span>{{ shortenAddress(vMethod.address) }}</span>
+											<CopyButton :address="vMethod.address" size="xs" />
+											<AddressLinkButton :address="vMethod.address" size="xs" />
 										</div>
 									</div>
 									<div
@@ -207,6 +202,22 @@ const showSwitchToCorrectChain = computed(() => {
 										<span class="flex-1 truncate">
 											{{ vMethod.username }}
 										</span>
+									</div>
+									<div v-if="vMethod.type === 'MULTI-EOA'">
+										<div class="flex items-center gap-2 text-xs text-muted-foreground">
+											<span class="font-medium min-w-0">Owners:</span>
+											<div
+												v-for="address in vMethod.addresses"
+												:key="address"
+												class="flex items-center gap-1 text-xs text-muted-foreground"
+											>
+												<span class="flex-1 truncate">
+													{{ shortenAddress(address) }}
+												</span>
+												<CopyButton :address="address" size="xs" />
+												<AddressLinkButton :address="address" size="xs" />
+											</div>
+										</div>
 									</div>
 								</div>
 							</div>
