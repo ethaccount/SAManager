@@ -15,7 +15,7 @@ import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
 import { useGetCode } from '@/lib/useGetCode'
 import {
 	ECDSAValidatorVMethod,
-	SingleOwnableValidatorVMethod,
+	OwnableValidatorVMethod,
 	ValidationMethod,
 	ValidationMethodName,
 	ValidationType,
@@ -96,7 +96,7 @@ const selectedValidationMethod = computed<ValidationMethod | null>(() => {
 				case 'ECDSAValidator':
 					return new ECDSAValidatorVMethod(identifier)
 				case 'OwnableValidator':
-					return new SingleOwnableValidatorVMethod(identifier)
+					return new OwnableValidatorVMethod(identifier)
 				default:
 					return null
 			}

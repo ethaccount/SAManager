@@ -2,7 +2,7 @@ import { ValidationMethod, ValidationMethodData, ValidationMethodName } from './
 import {
 	ECDSAValidatorVMethod,
 	Simple7702AccountVMethod,
-	SingleOwnableValidatorVMethod,
+	OwnableValidatorVMethod,
 	WebAuthnValidatorVMethod,
 } from './vMethods'
 
@@ -48,7 +48,7 @@ ValidationMethodRegistry.register('WebAuthnValidator', {
 ValidationMethodRegistry.register('OwnableValidator', {
 	create: data => {
 		if (data.name !== 'OwnableValidator') throw new Error('Invalid data type for OwnableValidator')
-		return new SingleOwnableValidatorVMethod(data.address)
+		return new OwnableValidatorVMethod(data.address)
 	},
 })
 

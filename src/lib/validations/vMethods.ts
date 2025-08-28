@@ -63,7 +63,7 @@ export class WebAuthnValidatorVMethod extends ValidationMethodBase {
 	}
 }
 
-export class SingleOwnableValidatorVMethod extends ValidationMethodBase {
+export class OwnableValidatorVMethod extends ValidationMethodBase {
 	name: ValidationMethodName = 'OwnableValidator'
 	type: ValidationType = 'EOA-Owned'
 	signerType: SignerType = 'EOAWallet'
