@@ -106,6 +106,19 @@ export class OwnableValidatorVMethod extends ValidationMethodBase {
 		if (signer.type !== this.signerType) return false
 		return this.addresses.includes(signer.identifier)
 	}
+
+	addOwner(owner: string) {
+		if (!isAddress(owner)) throw new Error('[OwnableValidatorVMethod#addOwner] owner is invalid')
+		if (this.addresses.includes(owner)) throw new Error('[OwnableValidatorVMethod#addOwner] owner already exists')
+		this.addresses.push(owner)
+	}
+
+	removeOwner(owner: string) {
+		if (!isAddress(owner)) throw new Error('[OwnableValidatorVMethod#removeOwner] owner is invalid')
+		if (!this.addresses.includes(owner))
+			throw new Error('[OwnableValidatorVMethod#removeOwner] owner does not exist')
+		this.addresses = this.addresses.filter(address => !isSameAddress(address, owner))
+	}
 }
 
 export class Simple7702AccountVMethod extends ValidationMethodBase {
