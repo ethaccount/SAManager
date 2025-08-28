@@ -8,7 +8,7 @@ overrides:
   '@babel/helpers': 7.27.1
   postcss: 8.5.3
   brace-expansion: '>=2.0.2'
-  pinia: 3.0.1
+  pinia: 3.0.3
   pbkdf2: '>=3.1.3'
   '@eslint/plugin-kit': '>=0.3.4'
   sha.js: '>=2.4.12'
@@ -197,16 +197,16 @@ importers:
         version: link:../sdk
       '@vue-dapp/core':
         specifier: 1.5.9
-        version: 1.5.9(pinia@3.0.1(typescript@5.8.3)(vue@3.5.13(typescript@5.8.3)))(vue@3.5.13(typescript@5.8.3))
+        version: 1.5.9(pinia@3.0.3(typescript@5.8.3)(vue@3.5.13(typescript@5.8.3)))(vue@3.5.13(typescript@5.8.3))
       '@vue-dapp/modal':
         specifier: 1.5.9
-        version: 1.5.9(@vue-dapp/core@1.5.9(pinia@3.0.1(typescript@5.8.3)(vue@3.5.13(typescript@5.8.3)))(vue@3.5.13(typescript@5.8.3)))(pinia@3.0.1(typescript@5.8.3)(vue@3.5.13(typescript@5.8.3)))(vue@3.5.13(typescript@5.8.3))
+        version: 1.5.9(@vue-dapp/core@1.5.9(pinia@3.0.3(typescript@5.8.3)(vue@3.5.13(typescript@5.8.3)))(vue@3.5.13(typescript@5.8.3)))(pinia@3.0.3(typescript@5.8.3)(vue@3.5.13(typescript@5.8.3)))(vue@3.5.13(typescript@5.8.3))
       '@vueuse/core':
         specifier: ^12.4.0
         version: 12.8.2(typescript@5.8.3)
       pinia:
-        specifier: 3.0.1
-        version: 3.0.1(typescript@5.8.3)(vue@3.5.13(typescript@5.8.3))
+        specifier: 3.0.3
+        version: 3.0.3(typescript@5.8.3)(vue@3.5.13(typescript@5.8.3))
       vue:
         specifier: ^3.5.13
         version: 3.5.13(typescript@5.8.3)
@@ -1805,14 +1805,14 @@ packages:
   '@vue-dapp/core@1.5.9':
     resolution: {integrity: sha512-1msGKO1yFGNYjxAZglOWF4aFe3fDX0fWwTDab/NemHZIGQh5GKUoaCtiqzvdn7djoPqR07RTRoJpqgYhfYkcLw==}
     peerDependencies:
-      pinia: 3.0.1
+      pinia: 3.0.3
       vue: ^3.3.7
 
   '@vue-dapp/modal@1.5.9':
     resolution: {integrity: sha512-A/yEtJKeq2jFJvRdLE7wsytXxlEpXoP1nD7E22Ctq3/aiCvTksCiIuHC7tQRG7lOADj2gmzqOaobiBi7fL80IQ==}
     peerDependencies:
       '@vue-dapp/core': '*'
-      pinia: 3.0.1
+      pinia: 3.0.3
       vue: '>=3.3.6'
 
   '@vue/babel-helper-vue-transform-on@1.4.0':
@@ -3602,22 +3602,13 @@ packages:
     peerDependencies:
       '@nuxt/kit': '>=3.0.0'
       '@pinia/nuxt': '>=0.10.0'
-      pinia: 3.0.1
+      pinia: 3.0.3
     peerDependenciesMeta:
       '@nuxt/kit':
         optional: true
       '@pinia/nuxt':
         optional: true
       pinia:
-        optional: true
-
-  pinia@3.0.1:
-    resolution: {integrity: sha512-WXglsDzztOTH6IfcJ99ltYZin2mY8XZCXujkYWVIJlBjqsP6ST7zw+Aarh63E1cDVYeyUcPCxPHzJpEOmzB6Wg==}
-    peerDependencies:
-      typescript: '>=4.4.4'
-      vue: ^2.7.0 || ^3.5.11
-    peerDependenciesMeta:
-      typescript:
         optional: true
 
   pinia@3.0.3:
@@ -6405,20 +6396,14 @@ snapshots:
       path-browserify: 1.0.1
       vscode-uri: 3.0.8
 
-  '@vue-dapp/core@1.5.9(pinia@3.0.1(typescript@5.8.3)(vue@3.5.13(typescript@5.8.3)))(vue@3.5.13(typescript@5.8.3))':
-    dependencies:
-      pinia: 3.0.1(typescript@5.8.3)(vue@3.5.13(typescript@5.8.3))
-      vue: 3.5.13(typescript@5.8.3)
-
   '@vue-dapp/core@1.5.9(pinia@3.0.3(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2)))(vue@3.5.13(typescript@5.7.2))':
     dependencies:
       pinia: 3.0.3(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2))
       vue: 3.5.13(typescript@5.7.2)
 
-  '@vue-dapp/modal@1.5.9(@vue-dapp/core@1.5.9(pinia@3.0.1(typescript@5.8.3)(vue@3.5.13(typescript@5.8.3)))(vue@3.5.13(typescript@5.8.3)))(pinia@3.0.1(typescript@5.8.3)(vue@3.5.13(typescript@5.8.3)))(vue@3.5.13(typescript@5.8.3))':
+  '@vue-dapp/core@1.5.9(pinia@3.0.3(typescript@5.8.3)(vue@3.5.13(typescript@5.8.3)))(vue@3.5.13(typescript@5.8.3))':
     dependencies:
-      '@vue-dapp/core': 1.5.9(pinia@3.0.1(typescript@5.8.3)(vue@3.5.13(typescript@5.8.3)))(vue@3.5.13(typescript@5.8.3))
-      pinia: 3.0.1(typescript@5.8.3)(vue@3.5.13(typescript@5.8.3))
+      pinia: 3.0.3(typescript@5.8.3)(vue@3.5.13(typescript@5.8.3))
       vue: 3.5.13(typescript@5.8.3)
 
   '@vue-dapp/modal@1.5.9(@vue-dapp/core@1.5.9(pinia@3.0.3(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2)))(vue@3.5.13(typescript@5.7.2)))(pinia@3.0.3(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2)))(vue@3.5.13(typescript@5.7.2))':
@@ -6426,6 +6411,12 @@ snapshots:
       '@vue-dapp/core': 1.5.9(pinia@3.0.3(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2)))(vue@3.5.13(typescript@5.7.2))
       pinia: 3.0.3(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2))
       vue: 3.5.13(typescript@5.7.2)
+
+  '@vue-dapp/modal@1.5.9(@vue-dapp/core@1.5.9(pinia@3.0.3(typescript@5.8.3)(vue@3.5.13(typescript@5.8.3)))(vue@3.5.13(typescript@5.8.3)))(pinia@3.0.3(typescript@5.8.3)(vue@3.5.13(typescript@5.8.3)))(vue@3.5.13(typescript@5.8.3))':
+    dependencies:
+      '@vue-dapp/core': 1.5.9(pinia@3.0.3(typescript@5.8.3)(vue@3.5.13(typescript@5.8.3)))(vue@3.5.13(typescript@5.8.3))
+      pinia: 3.0.3(typescript@5.8.3)(vue@3.5.13(typescript@5.8.3))
+      vue: 3.5.13(typescript@5.8.3)
 
   '@vue/babel-helper-vue-transform-on@1.4.0': {}
 
@@ -8470,19 +8461,19 @@ snapshots:
       '@nuxt/kit': 3.15.2(rollup@4.46.2)
       pinia: 3.0.3(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2))
 
-  pinia@3.0.1(typescript@5.8.3)(vue@3.5.13(typescript@5.8.3)):
-    dependencies:
-      '@vue/devtools-api': 7.7.2
-      vue: 3.5.13(typescript@5.8.3)
-    optionalDependencies:
-      typescript: 5.8.3
-
   pinia@3.0.3(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2)):
     dependencies:
       '@vue/devtools-api': 7.7.2
       vue: 3.5.13(typescript@5.7.2)
     optionalDependencies:
       typescript: 5.7.2
+
+  pinia@3.0.3(typescript@5.8.3)(vue@3.5.13(typescript@5.8.3)):
+    dependencies:
+      '@vue/devtools-api': 7.7.2
+      vue: 3.5.13(typescript@5.8.3)
+    optionalDependencies:
+      typescript: 5.8.3
 
   pirates@4.0.6: {}
 
