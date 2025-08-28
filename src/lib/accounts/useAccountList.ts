@@ -1,4 +1,4 @@
-import { useConfirmModal } from '@/components/ConfirmModal/useConfirmModal'
+import { useConfirmModal } from '@/lib/modals/useConfirmModal'
 import { ImportedAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useAccounts } from '@/stores/account/useAccounts'

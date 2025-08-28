@@ -3,7 +3,7 @@ import { IS_STAGING } from '@/config'
 import { AccountRegistry } from '@/lib/accounts'
 import { toRoute } from '@/lib/router'
 import { useGetCode } from '@/lib/useGetCode'
-import { getVMethodName, getVMethodType, getVMethodValidatorAddress } from '@/lib/validations/helpers'
+import { getVMethodName, getVMethodType } from '@/lib/validations/helpers'
 import { useAccount } from '@/stores/account/useAccount'
 import { displayChainName } from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
@@ -148,37 +148,28 @@ const showSwitchToCorrectChain = computed(() => {
 							:key="index"
 							class="group py-3 px-4 bg-card border border-border/40 rounded-lg hover:border-border/60 transition-colors"
 						>
-							<div class="w-full space-y-3">
-								<div class="flex items-center gap-2">
-									<div class="text-xs font-medium px-2.5 py-1 rounded-full bg-muted">
-										{{ getVMethodName(vMethod) }}
-									</div>
-									<div
-										class="text-xs px-2.5 py-1 rounded-full font-medium"
-										:class="
-											getVMethodType(vMethod) === 'PASSKEY'
-												? 'bg-blue-500/10 text-blue-500'
-												: 'bg-green-500/10 text-green-500'
-										"
-									>
-										{{ getVMethodType(vMethod) }}
+							<div class="w-full space-y-2">
+								<div class="flex items-center justify-between gap-2">
+									<div class="flex items-center">
+										<!-- vMethod name -->
+										<div class="text-sm">
+											{{ getVMethodName(vMethod) }}
+										</div>
+
+										<!-- vMethod type -->
+										<div
+											class="text-xs px-2.5 py-1 rounded-full font-medium"
+											:class="{
+												'bg-blue-500/10 text-blue-500': vMethod.type === 'PASSKEY',
+												'bg-green-500/10 text-green-500': vMethod.type === 'EOA-Owned',
+												'bg-yellow-500/10 text-yellow-500': vMethod.type === 'MULTI-EOA',
+											}"
+										>
+											{{ getVMethodType(vMethod) }}
+										</div>
 									</div>
 								</div>
 								<div class="space-y-1">
-									<div
-										v-if="getVMethodValidatorAddress(vMethod)"
-										class="flex items-center gap-2 text-xs text-muted-foreground"
-									>
-										<span class="font-medium min-w-0">Validator:</span>
-										<div class="font-mono flex-1 truncate flex items-center gap-1">
-											<span>{{ shortenAddress(getVMethodValidatorAddress(vMethod)!) }}</span>
-											<CopyButton :address="getVMethodValidatorAddress(vMethod)" size="xs" />
-											<AddressLinkButton
-												:address="getVMethodValidatorAddress(vMethod)"
-												size="xs"
-											/>
-										</div>
-									</div>
 									<div
 										v-if="vMethod.type === 'EOA-Owned'"
 										class="flex items-center gap-2 text-xs text-muted-foreground"

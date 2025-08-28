@@ -2,6 +2,7 @@
 import { ACCOUNT_SUPPORTED_INSTALL_VALIDATION } from '@/lib/accounts/account-specific'
 import { addressToName, DEPRECATED_WEB_AUTHN_VALIDATOR_ADDRESS } from '@/lib/addressToName'
 import { EMAIL_RECOVERY_EXECUTOR_ADDRESS, uninstallEmailRecovery } from '@/lib/email-recovery'
+import { useOwnableValidatorSettingsModal } from '@/lib/modals/useOwnableValidatorSettingsModal'
 import { MODULE_TYPE_LABELS } from '@/lib/modules/supported-modules'
 import { ModuleRecordModule, useAccountModule } from '@/lib/modules/useAccountModule'
 import { useValidatorManagement } from '@/lib/modules/useValidatorManagement'
@@ -9,7 +10,7 @@ import { ValidationMethodName } from '@/lib/validations/types'
 import { ImportedAccount } from '@/stores/account/account'
 import { shortenAddress } from '@vue-dapp/core'
 import { getAddress } from 'ethers'
-import { Loader2 } from 'lucide-vue-next'
+import { Loader2, Settings } from 'lucide-vue-next'
 import { ADDRESS, ERC7579_MODULE_TYPE, isSameAddress } from 'sendop'
 
 const props = defineProps<{
@@ -126,6 +127,10 @@ async function onClickUninstall(recordModule: ModuleRecordModule) {
 	}
 }
 
+function onClickOwnableValidatorSettings() {
+	useOwnableValidatorSettingsModal().openModal({})
+}
+
 const showAvailableModules = computed(() => {
 	if (!props.isDeployed) return false
 	if (loading.value) return false
@@ -173,15 +178,22 @@ const showAvailableModules = computed(() => {
 										</div>
 									</div>
 								</div>
-								<Button
-									:disabled="onlyOneValidator || operatingModule !== null"
-									:loading="!!operatingModule && isSameAddress(operatingModule, module.address)"
-									variant="outline"
-									size="sm"
-									@click="onClickUninstall(module)"
-								>
-									Uninstall
-								</Button>
+								<div class="flex items-center gap-2">
+									<div v-if="isSameAddress(module.address, ADDRESS.OwnableValidator)">
+										<Button variant="outline" size="sm" @click="onClickOwnableValidatorSettings">
+											<Settings class="w-4 h-4" />
+										</Button>
+									</div>
+									<Button
+										:disabled="onlyOneValidator || operatingModule !== null"
+										:loading="!!operatingModule && isSameAddress(operatingModule, module.address)"
+										variant="outline"
+										size="sm"
+										@click="onClickUninstall(module)"
+									>
+										Uninstall
+									</Button>
+								</div>
 							</div>
 						</div>
 					</div>

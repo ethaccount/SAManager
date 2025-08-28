@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useConfirmModal } from '@/components/ConfirmModal/useConfirmModal'
+import { useConfirmModal } from '@/lib/modals/useConfirmModal'
 import { Button } from '@/components/ui/button'
 import { CheckIcon, CopyIcon, TrashIcon } from 'lucide-vue-next'
 

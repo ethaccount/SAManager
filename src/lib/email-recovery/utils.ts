@@ -1,3 +1,4 @@
+import { OwnableValidatorAPI } from '@/api/OwnableValidatorAPI'
 import { buildPoseidon } from 'circomlibjs'
 import type { JsonRpcProvider } from 'ethers'
 import { Contract, hexlify, Interface } from 'ethers'
@@ -177,37 +178,6 @@ export async function recoveryCommandTemplates(client: JsonRpcProvider) {
 	}
 }
 
-export async function encodeAddOwner({
-	client,
-	owner,
-	account,
-}: {
-	client: JsonRpcProvider
-	owner: string
-	account: string
-}): Promise<string> {
-	try {
-		const contract = new Contract(
-			ADDRESS.OwnableValidator,
-			['function getOwners(address account) view returns (address[])'],
-			client,
-		)
-
-		const owners = (await contract.getOwners(account)) as string[]
-
-		// Check if owner already exists
-		const currentOwnerIndex = owners.findIndex((o: string) => o.toLowerCase() === owner.toLowerCase())
-
-		if (currentOwnerIndex !== -1) {
-			throw new Error('Owner already exists')
-		}
-
-		return new Interface(['function addOwner(address owner)']).encodeFunctionData('addOwner', [owner])
-	} catch (e) {
-		throw new Error('Failed to encode addOwner', { cause: e })
-	}
-}
-
 export async function sendRecoveryRequest({
 	client,
 	accountAddress,
@@ -223,11 +193,7 @@ export async function sendRecoveryRequest({
 	const templates = await recoveryCommandTemplates(client)
 
 	// Create recovery data
-	const addOwnerAction = await encodeAddOwner({
-		client,
-		account: accountAddress,
-		owner: newOwner,
-	})
+	const addOwnerAction = await OwnableValidatorAPI.encodeAddOwner(client, accountAddress, newOwner)
 
 	const recoveryData = abiEncode(['address', 'bytes'], [ADDRESS.OwnableValidator, addOwnerAction])
 
@@ -338,11 +304,7 @@ export async function completeRecovery(client: JsonRpcProvider, accountAddress: 
 	}
 
 	// Create recovery data
-	const addOwnerAction = await encodeAddOwner({
-		client,
-		account: accountAddress,
-		owner: newOwner,
-	})
+	const addOwnerAction = await OwnableValidatorAPI.encodeAddOwner(client, accountAddress, newOwner)
 
 	const recoveryData = abiEncode(['address', 'bytes'], [ADDRESS.OwnableValidator, addOwnerAction])
 
