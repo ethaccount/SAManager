@@ -1,8 +1,8 @@
 import { getOwnableValidator } from '@rhinestone/module-sdk'
 import { ERC7579_MODULE_TYPE, ERC7579Module, getECDSAValidator, getWebAuthnValidator } from 'sendop'
+import { ECDSAValidatorVMethod, OwnableValidatorVMethod, WebAuthnValidatorVMethod } from './methods'
 import { ValidationMethodRegistry } from './registry'
-import { ValidationMethod, ValidationMethodData, ValidationMethodName, ValidationType } from './ValidationMethod'
-import { ECDSAValidatorVMethod, OwnableValidatorVMethod, WebAuthnValidatorVMethod } from './vMethods'
+import { ValidationMethod, ValidationMethodData, ValidationMethodName, ValidationType } from './types'
 
 export function deserializeValidationMethod(data: ValidationMethodData): ValidationMethod {
 	return ValidationMethodRegistry.create(data)

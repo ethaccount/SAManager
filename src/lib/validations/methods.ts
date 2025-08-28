@@ -1,14 +1,15 @@
 import { getAddress, isAddress } from 'ethers'
 import { ADDRESS, isSameAddress, Simple7702AccountAPI, SingleEOAValidation, WebAuthnValidation } from 'sendop'
-import { AppSigner, SignerType } from './Signer'
 import {
+	AppSigner,
 	EOAValidationMethodData,
 	MultiEOAValidationMethodData,
+	SignerType,
 	ValidationMethodBase,
 	ValidationMethodName,
 	ValidationType,
 	WebAuthnValidationMethodData,
-} from './ValidationMethod'
+} from './types'
 
 export class ECDSAValidatorVMethod extends ValidationMethodBase {
 	name: ValidationMethodName = 'ECDSAValidator'

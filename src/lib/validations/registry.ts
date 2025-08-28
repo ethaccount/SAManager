@@ -1,10 +1,10 @@
-import { ValidationMethod, ValidationMethodData, ValidationMethodName } from './ValidationMethod'
+import { ValidationMethod, ValidationMethodData, ValidationMethodName } from './types'
 import {
 	ECDSAValidatorVMethod,
 	Simple7702AccountVMethod,
 	OwnableValidatorVMethod,
 	WebAuthnValidatorVMethod,
-} from './vMethods'
+} from './methods'
 
 export interface ValidationMethodFactory {
 	create(data: ValidationMethodData): ValidationMethod

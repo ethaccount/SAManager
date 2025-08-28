@@ -1,5 +1,14 @@
-import { ValidationAPI } from 'sendop'
-import { AppSigner, SignerType } from './Signer'
+import { TypedData, UserOpBuilder, ValidationAPI } from 'sendop'
+
+export type SignerType = 'EOAWallet' | 'Passkey'
+
+export interface AppSigner {
+	type: SignerType
+	identifier: string
+	sign(userOp: UserOpBuilder): Promise<string>
+	signHash(hash: Uint8Array): Promise<string>
+	signTypedData(typedData: TypedData): Promise<string>
+}
 
 export type ValidationMethodName = 'ECDSAValidator' | 'OwnableValidator' | 'WebAuthnValidator' | 'Simple7702Account'
 export type ValidationType = 'EOA-Owned' | 'PASSKEY' | 'MULTI-EOA'

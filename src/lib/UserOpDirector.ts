@@ -3,7 +3,7 @@ import { JsonRpcProvider } from 'ethers'
 import { AccountAPI, Execution, KernelAccountAPI, KernelValidationType, UserOpBuilder } from 'sendop'
 import { getExecutionAccountAPI, getSmartSessionExecutionAccountAPI } from './accounts/account-specific'
 import { SignerType } from './validations'
-import { ValidationMethod } from './validations/ValidationMethod'
+import { ValidationMethod } from './validations/types'
 
 export class UserOpDirector {
 	static async buildAccountExecutions({

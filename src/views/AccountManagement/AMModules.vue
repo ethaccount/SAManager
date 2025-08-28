@@ -5,7 +5,7 @@ import { EMAIL_RECOVERY_EXECUTOR_ADDRESS, uninstallEmailRecovery } from '@/lib/e
 import { MODULE_TYPE_LABELS } from '@/lib/modules/supported-modules'
 import { ModuleRecordModule, useAccountModule } from '@/lib/modules/useAccountModule'
 import { useValidatorManagement } from '@/lib/modules/useValidatorManagement'
-import { ValidationMethodName } from '@/lib/validations/ValidationMethod'
+import { ValidationMethodName } from '@/lib/validations/types'
 import { ImportedAccount } from '@/stores/account/account'
 import { shortenAddress } from '@vue-dapp/core'
 import { getAddress } from 'ethers'
