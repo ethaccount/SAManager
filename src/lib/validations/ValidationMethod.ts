@@ -1,5 +1,5 @@
 import { ValidationAPI } from 'sendop'
-import { SignerType } from './Signer'
+import { AppSigner, SignerType } from './Signer'
 
 export type ValidationMethodName = 'ECDSAValidator' | 'OwnableValidator' | 'WebAuthnValidator' | 'Simple7702Account'
 export type ValidationType = 'EOA-Owned' | 'PASSKEY'
@@ -31,6 +31,7 @@ export interface ValidationMethod {
 	isModule: boolean
 
 	serialize(): ValidationMethodData
+	isValidSigner(signer: AppSigner): boolean
 }
 
 export abstract class ValidationMethodBase implements ValidationMethod {
@@ -49,4 +50,6 @@ export abstract class ValidationMethodBase implements ValidationMethod {
 
 	// This will be overridden by subclasses with specific return types
 	abstract serialize(): ValidationMethodData
+
+	abstract isValidSigner(signer: AppSigner): boolean
 }

@@ -1,11 +1,11 @@
 import { getAddress } from 'ethers'
-import { ADDRESS, Simple7702AccountAPI, SingleEOAValidation, WebAuthnValidation } from 'sendop'
-import { SignerType } from './Signer'
+import { ADDRESS, isSameAddress, Simple7702AccountAPI, SingleEOAValidation, WebAuthnValidation } from 'sendop'
+import { AppSigner, SignerType } from './Signer'
 import {
+	EOAValidationMethodData,
 	ValidationMethodBase,
 	ValidationMethodName,
 	ValidationType,
-	EOAValidationMethodData,
 	WebAuthnValidationMethodData,
 } from './ValidationMethod'
 
@@ -25,6 +25,10 @@ export class ECDSAValidatorVMethod extends ValidationMethodBase {
 			name: 'ECDSAValidator',
 			address: this.identifier,
 		}
+	}
+
+	isValidSigner(signer: AppSigner): boolean {
+		return signer.type === this.signerType && isSameAddress(signer.identifier, this.identifier)
 	}
 }
 
@@ -53,6 +57,10 @@ export class WebAuthnValidatorVMethod extends ValidationMethodBase {
 			...(this.username !== undefined && { username: this.username }),
 		}
 	}
+
+	isValidSigner(signer: AppSigner): boolean {
+		return signer.type === this.signerType && signer.identifier === this.identifier
+	}
 }
 
 export class SingleOwnableValidatorVMethod extends ValidationMethodBase {
@@ -72,6 +80,10 @@ export class SingleOwnableValidatorVMethod extends ValidationMethodBase {
 			address: this.identifier,
 		}
 	}
+
+	isValidSigner(signer: AppSigner): boolean {
+		return signer.type === this.signerType && isSameAddress(signer.identifier, this.identifier)
+	}
 }
 
 export class Simple7702AccountVMethod extends ValidationMethodBase {
@@ -89,5 +101,9 @@ export class Simple7702AccountVMethod extends ValidationMethodBase {
 			name: 'Simple7702Account',
 			address: this.identifier,
 		}
+	}
+
+	isValidSigner(signer: AppSigner): boolean {
+		return signer.type === this.signerType && isSameAddress(signer.identifier, this.identifier)
 	}
 }

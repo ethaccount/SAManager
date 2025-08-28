@@ -46,7 +46,7 @@ const {
 	isPasskeySupported,
 } = usePasskey()
 const { importAccount, selectAccount, isAccountImported } = useAccounts()
-const { canSign } = useSigner()
+const { selectedSigner } = useSigner()
 
 const supportedAccounts = AccountRegistry.getSupportedAccountsForCreation()
 
@@ -133,7 +133,8 @@ const computedSalt = computed(() => {
 // Check if the signer is connected and corresponding to the selected validation type
 const isValidationAvailable = computed(() => {
 	if (!selectedValidationMethod.value) return false
-	return canSign(selectedValidationMethod.value)
+	if (!selectedSigner.value) return false
+	return selectedValidationMethod.value.isValidSigner(selectedSigner.value)
 })
 
 const deployment = ref<Deployment | null>(null)
@@ -484,7 +485,7 @@ function onClickPasskeyLogout() {
 					class="grid grid-cols-2 gap-2"
 				>
 					<Button variant="default" size="lg" :disabled="disabledImportButton" @click="onClickImport">
-						{{ isImported ? 'Account Management' : 'Import' }}
+						{{ isImported ? 'Manage Account' : 'Import' }}
 					</Button>
 
 					<Button variant="secondary" size="lg" :disabled="disabledDeployButton" @click="onClickDeploy">
