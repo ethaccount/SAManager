@@ -23,7 +23,7 @@ const data = await sendRecoveryRequest({
 	client,
 	accountAddress: ACCOUNT_ADDRESS,
 	guardianEmail: GUARDIAN_EMAIL,
-	newOwner: NEW_OWNER,
+	newOwnerAddress: NEW_OWNER,
 })
 
 console.log(data)

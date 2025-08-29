@@ -152,9 +152,14 @@ watchImmediate(
 				}
 			}
 
-			// If recovery request is sent, give the new owner address from the store if it exists
-			if (isRecoveryRequestSent.value) {
+			// If recovery request is confirmed, give the new owner address from the store if it exists
+			if (isRecoveryRequestConfirmed.value) {
 				newOwnerAddress.value = accountToNewOwnerAddress.value[props.selectedAccount.address] ?? ''
+			} else if (!acceptanceChecked.value) {
+				// clear the new owner address from the store if the recovery is not setup
+				if (accountToNewOwnerAddress.value[props.selectedAccount.address]) {
+					delete accountToNewOwnerAddress.value[props.selectedAccount.address]
+				}
 			}
 		} catch (e) {
 			throw e

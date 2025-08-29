@@ -2,9 +2,9 @@ import { fetchModules } from '@/lib/modules/fetch-modules'
 import { SUPPORTED_MODULES } from '@/lib/modules/supported-modules'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { ERC7579_MODULE_TYPE, isSameAddress, IERC7579Account__factory } from 'sendop'
+import { ERC7579_MODULE_TYPE, IERC7579Account__factory, isSameAddress } from 'sendop'
 
-export type ModuleRecordModule = { id: string; address: string }
+export type ModuleRecordModule = { type: ERC7579_MODULE_TYPE; address: string }
 export type ModuleRecord = Record<ERC7579_MODULE_TYPE, ModuleRecordModule[]>
 
 export function useAccountModule() {
@@ -49,7 +49,7 @@ export function useAccountModule() {
 			Object.entries(fetchedModules).forEach(([typeId, addresses]) => {
 				const type = Number(typeId) as ERC7579_MODULE_TYPE
 				grouped[type] = addresses.map(address => ({
-					id: address,
+					type,
 					address,
 				}))
 			})
@@ -66,7 +66,7 @@ export function useAccountModule() {
 					!moduleRecord.value[module.type].find(m => isSameAddress(m.address, module.address))
 				) {
 					moduleRecord.value[module.type].push({
-						id: module.address,
+						type: module.type,
 						address: module.address,
 					})
 				}

@@ -21,7 +21,11 @@ export function useUninstallEmailRecovery() {
 		return true
 	}
 
-	async function uninstallEmailRecovery(options?: { description?: string; onSuccess?: () => Promise<void> }) {
+	async function uninstallEmailRecovery(options?: { onSuccess?: () => Promise<void> }) {
+		if (!selectedAccount.value) {
+			throw new Error('No account selected')
+		}
+
 		if (!validateAccountAccess()) return
 
 		isLoading.value = true
@@ -36,12 +40,12 @@ export function useUninstallEmailRecovery() {
 			}
 
 			const execution: TxModalExecution = {
-				description: options?.description || 'Uninstall Email Recovery Module',
-				to: selectedAccount.value!.address,
+				description: 'Uninstall Email Recovery Module',
+				to: selectedAccount.value.address,
 				data: await getUninstallModuleData(
-					selectedAccount.value!.accountId,
+					selectedAccount.value.accountId,
 					emailRecoveryModule,
-					selectedAccount.value!.address,
+					selectedAccount.value.address,
 					client.value,
 				),
 				value: 0n,
@@ -67,7 +71,7 @@ export function useUninstallEmailRecovery() {
 }
 
 // Export the function directly for convenience
-export async function uninstallEmailRecovery(options?: { description?: string; onSuccess?: () => Promise<void> }) {
+export async function uninstallEmailRecovery(options?: { onSuccess?: () => Promise<void> }) {
 	const { uninstallEmailRecovery: uninstall } = useUninstallEmailRecovery()
 	return await uninstall(options)
 }
