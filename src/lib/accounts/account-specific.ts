@@ -15,7 +15,7 @@ export const ACCOUNT_SUPPORTED_INITIAL_VALIDATION: Partial<
 	>
 > = {
 	[AccountId['kernel.advanced.v0.3.3']]: [
-		{ type: 'EOA-Owned', name: 'ECDSAValidator' },
+		{ type: 'EOA-Owned', name: 'OwnableValidator' },
 		{ type: 'PASSKEY', name: 'WebAuthnValidator' },
 	],
 	[AccountId['biconomy.nexus.1.2.0']]: [
