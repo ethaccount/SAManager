@@ -21,7 +21,6 @@ export async function fetchModules(address: string, client: JsonRpcProvider) {
 		fromBlock = Math.max(0, currentBlock - 10000)
 	}
 
-	// Fetch install and uninstall events (using block 0 as starting point)
 	const installEvents = await contract.queryFilter(contract.filters.ModuleInstalled, fromBlock, currentBlock)
 	const uninstallEvents = await contract.queryFilter(contract.filters.ModuleUninstalled, fromBlock, currentBlock)
 

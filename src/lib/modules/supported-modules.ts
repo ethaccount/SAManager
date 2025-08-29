@@ -1,5 +1,5 @@
-import { ADDRESS } from 'sendop'
-import { ERC7579_MODULE_TYPE } from 'sendop'
+import { ADDRESS, ERC7579_MODULE_TYPE } from 'sendop'
+import { EMAIL_RECOVERY_EXECUTOR_ADDRESS } from '../email-recovery/utils'
 
 export const MODULE_TYPE_LABELS = {
 	[ERC7579_MODULE_TYPE.VALIDATOR]: 'Validator Modules',
@@ -63,6 +63,14 @@ export const SUPPORTED_MODULES: {
 		description: 'Scheduled orders module for your account',
 		type: ERC7579_MODULE_TYPE.EXECUTOR,
 		address: ADDRESS.ScheduledOrders,
+		disabled: false,
+		canInstall: false,
+	},
+	UniversalEmailRecovery: {
+		name: 'Universal Email Recovery',
+		description: 'Email recovery module for your account',
+		type: ERC7579_MODULE_TYPE.EXECUTOR,
+		address: EMAIL_RECOVERY_EXECUTOR_ADDRESS,
 		disabled: false,
 		canInstall: false,
 	},
