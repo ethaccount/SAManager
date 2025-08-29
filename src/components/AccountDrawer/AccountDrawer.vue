@@ -141,7 +141,7 @@ function getAccountListKey(account: AccountWithMultichain) {
 						<!-- chain -->
 						<div class="flex items-center gap-2 text-xs">
 							<div v-if="isMultichain">
-								<span class="text-xs text-muted-foreground">Multichain</span>
+								<span class="text-xs text-muted-foreground">(Multichain)</span>
 							</div>
 							<div v-else class="flex items-center gap-2">
 								<div>
@@ -154,13 +154,18 @@ function getAccountListKey(account: AccountWithMultichain) {
 				</div>
 
 				<!-- Warning section for inaccessible account -->
-				<div v-if="selectedAccount && !isAccountAccessible" class="warning-section">
-					<div class="flex items-start gap-2">
-						<Info class="w-4 h-4 flex-shrink-0" />
-						<div class="text-sm">
-							<p class="font-medium mb-1">Not Connected</p>
-							<p class="">Connect the appropriate signer to use this account</p>
-						</div>
+				<div
+					v-if="selectedAccount && !isAccountAccessible"
+					class="warning-section flex items-start gap-2 text-sm"
+				>
+					<div>
+						<p class="font-medium">
+							<span class="flex items-center gap-1">
+								<Info class="w-3.5 h-3.5 flex-shrink-0" />
+								Not Connected
+							</span>
+						</p>
+						<p class="">Connect the appropriate signer to use this account</p>
 					</div>
 				</div>
 

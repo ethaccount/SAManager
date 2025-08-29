@@ -451,7 +451,7 @@ function onClickPasskeyLogout() {
 							id="custom-salt"
 							v-model="saltInput"
 							type="number"
-							placeholder="Enter a number for custom salt. Leave empty for default."
+							placeholder="Enter a number"
 							class="w-full px-3 py-2 bg-muted/30 border border-border/50 rounded-lg focus:border-primary transition-colors"
 						/>
 					</div>

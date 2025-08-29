@@ -162,7 +162,7 @@ const showSwitchToCorrectChain = computed(() => {
 											:class="{
 												'bg-blue-500/10 text-blue-500': vMethod.type === 'PASSKEY',
 												'bg-green-500/10 text-green-500': vMethod.type === 'EOA-Owned',
-												'bg-yellow-500/10 text-yellow-500': vMethod.type === 'MULTI-EOA',
+												'bg-teal-500/10 text-teal-500': vMethod.type === 'MULTI-EOA',
 											}"
 										>
 											{{ getVMethodType(vMethod) }}
@@ -271,7 +271,7 @@ const showSwitchToCorrectChain = computed(() => {
 										: 'border-transparent text-muted-foreground hover:text-foreground'
 								"
 							>
-								Email Recovery
+								Recovery
 							</RouterLink>
 						</div>
 
