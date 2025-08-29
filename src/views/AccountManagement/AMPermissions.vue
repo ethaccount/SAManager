@@ -13,13 +13,16 @@ const props = defineProps<{
 	isModular: boolean
 }>()
 
-const { sessions, loading, expandedSessions, loadSessions } = useSessionList()
+const { sessions, loading, expandedSessions, loadSessions, error: loadSessionsError } = useSessionList()
 
-onMounted(async () => {
-	if (!props.isDeployed) return
-	if (!props.isModular) return
-	await loadSessions(props.selectedAccount.address)
-})
+watchImmediate(
+	() => props.selectedAccount,
+	async () => {
+		if (!props.isDeployed) return
+		if (!props.isModular) return
+		await loadSessions(props.selectedAccount.address)
+	},
+)
 
 function toggleSessionExpansion(permissionId: string) {
 	if (expandedSessions.value.has(permissionId)) {
@@ -63,12 +66,16 @@ const displaySessionList = computed(() => {
 		<div class="space-y-6 p-6">
 			<div v-if="!isDeployed" class="text-sm text-muted-foreground">Account is not deployed</div>
 			<div v-else-if="!isModular" class="text-sm text-muted-foreground">Account is not modular</div>
-			<div v-else-if="loading" class="flex justify-center py-8">
+			<div v-else-if="loading" class="flex justify-center items-center py-8">
 				<Loader2 class="w-6 h-6 animate-spin text-primary" />
+				<span class="ml-2 text-sm text-muted-foreground">Loading permissions...</span>
 			</div>
 
 			<div v-else class="space-y-4">
-				<div v-if="!sessions.length" class="text-center py-8 text-muted-foreground">
+				<div v-if="loadSessionsError" class="error-section">
+					{{ loadSessionsError }}
+				</div>
+				<div v-else-if="!sessions.length" class="text-center py-8 text-muted-foreground">
 					No permissions found for this account
 				</div>
 

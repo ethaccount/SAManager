@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { IS_SCHEDULED_SWAP_DISABLED } from './config'
+import { IS_PRODUCTION, IS_SCHEDULED_SWAP_DISABLED } from './config'
 
 const router = createRouter({
 	history: createWebHistory(),
@@ -60,7 +60,7 @@ const router = createRouter({
 							name: 'connect',
 							component: () => import('@/views/popup/Connect.vue'),
 						},
-						// Account Management
+						// Manage Account
 						{
 							path: '/:chainId/:address',
 							name: 'account-management',
@@ -82,6 +82,17 @@ const router = createRouter({
 									name: 'account-multichain',
 									component: () => import('@/views/AccountManagement/AMMultichain.vue'),
 								},
+								// only works on Base Sepolia
+								...(IS_PRODUCTION
+									? []
+									: [
+											{
+												path: 'email-recovery',
+												name: 'account-email-recovery',
+												component: () =>
+													import('@/views/AccountManagement/AMEmailRecovery.vue'),
+											},
+										]),
 							],
 						},
 						// Send

@@ -2,11 +2,7 @@
 import { fetchECDSAValidatorRegisteredEvent, fetchWebAuthnRegisteredEvent } from '@/api/registered-events'
 import { AccountId } from '@/lib/accounts'
 import { deserializeValidationMethod } from '@/lib/validations'
-import {
-	EOAValidationMethodData,
-	ValidationMethodData,
-	WebAuthnValidationMethodData,
-} from '@/lib/validations/ValidationMethod'
+import { EOAValidationMethodData, ValidationMethodData, WebAuthnValidationMethodData } from '@/lib/validations/types'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { shortenAddress } from '@vue-dapp/core'
 import { getAddress, JsonRpcProvider } from 'ethers'

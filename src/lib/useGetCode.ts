@@ -8,6 +8,7 @@ export function useGetCode() {
 	const code = ref('')
 	const loading = ref(false)
 	const error = ref<string | null>(null)
+	const isDeployed = ref(false)
 
 	const isSmartEOA = computed(() => {
 		if (
@@ -20,17 +21,17 @@ export function useGetCode() {
 		return false
 	})
 
-	const isDeployed = computed(() => {
-		return code.value !== '0x'
-	})
-
 	async function getCode(address: string) {
 		code.value = ''
 		error.value = null
+		isDeployed.value = false
 
 		try {
 			loading.value = true
 			code.value = await client.value.getCode(address)
+			if (code.value !== '0x') {
+				isDeployed.value = true
+			}
 		} catch (e: unknown) {
 			console.error(e)
 			if (e instanceof Error) {

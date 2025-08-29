@@ -2,7 +2,7 @@
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { AccountRegistry } from '@/lib/accounts'
-import { useAccountList } from '@/lib/accounts/useAccountList'
+import { AccountWithMultichain, useAccountList } from '@/lib/accounts/useAccountList'
 import { toRoute } from '@/lib/router'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
 import { useAccount } from '@/stores/account/useAccount'
@@ -13,6 +13,7 @@ import { useImportAccountModal } from '@/stores/useImportAccountModal'
 import { useSigner } from '@/stores/useSigner'
 import { shortenAddress } from '@vue-dapp/core'
 import { breakpointsTailwind } from '@vueuse/core'
+import { concat, keccak256, toBeHex } from 'ethers'
 import { AlertCircle, ArrowRight, CheckCircle, CircleDot, Download, Plus, Power, X } from 'lucide-vue-next'
 import { VueFinalModal } from 'vue-final-modal'
 
@@ -58,6 +59,11 @@ function onClickImportAccount() {
 
 const breakpoints = useBreakpoints(breakpointsTailwind)
 const xlAndLarger = breakpoints.greaterOrEqual('xl')
+
+// To make sure the key is unique for each account
+function getAccountListKey(account: AccountWithMultichain) {
+	return keccak256(concat([account.address, toBeHex(account.chainId)]))
+}
 </script>
 
 <template>
@@ -150,7 +156,7 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 					class="w-full justify-between"
 					@click="onClickAccountManagement"
 				>
-					Account Management
+					Manage Account
 					<ArrowRight class="w-4 h-4" />
 				</Button>
 			</div>
@@ -299,7 +305,7 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 				<div class="mt-2 flex-1 overflow-y-auto overflow-x-hidden space-y-2 pr-2">
 					<div
 						v-for="account in accountList"
-						:key="account.address"
+						:key="getAccountListKey(account)"
 						class="relative group p-3 rounded-lg border transition-colors hover:bg-accent cursor-pointer overflow-visible"
 						:class="{
 							'bg-accent border-primary': isAccountSelected(account),

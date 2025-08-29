@@ -1,13 +1,9 @@
 <script setup lang="ts">
+import { IS_STAGING } from '@/config'
 import { AccountRegistry } from '@/lib/accounts'
 import { toRoute } from '@/lib/router'
 import { useGetCode } from '@/lib/useGetCode'
-import {
-	getVMethodIdentifier,
-	getVMethodName,
-	getVMethodType,
-	getVMethodValidatorAddress,
-} from '@/lib/validations/helpers'
+import { getVMethodName, getVMethodType } from '@/lib/validations/helpers'
 import { useAccount } from '@/stores/account/useAccount'
 import { displayChainName } from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
@@ -18,15 +14,20 @@ const router = useRouter()
 const { selectedAccount, isModular, isChainIdMatching, isMultichain } = useAccount()
 const { getCode, isDeployed, loading } = useGetCode()
 
+const isGetCodeFinished = ref(false)
+
 // Timing: App loaded, Account changed
 // Use this instead of onMounted because users might change account with the drawer
 watchImmediate(selectedAccount, async () => {
+	isGetCodeFinished.value = false
+
 	if (selectedAccount.value && isChainIdMatching.value) {
 		// Only redirect if we're on the exact account-management route (not on a child route)
 		if (router.currentRoute.value.name === 'account-management') {
 			router.replace(toRoute('account-modules', { address: selectedAccount.value.address }))
 		}
 		await getCode(selectedAccount.value.address)
+		isGetCodeFinished.value = true
 	}
 })
 
@@ -147,46 +148,37 @@ const showSwitchToCorrectChain = computed(() => {
 							:key="index"
 							class="group py-3 px-4 bg-card border border-border/40 rounded-lg hover:border-border/60 transition-colors"
 						>
-							<div class="w-full space-y-3">
-								<div class="flex items-center gap-2">
-									<div class="text-xs font-medium px-2.5 py-1 rounded-full bg-muted">
-										{{ getVMethodName(vMethod) }}
-									</div>
-									<div
-										class="text-xs px-2.5 py-1 rounded-full font-medium"
-										:class="
-											getVMethodType(vMethod) === 'PASSKEY'
-												? 'bg-blue-500/10 text-blue-500'
-												: 'bg-green-500/10 text-green-500'
-										"
-									>
-										{{ getVMethodType(vMethod) }}
+							<div class="w-full space-y-2">
+								<div class="flex items-center justify-between gap-2">
+									<div class="flex items-center gap-2">
+										<!-- vMethod name -->
+										<div class="text-sm">
+											{{ getVMethodName(vMethod) }}
+										</div>
+
+										<!-- vMethod type -->
+										<div
+											class="text-xs px-2.5 py-1 rounded-full font-medium"
+											:class="{
+												'bg-blue-500/10 text-blue-500': vMethod.type === 'PASSKEY',
+												'bg-green-500/10 text-green-500': vMethod.type === 'EOA-Owned',
+												'bg-yellow-500/10 text-yellow-500': vMethod.type === 'MULTI-EOA',
+											}"
+										>
+											{{ getVMethodType(vMethod) }}
+										</div>
 									</div>
 								</div>
 								<div class="space-y-1">
 									<div
-										v-if="getVMethodValidatorAddress(vMethod)"
-										class="flex items-center gap-2 text-xs text-muted-foreground"
-									>
-										<span class="font-medium min-w-0">Validator:</span>
-										<div class="font-mono flex-1 truncate flex items-center gap-1">
-											<span>{{ shortenAddress(getVMethodValidatorAddress(vMethod)!) }}</span>
-											<CopyButton :address="getVMethodValidatorAddress(vMethod)" size="xs" />
-											<AddressLinkButton
-												:address="getVMethodValidatorAddress(vMethod)"
-												size="xs"
-											/>
-										</div>
-									</div>
-									<div
-										v-if="getVMethodType(vMethod) === 'EOA-Owned'"
+										v-if="vMethod.type === 'EOA-Owned'"
 										class="flex items-center gap-2 text-xs text-muted-foreground"
 									>
 										<span class="font-medium min-w-0">Owner:</span>
 										<div class="font-mono flex-1 truncate flex items-center gap-1">
-											<span>{{ shortenAddress(getVMethodIdentifier(vMethod)) }}</span>
-											<CopyButton :address="getVMethodIdentifier(vMethod)" size="xs" />
-											<AddressLinkButton :address="getVMethodIdentifier(vMethod)" size="xs" />
+											<span>{{ shortenAddress(vMethod.address) }}</span>
+											<CopyButton :address="vMethod.address" size="xs" />
+											<AddressLinkButton :address="vMethod.address" size="xs" />
 										</div>
 									</div>
 									<div
@@ -202,6 +194,22 @@ const showSwitchToCorrectChain = computed(() => {
 											{{ vMethod.username }}
 										</span>
 									</div>
+									<div v-if="vMethod.type === 'MULTI-EOA'">
+										<div class="flex items-center gap-2 text-xs text-muted-foreground">
+											<span class="font-medium min-w-0">Owners:</span>
+											<div
+												v-for="address in vMethod.addresses"
+												:key="address"
+												class="flex items-center gap-1 text-xs text-muted-foreground"
+											>
+												<span class="flex-1 truncate">
+													{{ shortenAddress(address) }}
+												</span>
+												<CopyButton :address="address" size="xs" />
+												<AddressLinkButton :address="address" size="xs" />
+											</div>
+										</div>
+									</div>
 								</div>
 							</div>
 						</div>
@@ -212,53 +220,69 @@ const showSwitchToCorrectChain = computed(() => {
 					<Loader2 class="w-6 h-6 animate-spin text-primary" />
 				</div>
 
-				<!-- Note: Must use v-show so that the RouterView will not mount again when the selectedAccount changes -->
-				<div v-show="!loading" class="mt-6">
-					<div class="flex border-b">
-						<RouterLink
-							:to="toRoute('account-modules', { address: selectedAccount.address })"
-							class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
-							:class="
-								$route.name === 'account-modules'
-									? 'border-primary text-primary'
-									: 'border-transparent text-muted-foreground hover:text-foreground'
-							"
-						>
-							Modules
-						</RouterLink>
+				<!-- Ensure the isDeployed is updated before rendering the RouterView -->
+				<div v-if="isGetCodeFinished">
+					<!-- Note: Must use v-show so that the RouterView will not mount again when the selectedAccount changes -->
+					<div v-show="!loading" class="mt-6 mb-[100px]">
+						<div class="flex border-b">
+							<RouterLink
+								:to="toRoute('account-modules', { address: selectedAccount.address })"
+								class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+								:class="
+									$route.name === 'account-modules'
+										? 'border-primary text-primary'
+										: 'border-transparent text-muted-foreground hover:text-foreground'
+								"
+							>
+								Modules
+							</RouterLink>
 
-						<RouterLink
-							:to="toRoute('account-permissions', { address: selectedAccount.address })"
-							class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
-							:class="
-								$route.name === 'account-permissions'
-									? 'border-primary text-primary'
-									: 'border-transparent text-muted-foreground hover:text-foreground'
-							"
-						>
-							Permissions
-						</RouterLink>
+							<RouterLink
+								:to="toRoute('account-permissions', { address: selectedAccount.address })"
+								class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+								:class="
+									$route.name === 'account-permissions'
+										? 'border-primary text-primary'
+										: 'border-transparent text-muted-foreground hover:text-foreground'
+								"
+							>
+								Permissions
+							</RouterLink>
 
-						<RouterLink
-							:to="toRoute('account-multichain', { address: selectedAccount.address })"
-							class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
-							:class="
-								$route.name === 'account-multichain'
-									? 'border-primary text-primary'
-									: 'border-transparent text-muted-foreground hover:text-foreground'
-							"
-						>
-							Multichain
-						</RouterLink>
-					</div>
+							<RouterLink
+								:to="toRoute('account-multichain', { address: selectedAccount.address })"
+								class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+								:class="
+									$route.name === 'account-multichain'
+										? 'border-primary text-primary'
+										: 'border-transparent text-muted-foreground hover:text-foreground'
+								"
+							>
+								Multichain
+							</RouterLink>
 
-					<div class="mt-6">
-						<RouterView
-							v-if="selectedAccount"
-							:selected-account="selectedAccount"
-							:is-deployed="isDeployed"
-							:is-modular="isModular"
-						/>
+							<RouterLink
+								v-if="IS_STAGING"
+								:to="toRoute('account-email-recovery', { address: selectedAccount.address })"
+								class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+								:class="
+									$route.name === 'account-email-recovery'
+										? 'border-primary text-primary'
+										: 'border-transparent text-muted-foreground hover:text-foreground'
+								"
+							>
+								Email Recovery
+							</RouterLink>
+						</div>
+
+						<div class="mt-6">
+							<RouterView
+								v-if="selectedAccount"
+								:selected-account="selectedAccount"
+								:is-deployed="isDeployed"
+								:is-modular="isModular"
+							/>
+						</div>
 					</div>
 				</div>
 			</div>

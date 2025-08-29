@@ -1,15 +1,19 @@
 <script setup lang="ts">
 import { ACCOUNT_SUPPORTED_INSTALL_VALIDATION } from '@/lib/accounts/account-specific'
 import { addressToName, DEPRECATED_WEB_AUTHN_VALIDATOR_ADDRESS } from '@/lib/addressToName'
+import { EMAIL_RECOVERY_EXECUTOR_ADDRESS, uninstallEmailRecovery } from '@/lib/email-recovery'
+import { getErrorMessage } from '@/lib/error'
+import { useOwnableValidatorSettingsModal } from '@/lib/modals/useOwnableValidatorSettingsModal'
 import { MODULE_TYPE_LABELS } from '@/lib/modules/supported-modules'
 import { ModuleRecordModule, useAccountModule } from '@/lib/modules/useAccountModule'
 import { useValidatorManagement } from '@/lib/modules/useValidatorManagement'
-import { ValidationMethodName } from '@/lib/validations/ValidationMethod'
+import { ValidationMethodName } from '@/lib/validations/types'
 import { ImportedAccount } from '@/stores/account/account'
 import { shortenAddress } from '@vue-dapp/core'
 import { getAddress } from 'ethers'
-import { Loader2 } from 'lucide-vue-next'
+import { Loader2, Settings } from 'lucide-vue-next'
 import { ADDRESS, ERC7579_MODULE_TYPE, isSameAddress } from 'sendop'
+import { toast } from 'vue-sonner'
 
 const props = defineProps<{
 	selectedAccount: ImportedAccount
@@ -36,15 +40,31 @@ const {
 	uninstallOwnableValidator,
 } = useValidatorManagement()
 
-onMounted(async () => {
-	if (!props.isDeployed) return
-	if (!props.isModular) return
-	await fetchAccountModules()
-})
+watchImmediate(
+	() => props.selectedAccount,
+	async () => {
+		if (!props.isDeployed) return
+		if (!props.isModular) return
+		await fetchAccountModules()
+	},
+)
 
-const onlyOneValidator = computed<boolean>(() => {
-	return moduleRecord.value[ERC7579_MODULE_TYPE.VALIDATOR]?.length === 1
-})
+function isUninstallModuleDisabled(module: ModuleRecordModule) {
+	// If a module is being uninstalled, disable the button
+	if (operatingModule.value !== null) {
+		return true
+	}
+
+	// If there's only one validator, disable the button
+	if (
+		module.type === ERC7579_MODULE_TYPE.VALIDATOR &&
+		moduleRecord.value[ERC7579_MODULE_TYPE.VALIDATOR]?.length === 1
+	) {
+		return true
+	}
+
+	return false
+}
 
 // Available modules that can be installed (only validators for now)
 const availableModules = computed<{ address: string; name: ValidationMethodName }[]>(() => {
@@ -112,12 +132,21 @@ async function onClickUninstall(recordModule: ModuleRecordModule) {
 			await uninstallOwnableValidator({ onSuccess })
 		} else if (isSameAddress(recordModule.address, DEPRECATED_WEB_AUTHN_VALIDATOR_ADDRESS)) {
 			await uninstallDeprecatedWebAuthnValidator({ onSuccess })
+		} else if (isSameAddress(recordModule.address, EMAIL_RECOVERY_EXECUTOR_ADDRESS)) {
+			await uninstallEmailRecovery({ onSuccess })
 		} else {
-			throw new Error(`Unsupported module address: ${recordModule.address}`)
+			throw new Error(`Sorry, cannot uninstall this module. Please contact support.`)
 		}
+	} catch (e) {
+		console.error(`Error uninstalling module: ${getErrorMessage(e)}`)
+		toast.error(`Error uninstalling module: ${getErrorMessage(e)}`)
 	} finally {
 		operatingModule.value = null
 	}
+}
+
+function onClickOwnableValidatorSettings() {
+	useOwnableValidatorSettingsModal().openModal({})
 }
 
 const showAvailableModules = computed(() => {
@@ -134,8 +163,9 @@ const showAvailableModules = computed(() => {
 		<div class="space-y-6 p-6">
 			<div v-if="!isDeployed" class="text-sm text-muted-foreground">Account is not deployed</div>
 			<div v-else-if="!isModular" class="text-sm text-muted-foreground">Account is not modular</div>
-			<div v-else-if="loading" class="flex justify-center py-8">
+			<div v-else-if="loading" class="flex justify-center items-center py-8">
 				<Loader2 class="w-6 h-6 animate-spin text-primary" />
+				<span class="ml-2 text-sm text-muted-foreground">Loading modules...</span>
 			</div>
 
 			<!-- is deployed and modular -->
@@ -151,7 +181,7 @@ const showAvailableModules = computed(() => {
 						<div class="grid gap-2">
 							<div
 								v-for="module in moduleRecord[type]"
-								:key="module.id"
+								:key="module.address"
 								class="flex items-center justify-between p-3 border rounded-md bg-card"
 							>
 								<div class="space-y-1">
@@ -166,15 +196,25 @@ const showAvailableModules = computed(() => {
 										</div>
 									</div>
 								</div>
-								<Button
-									:disabled="onlyOneValidator || operatingModule !== null"
-									:loading="!!operatingModule && isSameAddress(operatingModule, module.address)"
-									variant="outline"
-									size="sm"
-									@click="onClickUninstall(module)"
-								>
-									Uninstall
-								</Button>
+								<div class="flex items-center gap-2">
+									<!-- Ownable Validator Settings -->
+									<div v-if="isSameAddress(module.address, ADDRESS.OwnableValidator)">
+										<Button variant="outline" size="sm" @click="onClickOwnableValidatorSettings">
+											<Settings class="w-4 h-4" />
+										</Button>
+									</div>
+
+									<!-- Uninstall Button -->
+									<Button
+										:disabled="isUninstallModuleDisabled(module)"
+										:loading="!!operatingModule && isSameAddress(operatingModule, module.address)"
+										variant="outline"
+										size="sm"
+										@click="onClickUninstall(module)"
+									>
+										Uninstall
+									</Button>
+								</div>
 							</div>
 						</div>
 					</div>

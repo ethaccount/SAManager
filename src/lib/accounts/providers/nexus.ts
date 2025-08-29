@@ -6,16 +6,14 @@ import {
 	BICONOMY_ATTESTER_ADDRESS,
 	ERC7579_MODULE_TYPE,
 	ERC7579Module,
-	findPrevious,
-	getValidatorsPaginated,
 	NexusAccountAPI,
 	NexusAPI,
 	RHINESTONE_ATTESTER_ADDRESS,
 	SimpleSmartSessionValidation,
 	ValidationAPI,
-	zeroPadLeft,
 } from 'sendop'
 import { AccountProvider, Deployment, Sign1271Config } from '../types'
+import { getPrevModuleAddress } from './common'
 
 export class NexusAccountProvider implements AccountProvider {
 	getExecutionAccountAPI(validationAPI: ValidationAPI, validatorAddress?: string): AccountAPI {
@@ -60,15 +58,11 @@ export class NexusAccountProvider implements AccountProvider {
 		accountAddress: string,
 		client: JsonRpcProvider,
 	): Promise<string> {
-		const config = {
+		const prev = await getPrevModuleAddress(client, accountAddress, module)
+		return NexusAPI.encodeUninstallModule({
 			moduleType: module.type as ERC7579_MODULE_TYPE.VALIDATOR | ERC7579_MODULE_TYPE.EXECUTOR,
 			moduleAddress: module.address,
 			deInitData: module.deInitData,
-		}
-		const { validators } = await getValidatorsPaginated(client, accountAddress, zeroPadLeft('0x01', 20), 10)
-		const prev = findPrevious(validators, module.address)
-		return NexusAPI.encodeUninstallModule({
-			...config,
 			prev,
 		})
 	}

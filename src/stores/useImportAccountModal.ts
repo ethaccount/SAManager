@@ -12,7 +12,7 @@ import {
 	Simple7702AccountVMethod,
 	WebAuthnValidatorVMethod,
 } from '@/lib/validations'
-import { ValidationMethodData } from '@/lib/validations/ValidationMethod'
+import { ValidationMethodData } from '@/lib/validations/types'
 import { AccountCategory } from '@/stores/account/account'
 import { getBigInt, hexlify } from 'ethers'
 import { defineStore, storeToRefs } from 'pinia'
