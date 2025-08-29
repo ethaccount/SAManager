@@ -93,9 +93,10 @@ export function useAccountModule() {
 				}
 			})
 
-			// if the account has a validation method but doesn't have a validator module, remove the validation method
-			const validators = moduleRecord.value[ERC7579_MODULE_TYPE.VALIDATOR]
-			selectedAccount.value.vMethods = removeInvalidValidationMethods(selectedAccount.value.vMethods, validators)
+			// TODO: if the account has a validation method but doesn't have a validator module, remove the validation method
+			// Warning: Do not remove validation methods just because a validator module is missing on this chain or not yet deployed!
+			// const validators = moduleRecord.value[ERC7579_MODULE_TYPE.VALIDATOR]
+			// selectedAccount.value.vMethods = removeInvalidValidationMethods(selectedAccount.value.vMethods, validators)
 
 			// updateModuleRecordByFetchingModules(accountAddress)
 		} catch (e: unknown) {
