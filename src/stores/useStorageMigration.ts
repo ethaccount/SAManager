@@ -5,7 +5,7 @@ import { getAuthenticatorIdHash } from './passkey/passkeyNoRp'
 export const useStorageMigrationStore = defineStore(
 	'useStorageMigrationStore',
 	() => {
-		const version = ref('1')
+		const version = ref('0')
 
 		const { accounts } = useAccounts()
 
@@ -100,6 +100,7 @@ export const useStorageMigrationStore = defineStore(
 
 			// migrate WebAuthnValidatorVMethodData identifier to authenticatorIdHash
 			if (version.value === '3') {
+				console.info('Migrating: Convert credentialId to authenticatorIdHash')
 				accounts.value.forEach(account => {
 					if (account.vMethods) {
 						account.vMethods.forEach(vMethod => {

@@ -90,7 +90,8 @@ export class OwnableValidatorVMethod extends ValidationMethodBase {
 
 	constructor({ addresses, threshold }: { addresses: string[]; threshold: number }) {
 		super()
-		if (addresses.length === 0) throw new Error('[OwnableValidatorVMethod] addresses is empty')
+		if (!Array.isArray(addresses) || addresses.length === 0)
+			throw new Error('[OwnableValidatorVMethod] addresses is invalid')
 		if (threshold <= 0) throw new Error('[OwnableValidatorVMethod] threshold is less than 1')
 		if (addresses.length !== new Set(addresses).size)
 			throw new Error('[OwnableValidatorVMethod] addresses has duplicates')

@@ -48,6 +48,15 @@ ValidationMethodRegistry.register('WebAuthnValidator', {
 ValidationMethodRegistry.register('OwnableValidator', {
 	create: data => {
 		if (data.name !== 'OwnableValidator') throw new Error('Invalid data type for OwnableValidator')
+
+		// Migrate from old format to new format
+		if (!data.addresses && 'address' in data) {
+			return new OwnableValidatorVMethod({
+				addresses: [data.address as string],
+				threshold: 1,
+			})
+		}
+
 		return new OwnableValidatorVMethod({
 			addresses: data.addresses,
 			threshold: data.threshold,
