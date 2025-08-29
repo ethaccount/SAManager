@@ -60,7 +60,7 @@ const router = createRouter({
 							name: 'connect',
 							component: () => import('@/views/popup/Connect.vue'),
 						},
-						// Manage Account
+						// Account Info
 						{
 							path: '/:chainId/:address',
 							name: 'account-management',

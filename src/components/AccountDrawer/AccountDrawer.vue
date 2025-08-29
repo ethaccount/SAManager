@@ -156,7 +156,7 @@ function getAccountListKey(account: AccountWithMultichain) {
 					class="w-full justify-between"
 					@click="onClickAccountManagement"
 				>
-					Manage Account
+					Account Info
 					<ArrowRight class="w-4 h-4" />
 				</Button>
 			</div>

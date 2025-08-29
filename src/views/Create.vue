@@ -488,7 +488,7 @@ function onClickPasskeyLogout() {
 					class="grid grid-cols-2 gap-2"
 				>
 					<Button variant="default" size="lg" :disabled="disabledImportButton" @click="onClickImport">
-						{{ isImported ? 'Manage Account' : 'Import' }}
+						{{ isImported ? 'Account Info' : 'Import' }}
 					</Button>
 
 					<Button variant="secondary" size="lg" :disabled="disabledDeployButton" @click="onClickDeploy">
