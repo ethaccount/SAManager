@@ -80,8 +80,8 @@ function getAccountListKey(account: AccountWithMultichain) {
 	>
 		<div class="account-drawer-visual-container">
 			<!-- Selected Account -->
-			<div class="flex justify-between items-start">
-				<div class="w-full flex justify-between items-start gap-2">
+			<div class="flex justify-between items-center">
+				<div class="w-full flex justify-between items-center gap-2">
 					<div>
 						<div v-if="selectedAccount" class="p-1.5">
 							<div class="flex justify-between items-center mb-1">
@@ -110,14 +110,19 @@ function getAccountListKey(account: AccountWithMultichain) {
 								</div>
 							</div>
 						</div>
+						<div v-else>
+							<div class="flex items-center gap-2">
+								<span class="font-medium truncate"> No account </span>
+							</div>
+						</div>
 					</div>
 
-					<div class="flex gap-1">
+					<div class="flex">
 						<Button v-if="selectedAccount" variant="ghost" size="icon" @click="onClickUnselectAccount">
-							<Power class="h-4 w-4" />
+							<Power class="h-3.5 w-3.5" />
 						</Button>
 						<Button variant="ghost" size="icon" @click="onClickCloseSidebar">
-							<X class="h-4 w-4" />
+							<X class="h-3.5 w-3.5" />
 						</Button>
 					</div>
 				</div>
@@ -149,7 +154,7 @@ function getAccountListKey(account: AccountWithMultichain) {
 				</div>
 
 				<!-- Warning section for inaccessible account -->
-				<div v-if="!isAccountAccessible" class="warning-section">
+				<div v-if="selectedAccount && !isAccountAccessible" class="warning-section">
 					<div class="flex items-start gap-2">
 						<Info class="w-4 h-4 flex-shrink-0" />
 						<div class="text-sm">
