@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useConfirmModal } from '@/components/ConfirmModal/useConfirmModal'
+import { useConfirmModal } from '@/lib/modals/useConfirmModal'
 
 function onClickOpen() {
 	const { openModal } = useConfirmModal()

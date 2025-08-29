@@ -14,6 +14,7 @@ import { makeFatalError } from './lib/error'
 import { useAccount } from './stores/account/useAccount'
 import { useBlockchain } from './stores/blockchain'
 import { useBackend } from './stores/useBackend'
+import { useStorageMigration } from './stores/useStorageMigration'
 
 const route = useRoute()
 
@@ -24,6 +25,9 @@ const { selectSigner } = useSigner()
 const { showDisclaimerIfNeeded } = useDisclaimerModal()
 const { checkBackendHealth } = useBackend()
 const { accountVMethods } = useAccount()
+
+const { runMigrations } = useStorageMigration()
+runMigrations()
 
 // NOTE: onMounted hooks are not guaranteed to execute in registration order
 useChainIdRoute()

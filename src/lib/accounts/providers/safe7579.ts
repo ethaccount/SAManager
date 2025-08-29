@@ -1,4 +1,4 @@
-import { getModuleByValidationMethod, ValidationMethod } from '@/lib/validations'
+import { getModuleByValidationMethod, OwnableValidatorVMethod, ValidationMethod } from '@/lib/validations'
 import { hexlify, JsonRpcProvider, randomBytes } from 'ethers'
 import {
 	AccountAPI,
@@ -6,16 +6,14 @@ import {
 	BICONOMY_ATTESTER_ADDRESS,
 	ERC7579_MODULE_TYPE,
 	ERC7579Module,
-	findPrevious,
-	getValidatorsPaginated,
 	RHINESTONE_ATTESTER_ADDRESS,
 	Safe7579AccountAPI,
 	Safe7579API,
 	SimpleSmartSessionValidation,
 	ValidationAPI,
-	zeroPadLeft,
 } from 'sendop'
 import { AccountProvider, Deployment, Sign1271Config } from '../types'
+import { getPrevModuleAddress } from './common'
 
 export class Safe7579AccountProvider implements AccountProvider {
 	getExecutionAccountAPI(validationAPI: ValidationAPI, validatorAddress?: string): AccountAPI {
@@ -60,32 +58,29 @@ export class Safe7579AccountProvider implements AccountProvider {
 		accountAddress: string,
 		client: JsonRpcProvider,
 	): Promise<string> {
-		const config = {
+		const prev = await getPrevModuleAddress(client, accountAddress, module)
+		return Safe7579API.encodeUninstallModule({
 			moduleType: module.type as ERC7579_MODULE_TYPE.VALIDATOR | ERC7579_MODULE_TYPE.EXECUTOR,
 			moduleAddress: module.address,
 			deInitData: module.deInitData,
-		}
-		const { validators } = await getValidatorsPaginated(client, accountAddress, zeroPadLeft('0x01', 20), 10)
-		const prev = findPrevious(validators, module.address)
-		return Safe7579API.encodeUninstallModule({
-			...config,
 			prev,
 		})
 	}
 
 	async getDeployment(client: JsonRpcProvider, validation: ValidationMethod, salt: string): Promise<Deployment> {
-		if (!validation.isModule) {
-			throw new Error('[Safe7579AccountProvider] Validation method is not a module')
+		if (validation.name !== 'OwnableValidator') {
+			throw new Error('[Safe7579AccountProvider] Validation method is not OwnableValidator')
 		}
+		const vMethod = validation as OwnableValidatorVMethod
+		const module = getModuleByValidationMethod(vMethod)
 
-		const module = getModuleByValidationMethod(validation)
 		return await Safe7579API.getDeployment({
 			client,
 			salt,
 			creationOptions: {
 				validatorAddress: module.address,
 				validatorInitData: module.initData,
-				owners: [validation.identifier],
+				owners: [vMethod.addresses[0]],
 				ownersThreshold: 1,
 				attesters: [RHINESTONE_ATTESTER_ADDRESS, BICONOMY_ATTESTER_ADDRESS],
 				attestersThreshold: 1,

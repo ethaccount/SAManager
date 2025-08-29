@@ -1,27 +1,11 @@
-import {
-	deserializeValidationMethod,
-	getVMethodIdentifier,
-	ValidationMethod,
-	ValidationMethodName,
-} from '@/lib/validations'
+import { deserializeValidationMethod, ValidationMethod, ValidationMethodName } from '@/lib/validations'
 import { ImportedAccount, isSameAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useInitCode } from '@/stores/account/useInitCode'
 import { CHAIN_ID } from '@/stores/blockchain/chains'
 import { JSONParse, JSONStringify } from 'json-with-bigint'
 import { isSameAddress } from 'sendop'
-import { getAuthenticatorIdHash } from '../passkey/passkeyNoRp'
 import { useSigner } from '../useSigner'
-
-// Legacy type for migration purposes
-interface LegacyWebAuthnValidationMethodData {
-	name: 'WebAuthnValidator'
-	credentialId?: string
-	authenticatorIdHash?: string
-	pubKeyX?: bigint
-	pubKeyY?: bigint
-	username?: string
-}
 
 export const useAccountsStore = defineStore(
 	'useAccountsStore',
@@ -30,66 +14,6 @@ export const useAccountsStore = defineStore(
 		const { selectedAccount } = useAccount()
 
 		const accounts = ref<ImportedAccount[]>([])
-
-		// migrate vOptions to vMethods
-		watchImmediate(accounts, accounts => {
-			const vOptionsToVMethods: Record<string, ValidationMethodName> = {
-				'EOA-Ownable': 'ECDSAValidator',
-				Passkey: 'WebAuthnValidator',
-			}
-			accounts.forEach(account => {
-				if (account.vOptions) {
-					for (const vOption of account.vOptions) {
-						// add vMethods field if it doesn't exist
-						if (!account.vMethods) {
-							account.vMethods = []
-						}
-						const vMethodName = vOptionsToVMethods[vOption.type]
-						if (vMethodName === 'WebAuthnValidator') {
-							account.vMethods.push({
-								name: vMethodName,
-								authenticatorIdHash: getAuthenticatorIdHash(vOption.identifier),
-							})
-						} else {
-							account.vMethods.push({
-								name: vMethodName,
-								address: vOption.identifier,
-							})
-						}
-					}
-					delete account.vOptions
-					console.log('migrated account', account.address)
-				}
-			})
-		})
-
-		// migrate existing WebAuthnValidatorVMethodData identifier to authenticatorIdHash
-		watchImmediate(accounts, accounts => {
-			let hasChanges = false
-			accounts.forEach(account => {
-				if (account.vMethods) {
-					account.vMethods.forEach(vMethod => {
-						if (vMethod.name === 'WebAuthnValidator') {
-							// Check if this is the old format with credentialId
-							const vMethodData = vMethod as LegacyWebAuthnValidationMethodData
-							if (vMethodData.credentialId && !vMethodData.authenticatorIdHash) {
-								// Convert credentialId to authenticatorIdHash
-								vMethodData.authenticatorIdHash = getAuthenticatorIdHash(vMethodData.credentialId)
-								delete vMethodData.credentialId
-								hasChanges = true
-								console.log(
-									'migrated WebAuthnValidator credentialId to authenticatorIdHash for account',
-									account.address,
-								)
-							}
-						}
-					})
-				}
-			})
-			if (hasChanges) {
-				console.log('WebAuthnValidator migration completed')
-			}
-		})
 
 		const hasAccounts = computed(() => accounts.value.length > 0)
 
@@ -162,20 +86,23 @@ export const useAccountsStore = defineStore(
 			return accounts.value.some(a => isSameAddress(a.address, accountAddress) && a.chainId === chainId)
 		}
 
+		/**
+		 * Add a validation method to a specific account in accounts
+		 */
 		function addValidationMethod(account: ImportedAccount, vMethod: ValidationMethod) {
 			const acc = accounts.value.find(a => isSameAccount(a, account))
 			if (!acc) {
 				throw new Error(`[addValidationMethod] Account not found: ${account.address} ${account.chainId}`)
 			}
 
-			// don't add the same vMethod if the vMethod name and identifier are the same
-			if (acc.vMethods.some(v => v.name === vMethod.name && getVMethodIdentifier(v) === vMethod.identifier)) {
-				throw new Error(
-					`[addValidationMethod] Validation method already exists: ${vMethod.name} ${vMethod.identifier}`,
-				)
+			// Throw error if the vMethod name is the same
+			if (acc.vMethods.some(v => v.name === vMethod.name)) {
+				throw new Error(`[addValidationMethod] Validation method already exists: ${vMethod.name}`)
 			}
 
 			acc.vMethods.push(vMethod.serialize())
+
+			// update the account in accounts
 			accounts.value = accounts.value.map(a => (isSameAccount(a, acc) ? acc : a))
 
 			// if selected account is the one being updated, update the selected account

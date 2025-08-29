@@ -1,6 +1,6 @@
-import { AppSigner, EOASigner, PasskeySigner, SignerType, ValidationMethod } from '@/lib/validations'
-import { usePasskey } from '@/stores/passkey/usePasskey'
+import { AppSigner, EOASigner, PasskeySigner, SignerType } from '@/lib/validations'
 import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
+import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 
 export const useSignerStore = defineStore('useSignerStore', () => {
@@ -69,18 +69,11 @@ export const useSignerStore = defineStore('useSignerStore', () => {
 		}
 	}
 
-	function canSign(vMethod: ValidationMethod): boolean {
-		return (
-			vMethod.signerType === selectedSignerType.value && vMethod.identifier === selectedSigner.value?.identifier
-		)
-	}
-
 	return {
 		connectedSigners,
 		selectedSigner,
 		selectedSignerType,
 		selectSigner,
-		canSign,
 		isSignerConnected,
 	}
 })

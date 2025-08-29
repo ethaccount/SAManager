@@ -2,7 +2,7 @@
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { AccountRegistry } from '@/lib/accounts'
-import { useAccountList } from '@/lib/accounts/useAccountList'
+import { AccountWithMultichain, useAccountList } from '@/lib/accounts/useAccountList'
 import { toRoute } from '@/lib/router'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
 import { useAccount } from '@/stores/account/useAccount'
@@ -13,7 +13,8 @@ import { useImportAccountModal } from '@/stores/useImportAccountModal'
 import { useSigner } from '@/stores/useSigner'
 import { shortenAddress } from '@vue-dapp/core'
 import { breakpointsTailwind } from '@vueuse/core'
-import { AlertCircle, ArrowRight, CheckCircle, CircleDot, Download, Plus, Power, X } from 'lucide-vue-next'
+import { concat, keccak256, toBeHex } from 'ethers'
+import { AlertCircle, ArrowRight, CheckCircle, CircleDot, Download, Info, Plus, Power, X } from 'lucide-vue-next'
 import { VueFinalModal } from 'vue-final-modal'
 
 const emit = defineEmits<{
@@ -58,6 +59,11 @@ function onClickImportAccount() {
 
 const breakpoints = useBreakpoints(breakpointsTailwind)
 const xlAndLarger = breakpoints.greaterOrEqual('xl')
+
+// To make sure the key is unique for each account
+function getAccountListKey(account: AccountWithMultichain) {
+	return keccak256(concat([account.address, toBeHex(account.chainId)]))
+}
 </script>
 
 <template>
@@ -74,8 +80,8 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 	>
 		<div class="account-drawer-visual-container">
 			<!-- Selected Account -->
-			<div class="flex justify-between items-start">
-				<div class="w-full flex justify-between items-start gap-2">
+			<div class="flex justify-between items-center">
+				<div class="w-full flex justify-between items-center gap-2">
 					<div>
 						<div v-if="selectedAccount" class="p-1.5">
 							<div class="flex justify-between items-center mb-1">
@@ -103,60 +109,82 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 									</div>
 								</div>
 							</div>
-							<div class="flex flex-col text-muted-foreground">
-								<div class="flex flex-col gap-1">
-									<!-- account Id -->
-									<div class="flex items-center gap-1 text-xs">
-										<span>{{ AccountRegistry.getName(selectedAccount.accountId) }}</span>
-										<!-- Long name with ID may cause layout break -->
-										<!-- <span>({{ selectedAccount.accountId }})</span> -->
-									</div>
-
-									<!-- chain -->
-									<div class="flex items-center gap-2 text-xs">
-										<div v-if="isMultichain">
-											<span class="text-xs text-muted-foreground">Multichain</span>
-										</div>
-										<div v-else class="flex items-center gap-2">
-											<div>
-												<span>{{ displayChainName(selectedAccount.chainId) }}</span>
-												<span v-if="!isChainIdMatching" class="text-yellow-500">
-													(Chain Mismatch)</span
-												>
-											</div>
-										</div>
-									</div>
-								</div>
+						</div>
+						<div v-else>
+							<div class="flex items-center gap-2">
+								<span class="font-medium truncate"> No account </span>
 							</div>
 						</div>
 					</div>
 
-					<div class="flex gap-1">
+					<div class="flex">
 						<Button v-if="selectedAccount" variant="ghost" size="icon" @click="onClickUnselectAccount">
-							<Power class="h-4 w-4" />
+							<Power class="h-3.5 w-3.5" />
 						</Button>
 						<Button variant="ghost" size="icon" @click="onClickCloseSidebar">
-							<X class="h-4 w-4" />
+							<X class="h-3.5 w-3.5" />
 						</Button>
 					</div>
 				</div>
 			</div>
 
-			<!-- Buttons -->
-			<div class="mt-4" v-if="selectedAccount">
-				<Button
-					:disabled="!selectedAccount"
-					variant="outline"
-					class="w-full justify-between"
-					@click="onClickAccountManagement"
+			<div class="space-y-2">
+				<div v-if="selectedAccount" class="flex flex-col text-muted-foreground">
+					<div class="flex gap-1">
+						<!-- account Id -->
+						<div class="flex items-center gap-1 text-xs">
+							<span>{{ AccountRegistry.getName(selectedAccount.accountId) }}</span>
+							<!-- Long name with ID may cause layout break -->
+							<!-- <span>({{ selectedAccount.accountId }})</span> -->
+						</div>
+
+						<!-- chain -->
+						<div class="flex items-center gap-2 text-xs">
+							<div v-if="isMultichain">
+								<span class="text-xs text-muted-foreground">(Multichain)</span>
+							</div>
+							<div v-else class="flex items-center gap-2">
+								<div>
+									<span>({{ displayChainName(selectedAccount.chainId) }})</span>
+									<span v-if="!isChainIdMatching" class="text-yellow-500"> (Chain Mismatch)</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Warning section for inaccessible account -->
+				<div
+					v-if="selectedAccount && !isAccountAccessible"
+					class="warning-section flex items-start gap-2 text-sm"
 				>
-					Account Management
-					<ArrowRight class="w-4 h-4" />
-				</Button>
+					<div>
+						<p class="font-medium">
+							<span class="flex items-center gap-1">
+								<Info class="w-3.5 h-3.5 flex-shrink-0" />
+								Not Connected
+							</span>
+						</p>
+						<p class="">Connect the appropriate signer to use this account</p>
+					</div>
+				</div>
+
+				<!-- Buttons -->
+				<div class="" v-if="selectedAccount">
+					<Button
+						:disabled="!selectedAccount"
+						variant="outline"
+						class="w-full justify-between"
+						@click="onClickAccountManagement"
+					>
+						Account Info
+						<ArrowRight class="w-4 h-4" />
+					</Button>
+				</div>
 			</div>
 
 			<!-- Signers -->
-			<div class="mt-4">
+			<div class="mt-5">
 				<h3 class="text-sm font-medium tracking-wider">Signers</h3>
 				<div class="mt-2 space-y-2">
 					<!-- EOA Wallet -->
@@ -268,7 +296,7 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 			</div>
 
 			<!-- Account List -->
-			<div class="mt-4 flex-1 flex flex-col overflow-hidden">
+			<div class="mt-5 flex-1 flex flex-col overflow-hidden">
 				<div class="flex justify-between items-center">
 					<h3 class="text-sm font-medium tracking-wider">Accounts</h3>
 					<div class="flex gap-1 mr-2">
@@ -299,7 +327,7 @@ const xlAndLarger = breakpoints.greaterOrEqual('xl')
 				<div class="mt-2 flex-1 overflow-y-auto overflow-x-hidden space-y-2 pr-2">
 					<div
 						v-for="account in accountList"
-						:key="account.address"
+						:key="getAccountListKey(account)"
 						class="relative group p-3 rounded-lg border transition-colors hover:bg-accent cursor-pointer overflow-visible"
 						:class="{
 							'bg-accent border-primary': isAccountSelected(account),

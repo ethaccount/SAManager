@@ -15,7 +15,7 @@ export async function signMessageUsingPasskey(message: string) {
 	}
 
 	// start authentication
-	const assertion = await navigator.credentials.get({ publicKey, mediation: 'silent' })
+	const assertion = await navigator.credentials.get({ publicKey })
 
 	if (!assertion) {
 		throw new Error('[signMessageUsingPasskey] No assertion')

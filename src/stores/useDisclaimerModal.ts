@@ -1,4 +1,4 @@
-import { useConfirmModal } from '@/components/ConfirmModal/useConfirmModal'
+import { useConfirmModal } from '@/lib/modals/useConfirmModal'
 import { IS_PRODUCTION, TESTNET_URL } from '@/config'
 import { defineStore, storeToRefs } from 'pinia'
 

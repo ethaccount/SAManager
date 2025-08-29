@@ -1,3 +1,4 @@
+import { TESTNET_CHAIN_ID } from '@/stores/blockchain'
 import { Contract, EventLog, JsonRpcProvider } from 'ethers'
 
 export async function fetchModules(address: string, client: JsonRpcProvider) {
@@ -10,9 +11,18 @@ export async function fetchModules(address: string, client: JsonRpcProvider) {
 		client,
 	)
 
-	// Fetch install and uninstall events (using block 0 as starting point)
-	const installEvents = await contract.queryFilter(contract.filters.ModuleInstalled)
-	const uninstallEvents = await contract.queryFilter(contract.filters.ModuleUninstalled)
+	const currentBlock = await client.getBlockNumber()
+	const network = await client.getNetwork()
+	const chainId = network.chainId
+
+	// SPECIAL CASE: For base sepolia, we need to fetch events from the last 10000 blocks to prevent "block range is too large" error
+	let fromBlock = 0
+	if (chainId.toString() === TESTNET_CHAIN_ID.BASE_SEPOLIA) {
+		fromBlock = Math.max(0, currentBlock - 10000)
+	}
+
+	const installEvents = await contract.queryFilter(contract.filters.ModuleInstalled, fromBlock, currentBlock)
+	const uninstallEvents = await contract.queryFilter(contract.filters.ModuleUninstalled, fromBlock, currentBlock)
 
 	// Combine and sort events by block number and transaction index
 	const allEvents = [...installEvents, ...uninstallEvents].sort((a, b) => {

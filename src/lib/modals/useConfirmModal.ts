@@ -1,5 +1,5 @@
 import { useModal } from 'vue-final-modal'
-import ConfirmModal from './ConfirmModal.vue'
+import ConfirmModal from '@/components/ConfirmModal.vue'
 
 export function useConfirmModal() {
 	const { open, close, patchOptions } = useModal({

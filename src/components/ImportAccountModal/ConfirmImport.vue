@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { AccountRegistry } from '@/lib/accounts'
-import { ValidationMethodData } from '@/lib/validations/ValidationMethod'
+import { ValidationMethodData } from '@/lib/validations/types'
 import { ImportedAccount } from '@/stores/account/account'
 import { useAccounts } from '@/stores/account/useAccounts'
 import { CHAIN_NAME } from '@/stores/blockchain/chains'

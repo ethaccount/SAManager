@@ -123,7 +123,7 @@ export const useBlockchainStore = defineStore(
 		)
 
 		// only for fetching event logs
-		const tenderlyClient = computed<JsonRpcProvider | null>(() => {
+		const tenderlyClient = computed<JsonRpcProvider>(() => {
 			return new JsonRpcProvider(getTenderlyUrl(selectedChainId.value), Number(selectedChainId.value), {
 				staticNetwork: true,
 			})

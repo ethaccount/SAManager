@@ -106,14 +106,16 @@ async function updateEthUsdPrice() {
 	ethUsdPrice.value = await fetchEthUsdPrice()
 }
 
+// Close the TxModal when the account is not accessible
+watchImmediate(isAccountAccessible, () => {
+	if (!isAccountAccessible.value) {
+		toast.error('Account is not accessible. Please connect the right signer to the account')
+		emit('close')
+	}
+})
+
 // When the TxModal is opened
 onMounted(async () => {
-	// Check if account is connected
-	if (!isAccountAccessible.value) {
-		emit('close')
-		throw new Error('Account not connected')
-	}
-
 	if (!selectedAccount.value) {
 		throw new Error('[TxModal#onMounted] No account selected')
 	}
@@ -334,10 +336,24 @@ const txLink = computed(() => {
 	return `${explorerUrl.value}/tx/${foundLog.transactionHash}`
 })
 
+/**
+ * Regardless of the currently selected signer,
+ * return true if the user is able to select EOAWallet and can immediately connect to that Account.
+ */
 const showEOAWalletValidationMethod = computed(() => {
 	if (!selectedAccount.value) return false
 	if (!isConnected.value) return false
-	return selectedAccount.value.vMethods.some(v => deserializeValidationMethod(v).signerType === 'EOAWallet')
+
+	const { connectedSigners } = useSigner()
+
+	return selectedAccount.value.vMethods.some(v => {
+		if (!connectedSigners.value) return false
+		const vMethod = deserializeValidationMethod(v)
+		return (
+			vMethod.signerType === 'EOAWallet' &&
+			vMethod.isValidSignerIdentifier(connectedSigners.value.EOAWallet.identifier ?? '')
+		)
+	})
 })
 
 const showPasskeyValidationMethod = computed(() => {

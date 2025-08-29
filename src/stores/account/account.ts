@@ -1,5 +1,5 @@
 import { AccountId } from '@/lib/accounts'
-import { ValidationMethodData } from '@/lib/validations/ValidationMethod'
+import { ValidationMethodData } from '@/lib/validations/types'
 import { CHAIN_ID } from '@/stores/blockchain/chains'
 import { isSameAddress } from 'sendop'
 

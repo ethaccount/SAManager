@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { parseError } from '@/lib/error'
+import { isProviderRpcError } from '@/lib/error'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useSigner } from '@/stores/useSigner'
 import { RdnsEnum, shortenAddress, type RDNS } from '@vue-dapp/core'
@@ -27,18 +27,18 @@ async function onClickWallet(rdns: RDNS) {
 	useVueDappModal().close()
 	try {
 		await connectTo('BrowserWallet', { target: 'rdns', rdns })
-	} catch (err: unknown) {
-		const e = parseError(err)
-
-		// Do not show error when the user cancels their action
-		if (
-			e.message.includes('user rejected action') ||
-			e.message.includes('User rejected the request.') ||
-			e.message.includes('4001')
-		) {
-			return
+	} catch (e: unknown) {
+		if (isProviderRpcError(e)) {
+			// Do not show error when the user rejects their action
+			if (e.code === 4001) {
+				return
+			}
+			connectError.value = e.message
+		} else if (e instanceof Error) {
+			connectError.value = e.message
+		} else {
+			connectError.value = JSON.stringify(e)
 		}
-		connectError.value = e.message
 	}
 }
 

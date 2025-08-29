@@ -1,7 +1,7 @@
 import { signMessageUsingPasskey } from '@/stores/passkey/signMessageUsingPasskey'
 import { getAddress, getBytes, hexlify, Signer, TypedDataEncoder } from 'ethers'
 import { ENTRY_POINT_V07_ADDRESS, ENTRY_POINT_V08_ADDRESS, TypedData, UserOpBuilder } from 'sendop'
-import { AppSigner, SignerType } from './Signer'
+import { AppSigner, SignerType } from './types'
 
 export class EOASigner implements AppSigner {
 	type: SignerType = 'EOAWallet'

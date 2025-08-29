@@ -12,7 +12,7 @@ import { getToken, getTokens, NATIVE_TOKEN_ADDRESS } from '@/lib/tokens/token'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { getLocalTimeZone, today, type DateValue } from '@internationalized/date'
 import { formatUnits, parseUnits } from 'ethers'
-import { AlertTriangle, ArrowUpDown, CalendarIcon, Loader2 } from 'lucide-vue-next'
+import { AlertTriangle, ArrowUpDown, Loader2 } from 'lucide-vue-next'
 
 const { selectedChainId, client } = useBlockchain()
 
@@ -319,11 +319,11 @@ function switchTokens() {
 				</div>
 
 				<!-- Start Date Section -->
-				<div
+				<!-- <div
 					class="relative p-4 rounded-xl bg-muted/30 border border-border/50 backdrop-blur-sm transition-all duration-200 hover:border-border"
 				>
 					<h3 class="mb-2 text-sm font-medium">Start Date</h3>
-					<!-- <Popover>
+					<Popover>
 						<PopoverTrigger class="w-full">
 							<Button
 								variant="outline"
@@ -340,12 +340,12 @@ function switchTokens() {
 						<PopoverContent class="w-auto p-0">
 							<Calendar v-model="scheduledSwapInput.startDate as DateValue" />
 						</PopoverContent>
-					</Popover> -->
+					</Popover>
 					<div class="w-full p-3 rounded-md bg-muted flex items-center">
 						<CalendarIcon class="mr-2 h-4 w-4" />
 						<span class="text-sm">Now</span>
 					</div>
-				</div>
+				</div> -->
 			</div>
 		</CardContent>
 	</Card>

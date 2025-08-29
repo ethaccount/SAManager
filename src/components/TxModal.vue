@@ -9,6 +9,18 @@ withDefaults(defineProps<TxUIProps>(), {
 const emit = defineEmits<TxUIEmits>()
 
 const { canClose } = useTxModal()
+
+const isCloseHandled = ref(false)
+
+onUnmounted(() => {
+	handleClose()
+})
+
+function handleClose() {
+	if (isCloseHandled.value) return
+	emit('close')
+	isCloseHandled.value = true
+}
 </script>
 
 <template>
@@ -22,7 +34,7 @@ const { canClose } = useTxModal()
 	>
 		<TxUI
 			:executions="executions"
-			@close="emit('close')"
+			@close="handleClose"
 			@executed="emit('executed')"
 			@success="emit('success')"
 			@failed="emit('failed')"

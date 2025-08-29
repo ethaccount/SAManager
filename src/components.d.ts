@@ -52,7 +52,7 @@ declare module 'vue' {
     ChainIcon: typeof import('./components/ChainIcon.vue')['default']
     Checkbox: typeof import('./components/ui/checkbox/Checkbox.vue')['default']
     ConfirmImport: typeof import('./components/ImportAccountModal/ConfirmImport.vue')['default']
-    ConfirmModal: typeof import('./components/ConfirmModal/ConfirmModal.vue')['default']
+    ConfirmModal: typeof import('./components/ConfirmModal.vue')['default']
     ConnectEOAWallet: typeof import('./components/signer/ConnectEOAWallet.vue')['default']
     ConnectPasskey: typeof import('./components/signer/ConnectPasskey.vue')['default']
     ConnectSignerModal: typeof import('./components/signer/ConnectSignerModal.vue')['default']

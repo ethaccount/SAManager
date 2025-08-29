@@ -2,6 +2,7 @@ import { shortenAddress } from '@vue-dapp/core'
 import { isAddress } from 'ethers'
 import { ADDRESS, ENTRY_POINT_V07_ADDRESS, ENTRY_POINT_V08_ADDRESS, KernelAPI, NexusAPI, Safe7579API } from 'sendop'
 import { AccountId } from './accounts'
+import { EMAIL_RECOVERY_EXECUTOR_ADDRESS } from './email-recovery/utils'
 
 export const DEPRECATED_WEB_AUTHN_VALIDATOR_ADDRESS = '0xD990393C670dCcE8b4d8F858FB98c9912dBFAa06'
 
@@ -15,6 +16,7 @@ const ADDRESS_TO_NAME: Record<string, string> = {
 	[ADDRESS.ScheduledTransfers]: 'Scheduled Transfers',
 	[ADDRESS.ScheduledOrders]: 'Scheduled Orders',
 	[DEPRECATED_WEB_AUTHN_VALIDATOR_ADDRESS]: 'WebAuthn Validator (Deprecated)',
+	[EMAIL_RECOVERY_EXECUTOR_ADDRESS]: 'Email Recovery Executor',
 
 	// accounts
 	[KernelAPI.implementationAddress]: AccountId['kernel.advanced.v0.3.3'],

@@ -7,6 +7,7 @@ import { defineStore, storeToRefs } from 'pinia'
 import { Execution, UserOpBuilder, UserOperationReceipt } from 'sendop'
 import { useModal } from 'vue-final-modal'
 import { useSigner } from './useSigner'
+import { toast } from 'vue-sonner'
 
 export enum TransactionStatus {
 	Closed = 'Closed',
@@ -49,6 +50,12 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 	}
 
 	function openModal(props: InstanceType<typeof TxModal>['$props']) {
+		const { isAccountAccessible } = useAccount()
+		if (!isAccountAccessible.value) {
+			toast.error('Please connect your account first')
+			return
+		}
+
 		patchOptions({
 			attrs: {
 				...defaultProps, // set default props to clear the props

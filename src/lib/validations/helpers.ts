@@ -1,7 +1,8 @@
 import { getOwnableValidator } from '@rhinestone/module-sdk'
 import { ERC7579_MODULE_TYPE, ERC7579Module, getECDSAValidator, getWebAuthnValidator } from 'sendop'
+import { ECDSAValidatorVMethod, OwnableValidatorVMethod, WebAuthnValidatorVMethod } from './methods'
 import { ValidationMethodRegistry } from './registry'
-import { ValidationMethod, ValidationMethodData, ValidationMethodName, ValidationType } from './ValidationMethod'
+import { ValidationMethod, ValidationMethodData, ValidationMethodName, ValidationType } from './types'
 
 export function deserializeValidationMethod(data: ValidationMethodData): ValidationMethod {
 	return ValidationMethodRegistry.create(data)
@@ -23,15 +24,11 @@ export function getVMethodValidatorAddress(data: ValidationMethodData): string |
 	return ValidationMethodRegistry.create(data).validatorAddress
 }
 
-export function getVMethodIdentifier(data: ValidationMethodData): string {
-	return ValidationMethodRegistry.create(data).identifier
-}
-
 export function getModuleByValidationMethod(validation: ValidationMethod): ERC7579Module {
 	switch (validation.name) {
 		case 'ECDSAValidator':
 			return getECDSAValidator({
-				ownerAddress: validation.identifier,
+				ownerAddress: (validation as ECDSAValidatorVMethod).address,
 			})
 		case 'WebAuthnValidator': {
 			// Type cast to ensure we have the right data structure
@@ -51,13 +48,13 @@ export function getModuleByValidationMethod(validation: ValidationMethod): ERC75
 				pubKeyX: webAuthnData.pubKeyX,
 				pubKeyY: webAuthnData.pubKeyY,
 				// Fix: The vMethod identifier is the authenticatorIdHash. Don't hash it again.
-				authenticatorIdHash: validation.identifier,
+				authenticatorIdHash: (validation as WebAuthnValidatorVMethod).authenticatorIdHash,
 			})
 		}
 		case 'OwnableValidator': {
 			const m = getOwnableValidator({
-				owners: [validation.identifier as `0x${string}`],
-				threshold: 1,
+				owners: (validation as OwnableValidatorVMethod).addresses.map(address => address as `0x${string}`),
+				threshold: (validation as OwnableValidatorVMethod).threshold,
 			})
 			return {
 				address: m.address,

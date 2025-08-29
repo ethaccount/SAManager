@@ -89,7 +89,6 @@ export async function getCredential(options: {
 	}
 	const credential = (await navigator.credentials.get({
 		publicKey,
-		mediation: 'silent',
 	})) as PublicKeyCredential | null
 
 	if (!credential) {

@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { useAccountDrawer } from '@/components/AccountDrawer/useAccountDrawer'
 import { Button } from '@/components/ui/button'
+import CopyButton from '@/components/utils/CopyButton.vue'
 import { useAccount } from '@/stores/account/useAccount'
 import { shortenAddress } from '@vue-dapp/core'
 import { Wallet } from 'lucide-vue-next'
@@ -18,13 +19,14 @@ function onClickAccountButton() {
 		<Button
 			v-if="!isAccountAccessible"
 			variant="outline"
-			class="w-9 h-9 rounded-full ring-0"
+			class="rounded-full ring-0 px-4 py-2 h-auto"
 			:class="{
 				'ring-1 ring-green-500': isAccountAccessible,
 			}"
 			@click="onClickAccountButton"
 		>
 			<Wallet class="w-4 h-4" />
+			<span class="text-sm">Connect</span>
 		</Button>
 		<div v-else class="flex items-center flex-col cursor-pointer" @click="onClickAccountButton">
 			<div

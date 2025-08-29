@@ -16,11 +16,14 @@ const props = withDefaults(defineProps<Props>(), {
 	as: 'button',
 	loading: false,
 })
+
+const isIcon = computed(() => props.size === 'icon')
+const noSlot = computed(() => isIcon.value && props.loading)
 </script>
 
 <template>
 	<Primitive :as="as" :as-child="asChild" :class="cn(buttonVariants({ variant, size }), props.class)">
-		<Loader2 v-if="loading" class="w-4 h-4 mr-2 animate-spin" />
-		<slot />
+		<Loader2 v-if="loading" class="w-4 h-4 animate-spin" />
+		<slot class="ml-2" v-if="!noSlot" />
 	</Primitive>
 </template>

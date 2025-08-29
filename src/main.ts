@@ -2,7 +2,6 @@ import { createApp } from 'vue'
 import { toast } from 'vue-sonner'
 import App from './App.vue'
 import { ERROR_NOTIFICATION_DURATION, LOCAL_STORAGE_KEY_PREFIX } from './config'
-import { parseError } from './lib/error'
 import './style.css'
 
 const app = createApp(App)
@@ -34,10 +33,16 @@ app.use(vfm)
 app.mount('#app')
 
 app.config.errorHandler = (error: unknown, _vm, _info) => {
-	const err = parseError(error)
-	console.error(err)
+	console.error(error)
 
-	toast.error(err.message, {
+	let e: Error
+	if (error instanceof Error) {
+		e = error
+	} else {
+		e = new Error(JSON.stringify(error))
+	}
+
+	toast.error(e.message, {
 		duration: ERROR_NOTIFICATION_DURATION,
 	})
 }
