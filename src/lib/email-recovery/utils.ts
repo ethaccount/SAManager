@@ -280,7 +280,11 @@ export async function getRecoveryTimeLeft(client: JsonRpcProvider, accountAddres
 	return executeAfter - BigInt(block.timestamp)
 }
 
-export async function completeRecovery(client: JsonRpcProvider, accountAddress: string, newOwnerAddress: string) {
+export async function completeRecovery(
+	client: JsonRpcProvider,
+	accountAddress: string,
+	newOwnerAddress: string,
+): Promise<boolean> {
 	if (!isAddress(accountAddress)) {
 		throw new Error('Invalid account address')
 	}
@@ -316,6 +320,7 @@ export async function completeRecovery(client: JsonRpcProvider, accountAddress: 
 
 	const recoveryData = abiEncode(['address', 'bytes'], [ADDRESS.OwnableValidator, addOwnerAction])
 
+	// Response text/plain: Recovery completed
 	const response = await fetch(`${EMAIL_RELAYER_URL_BASE_SEPOLIA}/completeRequest`, {
 		method: 'POST',
 		headers: {
@@ -328,5 +333,10 @@ export async function completeRecovery(client: JsonRpcProvider, accountAddress: 
 		}),
 	})
 
-	return await response.json()
+	const text = await response.text()
+	if (text !== 'Recovery completed') {
+		throw new Error('Recovery failed')
+	}
+
+	return true
 }

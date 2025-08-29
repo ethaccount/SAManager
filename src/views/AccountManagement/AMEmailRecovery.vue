@@ -41,7 +41,6 @@ const { selectedChainId, switchChain, client } = useBlockchain()
 const { openModal } = useTxModal()
 const { accountToNewOwnerAddress } = useEmailRecovery()
 
-const isLoading = ref(false)
 const isLoadingState = ref(true)
 const error = ref<string | null>(null)
 const hasOwnableValidator = ref(false)
@@ -262,6 +261,7 @@ async function onClickSwitchToBaseSepolia() {
 	switchChain(TESTNET_CHAIN_ID.BASE_SEPOLIA)
 }
 
+const isLoadingConfigureRecovery = ref(false)
 async function onClickConfigureRecovery() {
 	if (!canUseEmailRecovery.value) return
 	if (!guardianEmail.value) {
@@ -277,7 +277,7 @@ async function onClickConfigureRecovery() {
 		return
 	}
 
-	isLoading.value = true
+	isLoadingConfigureRecovery.value = true
 	error.value = null
 
 	try {
@@ -319,17 +319,18 @@ async function onClickConfigureRecovery() {
 		error.value = `Failed to setup email recovery: ${e instanceof Error ? e.message : 'Unknown error'}`
 		toast.error(error.value)
 	} finally {
-		isLoading.value = false
+		isLoadingConfigureRecovery.value = false
 	}
 }
 
+const isLoadingSendRecoveryRequest = ref(false)
 async function onClickSendRecoveryRequest() {
 	if (!newOwnerAddress.value) {
 		toast.error('Please enter new owner address')
 		return
 	}
 
-	isLoading.value = true
+	isLoadingSendRecoveryRequest.value = true
 	error.value = null
 
 	try {
@@ -346,12 +347,13 @@ async function onClickSendRecoveryRequest() {
 		console.error('Error initiating recovery:', e)
 		error.value = `Error initiating recovery: ${getErrorMessage(e)}`
 	} finally {
-		isLoading.value = false
+		isLoadingSendRecoveryRequest.value = false
 	}
 }
 
+const isLoadingCompleteRecovery = ref(false)
 async function onClickCompleteRecovery() {
-	isLoading.value = true
+	isLoadingCompleteRecovery.value = true
 	error.value = null
 
 	try {
@@ -375,23 +377,26 @@ async function onClickCompleteRecovery() {
 		}
 
 		toast.success('Recovery completed successfully!')
+		// After completion, the on-chain getRecoveryRequest data will be cleared, returning to a state with no recovery request.
+		await fetchRecoveryRequestStatus()
 
 		resetRecoveryRequestState()
 	} catch (e) {
 		console.error('Error completing recovery:', e)
 		error.value = `Error completing recovery: ${getErrorMessage(e)}`
 	} finally {
-		isLoading.value = false
+		isLoadingCompleteRecovery.value = false
 	}
 }
 
+const isLoadingCancelRecovery = ref(false)
 function onClickCancelRecovery() {
 	if (!isRecoveryRequestConfirmed.value) {
 		return
 	}
 
 	try {
-		isLoading.value = true
+		isLoadingCancelRecovery.value = true
 		error.value = null
 
 		let execution: TxModalExecution
@@ -428,9 +433,19 @@ function onClickCancelRecovery() {
 		console.error('Error canceling recovery:', e)
 		error.value = `Error canceling recovery: ${getErrorMessage(e)}`
 	} finally {
-		isLoading.value = false
+		isLoadingCancelRecovery.value = false
 	}
 }
+
+const isLoading = computed(() => {
+	return (
+		isLoadingState.value ||
+		isLoadingConfigureRecovery.value ||
+		isLoadingSendRecoveryRequest.value ||
+		isLoadingCompleteRecovery.value ||
+		isLoadingCancelRecovery.value
+	)
+})
 </script>
 
 <template>
@@ -597,8 +612,8 @@ function onClickCancelRecovery() {
 
 								<Button
 									@click="onClickConfigureRecovery"
+									:loading="isLoadingConfigureRecovery"
 									:disabled="!guardianEmail || !timelockValue || !expiryValue || isLoading"
-									:loading="isLoading"
 									class="w-full"
 								>
 									Configure Recovery
@@ -646,7 +661,7 @@ function onClickCancelRecovery() {
 								<Button
 									@click="onClickSendRecoveryRequest"
 									:disabled="!newOwnerAddress || isLoading"
-									:loading="isLoading"
+									:loading="isLoadingSendRecoveryRequest"
 									class="w-full"
 								>
 									Send Recovery Request
@@ -700,14 +715,22 @@ function onClickCancelRecovery() {
 							<div class="space-y-4 p-4">
 								<div class="flex gap-2">
 									<!-- Cancel -->
-									<Button variant="outline" @click="onClickCancelRecovery" class="flex-1">
+									<Button
+										variant="outline"
+										@click="onClickCancelRecovery"
+										:loading="isLoadingCancelRecovery"
+										:disabled="isLoading"
+										class="flex-1"
+									>
 										Cancel Recovery
 									</Button>
+
 									<!-- Complete -->
 									<Button
 										v-if="canCompleteRecovery"
 										@click="onClickCompleteRecovery"
-										:loading="isLoading"
+										:loading="isLoadingCompleteRecovery"
+										:disabled="isLoading"
 										class="flex-1"
 									>
 										Complete Recovery
