@@ -12,7 +12,7 @@ export const useStorageMigrationStore = defineStore(
 		function runMigrations() {
 			// migrate OwnableValidatorVMethod to new format
 			if (version.value === '0') {
-				console.info('Migrating: update OwnableValidatorVMethod to new format')
+				console.info('Migrating: Update OwnableValidatorVMethod to new format')
 
 				for (const account of accounts.value) {
 					for (let i = 0; i < account.vMethods.length; i++) {
