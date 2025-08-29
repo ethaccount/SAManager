@@ -14,32 +14,22 @@ export function useAccountList() {
 	const { selectedAccount } = useAccount()
 
 	const accountList = computed<AccountWithMultichain[]>(() =>
-		accounts.value
-			.reduce((acc, cur) => {
-				const account = {
-					...cur,
-					isMultichain: cur.category === 'Smart Account' && hasInitCode(cur.address),
-				}
+		accounts.value.reduce((acc, cur) => {
+			const account = {
+				...cur,
+				isMultichain: cur.category === 'Smart Account' && hasInitCode(cur.address),
+			}
 
-				// Regular accounts: always add (no deduplication needed)
-				// Multichain accounts: only add if not already present (deduplicate)
-				if (!account.isMultichain) {
-					acc.push(account)
-				} else if (!acc.some(a => isSameAddress(a.address, account.address))) {
-					acc.push(account)
-				}
+			// Regular accounts: always add (no deduplication needed)
+			// Multichain accounts: only add if not already present (deduplicate)
+			if (!account.isMultichain) {
+				acc.push(account)
+			} else if (!acc.some(a => isSameAddress(a.address, account.address))) {
+				acc.push(account)
+			}
 
-				return acc
-			}, [] as AccountWithMultichain[])
-			.sort((a, b) => {
-				// Put selected account at the top
-				const aIsSelected = isAccountSelected(a)
-				const bIsSelected = isAccountSelected(b)
-
-				if (aIsSelected && !bIsSelected) return -1
-				if (!aIsSelected && bIsSelected) return 1
-				return 0
-			}),
+			return acc
+		}, [] as AccountWithMultichain[]),
 	)
 
 	function isAccountSelected(account: AccountWithMultichain) {

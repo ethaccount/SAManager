@@ -14,7 +14,7 @@ import { useSigner } from '@/stores/useSigner'
 import { shortenAddress } from '@vue-dapp/core'
 import { breakpointsTailwind } from '@vueuse/core'
 import { concat, keccak256, toBeHex } from 'ethers'
-import { AlertCircle, ArrowRight, CheckCircle, CircleDot, Download, Plus, Power, X } from 'lucide-vue-next'
+import { AlertCircle, ArrowRight, CheckCircle, CircleDot, Download, Info, Plus, Power, X } from 'lucide-vue-next'
 import { VueFinalModal } from 'vue-final-modal'
 
 const emit = defineEmits<{
@@ -109,31 +109,6 @@ function getAccountListKey(account: AccountWithMultichain) {
 									</div>
 								</div>
 							</div>
-							<div class="flex flex-col text-muted-foreground">
-								<div class="flex flex-col gap-1">
-									<!-- account Id -->
-									<div class="flex items-center gap-1 text-xs">
-										<span>{{ AccountRegistry.getName(selectedAccount.accountId) }}</span>
-										<!-- Long name with ID may cause layout break -->
-										<!-- <span>({{ selectedAccount.accountId }})</span> -->
-									</div>
-
-									<!-- chain -->
-									<div class="flex items-center gap-2 text-xs">
-										<div v-if="isMultichain">
-											<span class="text-xs text-muted-foreground">Multichain</span>
-										</div>
-										<div v-else class="flex items-center gap-2">
-											<div>
-												<span>{{ displayChainName(selectedAccount.chainId) }}</span>
-												<span v-if="!isChainIdMatching" class="text-yellow-500">
-													(Chain Mismatch)</span
-												>
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
 						</div>
 					</div>
 
@@ -148,21 +123,58 @@ function getAccountListKey(account: AccountWithMultichain) {
 				</div>
 			</div>
 
-			<!-- Buttons -->
-			<div class="mt-4" v-if="selectedAccount">
-				<Button
-					:disabled="!selectedAccount"
-					variant="outline"
-					class="w-full justify-between"
-					@click="onClickAccountManagement"
-				>
-					Account Info
-					<ArrowRight class="w-4 h-4" />
-				</Button>
+			<div class="space-y-2">
+				<div v-if="selectedAccount" class="flex flex-col text-muted-foreground">
+					<div class="flex gap-1">
+						<!-- account Id -->
+						<div class="flex items-center gap-1 text-xs">
+							<span>{{ AccountRegistry.getName(selectedAccount.accountId) }}</span>
+							<!-- Long name with ID may cause layout break -->
+							<!-- <span>({{ selectedAccount.accountId }})</span> -->
+						</div>
+
+						<!-- chain -->
+						<div class="flex items-center gap-2 text-xs">
+							<div v-if="isMultichain">
+								<span class="text-xs text-muted-foreground">Multichain</span>
+							</div>
+							<div v-else class="flex items-center gap-2">
+								<div>
+									<span>({{ displayChainName(selectedAccount.chainId) }})</span>
+									<span v-if="!isChainIdMatching" class="text-yellow-500"> (Chain Mismatch)</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Warning section for inaccessible account -->
+				<div v-if="!isAccountAccessible" class="warning-section">
+					<div class="flex items-start gap-2">
+						<Info class="w-4 h-4 flex-shrink-0" />
+						<div class="text-sm">
+							<p class="font-medium mb-1">Not Connected</p>
+							<p class="">Connect the appropriate signer to use this account</p>
+						</div>
+					</div>
+				</div>
+
+				<!-- Buttons -->
+				<div class="" v-if="selectedAccount">
+					<Button
+						:disabled="!selectedAccount"
+						variant="outline"
+						class="w-full justify-between"
+						@click="onClickAccountManagement"
+					>
+						Account Info
+						<ArrowRight class="w-4 h-4" />
+					</Button>
+				</div>
 			</div>
 
 			<!-- Signers -->
-			<div class="mt-4">
+			<div class="mt-5">
 				<h3 class="text-sm font-medium tracking-wider">Signers</h3>
 				<div class="mt-2 space-y-2">
 					<!-- EOA Wallet -->
@@ -274,7 +286,7 @@ function getAccountListKey(account: AccountWithMultichain) {
 			</div>
 
 			<!-- Account List -->
-			<div class="mt-4 flex-1 flex flex-col overflow-hidden">
+			<div class="mt-5 flex-1 flex flex-col overflow-hidden">
 				<div class="flex justify-between items-center">
 					<h3 class="text-sm font-medium tracking-wider">Accounts</h3>
 					<div class="flex gap-1 mr-2">
