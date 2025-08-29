@@ -39,7 +39,7 @@ const props = defineProps<{
 
 const { selectedChainId, switchChain, client } = useBlockchain()
 const { openModal } = useTxModal()
-const { accountToNewOwnerAddress } = useEmailRecovery()
+const { accountToNewOwnerAddress, accountToEmail } = useEmailRecovery()
 
 const isLoadingState = ref(true)
 const error = ref<string | null>(null)
@@ -224,6 +224,7 @@ async function checkAcceptanceStatus() {
 		)
 		if (canStart) {
 			acceptanceChecked.value = true
+			guardianEmail.value = accountToEmail.value[props.selectedAccount.address] ?? ''
 		}
 	} catch (e) {
 		throw new Error('Failed to check acceptance status', { cause: e })
@@ -310,6 +311,7 @@ async function onClickConfigureRecovery() {
 				)
 
 				hasEmailRecoveryExecutor.value = true
+				accountToEmail.value[props.selectedAccount.address] = guardianEmail.value
 
 				// Start checking for acceptance
 				checkAcceptanceStatus()
