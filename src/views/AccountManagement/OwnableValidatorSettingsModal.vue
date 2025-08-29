@@ -42,7 +42,7 @@ onMounted(async () => {
 })
 
 function updateOwnableValidatorVMethodAddresses() {
-	if (owners.value) {
+	if (owners.value && owners.value.length) {
 		if (!selectedAccount.value) {
 			throw new Error('[updateOwnableValidatorVMethodAddresses] No selected account')
 		}

@@ -1,7 +1,7 @@
 import { OwnableValidatorAPI } from '@/api/OwnableValidatorAPI'
 import { buildPoseidon } from 'circomlibjs'
 import type { JsonRpcProvider } from 'ethers'
-import { Contract, hexlify, Interface } from 'ethers'
+import { Contract, hexlify, Interface, isAddress } from 'ethers'
 import { abiEncode, ADDRESS, ERC7579_MODULE_TYPE, type ERC7579Module } from 'sendop'
 
 export const EMAIL_RECOVERY_EXECUTOR_ADDRESS = '0x636632FA22052d2a4Fb6e3Bab84551B620b9C1F9'
@@ -182,18 +182,18 @@ export async function sendRecoveryRequest({
 	client,
 	accountAddress,
 	guardianEmail,
-	newOwner,
+	newOwnerAddress,
 }: {
 	client: JsonRpcProvider
 	accountAddress: string
 	guardianEmail: string
-	newOwner: string
+	newOwnerAddress: string
 }) {
 	// Get recovery command templates
 	const templates = await recoveryCommandTemplates(client)
 
 	// Create recovery data
-	const addOwnerAction = await OwnableValidatorAPI.encodeAddOwner(client, accountAddress, newOwner)
+	const addOwnerAction = await OwnableValidatorAPI.encodeAddOwner(client, accountAddress, newOwnerAddress)
 
 	const recoveryData = abiEncode(['address', 'bytes'], [ADDRESS.OwnableValidator, addOwnerAction])
 
@@ -280,7 +280,15 @@ export async function getRecoveryTimeLeft(client: JsonRpcProvider, accountAddres
 	return executeAfter - BigInt(block.timestamp)
 }
 
-export async function completeRecovery(client: JsonRpcProvider, accountAddress: string, newOwner: string) {
+export async function completeRecovery(client: JsonRpcProvider, accountAddress: string, newOwnerAddress: string) {
+	if (!isAddress(accountAddress)) {
+		throw new Error('Invalid account address')
+	}
+
+	if (!isAddress(newOwnerAddress)) {
+		throw new Error('Invalid new owner address')
+	}
+
 	// Get recovery request
 	const { executeAfter } = await getRecoveryRequest({
 		client,
@@ -304,7 +312,7 @@ export async function completeRecovery(client: JsonRpcProvider, accountAddress: 
 	}
 
 	// Create recovery data
-	const addOwnerAction = await OwnableValidatorAPI.encodeAddOwner(client, accountAddress, newOwner)
+	const addOwnerAction = await OwnableValidatorAPI.encodeAddOwner(client, accountAddress, newOwnerAddress)
 
 	const recoveryData = abiEncode(['address', 'bytes'], [ADDRESS.OwnableValidator, addOwnerAction])
 

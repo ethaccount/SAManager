@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { OwnableValidatorAPI } from '@/api/OwnableValidatorAPI'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -15,9 +16,12 @@ import {
 } from '@/lib/email-recovery'
 import { getErrorMessage } from '@/lib/error'
 import { toRoute } from '@/lib/router'
+import { deserializeValidationMethod, OwnableValidatorVMethod } from '@/lib/validations'
 import type { ImportedAccount } from '@/stores/account/account'
+import { useAccount } from '@/stores/account/useAccount'
 import { TESTNET_CHAIN_ID } from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
+import { useEmailRecovery } from '@/stores/useEmailRecovery'
 import type { TxModalExecution } from '@/stores/useTxModal'
 import { useTxModal } from '@/stores/useTxModal'
 import { Interface } from 'ethers'
@@ -35,6 +39,7 @@ const props = defineProps<{
 
 const { selectedChainId, switchChain, client } = useBlockchain()
 const { openModal } = useTxModal()
+const { accountToNewOwnerAddress } = useEmailRecovery()
 
 const isLoading = ref(false)
 const isLoadingState = ref(true)
@@ -146,6 +151,11 @@ watchImmediate(
 					await fetchRecoveryRequestStatus()
 				}
 			}
+
+			// If recovery request is sent, give the new owner address from the store if it exists
+			if (isRecoveryRequestSent.value) {
+				newOwnerAddress.value = accountToNewOwnerAddress.value[props.selectedAccount.address] ?? ''
+			}
 		} catch (e) {
 			throw e
 		} finally {
@@ -247,7 +257,7 @@ async function onClickSwitchToBaseSepolia() {
 	switchChain(TESTNET_CHAIN_ID.BASE_SEPOLIA)
 }
 
-async function onClickSetupEmailRecovery() {
+async function onClickConfigureRecovery() {
 	if (!canUseEmailRecovery.value) return
 	if (!guardianEmail.value) {
 		toast.error('Please enter guardian email')
@@ -322,10 +332,11 @@ async function onClickSendRecoveryRequest() {
 			client: client.value,
 			accountAddress: props.selectedAccount.address,
 			guardianEmail: guardianEmail.value,
-			newOwner: newOwnerAddress.value,
+			newOwnerAddress: newOwnerAddress.value,
 		})
 
 		isRecoveryRequestSent.value = true
+		accountToNewOwnerAddress.value[props.selectedAccount.address] = newOwnerAddress.value
 	} catch (e) {
 		console.error('Error initiating recovery:', e)
 		error.value = `Error initiating recovery: ${getErrorMessage(e)}`
@@ -340,6 +351,24 @@ async function onClickCompleteRecovery() {
 
 	try {
 		await completeRecovery(client.value, props.selectedAccount.address, newOwnerAddress.value)
+
+		// Update OwnableValidator addresses
+		const owners = await OwnableValidatorAPI.getOwners(client.value, props.selectedAccount.address)
+		if (owners.length) {
+			const { selectedAccount } = useAccount()
+			if (!selectedAccount.value) {
+				throw new Error('Updating OwnableValidator addresses: No selected account')
+			}
+			for (let i = 0; i < selectedAccount.value.vMethods.length; i++) {
+				const vMethodData = selectedAccount.value.vMethods[i]
+				if (vMethodData.name === 'OwnableValidator') {
+					const vMethod = deserializeValidationMethod(vMethodData) as OwnableValidatorVMethod
+					vMethod.addresses = owners
+					selectedAccount.value.vMethods[i] = vMethod.serialize()
+				}
+			}
+		}
+
 		toast.success('Recovery completed successfully!')
 
 		resetRecoveryRequestState()
@@ -562,7 +591,7 @@ function onClickCancelRecovery() {
 								</div>
 
 								<Button
-									@click="onClickSetupEmailRecovery"
+									@click="onClickConfigureRecovery"
 									:disabled="!guardianEmail || !timelockValue || !expiryValue || isLoading"
 									:loading="isLoading"
 									class="w-full"
@@ -605,11 +634,7 @@ function onClickCancelRecovery() {
 
 									<div class="space-y-2">
 										<label class="text-sm font-medium">Requested New Owner Address</label>
-										<Input
-											v-model="newOwnerAddress"
-											placeholder="0xAB12..."
-											:disabled="isLoading"
-										/>
+										<Input v-model="newOwnerAddress" placeholder="0x..." :disabled="isLoading" />
 									</div>
 								</div>
 
@@ -660,6 +685,11 @@ function onClickCancelRecovery() {
 										Recovery request expires in {{ expiryTimeLeftFormatted }}.
 									</p>
 								</div>
+							</div>
+
+							<div class="space-y-2">
+								<label class="text-sm font-medium">Requested New Owner Address</label>
+								<Input v-model="newOwnerAddress" placeholder="0x..." :disabled="isLoading" />
 							</div>
 
 							<div class="space-y-4 p-4">
