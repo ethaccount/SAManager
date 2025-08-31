@@ -1,6 +1,6 @@
 import { getInstallModuleData, getUninstallModuleData } from '@/lib/accounts/account-specific'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
-import { ECDSAValidatorVMethod, SingleOwnableValidatorVMethod, WebAuthnValidatorVMethod } from '@/lib/validations'
+import { ECDSAValidatorVMethod, OwnableValidatorVMethod, WebAuthnValidatorVMethod } from '@/lib/validations'
 import { getModuleByValidationMethod } from '@/lib/validations/helpers'
 import { useAccount } from '@/stores/account/useAccount'
 import { useAccounts } from '@/stores/account/useAccounts'
@@ -35,7 +35,7 @@ export function useValidatorManagement() {
 	}
 
 	async function installValidatorModule(
-		validationMethod: ECDSAValidatorVMethod | WebAuthnValidatorVMethod | SingleOwnableValidatorVMethod,
+		validationMethod: ECDSAValidatorVMethod | WebAuthnValidatorVMethod | OwnableValidatorVMethod,
 		options?: {
 			description?: string
 			onSuccess?: () => Promise<void>
@@ -175,7 +175,10 @@ export function useValidatorManagement() {
 			return
 		}
 
-		const validationMethod = new SingleOwnableValidatorVMethod(wallet.address)
+		const validationMethod = new OwnableValidatorVMethod({
+			addresses: [wallet.address],
+			threshold: 1,
+		})
 
 		await installValidatorModule(validationMethod, {
 			description: 'Install OwnableValidator',

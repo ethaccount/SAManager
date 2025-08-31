@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { useConfirmModal } from '@/components/ConfirmModal/useConfirmModal'
+import { useConfirmModal } from '@/lib/modals/useConfirmModal'
 import { Button } from '@/components/ui/button'
 import { CheckIcon, CopyIcon, TrashIcon } from 'lucide-vue-next'
+
+const CANNOT_DELETE_KEYS = ['useStorageMigrationStore']
 
 interface StorageItem {
 	key: string
@@ -116,6 +118,7 @@ refreshItems()
 											<CopyIcon v-else class="h-3.5 w-3.5" />
 										</Button>
 										<Button
+											v-if="!CANNOT_DELETE_KEYS.includes(item.key)"
 											variant="ghost"
 											size="icon"
 											class="h-6 w-6 text-muted-foreground hover:text-destructive"

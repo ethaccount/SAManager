@@ -15,7 +15,7 @@ import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
 import { useGetCode } from '@/lib/useGetCode'
 import {
 	ECDSAValidatorVMethod,
-	SingleOwnableValidatorVMethod,
+	OwnableValidatorVMethod,
 	ValidationMethod,
 	ValidationMethodName,
 	ValidationType,
@@ -46,7 +46,7 @@ const {
 	isPasskeySupported,
 } = usePasskey()
 const { importAccount, selectAccount, isAccountImported } = useAccounts()
-const { canSign } = useSigner()
+const { selectedSigner } = useSigner()
 
 const supportedAccounts = AccountRegistry.getSupportedAccountsForCreation()
 
@@ -84,7 +84,7 @@ const selectedValidationMethod = computed<ValidationMethod | null>(() => {
 	switch (selectedValidationType.value) {
 		case 'EOA-Owned': {
 			if (!signer.value) return null
-			const identifier = signer.value.address
+			const signerAddress = signer.value.address
 
 			// get account supported validation method name
 			const validationMethodName = ACCOUNT_SUPPORTED_INITIAL_VALIDATION[selectedAccountType.value]?.find(
@@ -94,9 +94,12 @@ const selectedValidationMethod = computed<ValidationMethod | null>(() => {
 
 			switch (validationMethodName) {
 				case 'ECDSAValidator':
-					return new ECDSAValidatorVMethod(identifier)
+					return new ECDSAValidatorVMethod(signerAddress)
 				case 'OwnableValidator':
-					return new SingleOwnableValidatorVMethod(identifier)
+					return new OwnableValidatorVMethod({
+						addresses: [signerAddress],
+						threshold: 1,
+					})
 				default:
 					return null
 			}
@@ -133,7 +136,8 @@ const computedSalt = computed(() => {
 // Check if the signer is connected and corresponding to the selected validation type
 const isValidationAvailable = computed(() => {
 	if (!selectedValidationMethod.value) return false
-	return canSign(selectedValidationMethod.value)
+	if (!selectedSigner.value) return false
+	return selectedValidationMethod.value.isValidSigner(selectedSigner.value)
 })
 
 const deployment = ref<Deployment | null>(null)
@@ -447,7 +451,7 @@ function onClickPasskeyLogout() {
 							id="custom-salt"
 							v-model="saltInput"
 							type="number"
-							placeholder="Enter a number for custom salt. Leave empty for default."
+							placeholder="Enter a number"
 							class="w-full px-3 py-2 bg-muted/30 border border-border/50 rounded-lg focus:border-primary transition-colors"
 						/>
 					</div>
@@ -484,7 +488,7 @@ function onClickPasskeyLogout() {
 					class="grid grid-cols-2 gap-2"
 				>
 					<Button variant="default" size="lg" :disabled="disabledImportButton" @click="onClickImport">
-						{{ isImported ? 'Account Management' : 'Import' }}
+						{{ isImported ? 'Account Info' : 'Import' }}
 					</Button>
 
 					<Button variant="secondary" size="lg" :disabled="disabledDeployButton" @click="onClickDeploy">

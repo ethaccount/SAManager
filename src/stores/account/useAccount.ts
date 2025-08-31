@@ -12,7 +12,7 @@ export const useAccountStore = defineStore(
 	'useAccountStore',
 	() => {
 		const { initCodeList, hasInitCode } = useInitCode()
-		const { canSign } = useSigner()
+		const { selectedSigner } = useSigner()
 		const { selectedChainId } = useBlockchain()
 
 		const selectedAccount = ref<ImportedAccount | null>(null)
@@ -30,7 +30,11 @@ export const useAccountStore = defineStore(
 		const isAccountAccessible = computed(() => {
 			if (!selectedAccount.value) return false
 			if (selectedAccount.value.chainId !== selectedChainId.value) return false
-			return accountVMethods.value.some(canSign)
+
+			return accountVMethods.value.some(vMethod => {
+				if (!selectedSigner.value) return false
+				return vMethod.isValidSigner(selectedSigner.value)
+			})
 		})
 
 		const isModular = computed(() => {
