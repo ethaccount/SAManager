@@ -1,12 +1,12 @@
 {
 	"name": "smart-account-manager",
 	"private": true,
-	"version": "0.8.0-beta.2",
+	"version": "0.8.0",
 	"type": "module",
 	"repository": "https://github.com/ethaccount/SAManager",
 	"author": "Johnson Chen <https://x.com/johnson86tw>",
 	"license": "AGPL-3.0-only",
-	"description": "A clean interface for smart accounts on ERC-4337",
+	"description": "A web-based wallet designed for interoperability and Dapp integration",
 	"homepage": "https://samanager.xyz",
 	"keywords": [
 		"ERC-4337",
