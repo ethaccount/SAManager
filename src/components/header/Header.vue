@@ -1,10 +1,12 @@
 <script lang="ts" setup>
 import { IS_STAGING } from '@/config'
 import { toRoute } from '@/lib/router'
+import NetworkSelector from '@/components/header/NetworkSelector.vue'
 import { breakpointsTailwind } from '@vueuse/core'
 import { RouterLink } from 'vue-router'
 
 const breakpoints = useBreakpoints(breakpointsTailwind)
+const smAndLarger = breakpoints.greaterOrEqual('sm')
 </script>
 
 <template>
@@ -25,7 +27,7 @@ const breakpoints = useBreakpoints(breakpointsTailwind)
 					</div>
 				</RouterLink>
 
-				<NetworkSelector />
+				<NetworkSelector :show-network-name="smAndLarger" />
 
 				<Navigator />
 			</div>

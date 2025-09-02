@@ -81,6 +81,7 @@ async function onClickGetCapabilities() {
 				method: 'wallet_getCapabilities',
 				params: [wallet.address, [`0x${DAPP_CHAIN_ID.toString(16)}`]],
 			})
+			console.log('capabilitiesResult', capabilitiesResult.value)
 		} catch (err: unknown) {
 			console.error('Error getting capabilities', err)
 			capabilitiesError.value = err instanceof Error ? err.message : 'Failed to get capabilities'
