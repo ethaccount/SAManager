@@ -58,7 +58,7 @@ const router = createRouter({
 						{
 							path: '/:chainId/connect',
 							name: 'connect',
-							component: () => import('@/views/popup/Connect.vue'),
+							component: () => import('@/views/Connect.vue'),
 						},
 						// Account Info
 						{

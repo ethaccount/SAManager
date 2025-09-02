@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { DEFAULT_BROWSER_URL } from '@/config'
-import { useSafeApps } from '@/lib/browser/useSafeApps'
+import { useSafeApps } from '@/features/browser/useSafeApps'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { ArrowLeft, ArrowRight, Loader2, RotateCcw } from 'lucide-vue-next'

@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import NetworkSelector from '@/components/header/NetworkSelector.vue'
 import CenterStageLayout from '@/components/layout/CenterStageLayout.vue'
+import EthRequestAccounts from '@/features/connect/EthRequestAccounts.vue'
+import { handleGetCallsStatus } from '@/features/connect/wallet_getCallsStatus'
+import { handleGetCapabilities } from '@/features/connect/wallet_getCapabilities'
+import WalletSendCalls from '@/features/connect/WalletSendCalls.vue'
+import WalletShowCallsStatus from '@/features/connect/WalletShowCallsStatus.vue'
 import { toRoute } from '@/lib/router'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain'
@@ -14,10 +19,6 @@ import {
 	WalletSendCallsRequest,
 } from '@samanager/sdk'
 import { AlertCircle, Loader2 } from 'lucide-vue-next'
-import { handleGetCallsStatus, handleGetCapabilities } from './eip5792-handlers'
-import EthRequestAccounts from './EthRequestAccounts.vue'
-import WalletSendCalls from './WalletSendCalls.vue'
-import WalletShowCallsStatus from './WalletShowCallsStatus.vue'
 
 const { selectedAccount } = useAccount()
 

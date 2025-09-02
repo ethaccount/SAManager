@@ -13,7 +13,7 @@ import {
 	getRecoveryRequest,
 	sendAcceptanceRequest,
 	sendRecoveryRequest,
-} from '@/lib/email-recovery'
+} from '@/features/email-recovery'
 import { getErrorMessage } from '@/lib/error'
 import { toRoute } from '@/lib/router'
 import { deserializeValidationMethod, OwnableValidatorVMethod } from '@/lib/validations'

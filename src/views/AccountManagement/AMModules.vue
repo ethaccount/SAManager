@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import { EMAIL_RECOVERY_EXECUTOR_ADDRESS, uninstallEmailRecovery } from '@/features/email-recovery'
 import { ACCOUNT_SUPPORTED_INSTALL_VALIDATION } from '@/lib/accounts/account-specific'
 import { addressToName, DEPRECATED_WEB_AUTHN_VALIDATOR_ADDRESS } from '@/lib/addressToName'
-import { EMAIL_RECOVERY_EXECUTOR_ADDRESS, uninstallEmailRecovery } from '@/lib/email-recovery'
 import { getErrorMessage } from '@/lib/error'
 import { useOwnableValidatorSettingsModal } from '@/lib/modals/useOwnableValidatorSettingsModal'
 import { MODULE_TYPE_LABELS } from '@/lib/modules/supported-modules'
