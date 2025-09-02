@@ -231,7 +231,7 @@ function onClickImport() {
 
 	selectAccount(computedAddress.value, selectedChainId.value)
 
-	router.push(toRoute('account-management', { address: computedAddress.value }))
+	router.push(toRoute('account-settings', { address: computedAddress.value }))
 }
 
 function onClickDeploy() {
@@ -488,7 +488,7 @@ function onClickPasskeyLogout() {
 					class="grid grid-cols-2 gap-2"
 				>
 					<Button variant="default" size="lg" :disabled="disabledImportButton" @click="onClickImport">
-						{{ isImported ? 'Account Info' : 'Import' }}
+						{{ isImported ? 'Settings' : 'Import' }}
 					</Button>
 
 					<Button variant="secondary" size="lg" :disabled="disabledDeployButton" @click="onClickDeploy">

@@ -1,4 +1,4 @@
-import OwnableValidatorSettingsModal from '@/views/AccountManagement/OwnableValidatorSettingsModal.vue'
+import OwnableValidatorSettingsModal from '@/features/ownable-validator-settings-modal/OwnableValidatorSettingsModal.vue'
 import { useModal } from 'vue-final-modal'
 
 export function useOwnableValidatorSettingsModal() {

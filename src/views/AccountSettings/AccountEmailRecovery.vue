@@ -505,7 +505,7 @@ const isLoading = computed(() => {
 						</div>
 					</div>
 					<div>
-						<RouterLink :to="toRoute('account-modules', { address: selectedAccount.address })">
+						<RouterLink :to="toRoute('account-settings-modules', { address: selectedAccount.address })">
 							<Button variant="outline"> Go to Modules </Button>
 						</RouterLink>
 					</div>
