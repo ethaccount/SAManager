@@ -3,7 +3,6 @@ import NetworkSelector from '@/components/header/NetworkSelector.vue'
 import CenterStageLayout from '@/components/layout/CenterStageLayout.vue'
 import { PendingRequest } from '@/features/connect'
 import EthRequestAccounts from '@/features/connect/EthRequestAccounts.vue'
-import { handleGetCallsStatus } from '@/features/connect/wallet_getCallsStatus'
 import { handleGetCapabilities } from '@/features/connect/wallet_getCapabilities'
 import WalletSendCalls from '@/features/connect/WalletSendCalls.vue'
 import WalletShowCallsStatus from '@/features/connect/WalletShowCallsStatus.vue'
@@ -12,8 +11,6 @@ import { useBlockchain } from '@/stores/blockchain'
 import {
 	SAManagerPopup,
 	standardErrors,
-	WalletGetCallsStatusRequest,
-	WalletGetCallsStatusResponse,
 	WalletGetCapabilitiesRequest,
 	WalletGetCapabilitiesResponse,
 	WalletSendCallsRequest,
@@ -66,13 +63,6 @@ if (window.opener) {
 								params as WalletGetCapabilitiesRequest['params'],
 							)) as WalletGetCapabilitiesResponse
 							result = capabilities
-							break
-						}
-						case 'wallet_getCallsStatus': {
-							// await new Promise(resolve => setTimeout(resolve, 10000000))
-							result = (await handleGetCallsStatus(
-								params as WalletGetCallsStatusRequest['params'],
-							)) as WalletGetCallsStatusResponse
 							break
 						}
 						// Method that requires user interaction

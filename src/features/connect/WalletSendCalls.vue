@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { TransactionStatus, useTxModal } from '@/stores/useTxModal'
-import { standardErrors, WalletSendCallsRequest } from '@samanager/sdk'
+import { encodeCallIdentifier, standardErrors, WalletSendCallsRequest } from '@samanager/sdk'
+import { toBigInt } from 'ethers'
 import { PendingRequest } from './types'
 
 const props = defineProps<{
@@ -31,7 +32,11 @@ function onClickTxClose() {
 
 function handleTxSent(hash: string) {
 	props.pendingRequest.resolve({
-		id: hash,
+		id: encodeCallIdentifier({
+			chainId: toBigInt(props.pendingRequest.params[0].chainId),
+			type: 0,
+			hash,
+		}),
 	})
 }
 </script>

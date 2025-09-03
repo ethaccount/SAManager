@@ -5,6 +5,7 @@ import { deserializeError, standardErrors } from './error'
 import { KeyManager } from './KeyManager'
 import type { EncryptedData, RPCRequestMessage, RPCResponse, RPCResponseMessage } from './message'
 import type { EthRequestAccountsResponse } from './rpc'
+import { handleGetCallsStatus } from './rpc/wallet_getCallStatus'
 import type { Address, ProviderEventMap, ProviderInterface, RequestArguments } from './types'
 import { bigIntToHex, decryptContent, encryptContent, exportKeyToHexString, importKeyFromHexString } from './utils'
 
@@ -24,6 +25,7 @@ export class SAManagerProvider implements ProviderInterface {
 
 	private accounts: Address[]
 	private chainId: bigint
+	private origin: string
 
 	constructor({ chainId, origin = DEFAULT_ORIGIN, debug = false }: SAManagerProviderOptions) {
 		// Check if the chainId is supported in SAManager
@@ -33,6 +35,7 @@ export class SAManagerProvider implements ProviderInterface {
 			)
 		}
 		this.chainId = chainId
+		this.origin = origin
 		this.communicator = new Communicator({
 			url: origin + '/' + this.chainId.toString() + '/connect',
 			onDisconnect: () => this.handlePopupDisconnect(),
@@ -61,6 +64,9 @@ export class SAManagerProvider implements ProviderInterface {
 					},
 				})
 			}
+			case 'wallet_getCallsStatus': {
+				return await handleGetCallsStatus(request, this.origin)
+			}
 		}
 
 		try {
@@ -86,9 +92,9 @@ export class SAManagerProvider implements ProviderInterface {
 					this.updateAccounts(result as EthRequestAccountsResponse)
 					break
 				}
+
 				case 'wallet_getCapabilities':
 				case 'wallet_sendCalls':
-				case 'wallet_getCallsStatus':
 				case 'wallet_showCallsStatus': {
 					// Check if there is an account connected
 					if (!this.hasAccount()) {
@@ -97,6 +103,7 @@ export class SAManagerProvider implements ProviderInterface {
 					result = await this.sendRequestToPopup(request)
 					break
 				}
+
 				default:
 					throw standardErrors.provider.unsupportedMethod(`Unsupported method: ${request.method}`)
 			}
