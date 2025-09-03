@@ -1,5 +1,5 @@
 import { getUninstallModuleData } from '@/lib/accounts/account-specific'
-import { EMAIL_RECOVERY_EXECUTOR_ADDRESS } from '@/lib/email-recovery'
+import { EMAIL_RECOVERY_EXECUTOR_ADDRESS } from '@/features/email-recovery'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { useTxModal, type TxModalExecution } from '@/stores/useTxModal'

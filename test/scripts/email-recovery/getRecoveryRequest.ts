@@ -1,4 +1,4 @@
-import { getRecoveryRequest } from '@/lib/email-recovery/utils'
+import { getRecoveryRequest } from '@/features/email-recovery/utils'
 import { JsonRpcProvider } from 'ethers'
 import { alchemy } from 'evm-providers'
 

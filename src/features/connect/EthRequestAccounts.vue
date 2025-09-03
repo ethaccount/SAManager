@@ -5,17 +5,19 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import Address from '@/components/utils/Address.vue'
 import { AccountRegistry } from '@/lib/accounts'
 import { useAccountList } from '@/lib/accounts/useAccountList'
+import { getErrorMessage } from '@/lib/error'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
 import { useAccount } from '@/stores/account/useAccount'
 import { displayChainName } from '@/stores/blockchain/chains'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useSigner } from '@/stores/useSigner'
+import { standardErrors } from '@samanager/sdk'
 import { AlertCircle, CheckCircle, CircleDot, Power, X } from 'lucide-vue-next'
+import { PendingRequest } from './types'
 
-const emit = defineEmits<{
-	connect: []
-	reject: []
+const props = defineProps<{
+	pendingRequest: PendingRequest<undefined>
 }>()
 
 const { selectedAccount, isAccountAccessible, isChainIdMatching, isMultichain } = useAccount()
@@ -26,11 +28,19 @@ const { selectSigner, selectedSigner } = useSigner()
 const { accountList, isAccountSelected, onClickSelectAccount, onClickUnselectAccount } = useAccountList()
 
 function onClickConnect() {
-	emit('connect')
+	try {
+		if (!selectedAccount.value) {
+			throw new Error('No account selected')
+		} else {
+			props.pendingRequest.resolve([selectedAccount.value.address])
+		}
+	} catch (err) {
+		props.pendingRequest.reject(standardErrors.rpc.internal(`Error connecting wallet: ${getErrorMessage(err)}`))
+	}
 }
 
 function onClickReject() {
-	emit('reject')
+	props.pendingRequest.reject(standardErrors.provider.userRejectedRequest())
 }
 </script>
 

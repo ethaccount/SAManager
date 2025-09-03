@@ -1,15 +1,17 @@
 <script setup lang="ts">
 import NetworkSelector from '@/components/header/NetworkSelector.vue'
 import { useBlockchain } from '@/stores/blockchain'
+import { WalletShowCallsStatusRequest } from '@samanager/sdk'
 import { AlertCircle, CheckCircle, ExternalLink, Loader2 } from 'lucide-vue-next'
+import { PendingRequest } from './types'
 
 const props = defineProps<{
-	identifier: string
+	pendingRequest: PendingRequest<WalletShowCallsStatusRequest['params']>
 }>()
 
-const emit = defineEmits<{
-	(e: 'close'): void
-}>()
+const identifier = computed(() => {
+	return props.pendingRequest.params[0]
+})
 
 const { bundler, explorerUrl } = useBlockchain()
 
@@ -35,7 +37,7 @@ onMounted(async () => {
 		isLoading.value = true
 		error.value = null
 
-		const result = await bundler.value.waitForReceipt(props.identifier)
+		const result = await bundler.value.waitForReceipt(identifier.value)
 		receipt.value = result
 	} catch (e: unknown) {
 		console.error('Failed to get call status:', e)
@@ -46,7 +48,7 @@ onMounted(async () => {
 })
 
 function onClickClose() {
-	emit('close')
+	props.pendingRequest.resolve(undefined)
 }
 </script>
 

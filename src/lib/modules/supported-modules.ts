@@ -1,5 +1,5 @@
+import { EMAIL_RECOVERY_EXECUTOR_ADDRESS } from '@/features/email-recovery/utils'
 import { ADDRESS, ERC7579_MODULE_TYPE } from 'sendop'
-import { EMAIL_RECOVERY_EXECUTOR_ADDRESS } from '../email-recovery/utils'
 
 export const MODULE_TYPE_LABELS = {
 	[ERC7579_MODULE_TYPE.VALIDATOR]: 'Validator Modules',

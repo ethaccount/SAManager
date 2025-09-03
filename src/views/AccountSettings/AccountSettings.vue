@@ -22,9 +22,9 @@ watchImmediate(selectedAccount, async () => {
 	isGetCodeFinished.value = false
 
 	if (selectedAccount.value && isChainIdMatching.value) {
-		// Only redirect if we're on the exact account-management route (not on a child route)
-		if (router.currentRoute.value.name === 'account-management') {
-			router.replace(toRoute('account-modules', { address: selectedAccount.value.address }))
+		// Only redirect if we're on the exact account route (not on a child route)
+		if (router.currentRoute.value.name === 'account') {
+			router.replace(toRoute('account-settings-modules', { address: selectedAccount.value.address }))
 		}
 		await getCode(selectedAccount.value.address)
 		isGetCodeFinished.value = true
@@ -226,10 +226,10 @@ const showSwitchToCorrectChain = computed(() => {
 					<div v-show="!loading" class="mt-6 mb-[100px]">
 						<div class="flex border-b">
 							<RouterLink
-								:to="toRoute('account-modules', { address: selectedAccount.address })"
+								:to="toRoute('account-settings-modules', { address: selectedAccount.address })"
 								class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
 								:class="
-									$route.name === 'account-modules'
+									$route.name === 'account-settings-modules'
 										? 'border-primary text-primary'
 										: 'border-transparent text-muted-foreground hover:text-foreground'
 								"
@@ -238,10 +238,10 @@ const showSwitchToCorrectChain = computed(() => {
 							</RouterLink>
 
 							<RouterLink
-								:to="toRoute('account-permissions', { address: selectedAccount.address })"
+								:to="toRoute('account-settings-permissions', { address: selectedAccount.address })"
 								class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
 								:class="
-									$route.name === 'account-permissions'
+									$route.name === 'account-settings-permissions'
 										? 'border-primary text-primary'
 										: 'border-transparent text-muted-foreground hover:text-foreground'
 								"
@@ -250,10 +250,10 @@ const showSwitchToCorrectChain = computed(() => {
 							</RouterLink>
 
 							<RouterLink
-								:to="toRoute('account-multichain', { address: selectedAccount.address })"
+								:to="toRoute('account-settings-multichain', { address: selectedAccount.address })"
 								class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
 								:class="
-									$route.name === 'account-multichain'
+									$route.name === 'account-settings-multichain'
 										? 'border-primary text-primary'
 										: 'border-transparent text-muted-foreground hover:text-foreground'
 								"
@@ -263,10 +263,10 @@ const showSwitchToCorrectChain = computed(() => {
 
 							<RouterLink
 								v-if="IS_STAGING"
-								:to="toRoute('account-email-recovery', { address: selectedAccount.address })"
+								:to="toRoute('account-settings-email-recovery', { address: selectedAccount.address })"
 								class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
 								:class="
-									$route.name === 'account-email-recovery'
+									$route.name === 'account-settings-email-recovery'
 										? 'border-primary text-primary'
 										: 'border-transparent text-muted-foreground hover:text-foreground'
 								"

@@ -13,7 +13,7 @@ import {
 	getRecoveryRequest,
 	sendAcceptanceRequest,
 	sendRecoveryRequest,
-} from '@/lib/email-recovery'
+} from '@/features/email-recovery'
 import { getErrorMessage } from '@/lib/error'
 import { toRoute } from '@/lib/router'
 import { deserializeValidationMethod, OwnableValidatorVMethod } from '@/lib/validations'
@@ -505,7 +505,7 @@ const isLoading = computed(() => {
 						</div>
 					</div>
 					<div>
-						<RouterLink :to="toRoute('account-modules', { address: selectedAccount.address })">
+						<RouterLink :to="toRoute('account-settings-modules', { address: selectedAccount.address })">
 							<Button variant="outline"> Go to Modules </Button>
 						</RouterLink>
 					</div>

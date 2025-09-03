@@ -1,4 +1,4 @@
-import { createOwnableEmailRecovery } from '@/lib/email-recovery'
+import { createOwnableEmailRecovery } from '@/features/email-recovery'
 import { getOwnableValidator, RHINESTONE_ATTESTER_ADDRESS } from '@rhinestone/module-sdk'
 import { JsonRpcProvider, Wallet } from 'ethers'
 import { alchemy, pimlico } from 'evm-providers'

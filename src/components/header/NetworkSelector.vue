@@ -18,9 +18,11 @@ import { Check } from 'lucide-vue-next'
 const props = withDefaults(
 	defineProps<{
 		fixedChain?: boolean
+		showNetworkName?: boolean
 	}>(),
 	{
 		fixedChain: false,
+		showNetworkName: true,
 	},
 )
 
@@ -75,21 +77,32 @@ function onClickNetworkSelector() {
 
 <template>
 	<DropdownMenu v-model:open="isOpen">
+		<!-- Selector Button -->
 		<DropdownMenuTrigger as-child>
-			<Button variant="outline" class="hidden sm:flex rounded-full pl-1.5 py-1" @click="onClickNetworkSelector">
+			<!-- Button with Network Name -->
+			<Button
+				v-if="props.showNetworkName"
+				variant="outline"
+				class="rounded-full pl-1.5 py-1"
+				@click="onClickNetworkSelector"
+			>
 				<ChainIcon :chain-id="selectedChainId" :size="24" :show-tooltip="false" />
 				{{ displayChainName(selectedChainId) }}
 			</Button>
+
+			<!-- Button with only Network Icon -->
 			<Button
+				v-else
 				variant="ghost"
 				size="icon"
-				class="sm:hidden flex items-center justify-center"
+				class="flex items-center justify-center"
 				@click="onClickNetworkSelector"
 			>
 				<ChainIcon :chain-id="selectedChainId" :size="32" :show-tooltip="false" />
 			</Button>
 		</DropdownMenuTrigger>
 
+		<!-- Dropdown Menu Content -->
 		<DropdownMenuContent class="w-80 max-h-[80vh] overflow-y-auto">
 			<!-- Network Section -->
 			<template v-if="!props.fixedChain">

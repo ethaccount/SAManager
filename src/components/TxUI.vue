@@ -759,10 +759,10 @@ const shouldShowEffectiveFee = computed(() => {
 				</div>
 			</div>
 
-			<!-- Account Info -->
+			<!-- Account section -->
 			<div class="space-y-4">
 				<div class="p-4 bg-muted/30 border border-border/50 rounded-lg space-y-3">
-					<!-- Account Address -->
+					<!-- Sender Address -->
 					<div class="flex items-center justify-between text-sm">
 						<div class="text-muted-foreground">Sender</div>
 						<Address :address="selectedAccount?.address || ''" button-size="xs" text-size="sm" />

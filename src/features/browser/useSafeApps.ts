@@ -1,4 +1,4 @@
-import { Methods, RPCPayload } from '@/lib/browser/types'
+import { Methods, RPCPayload } from '@/features/browser/types'
 import { useAccount } from '@/stores/account/useAccount'
 import { displayChainName } from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'

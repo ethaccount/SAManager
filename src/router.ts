@@ -58,29 +58,29 @@ const router = createRouter({
 						{
 							path: '/:chainId/connect',
 							name: 'connect',
-							component: () => import('@/views/popup/Connect.vue'),
+							component: () => import('@/views/Connect.vue'),
 						},
-						// Account Info
+						// Account Settings
 						{
 							path: '/:chainId/:address',
-							name: 'account-management',
-							component: () => import('@/views/AccountManagement/AccountManagement.vue'),
+							name: 'account-settings',
+							component: () => import('@/views/AccountSettings/AccountSettings.vue'),
 							redirect: to => `${to.path}/modules`,
 							children: [
 								{
 									path: 'modules',
-									name: 'account-modules',
-									component: () => import('@/views/AccountManagement/AMModules.vue'),
+									name: 'account-settings-modules',
+									component: () => import('@/views/AccountSettings/AccountModules.vue'),
 								},
 								{
 									path: 'permissions',
-									name: 'account-permissions',
-									component: () => import('@/views/AccountManagement/AMPermissions.vue'),
+									name: 'account-settings-permissions',
+									component: () => import('@/views/AccountSettings/AccountPermissions.vue'),
 								},
 								{
 									path: 'multichain',
-									name: 'account-multichain',
-									component: () => import('@/views/AccountManagement/AMMultichain.vue'),
+									name: 'account-settings-multichain',
+									component: () => import('@/views/AccountSettings/AccountMultichain.vue'),
 								},
 								// only works on Base Sepolia
 								...(IS_PRODUCTION
@@ -88,9 +88,9 @@ const router = createRouter({
 									: [
 											{
 												path: 'email-recovery',
-												name: 'account-email-recovery',
+												name: 'account-settings-email-recovery',
 												component: () =>
-													import('@/views/AccountManagement/AMEmailRecovery.vue'),
+													import('@/views/AccountSettings/AccountEmailRecovery.vue'),
 											},
 										]),
 							],

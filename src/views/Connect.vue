@@ -1,8 +1,13 @@
 <script setup lang="ts">
 import NetworkSelector from '@/components/header/NetworkSelector.vue'
 import CenterStageLayout from '@/components/layout/CenterStageLayout.vue'
+import { PendingRequest } from '@/features/connect'
+import EthRequestAccounts from '@/features/connect/EthRequestAccounts.vue'
+import { handleGetCallsStatus } from '@/features/connect/wallet_getCallsStatus'
+import { handleGetCapabilities } from '@/features/connect/wallet_getCapabilities'
+import WalletSendCalls from '@/features/connect/WalletSendCalls.vue'
+import WalletShowCallsStatus from '@/features/connect/WalletShowCallsStatus.vue'
 import { toRoute } from '@/lib/router'
-import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain'
 import {
 	SAManagerPopup,
@@ -12,30 +17,22 @@ import {
 	WalletGetCapabilitiesRequest,
 	WalletGetCapabilitiesResponse,
 	WalletSendCallsRequest,
+	WalletShowCallsStatusRequest,
 } from '@samanager/sdk'
 import { AlertCircle, Loader2 } from 'lucide-vue-next'
-import { handleGetCallsStatus, handleGetCapabilities } from './eip5792-handlers'
-import EthRequestAccounts from './EthRequestAccounts.vue'
-import WalletSendCalls from './WalletSendCalls.vue'
-import WalletShowCallsStatus from './WalletShowCallsStatus.vue'
-
-const { selectedAccount } = useAccount()
-
-type PendingRequest = {
-	method: string
-	params: unknown[]
-	resolve: (value: unknown) => void
-	reject: (reason?: unknown) => void
-}
-
-const error = ref<string | null>(null)
-const pendingRequest = ref<PendingRequest | null>(null)
-const isLoading = ref(false)
 
 const route = useRoute()
 const router = useRouter()
 
 const chainId = route.params.chainId as string
+
+const error = ref<string | null>(null)
+const pendingRequest = ref<PendingRequest | null>(null)
+const isLoading = ref(false)
+
+const method = computed(() => {
+	return pendingRequest.value?.method
+})
 
 if (window.opener) {
 	if (!chainId) {
@@ -114,94 +111,23 @@ if (window.opener) {
 	// Redirect to the home page when this popup route is not opened by a parent window
 	router.replace(toRoute('home'))
 }
-
-// ================================ eth_requestAccounts ================================
-
-function onClickConnect() {
-	try {
-		if (!pendingRequest.value) {
-			throw new Error('No pending request')
-		}
-		console.log('onClickConnect')
-		if (!selectedAccount.value) {
-			throw standardErrors.provider.userRejectedRequest()
-		} else {
-			pendingRequest.value.resolve([selectedAccount.value.address])
-		}
-	} catch (err) {
-		pendingRequest.value?.reject(
-			standardErrors.rpc.internal(err instanceof Error ? err.message : 'Failed to connect'),
-		)
-	} finally {
-		isLoading.value = false
-		pendingRequest.value = null
-	}
-}
-
-function onClickReject() {
-	try {
-		if (!pendingRequest.value) {
-			throw new Error('No pending request')
-		}
-		console.log('onClickReject')
-		pendingRequest.value.reject(standardErrors.provider.userRejectedRequest())
-	} catch (err) {
-		console.error('Error rejecting request:', err)
-	} finally {
-		isLoading.value = false
-		pendingRequest.value = null
-	}
-}
-
-// ================================ wallet_sendCalls ================================
-
-const executions = computed(() => {
-	const params = pendingRequest.value?.params as WalletSendCallsRequest['params']
-	return params[0].calls.map(call => {
-		return {
-			to: call.to ?? '',
-			data: call.data ?? '',
-			value: BigInt(call.value ?? 0n),
-		}
-	})
-})
-
-function onClickTxClose() {
-	pendingRequest.value?.reject(standardErrors.provider.userRejectedRequest())
-}
-
-function handleTxSent(hash: string) {
-	pendingRequest.value?.resolve({
-		id: hash,
-	})
-}
-
-function handleWalletShowCallsStatusClose() {
-	pendingRequest.value?.resolve(undefined)
-}
 </script>
 
 <template>
 	<CenterStageLayout>
-		<!-- eth_requestAccounts -->
 		<EthRequestAccounts
-			v-if="pendingRequest?.method === 'eth_requestAccounts'"
-			@connect="onClickConnect"
-			@reject="onClickReject"
-		/>
-		<!-- wallet_sendCalls -->
-		<WalletSendCalls
-			v-else-if="pendingRequest?.method === 'wallet_sendCalls'"
-			:executions="executions"
-			@close="onClickTxClose"
-			@sent="handleTxSent"
+			v-if="method === 'eth_requestAccounts'"
+			:pending-request="<PendingRequest<undefined>>pendingRequest"
 		/>
 
-		<!-- wallet_showCallsStatus -->
+		<WalletSendCalls
+			v-else-if="method === 'wallet_sendCalls'"
+			:pendingRequest="<PendingRequest<WalletSendCallsRequest['params']>>pendingRequest"
+		/>
+
 		<WalletShowCallsStatus
-			v-else-if="pendingRequest?.method === 'wallet_showCallsStatus'"
-			:identifier="<string>pendingRequest?.params[0]"
-			@close="handleWalletShowCallsStatusClose"
+			v-else-if="method === 'wallet_showCallsStatus'"
+			:pending-request="<PendingRequest<WalletShowCallsStatusRequest['params']>>pendingRequest"
 		/>
 
 		<div v-else class="w-full max-w-2xl mx-auto p-6 space-y-6">

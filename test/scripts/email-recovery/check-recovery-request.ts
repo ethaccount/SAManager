@@ -1,4 +1,4 @@
-import { getRecoveryTimeLeft, isRecoveryRequestExists } from '@/lib/email-recovery'
+import { getRecoveryTimeLeft, isRecoveryRequestExists } from '@/features/email-recovery'
 import { JsonRpcProvider } from 'ethers'
 import { alchemy } from 'evm-providers'
 

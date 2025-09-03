@@ -35,9 +35,9 @@ const { selectSigner, selectedSigner } = useSigner()
 const { accountList, isAccountSelected, onClickSelectAccount, onClickDeleteAccount, onClickUnselectAccount } =
 	useAccountList()
 
-function onClickAccountManagement() {
+function onClickAccountSettings() {
 	if (!selectedAccount.value) return
-	router.push(toRoute('account-management', { address: selectedAccount.value.address }))
+	router.push(toRoute('account-settings', { address: selectedAccount.value.address }))
 
 	if (!xlAndLarger.value) {
 		emit('close')
@@ -175,9 +175,9 @@ function getAccountListKey(account: AccountWithMultichain) {
 						:disabled="!selectedAccount"
 						variant="outline"
 						class="w-full justify-between"
-						@click="onClickAccountManagement"
+						@click="onClickAccountSettings"
 					>
-						Account Info
+						Account settings
 						<ArrowRight class="w-4 h-4" />
 					</Button>
 				</div>
