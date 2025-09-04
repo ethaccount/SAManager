@@ -77,7 +77,8 @@ export class SAManagerProvider implements ProviderInterface {
 
 			switch (request.method) {
 				case 'eth_chainId':
-				case 'eth_getBlockByNumber': {
+				case 'eth_getBlockByNumber':
+				case 'wallet_switchEthereumChain': {
 					result = await this.sendRequestToPopup(request)
 					break
 				}
@@ -291,6 +292,10 @@ export class SAManagerProvider implements ProviderInterface {
 	}
 
 	private async handleResponse(_request: RequestArguments, decrypted: RPCResponse) {
+		if (!decrypted || !decrypted.result) {
+			throw standardErrors.rpc.internal('Invalid response structure from popup')
+		}
+
 		const result = decrypted.result
 		if ('error' in result) throw deserializeError(result.error)
 		// Update chainId in every response

@@ -1,11 +1,10 @@
 import { useAccount } from '@/stores/account/useAccount'
-import { isSupportedChainId } from '@/stores/blockchain/chains'
-import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import type { Call, Capability, WalletSendCallsRequest } from '@samanager/sdk'
 import { standardErrors } from '@samanager/sdk'
 import { isAddress } from 'ethers'
 import { isSameAddress } from 'sendop'
 import { isSupportedCapability } from './capabilities'
+import { validateChainIdFormat, validateChainIdMatchesSelectedChain, validateChainIdSupport } from './common'
 
 export function validateWalletSendCallsParams(params: WalletSendCallsRequest['params']) {
 	// Validate basic parameter structure
@@ -32,9 +31,10 @@ export function validateWalletSendCallsParams(params: WalletSendCallsRequest['pa
 		throw standardErrors.rpc.invalidParams('Missing or invalid calls field')
 	}
 
-	// Validate chainId format and support
+	// Validate chainId
 	validateChainIdFormat(sendCallsParams.chainId)
 	validateChainIdSupport(sendCallsParams.chainId)
+	validateChainIdMatchesSelectedChain(sendCallsParams.chainId)
 
 	// Validate from address if provided
 	if (sendCallsParams.from) {
@@ -58,32 +58,6 @@ export function validateWalletSendCallsParams(params: WalletSendCallsRequest['pa
 	// Validate capabilities if provided
 	if (sendCallsParams.capabilities) {
 		validateCapabilities(sender, sendCallsParams.capabilities)
-	}
-}
-
-export function validateChainIdFormat(chainId: string) {
-	// Check hex format with 0x prefix
-	if (!chainId.startsWith('0x')) {
-		throw standardErrors.rpc.invalidParams('chainId must have 0x prefix')
-	}
-
-	// Check for leading zeros (invalid per EIP-5792)
-	const hexValue = chainId.slice(2)
-	if (hexValue.length > 1 && hexValue.startsWith('0')) {
-		throw standardErrors.rpc.invalidParams('chainId must not have leading zeros')
-	}
-}
-
-export function validateChainIdSupport(chainId: string) {
-	const chainIdStr = parseInt(chainId, 16).toString()
-	if (!isSupportedChainId(chainIdStr)) {
-		throw standardErrors.provider.unsupportedChainId()
-	}
-
-	// Check if matches current selected chain
-	const { selectedChainId } = useBlockchain()
-	if (chainIdStr !== selectedChainId.value) {
-		throw standardErrors.provider.unsupportedChainId('chainId field does not match the currently selected chain')
 	}
 }
 

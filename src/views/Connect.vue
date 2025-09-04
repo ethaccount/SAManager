@@ -5,6 +5,7 @@ import { PendingRequest } from '@/features/connect'
 import EthRequestAccounts from '@/features/connect/EthRequestAccounts.vue'
 import { handleGetCapabilities } from '@/features/connect/wallet_getCapabilities'
 import { validateWalletSendCallsParams } from '@/features/connect/wallet_sendCalls'
+import { handleWalletSwitchEthereumChain } from '@/features/connect/wallet_switchEthereumChain'
 import WalletSendCalls from '@/features/connect/WalletSendCalls.vue'
 import WalletShowCallsStatus from '@/features/connect/WalletShowCallsStatus.vue'
 import { getErrorMessage } from '@/lib/error'
@@ -18,6 +19,7 @@ import {
 	WalletGetCapabilitiesResponse,
 	WalletSendCallsRequest,
 	WalletShowCallsStatusRequest,
+	WalletSwitchEthereumChainRequest,
 } from '@samanager/sdk'
 import { AlertCircle, Loader2 } from 'lucide-vue-next'
 
@@ -57,6 +59,12 @@ if (!window.opener) {
 							// await new Promise(resolve => setTimeout(resolve, 10000000))
 							const { client } = useBlockchain()
 							result = await client.value.send(method, params)
+							break
+						}
+						case 'wallet_switchEthereumChain': {
+							result = await handleWalletSwitchEthereumChain(
+								params as WalletSwitchEthereumChainRequest['params'],
+							)
 							break
 						}
 						case 'wallet_getCapabilities': {

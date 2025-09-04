@@ -73,6 +73,8 @@ const showCallsStatusError = ref<string | null>(null)
 const showCallsStatusResult = ref(null)
 const capabilitiesError = ref<string | null>(null)
 const capabilitiesResult = ref(null)
+const switchChainError = ref<string | null>(null)
+const switchChainResult = ref<string | null>(null)
 
 async function onClickGetBlock() {
 	getBlockError.value = null
@@ -205,6 +207,25 @@ async function onClickShowCallsStatus() {
 		showCallsStatusError.value = 'Wallet not connected'
 	}
 }
+
+async function onClickSwitchChain() {
+	switchChainError.value = null
+	switchChainResult.value = null
+
+	try {
+		if (!wallet.provider) {
+			throw new Error('wallet.provider not found')
+		}
+		const result = await wallet.provider.request({
+			method: 'wallet_switchEthereumChain',
+			params: [{ chainId: `0x${DAPP_CHAIN_ID.toString(16)}` }],
+		})
+		switchChainResult.value = result === null ? 'Chain switched successfully' : JSON.stringify(result)
+	} catch (err: unknown) {
+		console.error(err)
+		switchChainError.value = err instanceof Error ? err.message : 'Failed to switch chain'
+	}
+}
 </script>
 
 <template>
@@ -222,6 +243,16 @@ async function onClickShowCallsStatus() {
 		<div v-if="isConnected">
 			<div>chainId: {{ wallet.chainId }}</div>
 			<div>address: {{ wallet.address }}</div>
+		</div>
+
+		<br />
+
+		<div>
+			<button class="btn" @click="onClickSwitchChain">wallet_switchEthereumChain</button>
+			<div v-if="switchChainError" class="text-red-500">{{ switchChainError }}</div>
+			<div v-if="switchChainResult">
+				<div>{{ switchChainResult }}</div>
+			</div>
 		</div>
 
 		<br />
@@ -283,6 +314,8 @@ async function onClickShowCallsStatus() {
 				<div>{{ showCallsStatusResult }}</div>
 			</div>
 		</div>
+
+		<br />
 
 		<RouterView />
 	</div>
