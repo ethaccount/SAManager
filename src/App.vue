@@ -88,16 +88,21 @@ watchImmediate([isEOAWalletConnected, isLogin], ([eoaWalletConnected, passkeyCon
 })
 
 const mode = useColorMode()
+
+// Prefer window.location.pathname over route.name for layout control,
+// as route.name's reactivity can lag and briefly render incorrect UI (header flicker)
+const pathname = computed(() => window.location.pathname)
 </script>
 
 <template>
-	<div v-if="route.name === 'connect'">
-		<RouterView />
-	</div>
-
-	<div v-else>
-		<Header />
-		<MainLayout />
+	<div>
+		<div v-if="pathname.endsWith('/connect')">
+			<RouterView />
+		</div>
+		<div v-else>
+			<Header />
+			<MainLayout />
+		</div>
 	</div>
 
 	<AppHelp v-if="route.name !== 'browser' && route.name !== 'connect'" class="fixed bottom-4 left-4" />

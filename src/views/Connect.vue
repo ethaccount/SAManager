@@ -31,11 +31,10 @@ const method = computed(() => {
 	return pendingRequest.value?.method
 })
 
-if (window.opener) {
-	if (!chainId) {
-		window.close()
-	}
-
+if (!window.opener) {
+	// Redirect to the home page when this popup route is not opened by a parent window
+	router.replace(toRoute('home'))
+} else {
 	new SAManagerPopup({
 		debug: true,
 		chainId: BigInt(chainId),
@@ -97,9 +96,6 @@ if (window.opener) {
 			})
 		},
 	})
-} else {
-	// Redirect to the home page when this popup route is not opened by a parent window
-	router.replace(toRoute('home'))
 }
 </script>
 
@@ -145,7 +141,7 @@ if (window.opener) {
 						<div>
 							<span class="font-medium text-muted-foreground">Method:</span>
 							<div class="mt-1 p-2 bg-background rounded border font-mono text-sm">
-								{{ pendingRequest?.method }}
+								{{ pendingRequest?.method || 'None' }}
 							</div>
 						</div>
 
@@ -154,7 +150,7 @@ if (window.opener) {
 							<div
 								class="mt-1 p-2 bg-background rounded border font-mono text-sm max-h-32 overflow-y-auto"
 							>
-								<pre>{{ JSON.stringify(pendingRequest?.params, null, 2) }}</pre>
+								<pre>{{ JSON.stringify(pendingRequest?.params, null, 2) || 'None' }}</pre>
 							</div>
 						</div>
 					</div>
