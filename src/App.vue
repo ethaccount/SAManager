@@ -9,16 +9,13 @@ import { useSigner } from '@/stores/useSigner'
 import { VueDappModal } from '@vue-dapp/modal'
 import { ModalsContainer } from 'vue-final-modal'
 import { Toaster } from 'vue-sonner'
-import { DEFAULT_CHAIN_ID, SUPPORTED_CHAIN_IDS } from './config'
 import { makeFatalError } from './lib/error'
 import { useAccount } from './stores/account/useAccount'
-import { useBlockchain } from './stores/blockchain'
 import { useBackend } from './stores/useBackend'
 import { useStorageMigration } from './stores/useStorageMigration'
 
 const route = useRoute()
 
-const { selectedChainId } = useBlockchain()
 const { isEOAWalletConnected } = useEOAWallet()
 const { isLogin, checkPasskeySupport } = usePasskey()
 const { selectSigner } = useSigner()
@@ -39,11 +36,6 @@ onMounted(async () => {
 	console.info('APP_SESSION_SIGNER_ADDRESS', APP_SESSION_SIGNER_ADDRESS)
 
 	showDisclaimerIfNeeded()
-
-	// reset selectedChainId when it is not supported because it may be stored in localStorage
-	if (!SUPPORTED_CHAIN_IDS.includes(selectedChainId.value)) {
-		selectedChainId.value = DEFAULT_CHAIN_ID
-	}
 
 	await checkPasskeySupport()
 	await checkWorkerHealth()

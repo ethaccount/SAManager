@@ -1,5 +1,6 @@
 import { displayChainName } from '@/stores/blockchain/chains'
 import { ProviderRpcError } from '@samanager/sdk'
+import { normalizeChainId } from '@vue-dapp/core'
 import type { ErrorCode, ethers, EthersError } from 'ethers'
 import { isError } from 'ethers'
 
@@ -129,7 +130,7 @@ export function getChainMismatchErrorMessage(error: unknown): string {
 		const chainMismatchMatch = errorMsg.match(/Provided chainId "(\d+)" must match the active chainId "(\d+)"/)
 		if (chainMismatchMatch) {
 			const expectedChainId = chainMismatchMatch[1]
-			const currentChainName = displayChainName(Number(expectedChainId))
+			const currentChainName = displayChainName(normalizeChainId(expectedChainId).toString())
 			return `Please switch your EOA Wallet network to ${currentChainName} to sign the user operation`
 		}
 	}

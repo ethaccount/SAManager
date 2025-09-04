@@ -1,7 +1,11 @@
+import { SUPPORTED_CHAIN_IDS } from '@/config'
 import { ADDRESS, EntryPointVersion } from 'sendop'
 
 export type CHAIN_ID = MAINNET_CHAIN_ID | TESTNET_CHAIN_ID
 
+// Reason to use string enums instead of number enums for chain ids:
+// Numeric enums generate a bi-directional mapping, so Object.values includes both the keys and the values
+// String enums only have a one-way mapping, so Object.values only contains the defined string values.
 export enum MAINNET_CHAIN_ID {
 	ETHEREUM = '1',
 	BASE = '8453',
@@ -66,21 +70,15 @@ export enum SUPPORTED_BUNDLER {
 
 export type SUPPORTED_ENTRY_POINT = EntryPointVersion
 
-export function isSupportedChainId(chainId: string | number | bigint): chainId is TESTNET_CHAIN_ID | MAINNET_CHAIN_ID {
-	try {
-		return Object.values({ ...TESTNET_CHAIN_ID, ...MAINNET_CHAIN_ID }).includes(
-			chainId.toString() as TESTNET_CHAIN_ID | MAINNET_CHAIN_ID,
-		)
-	} catch {
-		return false
-	}
+export function isSupportedChainId(chainId: string): chainId is CHAIN_ID {
+	return SUPPORTED_CHAIN_IDS.includes(chainId as CHAIN_ID)
 }
 
-export function displayChainName(chainId: string | number | bigint): string {
+export function displayChainName(chainId: string): string {
 	if (isSupportedChainId(chainId)) {
-		return CHAIN_NAME[chainId.toString()]
+		return CHAIN_NAME[chainId]
 	}
-	return 'Unknown'
+	return `Unknown(${chainId})`
 }
 
 export function isTestnet(chainId: string): boolean {
