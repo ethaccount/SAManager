@@ -207,6 +207,10 @@ export class SAManagerProvider implements ProviderInterface {
 			const peerPublicKey = await importKeyFromHexString('public', response.sender)
 			await this.keyManager.setPeerPublicKey(peerPublicKey)
 
+			// 5. Decrypt the response to get the chainId
+			const decryptedResponse = await this.decryptResponseMessage(response)
+			this.updateChainId(decryptedResponse.data.chainId)
+
 			this.log('handshake completed')
 		} catch (error) {
 			throw error

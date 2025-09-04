@@ -77,14 +77,13 @@ export function validateChainIdFormat(chainId: string) {
 export function validateChainIdSupport(chainId: string) {
 	const chainIdStr = parseInt(chainId, 16).toString()
 	if (!isSupportedChainId(chainIdStr)) {
-		throw standardErrors.provider.unsupportedChainId('Chain not supported')
+		throw standardErrors.provider.unsupportedChainId()
 	}
 
 	// Check if matches current selected chain
 	const { selectedChainId } = useBlockchain()
 	if (chainIdStr !== selectedChainId.value) {
-		const { switchChain } = useBlockchain()
-		switchChain(chainIdStr)
+		throw standardErrors.provider.unsupportedChainId('chainId field does not match the currently selected chain')
 	}
 }
 
