@@ -2,7 +2,7 @@ import { standardErrors } from '../error'
 import { decodeCallIdentifier, type CallIdentifier } from '../identifier'
 import type { RequestArguments } from '../types'
 import { getErrorMessage } from '../utils'
-import type { WalletGetCallsStatusResponse } from './eip5792'
+import type { WalletGetCallsStatusResponse } from './eip5792-types'
 
 type UserOperationReceiptHex = {
 	userOpHash: string

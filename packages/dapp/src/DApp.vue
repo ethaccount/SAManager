@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { announceSAManagerProvider, WalletGetCallsStatusResponse, WalletSendCallsResponse } from '@samanager/sdk'
+import {
+	announceSAManagerProvider,
+	EthereumRpcError,
+	getErrorMessage,
+	WalletGetCallsStatusResponse,
+	WalletSendCallsResponse,
+} from '@samanager/sdk'
 import { BrowserWalletConnector, useVueDapp } from '@vue-dapp/core'
 import { useVueDappModal, VueDappModal } from '@vue-dapp/modal'
 import '@vue-dapp/modal/dist/style.css'
@@ -132,7 +138,7 @@ async function onClickSendCalls() {
 				method: 'wallet_sendCalls',
 				params: [
 					{
-						version: '1.0',
+						version: '2.0',
 						chainId: `0x${DAPP_CHAIN_ID.toString(16)}`,
 						from: wallet.address,
 						atomicRequired: true,
@@ -147,9 +153,13 @@ async function onClickSendCalls() {
 					},
 				],
 			})
-		} catch (err: unknown) {
+		} catch (err) {
 			console.error(err)
-			sendCallsError.value = err instanceof Error ? err.message : 'Failed to send calls'
+			if (err instanceof EthereumRpcError) {
+				sendCallsError.value = `${err.code}: ${err.message}`
+			} else {
+				sendCallsError.value = `Error sending calls: ${getErrorMessage(err)}`
+			}
 		}
 	} else {
 		sendCallsError.value = 'Wallet not connected'

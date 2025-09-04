@@ -1,6 +1,15 @@
 import type { Address } from '../types'
 
-// Common types
+/**
+ * Example:
+ *   paymasterService: {
+ *     url: "https://...",
+ *     optional: true
+ *   },
+ *   atomic: {
+ *     status: "supported"
+ *   }
+ */
 export type Capability = {
 	[key: string]: unknown
 	optional?: boolean
@@ -16,16 +25,19 @@ export type WalletSendCallsRequest = {
 			from?: Address
 			chainId: string
 			atomicRequired: boolean
-			calls: {
-				to?: Address
-				data?: string
-				value?: string
-				capabilities?: Record<string, Capability>
-			}[]
+			calls: Call[]
 			capabilities?: Record<string, Capability>
 		},
 	]
 }
+
+export type Call = {
+	to?: Address
+	data?: string
+	value?: string
+	capabilities?: Record<string, Capability>
+}
+
 export type WalletSendCallsResponse = {
 	id: string
 	capabilities?: Record<string, unknown>

@@ -217,7 +217,7 @@ export type InsufficientBalanceErrorData = {
 class ActionableInsufficientBalanceError extends EthereumRpcError<InsufficientBalanceErrorData> {}
 
 function isValidEthProviderCode(code: number): boolean {
-	return Number.isInteger(code) && code >= 1000 && code <= 4999
+	return Number.isInteger(code) && code >= 1000 && code <= 5999
 }
 
 export function isActionableHttpRequestError(errorObject: unknown): errorObject is ActionableInsufficientBalanceError {

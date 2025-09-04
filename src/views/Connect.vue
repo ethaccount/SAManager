@@ -4,11 +4,14 @@ import CenterStageLayout from '@/components/layout/CenterStageLayout.vue'
 import { PendingRequest } from '@/features/connect'
 import EthRequestAccounts from '@/features/connect/EthRequestAccounts.vue'
 import { handleGetCapabilities } from '@/features/connect/wallet_getCapabilities'
+import { validateWalletSendCallsParams } from '@/features/connect/wallet_sendCalls'
 import WalletSendCalls from '@/features/connect/WalletSendCalls.vue'
 import WalletShowCallsStatus from '@/features/connect/WalletShowCallsStatus.vue'
+import { getErrorMessage } from '@/lib/error'
 import { toRoute } from '@/lib/router'
 import { useBlockchain } from '@/stores/blockchain'
 import {
+	EthereumRpcError,
 	SAManagerPopup,
 	standardErrors,
 	WalletGetCapabilitiesRequest,
@@ -64,29 +67,39 @@ if (!window.opener) {
 							result = capabilities
 							break
 						}
-						// Method that requires user interaction
-						case 'eth_requestAccounts':
+
+						// ============== Method that requires user interaction ==============
+
 						case 'wallet_sendCalls':
+							validateWalletSendCallsParams(params as WalletSendCallsRequest['params'])
+							shouldResolveImmediately = false
+							break
+
+						case 'eth_requestAccounts':
 						case 'wallet_showCallsStatus': {
 							shouldResolveImmediately = false
 							break
 						}
 
 						default: {
-							throw standardErrors.provider.unsupportedMethod({
-								message: `Method ${method} not supported`,
-							})
+							throw standardErrors.provider.unsupportedMethod(`Method ${method} not supported`)
 						}
 					}
 
 					if (shouldResolveImmediately) {
 						resolve(result)
 					}
-					// For eth_requestAccounts, the promise remains pending until user clicks connect
 				} catch (err) {
 					console.error('Error processing request', err)
-					error.value = err instanceof Error ? err.message : 'Failed to process request'
-					reject(standardErrors.rpc.internal(error.value))
+
+					// MUST reject with standardErrors; Note that the EthereumProviderError extends EthereumRpcError
+					if (err instanceof EthereumRpcError) {
+						error.value = err.message
+						reject(err)
+					} else {
+						error.value = getErrorMessage(err)
+						reject(standardErrors.rpc.internal(error.value))
+					}
 				} finally {
 					if (shouldResolveImmediately) {
 						isLoading.value = false
