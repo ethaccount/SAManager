@@ -5,7 +5,14 @@ import { EthereumProviderError, EthereumRpcError, serializeError, standardErrors
 import { KeyManager } from './KeyManager'
 import type { EncryptedData, RPCRequestMessage, RPCResponseMessage } from './message'
 import { SAManagerProvider } from './SAManagerProvider'
-import { bigIntToHex, decryptContent, encryptContent, exportKeyToHexString, importKeyFromHexString } from './utils'
+import {
+	bigIntToHex,
+	decryptContent,
+	encryptContent,
+	exportKeyToHexString,
+	importKeyFromHexString,
+	toChainIdHex,
+} from './utils'
 
 vi.mock('./Communicator', () => ({
 	Communicator: vi.fn(() => ({
@@ -28,6 +35,7 @@ vi.mock('./utils', () => ({
 	exportKeyToHexString: vi.fn(),
 	importKeyFromHexString: vi.fn(),
 	bigIntToHex: vi.fn(),
+	toChainIdHex: vi.fn(),
 }))
 
 const MOCK_URL = 'http://localhost:3000/connect'
@@ -64,54 +72,11 @@ describe('SAManagerProvider', () => {
 		;(exportKeyToHexString as Mock).mockResolvedValueOnce('0xPublicKey')
 		;(encryptContent as Mock).mockResolvedValue(encryptedData)
 		;(bigIntToHex as Mock).mockReturnValue('0x1')
+		;(toChainIdHex as Mock).mockReturnValue('0x1')
 
 		vi.spyOn(correlationIds, 'get').mockReturnValue(mockCorrelationId)
 
-		provider = new SAManagerProvider({
-			chainId: 1n,
-		})
-	})
-
-	describe('constructor', () => {
-		it('should initialize successfully with all supported chainIds', () => {
-			// Test all supported mainnet chains
-			const supportedChains = [
-				1n, // ETHEREUM
-				8453n, // BASE
-				// 42161n, // ARBITRUM
-				// 10n, // OPTIMISM
-				// 137n, // POLYGON
-
-				// Testnet chains
-				11155111n, // SEPOLIA
-				84532n, // BASE_SEPOLIA
-				421614n, // ARBITRUM_SEPOLIA
-				11155420n, // OPTIMISM_SEPOLIA
-				80002n, // POLYGON_AMOY
-			]
-
-			supportedChains.forEach(chainId => {
-				expect(
-					() =>
-						new SAManagerProvider({
-							chainId,
-						}),
-				).not.toThrow()
-			})
-		})
-
-		it('should throw error with unsupported chainId', () => {
-			const unsupportedChains = [999999n, 1234n, 56n, 43114n]
-
-			unsupportedChains.forEach(chainId => {
-				expect(
-					() =>
-						new SAManagerProvider({
-							chainId,
-						}),
-				).toThrowError(`Unsupported chainId: ${chainId}`)
-			})
-		})
+		provider = new SAManagerProvider()
 	})
 
 	afterEach(async () => {
@@ -134,6 +99,7 @@ describe('SAManagerProvider', () => {
 		;(encryptContent as Mock).mockClear()
 		;(decryptContent as Mock).mockClear()
 		;(bigIntToHex as Mock).mockClear()
+		;(toChainIdHex as Mock).mockClear()
 
 		// Clear correlation IDs spy
 		vi.restoreAllMocks()
@@ -141,7 +107,10 @@ describe('SAManagerProvider', () => {
 
 	describe('eth_requestAccounts with handshake', () => {
 		it('should perform a successful eth_requestAccounts with handshake', async () => {
-			;(decryptContent as Mock).mockResolvedValueOnce({ result: { value: ['0xAddress'] } })
+			;(decryptContent as Mock).mockResolvedValueOnce({
+				result: { value: ['0xAddress'] },
+				data: { chainId: 1 },
+			})
 
 			const emitSpy = vi.spyOn(provider, 'emit')
 
@@ -170,10 +139,7 @@ describe('SAManagerProvider', () => {
 			expect((encryptedCall[0] as RPCRequestMessage).content).toHaveProperty('encrypted')
 
 			// Verify encryption of actual request
-			expect(encryptContent).toHaveBeenCalledWith(
-				{ action: { method: 'eth_requestAccounts' }, chainId: 1 },
-				mockCryptoKey,
-			)
+			expect(encryptContent).toHaveBeenCalledWith({ action: { method: 'eth_requestAccounts' } }, mockCryptoKey)
 
 			// Verify popup loading sequence
 			expect(mockCommunicator.waitForPopupLoaded).toHaveBeenCalledTimes(2)
@@ -206,7 +172,7 @@ describe('SAManagerProvider', () => {
 			;(encryptContent as Mock).mockRejectedValueOnce(encryptionError)
 
 			await expect(provider.request({ method: 'eth_requestAccounts' })).rejects.toThrowError(
-				new Error('Failed to encrypt request', { cause: encryptionError }),
+				new Error('Error encrypting request', { cause: encryptionError }),
 			)
 		})
 
@@ -240,21 +206,29 @@ describe('SAManagerProvider', () => {
 	})
 
 	describe('eth_chainId', () => {
-		it('should handle eth_chainId without requiring popup', async () => {
+		it('should handle eth_chainId by calling popup when chainId is 0', async () => {
+			// Mock the decrypted response for chainId request
+			;(decryptContent as Mock).mockResolvedValueOnce({
+				result: { value: '0x1' },
+				data: { chainId: 1 },
+			})
+
 			const result = await provider.request({ method: 'eth_chainId' })
 
-			expect(result).toBe('0x1') // chainId 1n converted to hex
+			expect(result).toBe('0x1')
 
-			// Verify no popup interaction occurred
-			expect(mockCommunicator.waitForPopupLoaded).not.toHaveBeenCalled()
-			expect(mockCommunicator.postRequestAndWaitForResponse).not.toHaveBeenCalled()
-			expect(mockKeyManager.getSharedSecret).not.toHaveBeenCalled()
+			// Since chainId starts as 0, it should call the popup
+			expect(mockCommunicator.waitForPopupLoaded).toHaveBeenCalled()
+			expect(mockCommunicator.postRequestAndWaitForResponse).toHaveBeenCalled()
 		})
 	})
 
 	describe('popup management', () => {
 		it('should close the popup after the request is sent', async () => {
-			;(decryptContent as Mock).mockResolvedValueOnce({ result: { value: ['0xAddress'] } })
+			;(decryptContent as Mock).mockResolvedValueOnce({
+				result: { value: ['0xAddress'] },
+				data: { chainId: 1 },
+			})
 
 			await provider.request({ method: 'eth_requestAccounts' })
 
@@ -268,7 +242,10 @@ describe('SAManagerProvider', () => {
 			const emitSpy = vi.spyOn(provider, 'emit')
 
 			// First populate accounts
-			;(decryptContent as Mock).mockResolvedValueOnce({ result: { value: ['0xAddress'] } })
+			;(decryptContent as Mock).mockResolvedValueOnce({
+				result: { value: ['0xAddress'] },
+				data: { chainId: 1 },
+			})
 			await provider.request({ method: 'eth_requestAccounts' })
 			expect(provider['accounts']).toEqual(['0xAddress'])
 
@@ -396,6 +373,7 @@ describe('SAManagerProvider', () => {
 				// Mock successful handshake and popup communication, but with error in result
 				;(decryptContent as Mock).mockResolvedValueOnce({
 					result: { error: serializedError },
+					data: { chainId: 1 },
 				})
 
 				let caughtError: Error | undefined
@@ -423,6 +401,7 @@ describe('SAManagerProvider', () => {
 				// Mock successful handshake and popup communication, but with error in result
 				;(decryptContent as Mock).mockResolvedValueOnce({
 					result: { error: serializedError },
+					data: { chainId: 1 },
 				})
 
 				let caughtError: Error | undefined
@@ -451,6 +430,7 @@ describe('SAManagerProvider', () => {
 				// Mock successful handshake and popup communication, but with error in result
 				;(decryptContent as Mock).mockResolvedValueOnce({
 					result: { error: serializedError },
+					data: { chainId: 1 },
 				})
 
 				let caughtError: Error | undefined
@@ -471,6 +451,7 @@ describe('SAManagerProvider', () => {
 				// Mock successful handshake and popup communication, but with string error in result
 				;(decryptContent as Mock).mockResolvedValueOnce({
 					result: { error: serializedError },
+					data: { chainId: 1 },
 				})
 
 				let caughtError: Error | undefined

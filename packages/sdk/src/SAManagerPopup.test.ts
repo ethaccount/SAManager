@@ -94,7 +94,7 @@ describe('SAManagerPopup', () => {
 		;(importKeyFromHexString as Mock).mockResolvedValue(mockCryptoKey)
 		;(exportKeyToHexString as Mock).mockResolvedValue(mockPublicKey)
 		;(encryptContent as Mock).mockResolvedValue(encryptedData)
-		;(decryptContent as Mock).mockResolvedValue({ action: { method: 'eth_requestAccounts' }, chainId: 1n })
+		;(decryptContent as Mock).mockResolvedValue({ action: { method: 'eth_requestAccounts' }, chainId: 1 })
 		;(serializeError as Mock).mockReturnValue({ code: -1, message: 'Serialized error' })
 
 		// Setup browser API mocks
@@ -121,7 +121,7 @@ describe('SAManagerPopup', () => {
 		const mockWalletRequestHandler = vi.fn().mockResolvedValue(['0x742d35Cc6634C0532925a3b8D1D8c8D7C94b5b8B'])
 
 		// Create popup instance
-		_popup = new SAManagerPopup({ chainId: 1n, walletRequestHandler: mockWalletRequestHandler })
+		_popup = new SAManagerPopup({ chainId: 1, walletRequestHandler: mockWalletRequestHandler })
 	})
 
 	afterEach(async () => {
@@ -157,7 +157,7 @@ describe('SAManagerPopup', () => {
 		it('should register message event listener', () => {
 			// Arrange & Act
 			new SAManagerPopup({
-				chainId: 1n,
+				chainId: 1,
 				walletRequestHandler: vi.fn(),
 			})
 
@@ -168,7 +168,7 @@ describe('SAManagerPopup', () => {
 		it('should ignore messages from invalid origins', async () => {
 			// Arrange
 			const _popup = new SAManagerPopup({
-				chainId: 1n,
+				chainId: 1,
 				walletRequestHandler: vi.fn(),
 			})
 
@@ -212,7 +212,7 @@ describe('SAManagerPopup', () => {
 
 			// Create the popup instance with the mock handler
 			new SAManagerPopup({
-				chainId: 1n,
+				chainId: 1,
 				walletRequestHandler: mockWalletHandler,
 			})
 
@@ -235,7 +235,7 @@ describe('SAManagerPopup', () => {
 			expect(decryptContent).toHaveBeenCalledWith(encryptedData, mockCryptoKey)
 			expect(mockWalletHandler).toHaveBeenCalledWith('eth_requestAccounts', []) // Now this will pass
 			expect(encryptContent).toHaveBeenCalledWith(
-				{ result: { value: ['0x742d35Cc6634C0532925a3b8D1D8c8D7C94b5b8B'] } },
+				{ result: { value: ['0x742d35Cc6634C0532925a3b8D1D8c8D7C94b5b8B'] }, data: { chainId: 1 } },
 				mockCryptoKey,
 			)
 		})
@@ -244,7 +244,7 @@ describe('SAManagerPopup', () => {
 			// Arrange
 			mockKeyManager.getSharedSecret.mockResolvedValue(null)
 			const _popup = new SAManagerPopup({
-				chainId: 1n,
+				chainId: 1,
 				walletRequestHandler: vi.fn(),
 			})
 
@@ -278,7 +278,7 @@ describe('SAManagerPopup', () => {
 		it('should create encrypted response successfully', async () => {
 			// Arrange
 			const popup = new SAManagerPopup({
-				chainId: 1n,
+				chainId: 1,
 				walletRequestHandler: vi.fn(),
 			})
 
@@ -300,7 +300,7 @@ describe('SAManagerPopup', () => {
 		it('should throw error when no shared secret', async () => {
 			// Arrange
 			const popup = new SAManagerPopup({
-				chainId: 1n,
+				chainId: 1,
 				walletRequestHandler: vi.fn(),
 			})
 
@@ -320,7 +320,7 @@ describe('SAManagerPopup', () => {
 		it('should send error response successfully', async () => {
 			// Arrange
 			const popup = new SAManagerPopup({
-				chainId: 1n,
+				chainId: 1,
 				walletRequestHandler: vi.fn(),
 			})
 			const error = new Error('Test error')
@@ -343,7 +343,7 @@ describe('SAManagerPopup', () => {
 		it('should handle error in error response sending', async () => {
 			// Arrange
 			const popup = new SAManagerPopup({
-				chainId: 1n,
+				chainId: 1,
 				walletRequestHandler: vi.fn(),
 			})
 			const error = new Error('Test error')
@@ -365,7 +365,7 @@ describe('SAManagerPopup', () => {
 		it('should send loaded message to parent', () => {
 			// Arrange & Act
 			new SAManagerPopup({
-				chainId: 1n,
+				chainId: 1,
 				walletRequestHandler: vi.fn(),
 			})
 
@@ -380,39 +380,33 @@ describe('SAManagerPopup', () => {
 		})
 	})
 
-	describe('updateChain', () => {
+	describe('updateChainId', () => {
 		it('should update chain ID when different', () => {
 			// Arrange
-			const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
 			const popup = new SAManagerPopup({
-				chainId: 1n,
+				chainId: 1,
 				walletRequestHandler: vi.fn(),
 			})
 
 			// Act
-			;(popup as any).updateChain(2n)
+			popup.updateChainId(2)
 
 			// Assert
-			expect(consoleSpy).toHaveBeenCalledWith('Chain updated to:', '2')
-
-			consoleSpy.mockRestore()
+			expect((popup as any).chainId).toBe(2)
 		})
 
-		it('should not log when chain ID is same', () => {
+		it('should update chain ID when same', () => {
 			// Arrange
-			const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
 			const popup = new SAManagerPopup({
-				chainId: 1n,
+				chainId: 1,
 				walletRequestHandler: vi.fn(),
 			})
 
 			// Act
-			;(popup as any).updateChain(1n)
+			popup.updateChainId(1)
 
 			// Assert
-			expect(consoleSpy).not.toHaveBeenCalled()
-
-			consoleSpy.mockRestore()
+			expect((popup as any).chainId).toBe(1)
 		})
 	})
 
@@ -421,7 +415,7 @@ describe('SAManagerPopup', () => {
 
 		beforeEach(() => {
 			popup = new SAManagerPopup({
-				chainId: 1n,
+				chainId: 1,
 				walletRequestHandler: vi.fn(),
 			})
 		})
@@ -443,7 +437,7 @@ describe('SAManagerPopup', () => {
 
 		beforeEach(() => {
 			popup = new SAManagerPopup({
-				chainId: 1n,
+				chainId: 1,
 				walletRequestHandler: vi.fn(),
 			})
 		})
@@ -476,7 +470,7 @@ describe('SAManagerPopup', () => {
 
 		beforeEach(() => {
 			popup = new SAManagerPopup({
-				chainId: 1n,
+				chainId: 1,
 				walletRequestHandler: vi.fn(),
 			})
 		})
@@ -508,7 +502,7 @@ describe('SAManagerPopup', () => {
 		it('should successfully handle handshake and send encrypted response', async () => {
 			// Arrange
 			const _popup = new SAManagerPopup({
-				chainId: 1n,
+				chainId: 1,
 				walletRequestHandler: vi.fn().mockResolvedValue(['0x742d35Cc6634C0532925a3b8D1D8c8D7C94b5b8B']),
 			})
 
@@ -529,7 +523,10 @@ describe('SAManagerPopup', () => {
 			// Assert
 			expect(importKeyFromHexString).toHaveBeenCalledWith('public', mockPublicKey)
 			expect(mockKeyManager.setPeerPublicKey).toHaveBeenCalledWith(mockCryptoKey)
-			expect(encryptContent).toHaveBeenCalledWith({ result: { value: 'handshake_complete' } }, mockCryptoKey)
+			expect(encryptContent).toHaveBeenCalledWith(
+				{ result: { value: 'handshake_complete' }, data: { chainId: 1 } },
+				mockCryptoKey,
+			)
 			expect(mockPostMessage).toHaveBeenCalledWith(
 				expect.objectContaining({
 					id: mockResponseId,
@@ -549,7 +546,7 @@ describe('SAManagerPopup', () => {
 			;(importKeyFromHexString as Mock).mockRejectedValueOnce(importError)
 
 			const _popup = new SAManagerPopup({
-				chainId: 1n,
+				chainId: 1,
 				walletRequestHandler: vi.fn().mockResolvedValue(['0x742d35Cc6634C0532925a3b8D1D8c8D7C94b5b8B']),
 			})
 
@@ -587,7 +584,7 @@ describe('SAManagerPopup', () => {
 			mockKeyManager.setPeerPublicKey.mockRejectedValueOnce(setPeerError)
 
 			const _popup = new SAManagerPopup({
-				chainId: 1n,
+				chainId: 1,
 				walletRequestHandler: vi.fn().mockResolvedValue(['0x742d35Cc6634C0532925a3b8D1D8c8D7C94b5b8B']),
 			})
 
@@ -621,7 +618,7 @@ describe('SAManagerPopup', () => {
 			;(encryptContent as Mock).mockRejectedValueOnce(encryptError)
 
 			const _popup = new SAManagerPopup({
-				chainId: 1n,
+				chainId: 1,
 				walletRequestHandler: vi.fn().mockResolvedValue(['0x742d35Cc6634C0532925a3b8D1D8c8D7C94b5b8B']),
 			})
 
@@ -639,7 +636,10 @@ describe('SAManagerPopup', () => {
 			await messageHandler(messageEvent)
 
 			// Assert
-			expect(encryptContent).toHaveBeenCalledWith({ result: { value: 'handshake_complete' } }, mockCryptoKey)
+			expect(encryptContent).toHaveBeenCalledWith(
+				{ result: { value: 'handshake_complete' }, data: { chainId: 1 } },
+				mockCryptoKey,
+			)
 			expect(serializeError).toHaveBeenCalledWith(encryptError)
 			expect(mockPostMessage).toHaveBeenCalledWith(
 				expect.objectContaining({
@@ -661,7 +661,7 @@ describe('SAManagerPopup', () => {
 			} as any as RPCRequestMessage
 
 			const _popup = new SAManagerPopup({
-				chainId: 1n,
+				chainId: 1,
 				walletRequestHandler: vi.fn().mockResolvedValue(['0x742d35Cc6634C0532925a3b8D1D8c8D7C94b5b8B']),
 			})
 

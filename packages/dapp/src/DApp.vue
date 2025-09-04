@@ -4,7 +4,16 @@ import { BrowserWalletConnector, useVueDapp } from '@vue-dapp/core'
 import { useVueDappModal, VueDappModal } from '@vue-dapp/modal'
 import '@vue-dapp/modal/dist/style.css'
 
-const { wallet, isConnected, connectors, addConnectors, watchWalletChanged, watchDisconnect, disconnect } = useVueDapp()
+const {
+	wallet,
+	isConnected,
+	connectors,
+	addConnectors,
+	watchWalletChanged,
+	watchDisconnect,
+	disconnect,
+	onChainChanged,
+} = useVueDapp()
 
 const DAPP_CHAIN_ID = 84532n
 
@@ -16,11 +25,14 @@ onMounted(() => {
 	// Announce SAManager as an EIP-6963 provider
 	announceSAManagerProvider({
 		debug: true,
-		chainId: DAPP_CHAIN_ID,
 		origin: 'http://localhost:5173',
 	})
 
 	onClickConnectButton()
+})
+
+onChainChanged((chainId: number) => {
+	console.log('chainChanged', chainId)
 })
 
 watchWalletChanged(async wallet => {
@@ -45,6 +57,8 @@ function onClickConnectButton() {
 
 const getBlockError = ref<string | null>(null)
 const block = ref(null)
+const chainIdError = ref<string | null>(null)
+const chainIdResult = ref<string | null>(null)
 const sendCallsError = ref<string | null>(null)
 const sendCallsResult = ref<WalletSendCallsResponse | null>(null)
 const getCallsStatusError = ref<string | null>(null)
@@ -69,6 +83,24 @@ async function onClickGetBlock() {
 		}
 	} else {
 		getBlockError.value = 'Wallet not connected'
+	}
+}
+
+async function onClickGetChainId() {
+	chainIdError.value = null
+	chainIdResult.value = null
+	if (wallet.status === 'connected' && wallet.provider) {
+		try {
+			chainIdResult.value = await wallet.provider.request({
+				method: 'eth_chainId',
+				params: [],
+			})
+		} catch (err: unknown) {
+			console.error('Error getting chain ID', err)
+			chainIdError.value = err instanceof Error ? err.message : 'Failed to get chain ID'
+		}
+	} else {
+		chainIdError.value = 'Wallet not connected'
 	}
 }
 
@@ -189,6 +221,16 @@ async function onClickShowCallsStatus() {
 			<div v-if="getBlockError" class="text-red-500">{{ getBlockError }}</div>
 			<div v-if="block">
 				<div>{{ (block as any).hash }}</div>
+			</div>
+		</div>
+
+		<br />
+
+		<div>
+			<button class="btn" @click="onClickGetChainId">eth_chainId</button>
+			<div v-if="chainIdError" class="text-red-500">{{ chainIdError }}</div>
+			<div v-if="chainIdResult">
+				<div>{{ chainIdResult }}</div>
 			</div>
 		</div>
 

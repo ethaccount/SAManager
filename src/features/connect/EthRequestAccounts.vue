@@ -49,7 +49,7 @@ function onClickReject() {
 		<!-- Header with Network Selector -->
 		<div class="flex justify-between items-center mb-6">
 			<h1 class="text-2xl font-bold">Connect Wallet</h1>
-			<NetworkSelector fixed-chain />
+			<NetworkSelector />
 		</div>
 
 		<!-- Selected Account -->

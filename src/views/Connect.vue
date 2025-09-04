@@ -18,10 +18,8 @@ import {
 } from '@samanager/sdk'
 import { AlertCircle, Loader2 } from 'lucide-vue-next'
 
-const route = useRoute()
 const router = useRouter()
-
-const chainId = route.params.chainId as string
+const { selectedChainId } = useBlockchain()
 
 const error = ref<string | null>(null)
 const pendingRequest = ref<PendingRequest | null>(null)
@@ -31,13 +29,15 @@ const method = computed(() => {
 	return pendingRequest.value?.method
 })
 
+let popup: SAManagerPopup
+
 if (!window.opener) {
 	// Redirect to the home page when this popup route is not opened by a parent window
 	router.replace(toRoute('home'))
 } else {
-	new SAManagerPopup({
+	popup = new SAManagerPopup({
+		chainId: Number(selectedChainId.value),
 		debug: true,
-		chainId: BigInt(chainId),
 		walletRequestHandler: async (method, params) => {
 			console.log('request', method, params)
 
@@ -97,6 +97,10 @@ if (!window.opener) {
 		},
 	})
 }
+
+watch(selectedChainId, () => {
+	popup.updateChainId(Number(selectedChainId.value))
+})
 </script>
 
 <template>
@@ -123,7 +127,7 @@ if (!window.opener) {
 					<h1 class="text-xl font-bold">{{ pendingRequest?.method }}</h1>
 				</div>
 
-				<NetworkSelector fixed-chain />
+				<NetworkSelector />
 			</div>
 
 			<!-- Loading State -->
