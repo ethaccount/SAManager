@@ -48,7 +48,7 @@ export class SAManagerProvider implements ProviderInterface {
 	async request(request: RequestArguments) {
 		this.log('request', request)
 
-		// Handle methods that don't require popup
+		// Handle methods that don't require popup or before handshake
 		switch (request.method) {
 			case 'eth_chainId': {
 				// If the chainId is set, direct return the chainId, or call the popup to get the chainId as below
@@ -61,9 +61,19 @@ export class SAManagerProvider implements ProviderInterface {
 			case 'wallet_getCallsStatus': {
 				return await handleGetCallsStatus(request, this.origin)
 			}
+
+			// Methods that require account connection
+			case 'wallet_getCapabilities':
+			case 'wallet_sendCalls': {
+				if (!this.hasAccount()) {
+					throw standardErrors.provider.unauthorized('No account connected')
+				}
+				break
+			}
 		}
 
 		try {
+			// ================= Handshake =================
 			// Checks if a shared secret exists. If not, it will perform a handshake
 			const sharedSecret = await this.keyManager.getSharedSecret()
 			if (!sharedSecret) {
@@ -78,6 +88,9 @@ export class SAManagerProvider implements ProviderInterface {
 			switch (request.method) {
 				case 'eth_chainId':
 				case 'eth_getBlockByNumber':
+				case 'wallet_showCallsStatus':
+				case 'wallet_getCapabilities':
+				case 'wallet_sendCalls':
 				case 'wallet_switchEthereumChain': {
 					result = await this.sendRequestToPopup(request)
 					break
@@ -88,18 +101,6 @@ export class SAManagerProvider implements ProviderInterface {
 					this.updateAccounts(result as EthRequestAccountsResponse)
 					break
 				}
-
-				case 'wallet_getCapabilities':
-				case 'wallet_sendCalls':
-				case 'wallet_showCallsStatus': {
-					// Check if there is an account connected
-					if (!this.hasAccount()) {
-						throw standardErrors.provider.disconnected('No account found. Please connect wallet.')
-					}
-					result = await this.sendRequestToPopup(request)
-					break
-				}
-
 				default:
 					throw standardErrors.provider.unsupportedMethod(`Unsupported method: ${request.method}`)
 			}

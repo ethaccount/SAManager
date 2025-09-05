@@ -308,7 +308,7 @@ describe('SAManagerProvider', () => {
 		})
 	})
 
-	describe('error handling and deserialization', () => {
+	describe('Error handling', () => {
 		describe('failure in response content', () => {
 			it('should deserialize EthereumProviderError from response content failure', async () => {
 				// Create a provider error and serialize it
@@ -522,6 +522,61 @@ describe('SAManagerProvider', () => {
 				expect(caughtError).not.toBeInstanceOf(EthereumProviderError)
 				expect(caughtError?.message).toBe('Something went wrong')
 				expect((caughtError as EthereumRpcError<any>).code).toBe(-32603) // internal error code
+			})
+		})
+
+		describe('4100 Unauthorized for wallet_sendCalls and wallet_getCapabilities', () => {
+			it('should throw unauthorized error when no account is connected for wallet methods', async () => {
+				// Ensure no accounts are connected
+				expect(provider['accounts']).toEqual([])
+
+				// Test wallet_getCapabilities
+				await expect(provider.request({ method: 'wallet_getCapabilities' })).rejects.toThrowError(
+					standardErrors.provider.unauthorized('No account connected'),
+				)
+
+				// Test wallet_sendCalls
+				await expect(
+					provider.request({ method: 'wallet_sendCalls', params: [{ calls: [] }] }),
+				).rejects.toThrowError(standardErrors.provider.unauthorized('No account connected'))
+
+				// Verify no popup communication attempts were made since the check happens before
+				expect(mockCommunicator.waitForPopupLoaded).not.toHaveBeenCalled()
+				expect(mockCommunicator.postRequestAndWaitForResponse).not.toHaveBeenCalled()
+			})
+
+			it('should not throw unauthorized error when account is connected for wallet methods', async () => {
+				// First connect an account
+				;(decryptContent as Mock).mockResolvedValueOnce({
+					data: { chainId: 1 },
+				})
+				;(decryptContent as Mock).mockResolvedValueOnce({
+					result: { value: ['0xAddress'] },
+					data: { chainId: 1 },
+				})
+				await provider.request({ method: 'eth_requestAccounts' })
+
+				// Verify account is connected
+				expect(provider['accounts']).toEqual(['0xAddress'])
+
+				// Reset mocks for the wallet method calls
+				mockCommunicator.waitForPopupLoaded.mockClear()
+				mockCommunicator.postRequestAndWaitForResponse.mockClear()
+
+				// Mock successful response for wallet method
+				;(decryptContent as Mock).mockResolvedValueOnce({
+					result: { value: { chainId: '0x1' } },
+					data: { chainId: 1 },
+				})
+
+				// Test that wallet_getCapabilities works when account is connected
+				await expect(provider.request({ method: 'wallet_getCapabilities' })).resolves.toEqual({
+					chainId: '0x1',
+				})
+
+				// Verify popup communication was attempted
+				expect(mockCommunicator.waitForPopupLoaded).toHaveBeenCalled()
+				expect(mockCommunicator.postRequestAndWaitForResponse).toHaveBeenCalled()
 			})
 		})
 
