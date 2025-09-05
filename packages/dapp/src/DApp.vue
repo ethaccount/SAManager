@@ -189,6 +189,7 @@ async function onClickGetCallsStatus() {
 				method: 'wallet_getCallsStatus',
 				params: [sendCallsResult.value.id],
 			})
+			console.log('getCallsStatusResult', getCallsStatusResult.value)
 		} catch (err) {
 			console.error(err)
 			if (err instanceof EthereumRpcError) {

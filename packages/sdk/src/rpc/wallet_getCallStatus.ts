@@ -1,46 +1,9 @@
 import { standardErrors } from '../error'
 import { decodeCallIdentifier, type CallIdentifier } from '../identifier'
 import type { RequestArguments } from '../types'
-import { getErrorMessage } from '../utils'
+import { getErrorMessage, toChainIdHex } from '../utils'
 import type { WalletGetCallsStatusResponse } from './eip5792-types'
-
-type UserOperationReceiptHex = {
-	userOpHash: string
-	entryPoint: string
-	sender: string
-	nonce: string
-	paymaster: string
-	actualGasUsed: string
-	actualGasCost: string
-	success: boolean
-	logs: UserOperationLogHex[]
-	receipt: {
-		transactionHash: string
-		transactionIndex: string
-		from: string
-		to: string
-		status: string
-		logsBloom: string
-		blockHash: string
-		blockNumber: string
-		contractAddress: null | string
-		gasUsed: string
-		cumulativeGasUsed: string
-		effectiveGasPrice: string
-		logs: UserOperationLogHex[]
-	}
-}
-
-type UserOperationLogHex = {
-	logIndex: string
-	transactionIndex: string
-	transactionHash: string
-	blockHash: string
-	blockNumber: string
-	address: string
-	data: string
-	topics: string[]
-}
+import type { UserOperationReceiptHex } from './erc4337-types'
 
 export async function handleGetCallsStatus(
 	request: RequestArguments,
@@ -87,37 +50,35 @@ export async function handleGetCallsStatus(
 		throw standardErrors.rpc.internal(`Error getting user operation receipt: ${getErrorMessage(e)}`)
 	}
 
-	const chainIdHex = `0x${Number(decodedIdentifier.chainId).toString(16)}`
+	const chainIdHex = toChainIdHex(decodedIdentifier.chainId)
+
+	const baseResponse: Omit<WalletGetCallsStatusResponse, 'status' | 'receipts'> = {
+		version: '2.0',
+		id: identifier,
+		chainId: chainIdHex,
+		atomic: true,
+	}
 
 	// If no receipt yet, the batch is still pending
 	if (!receipt) {
 		return {
-			version: '1.0',
-			id: identifier,
-			chainId: chainIdHex,
+			...baseResponse,
 			status: 100, // Pending: Batch received but not completed onchain
-			atomic: true,
 		}
 	}
 
 	// If receipt exists and successful
 	if (receipt.success) {
 		return {
-			version: '1.0',
-			id: identifier,
-			chainId: chainIdHex,
+			...baseResponse,
 			status: 200, // Confirmed: Batch included onchain without reverts
-			atomic: true,
 			receipts: receipt.receipt ? [receipt.receipt] : undefined,
 		}
 	} else {
 		// Receipt exists but failed
 		return {
-			version: '1.0',
-			id: identifier,
-			chainId: chainIdHex,
+			...baseResponse,
 			status: 500, // Chain rules failure: Batch reverted completely
-			atomic: true,
 			receipts: receipt.receipt ? [receipt.receipt] : undefined,
 		}
 	}

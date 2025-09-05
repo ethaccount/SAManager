@@ -1,4 +1,5 @@
 export * from './eip1193-types'
 export * from './eip5792-types'
 export * from './eip3326-types'
+export * from './erc4337-types'
 export * from './wallet_getCallStatus'
