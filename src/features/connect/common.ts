@@ -1,6 +1,9 @@
+import { useAccount } from '@/stores/account/useAccount'
 import { CHAIN_ID, isSupportedChainId } from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { standardErrors } from '@samanager/sdk'
+import { isAddress } from 'ethers'
+import { isSameAddress } from 'sendop'
 
 export function validateChainIdFormat(chainIdHex: string) {
 	// Check hex format with 0x prefix
@@ -29,4 +32,26 @@ export function validateChainIdMatchesSelectedChain(chainIdHex: string) {
 	if (chainId !== selectedChainId.value) {
 		throw standardErrors.provider.unsupportedChainId('chainId field does not match the currently selected chain')
 	}
+}
+
+export function validateAccountConnection(accountAddress: string): string {
+	if (!isAddress(accountAddress)) {
+		throw standardErrors.rpc.invalidParams('Invalid account address')
+	}
+
+	const selectedAccountAddress = validateConnection()
+
+	if (!isSameAddress(accountAddress, selectedAccountAddress)) {
+		throw standardErrors.provider.unauthorized('Account address mismatch')
+	}
+
+	return selectedAccountAddress
+}
+
+export function validateConnection(): string {
+	const { selectedAccount } = useAccount()
+	if (!selectedAccount.value) {
+		throw standardErrors.provider.unauthorized('No account selected')
+	}
+	return selectedAccount.value.address
 }

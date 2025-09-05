@@ -25,6 +25,7 @@
 		"build:production": "CLOUDFLARE_ENV=production vue-tsc --noEmit && pnpm run lint && vite build --mode production",
 		"test:sdk": "pnpm -F sdk test",
 		"test": "vitest --run",
+		"test:all": "pnpm run test:sdk && pnpm run test",
 		"preview": "vite preview",
 		"clean": "rm -rf dist && rm -rf node_modules",
 		"typecheck": "vue-tsc --noEmit",

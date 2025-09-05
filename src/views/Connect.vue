@@ -3,36 +3,18 @@ import NetworkSelector from '@/components/header/NetworkSelector.vue'
 import CenterStageLayout from '@/components/layout/CenterStageLayout.vue'
 import { PendingRequest } from '@/features/connect'
 import EthRequestAccounts from '@/features/connect/EthRequestAccounts.vue'
-import { handleGetCapabilities } from '@/features/connect/wallet_getCapabilities'
-import { validateWalletSendCallsParams } from '@/features/connect/wallet_sendCalls'
-import { handleWalletSwitchEthereumChain } from '@/features/connect/wallet_switchEthereumChain'
+import { useConnect } from '@/features/connect/useConnect'
 import WalletSendCalls from '@/features/connect/WalletSendCalls.vue'
 import WalletShowCallsStatus from '@/features/connect/WalletShowCallsStatus.vue'
-import { getErrorMessage } from '@/lib/error'
 import { toRoute } from '@/lib/router'
 import { useBlockchain } from '@/stores/blockchain'
-import {
-	EthereumRpcError,
-	SAManagerPopup,
-	standardErrors,
-	WalletGetCapabilitiesRequest,
-	WalletGetCapabilitiesResponse,
-	WalletSendCallsRequest,
-	WalletShowCallsStatusRequest,
-	WalletSwitchEthereumChainRequest,
-} from '@samanager/sdk'
+import { SAManagerPopup, WalletSendCallsRequest, WalletShowCallsStatusRequest } from '@samanager/sdk'
 import { AlertCircle, Loader2 } from 'lucide-vue-next'
 
 const router = useRouter()
 const { selectedChainId } = useBlockchain()
 
-const error = ref<string | null>(null)
-const pendingRequest = ref<PendingRequest | null>(null)
-const isLoading = ref(false)
-
-const method = computed(() => {
-	return pendingRequest.value?.method
-})
+const { pendingRequest, error, isLoading, method, walletRequestHandler } = useConnect()
 
 let popup: SAManagerPopup
 
@@ -43,79 +25,7 @@ if (!window.opener) {
 	popup = new SAManagerPopup({
 		chainId: Number(selectedChainId.value),
 		debug: true,
-		walletRequestHandler: async (method, params) => {
-			console.log('request', method, params)
-
-			return new Promise(async (resolve, reject) => {
-				pendingRequest.value = { method, params, resolve, reject }
-				isLoading.value = true
-				let result
-				let shouldResolveImmediately = true
-
-				try {
-					switch (method) {
-						case 'eth_chainId':
-						case 'eth_getBlockByNumber': {
-							// await new Promise(resolve => setTimeout(resolve, 10000000))
-							const { client } = useBlockchain()
-							result = await client.value.send(method, params)
-							break
-						}
-						case 'wallet_switchEthereumChain': {
-							result = await handleWalletSwitchEthereumChain(
-								params as WalletSwitchEthereumChainRequest['params'],
-							)
-							break
-						}
-						case 'wallet_getCapabilities': {
-							// await new Promise(resolve => setTimeout(resolve, 10000000))
-							const capabilities = (await handleGetCapabilities(
-								params as WalletGetCapabilitiesRequest['params'],
-							)) as WalletGetCapabilitiesResponse
-							result = capabilities
-							break
-						}
-
-						// ============== Method that requires user interaction ==============
-
-						case 'wallet_sendCalls':
-							validateWalletSendCallsParams(params as WalletSendCallsRequest['params'])
-							shouldResolveImmediately = false
-							break
-
-						case 'eth_requestAccounts':
-						case 'wallet_showCallsStatus': {
-							shouldResolveImmediately = false
-							break
-						}
-
-						default: {
-							throw standardErrors.provider.unsupportedMethod(`Method ${method} not supported`)
-						}
-					}
-
-					if (shouldResolveImmediately) {
-						resolve(result)
-					}
-				} catch (err) {
-					console.error('Error processing request', err)
-
-					// MUST reject with standardErrors; Note that the EthereumProviderError extends EthereumRpcError
-					if (err instanceof EthereumRpcError) {
-						error.value = err.message
-						reject(err)
-					} else {
-						error.value = getErrorMessage(err)
-						reject(standardErrors.rpc.internal(error.value))
-					}
-				} finally {
-					if (shouldResolveImmediately) {
-						isLoading.value = false
-						pendingRequest.value = null
-					}
-				}
-			})
-		},
+		walletRequestHandler,
 	})
 }
 

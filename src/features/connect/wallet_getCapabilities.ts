@@ -1,19 +1,19 @@
-import { useAccount } from '@/stores/account/useAccount'
 import { standardErrors, WalletGetCapabilitiesRequest } from '@samanager/sdk'
-import { isSameAddress } from 'node_modules/sendop/dist/src/utils/ethers-helper'
+import { validateAccountConnection, validateChainIdFormat, validateChainIdSupport } from './common'
 
-export function handleGetCapabilities(params: WalletGetCapabilitiesRequest['params']) {
+export async function handleGetCapabilities(params: WalletGetCapabilitiesRequest['params']) {
 	const [address, chainIds] = params
 
-	// Validate connection
-	if (address) {
-		const { selectedAccount } = useAccount()
-		if (!selectedAccount.value) {
-			throw standardErrors.provider.unauthorized('No account selected')
+	validateAccountConnection(address)
+
+	if (chainIds) {
+		if (!Array.isArray(chainIds) || chainIds.length === 0) {
+			throw standardErrors.rpc.invalidParams('Invalid chainIds')
 		}
-		if (!isSameAddress(address, selectedAccount.value.address)) {
-			throw standardErrors.provider.unauthorized('Address does not match selected account')
-		}
+		chainIds.forEach(chainId => {
+			validateChainIdFormat(chainId)
+			validateChainIdSupport(chainId)
+		})
 	}
 
 	// If no chain IDs specified, return empty object

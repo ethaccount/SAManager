@@ -1,10 +1,14 @@
-import { useAccount } from '@/stores/account/useAccount'
 import type { Call, Capability, WalletSendCallsRequest } from '@samanager/sdk'
 import { standardErrors } from '@samanager/sdk'
 import { isAddress } from 'ethers'
-import { isSameAddress } from 'sendop'
 import { isSupportedCapability } from './capabilities'
-import { validateChainIdFormat, validateChainIdMatchesSelectedChain, validateChainIdSupport } from './common'
+import {
+	validateAccountConnection,
+	validateChainIdFormat,
+	validateChainIdMatchesSelectedChain,
+	validateChainIdSupport,
+	validateConnection,
+} from './common'
 
 export function validateWalletSendCallsParams(params: WalletSendCallsRequest['params']) {
 	// Validate basic parameter structure
@@ -36,20 +40,16 @@ export function validateWalletSendCallsParams(params: WalletSendCallsRequest['pa
 	validateChainIdSupport(sendCallsParams.chainId)
 	validateChainIdMatchesSelectedChain(sendCallsParams.chainId)
 
-	// Validate from address if provided
+	let sender: string
 	if (sendCallsParams.from) {
-		validateFromAddress(sendCallsParams.from)
+		sender = validateAccountConnection(sendCallsParams.from)
+	} else {
+		sender = validateConnection()
 	}
-
-	const { selectedAccount } = useAccount()
-	if (!selectedAccount.value) {
-		throw standardErrors.provider.unauthorized('No account selected')
-	}
-	const sender = sendCallsParams.from ?? selectedAccount.value.address
 
 	// Validate call id if provided
 	if (sendCallsParams.id) {
-		throw standardErrors.rpc.invalidParams('Custom call id field is not supported')
+		throw standardErrors.rpc.invalidParams('App-provided call bundle identifier is not supported')
 	}
 
 	// Validate calls array
@@ -58,23 +58,6 @@ export function validateWalletSendCallsParams(params: WalletSendCallsRequest['pa
 	// Validate capabilities if provided
 	if (sendCallsParams.capabilities) {
 		validateCapabilities(sender, sendCallsParams.capabilities)
-	}
-}
-
-function validateFromAddress(from: string) {
-	// Validate address format
-	if (!isAddress(from)) {
-		throw standardErrors.rpc.invalidParams('Invalid from address format')
-	}
-
-	// Check if address is authorized/connected
-	const { selectedAccount } = useAccount()
-	if (!selectedAccount.value) {
-		throw standardErrors.provider.unauthorized('No account selected')
-	}
-
-	if (!isSameAddress(from, selectedAccount.value.address)) {
-		throw standardErrors.provider.unauthorized('From address does not match selected account')
 	}
 }
 
