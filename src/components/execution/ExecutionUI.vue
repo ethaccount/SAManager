@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import Address from '@/components/utils/Address.vue'
+import { ExecutionUIEmits, ExecutionUIProps, TransactionStatus, useExecutionModal } from '@/components/execution'
 import { AccountRegistry } from '@/lib/accounts'
 import { addressToName } from '@/lib/addressToName'
 import {
@@ -23,7 +24,6 @@ import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useSigner } from '@/stores/useSigner'
-import { TransactionStatus, TxUIEmits, TxUIProps, useTxModal } from '@/stores/useTxModal'
 import { formatEther } from 'ethers'
 import { ArrowLeft, ChevronDown, ChevronUp, CircleDot, Code, ExternalLink, Loader2, X } from 'lucide-vue-next'
 import {
@@ -35,14 +35,14 @@ import {
 	UserOpBuilder,
 } from 'sendop'
 import { toast } from 'vue-sonner'
-import TxModalUOPreview from './TxModalOpPreview.vue'
+import ExecutionModalUOPreview from './ExecutionModalOpPreview.vue'
 
-const props = withDefaults(defineProps<TxUIProps>(), {
+const props = withDefaults(defineProps<ExecutionUIProps>(), {
 	executions: () => [],
 	useModalSpecificStyle: true,
 })
 
-const emit = defineEmits<TxUIEmits>()
+const emit = defineEmits<ExecutionUIEmits>()
 
 function onClickClose() {
 	// Prevent closing when transaction is being sent or pending
@@ -82,14 +82,14 @@ const {
 	handleSign,
 	sendUserOp,
 	waitUserOp,
-	resetTxModal,
+	resetExecutionModal,
 	checkUsdcBalanceAndAllowance,
 	usdcPaymasterData,
 	usdcPaymasterAddress,
 	usdcAllowance,
 	hasUsdcPermitSignature,
 	usdcBalance,
-} = useTxModal()
+} = useExecutionModal()
 
 const txModalErrorMessage = ref<string | null>(null)
 
@@ -106,7 +106,7 @@ async function updateEthUsdPrice() {
 	ethUsdPrice.value = await fetchEthUsdPrice()
 }
 
-// Close the TxModal when the account is not accessible
+// Close the ExecutionModal when the account is not accessible
 watchImmediate(isAccountAccessible, () => {
 	if (!isAccountAccessible.value) {
 		toast.error('Account is not accessible. Please connect the right signer to the account')
@@ -114,10 +114,10 @@ watchImmediate(isAccountAccessible, () => {
 	}
 })
 
-// When the TxModal is opened
+// When the ExecutionModal is opened
 onMounted(async () => {
 	if (!selectedAccount.value) {
-		throw new Error('[TxModal#onMounted] No account selected')
+		throw new Error('[ExecutionModal#onMounted] No account selected')
 	}
 
 	// Check if account is deployed
@@ -139,10 +139,10 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-	resetTxModal()
+	resetExecutionModal()
 })
 
-// This cannot be placed in useTxModal because it needs to be executed immediately when the TxModal is mounted
+// This cannot be placed in useExecutionModal because it needs to be executed immediately when the ExecutionModal is mounted
 watchImmediate(selectedPaymaster, async newPaymaster => {
 	// If the selected paymaster is not supported, switch to the first supported paymaster
 	if (!paymasters.value.some(paymaster => paymaster.id === newPaymaster)) {
@@ -481,7 +481,7 @@ const shouldShowEffectiveFee = computed(() => {
 		</div>
 
 		<!-- UserOp Preview Screen -->
-		<TxModalUOPreview v-show="showUserOpPreview" :user-op="userOp" />
+		<ExecutionModalUOPreview v-show="showUserOpPreview" :user-op="userOp" />
 
 		<!-- Content -->
 		<div

@@ -16,7 +16,7 @@ import { useGetCode } from '@/lib/useGetCode'
 import { ImportedAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { TxModalExecution, useTxModal } from '@/stores/useTxModal'
+import { ExecutionModalExecution, useExecutionModal } from '@/components/execution'
 import { DateValue, getLocalTimeZone } from '@internationalized/date'
 import { concat, parseUnits, toBeHex, ZeroAddress } from 'ethers'
 import {
@@ -131,8 +131,8 @@ export function useScheduleTransfer() {
 	function buildSmartSessionExecutions(
 		moduleStatus: ModuleStatus,
 		importedAccount: ImportedAccount,
-	): { executions: TxModalExecution[]; permissionId: string } {
-		const executions: TxModalExecution[] = []
+	): { executions: ExecutionModalExecution[]; permissionId: string } {
+		const executions: ExecutionModalExecution[] = []
 		let permissionId = moduleStatus.permissionId
 
 		if (!permissionId) {
@@ -181,8 +181,8 @@ export function useScheduleTransfer() {
 		moduleStatus: ModuleStatus,
 		accountId: AccountId,
 		scheduledTransfersOrderData: string,
-	): TxModalExecution[] {
-		const executions: TxModalExecution[] = []
+	): ExecutionModalExecution[] {
+		const executions: ExecutionModalExecution[] = []
 
 		if (moduleStatus.isScheduledTransfersInstalled) {
 			// Add a order
@@ -288,7 +288,7 @@ export function useScheduleTransfer() {
 			const rhinestoneExecutions = buildRhinestoneAttesterExecutions(moduleStatus.isRhinestoneAttesterTrusted)
 
 			// Step 9: Combine all executions
-			const executions: TxModalExecution[] = [
+			const executions: ExecutionModalExecution[] = [
 				...rhinestoneExecutions,
 				...smartSessionExecutions,
 				...scheduledTransfersExecutions,
@@ -297,7 +297,7 @@ export function useScheduleTransfer() {
 			// Step 10: Get job ID and open transaction modal
 			const jobId = await getJobId(selectedAccount.address)
 
-			useTxModal().openModal({
+			useExecutionModal().openModal({
 				executions,
 				async onSuccess() {
 					const { bundler, client } = useBlockchain()

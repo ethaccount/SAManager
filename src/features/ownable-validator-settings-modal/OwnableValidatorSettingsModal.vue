@@ -7,7 +7,7 @@ import { useLoading } from '@/lib/useLoading'
 import { deserializeValidationMethod, OwnableValidatorVMethod } from '@/lib/validations'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain'
-import { TxModalExecution, useTxModal } from '@/stores/useTxModal'
+import { ExecutionModalExecution, useExecutionModal } from '@/components/execution'
 import { shortenAddress } from '@vue-dapp/core'
 import { isAddress } from 'ethers'
 import { Loader2, Trash2, X } from 'lucide-vue-next'
@@ -72,7 +72,7 @@ async function onClickRemoveOwner(_ownerAddress: string) {
 
 	try {
 		loadingRemoveOwners.value.add(_ownerAddress)
-		const execution: TxModalExecution = {
+		const execution: ExecutionModalExecution = {
 			description: `Remove owner ${shortenAddress(_ownerAddress)}`,
 			to: ADDRESS.OwnableValidator,
 			data: await OwnableValidatorAPI.encodeRemoveOwner(
@@ -82,7 +82,7 @@ async function onClickRemoveOwner(_ownerAddress: string) {
 			),
 			value: 0n,
 		}
-		useTxModal().openModal({
+		useExecutionModal().openModal({
 			executions: [execution],
 			onSuccess: async () => {
 				toast.success('Owner removed successfully')
@@ -110,7 +110,7 @@ async function onClickAddOwner() {
 		}
 
 		isLoadingAddOwner.value = true
-		const execution: TxModalExecution = {
+		const execution: ExecutionModalExecution = {
 			description: `Add owner ${shortenAddress(newOwnerAddress.value)}`,
 			to: ADDRESS.OwnableValidator,
 			data: await OwnableValidatorAPI.encodeAddOwner(
@@ -120,7 +120,7 @@ async function onClickAddOwner() {
 			),
 			value: 0n,
 		}
-		useTxModal().openModal({
+		useExecutionModal().openModal({
 			executions: [execution],
 			onSuccess: async () => {
 				toast.success('Owner added successfully')

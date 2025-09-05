@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { fetchAccountCode } from '@/api/etherscan'
 import ChainIcon from '@/components/ChainIcon.vue'
+import { useExecutionModal } from '@/components/execution'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import Address from '@/components/utils/Address.vue'
@@ -12,7 +13,6 @@ import { useAccounts } from '@/stores/account/useAccounts'
 import { useInitCode } from '@/stores/account/useInitCode'
 import { CHAIN_ID, CHAIN_NAME, SUPPORTED_CHAIN_IDS } from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { useTxModal } from '@/stores/useTxModal'
 import { isSameAddress } from 'sendop'
 
 const props = defineProps<{
@@ -156,7 +156,7 @@ async function onClickDeploy(chainId: CHAIN_ID) {
 		// Select the account on the target chain
 		selectAccount(props.selectedAccount.address, chainId)
 
-		useTxModal().openModal({
+		useExecutionModal().openModal({
 			onSuccess: async () => {
 				// Update the deployment status when the transaction succeeds
 				// TODO: After transaction success, eth_getCode may not reflect deployment immediately due to block confirmation delay.

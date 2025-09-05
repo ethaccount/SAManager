@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { IS_STAGING } from '@/config'
 import { useAccount } from '@/stores/account/useAccount'
-import { useTxModal } from '@/stores/useTxModal'
+import { useExecutionModal } from '@/components/execution'
 import { Interface, isAddress, parseEther } from 'ethers'
 import { Eraser, Plus, X, Zap } from 'lucide-vue-next'
 
@@ -85,7 +85,7 @@ const reviewButtonText = computed(() => {
 })
 
 async function onClickSend() {
-	useTxModal().openModal({
+	useExecutionModal().openModal({
 		executions: executions.value.map(exec => ({
 			description: exec.description,
 			to: exec.to,

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { TransactionStatus, useTxModal } from '@/stores/useTxModal'
+import { TransactionStatus, useExecutionModal } from '@/components/execution'
 import { encodeCallIdentifier, standardErrors, WalletSendCallsRequest } from '@samanager/sdk'
 import { toBigInt } from 'ethers'
 import { PendingRequest } from './types'
@@ -8,10 +8,10 @@ const props = defineProps<{
 	pendingRequest: PendingRequest<WalletSendCallsRequest['params']>
 }>()
 
-const { status } = useTxModal()
+const { status } = useExecutionModal()
 
 onMounted(() => {
-	// set status to initial like useTxModalStore.openModal()
+	// set status to initial like useExecutionModalStore.openModal()
 	status.value = TransactionStatus.Initial
 })
 
@@ -42,7 +42,12 @@ function handleTxSent(hash: string) {
 </script>
 
 <template>
-	<TxUI :executions="executions" :use-modal-specific-style="false" @close="onClickTxClose" @sent="handleTxSent" />
+	<ExecutionUI
+		:executions="executions"
+		:use-modal-specific-style="false"
+		@close="onClickTxClose"
+		@sent="handleTxSent"
+	/>
 </template>
 
 <style lang="css" scoped></style>

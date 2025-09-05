@@ -2,7 +2,7 @@ import { Methods, RPCPayload } from '@/features/browser/types'
 import { useAccount } from '@/stores/account/useAccount'
 import { displayChainName } from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { useTxModal, type TxModalExecution } from '@/stores/useTxModal'
+import { useExecutionModal, type ExecutionModalExecution } from '@/components/execution'
 import { getAddress, isAddress } from 'ethers'
 import { SafeAppsCommunicator } from './SafeAppsCommunicator'
 import { SafeAppsTransaction, SignMessageParams, SignTypedMessageParams } from './types'
@@ -10,7 +10,7 @@ import { SafeAppsTransaction, SignMessageParams, SignTypedMessageParams } from '
 export function useSafeApps() {
 	const { selectedAccount } = useAccount()
 	const { selectedChainId, client, explorerUrl } = useBlockchain()
-	const { openModal } = useTxModal()
+	const { openModal } = useExecutionModal()
 
 	const communicatorRef = ref<SafeAppsCommunicator>()
 
@@ -83,9 +83,9 @@ export function useSafeApps() {
 				throw new Error('[useSafeApps#sendTransactions] No transactions provided')
 			}
 
-			// Convert SafeAppsTransaction to TxModalExecution
-			const executions: TxModalExecution[] = params.txs.map((tx: SafeAppsTransaction) => {
-				const processedTx: TxModalExecution = {
+			// Convert SafeAppsTransaction to ExecutionModalExecution
+			const executions: ExecutionModalExecution[] = params.txs.map((tx: SafeAppsTransaction) => {
+				const processedTx: ExecutionModalExecution = {
 					to: isAddress(tx.to) ? getAddress(tx.to) : tx.to,
 					value: BigInt(tx.value || '0'),
 					data: tx.data || '0x',
@@ -96,7 +96,7 @@ export function useSafeApps() {
 
 			const messageId = msg.data.id
 
-			// Open TxModal
+			// Open ExecutionModal
 			openModal({
 				executions,
 				// TODO: this doesn't work

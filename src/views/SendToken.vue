@@ -8,7 +8,7 @@ import { checkTokenBalance } from '@/lib/tokens/helpers'
 import { getToken, getTokens, NATIVE_TOKEN_ADDRESS, TokenTransfer } from '@/lib/tokens/token'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { useTxModal } from '@/stores/useTxModal'
+import { useExecutionModal } from '@/components/execution'
 import { shortenAddress } from '@vue-dapp/core'
 import { isAddress, parseUnits } from 'ethers'
 import { Eraser, Plus, X, Zap } from 'lucide-vue-next'
@@ -95,7 +95,7 @@ const onClickReview = async () => {
 	}
 
 	// If all balance checks pass, proceed with the transaction
-	useTxModal().openModal({
+	useExecutionModal().openModal({
 		executions: transfers.value.map(t => {
 			const token = getToken(selectedChainId.value, t.tokenAddress)
 			if (!token) {

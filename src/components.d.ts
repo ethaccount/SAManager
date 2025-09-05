@@ -71,6 +71,9 @@ declare module 'vue' {
     DropdownMenuSubContent: typeof import('./components/ui/dropdown-menu/DropdownMenuSubContent.vue')['default']
     DropdownMenuSubTrigger: typeof import('./components/ui/dropdown-menu/DropdownMenuSubTrigger.vue')['default']
     DropdownMenuTrigger: typeof import('./components/ui/dropdown-menu/DropdownMenuTrigger.vue')['default']
+    ExecutionModal: typeof import('./components/execution/ExecutionModal.vue')['default']
+    ExecutionModalOpPreview: typeof import('./components/execution/ExecutionModalOpPreview.vue')['default']
+    ExecutionUI: typeof import('./components/execution/ExecutionUI.vue')['default']
     FooterMeta: typeof import('./components/FooterMeta.vue')['default']
     FormControl: typeof import('./components/ui/form/FormControl.vue')['default']
     FormDescription: typeof import('./components/ui/form/FormDescription.vue')['default']
@@ -125,9 +128,6 @@ declare module 'vue' {
     TooltipContent: typeof import('./components/ui/tooltip/TooltipContent.vue')['default']
     TooltipProvider: typeof import('./components/ui/tooltip/TooltipProvider.vue')['default']
     TooltipTrigger: typeof import('./components/ui/tooltip/TooltipTrigger.vue')['default']
-    TxModal: typeof import('./components/TxModal.vue')['default']
-    TxModalOpPreview: typeof import('./components/TxModalOpPreview.vue')['default']
-    TxUI: typeof import('./components/TxUI.vue')['default']
     ValidateSmartEOA: typeof import('./components/ImportAccountModal/ValidateSmartEOA.vue')['default']
   }
 }

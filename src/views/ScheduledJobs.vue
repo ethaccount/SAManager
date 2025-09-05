@@ -3,7 +3,7 @@ import { toRoute } from '@/lib/router'
 import { formatDate, formatInterval, formatNextExecution, isJobCompleted, isJobOverdue } from '@/lib/scheduling/jobs'
 import { SwapJobDetails, TransferJobDetails, useFetchJobs, type Job } from '@/lib/scheduling/useFetchJobs'
 import { useAccount } from '@/stores/account/useAccount'
-import { useTxModal } from '@/stores/useTxModal'
+import { useExecutionModal } from '@/components/execution'
 import { shortenAddress } from '@vue-dapp/core'
 import { formatUnits } from 'ethers'
 import { Clock, Loader2, Pause, Play, Zap } from 'lucide-vue-next'
@@ -28,7 +28,7 @@ const onClickJobAction = async (jobId: number, action: 'disable' | 'enable') => 
 			data: INTERFACES.ScheduledTransfers.encodeFunctionData('toggleOrder', [jobId]),
 		}
 
-		useTxModal().openModal({
+		useExecutionModal().openModal({
 			executions: [execution],
 			onSuccess: async () => {
 				await fetchAccountJobs()
@@ -50,7 +50,7 @@ const onClickExecute = async (jobId: number) => {
 			data: INTERFACES.ScheduledTransfers.encodeFunctionData('executeOrder', [jobId]),
 		}
 
-		useTxModal().openModal({
+		useExecutionModal().openModal({
 			executions: [execution],
 			onSuccess: async () => {
 				await fetchAccountJobs()

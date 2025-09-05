@@ -8,7 +8,7 @@ import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
-import { TxModalExecution, useTxModal } from '@/stores/useTxModal'
+import { ExecutionModalExecution, useExecutionModal } from '@/components/execution'
 import { getBigInt, hexlify } from 'ethers'
 import { ADDRESS, ERC7579_MODULE_TYPE, ERC7579Module } from 'sendop'
 import { toast } from 'vue-sonner'
@@ -48,14 +48,14 @@ export function useValidatorManagement() {
 		try {
 			const module = getModuleByValidationMethod(validationMethod)
 
-			const execution: TxModalExecution = {
+			const execution: ExecutionModalExecution = {
 				description: options?.description || `Install ${validationMethod.name}`,
 				to: selectedAccount.value!.address,
 				data: await getInstallModuleData(selectedAccount.value!.accountId, module),
 				value: 0n,
 			}
 
-			useTxModal().openModal({
+			useExecutionModal().openModal({
 				executions: [execution],
 				onSuccess: async () => {
 					if (!selectedAccount.value) {
@@ -94,7 +94,7 @@ export function useValidatorManagement() {
 				deInitData: '0x',
 			}
 
-			const execution: TxModalExecution = {
+			const execution: ExecutionModalExecution = {
 				description: options?.description || `Uninstall ${validationMethodName}`,
 				to: selectedAccount.value!.address,
 				data: await getUninstallModuleData(
@@ -106,7 +106,7 @@ export function useValidatorManagement() {
 				value: 0n,
 			}
 
-			useTxModal().openModal({
+			useExecutionModal().openModal({
 				executions: [execution],
 				onSuccess: async () => {
 					if (!selectedAccount.value) {

@@ -2,7 +2,7 @@
 import { removeSessionExecution } from '@/api/smartsession/removeSession'
 import { useSessionList } from '@/lib/permissions/useSessionList'
 import { ImportedAccount } from '@/stores/account/account'
-import { useTxModal } from '@/stores/useTxModal'
+import { useExecutionModal } from '@/components/execution'
 import { shortenAddress } from '@vue-dapp/core'
 import { Loader2, Trash2 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
@@ -38,7 +38,7 @@ async function onClickRemoveSession(permissionId: string) {
 	}
 
 	try {
-		useTxModal().openModal({
+		useExecutionModal().openModal({
 			executions: [
 				{
 					description: `Remove session by permissionId ${shortenAddress(permissionId)}`,

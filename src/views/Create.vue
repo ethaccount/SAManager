@@ -28,7 +28,7 @@ import { getAuthenticatorIdHash } from '@/stores/passkey/passkeyNoRp'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useSigner } from '@/stores/useSigner'
-import { useTxModal } from '@/stores/useTxModal'
+import { useExecutionModal } from '@/components/execution'
 import { concat, getBigInt, hexlify, isAddress } from 'ethers'
 import { AlertCircle, ChevronRight, Power } from 'lucide-vue-next'
 import { toBytes32 } from 'sendop'
@@ -266,7 +266,7 @@ function onClickDeploy() {
 
 	selectAccount(computedAddress.value, selectedChainId.value)
 
-	useTxModal().openModal({
+	useExecutionModal().openModal({
 		// Update the deployed status when the transaction status changes
 		// When users has deployed and closed the modal, they can't click the deploy button again
 		onSuccess: async () => {

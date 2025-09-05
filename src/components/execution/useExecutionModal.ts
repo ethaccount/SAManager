@@ -1,4 +1,4 @@
-import TxModal from '@/components/TxModal.vue'
+import ExecutionModal from '@/components/execution/ExecutionModal.vue'
 import { usePaymaster } from '@/lib/paymasters'
 import { UserOpDirector } from '@/lib/UserOpDirector'
 import { useAccount } from '@/stores/account/useAccount'
@@ -6,8 +6,8 @@ import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { defineStore, storeToRefs } from 'pinia'
 import { Execution, UserOpBuilder, UserOperationReceipt } from 'sendop'
 import { useModal } from 'vue-final-modal'
-import { useSigner } from './useSigner'
 import { toast } from 'vue-sonner'
+import { useSigner } from '../../stores/useSigner'
 
 export enum TransactionStatus {
 	Closed = 'Closed',
@@ -23,12 +23,12 @@ export enum TransactionStatus {
 	Failed = 'Failed',
 }
 
-export type TxUIProps = {
-	executions?: TxModalExecution[]
+export type ExecutionUIProps = {
+	executions?: ExecutionModalExecution[]
 	useModalSpecificStyle?: boolean
 }
 
-export type TxUIEmits = {
+export type ExecutionUIEmits = {
 	(e: 'close'): void
 	(e: 'sent', hash: string): void
 	(e: 'executed'): void // when status is success or failed
@@ -36,20 +36,20 @@ export type TxUIEmits = {
 	(e: 'failed'): void
 }
 
-export type TxModalExecution = Execution & {
+export type ExecutionModalExecution = Execution & {
 	description?: string
 }
 
-export const useTxModalStore = defineStore('useTxModalStore', () => {
+export const useExecutionModalStore = defineStore('useExecutionModalStore', () => {
 	const { open, close, patchOptions } = useModal({
-		component: TxModal,
+		component: ExecutionModal,
 	})
 
-	const defaultProps: InstanceType<typeof TxModal>['$props'] = {
+	const defaultProps: InstanceType<typeof ExecutionModal>['$props'] = {
 		executions: [],
 	}
 
-	function openModal(props: InstanceType<typeof TxModal>['$props']) {
+	function openModal(props: InstanceType<typeof ExecutionModal>['$props']) {
 		const { isAccountAccessible } = useAccount()
 		if (!isAccountAccessible.value) {
 			toast.error('Please connect your account first')
@@ -124,7 +124,7 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 	const opHash = ref<string | null>(null)
 	const opReceipt = ref<UserOperationReceipt | null>(null)
 
-	function resetTxModal() {
+	function resetExecutionModal() {
 		status.value = TransactionStatus.Closed
 		userOp.value = null
 		opHash.value = null
@@ -246,7 +246,7 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 		canClose,
 		openModal,
 		closeModal: close,
-		resetTxModal,
+		resetExecutionModal,
 		handleEstimate,
 		handleSign,
 		sendUserOp,
@@ -255,8 +255,8 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 	}
 })
 
-export function useTxModal() {
-	const store = useTxModalStore()
+export function useExecutionModal() {
+	const store = useExecutionModalStore()
 	return {
 		...store,
 		...storeToRefs(store),
