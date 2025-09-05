@@ -1,3 +1,4 @@
+import { ImportedAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { CHAIN_ID, isSupportedChainId } from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
@@ -34,24 +35,24 @@ export function validateChainIdMatchesSelectedChain(chainIdHex: string) {
 	}
 }
 
-export function validateAccountConnection(accountAddress: string): string {
+export function validateAccountConnection(accountAddress: string): ImportedAccount {
 	if (!isAddress(accountAddress)) {
 		throw standardErrors.rpc.invalidParams('Invalid account address')
 	}
 
-	const selectedAccountAddress = validateConnection()
+	const selectedAccount = validateConnection()
 
-	if (!isSameAddress(accountAddress, selectedAccountAddress)) {
+	if (!isSameAddress(accountAddress, selectedAccount.address)) {
 		throw standardErrors.provider.unauthorized('Account address mismatch')
 	}
 
-	return selectedAccountAddress
+	return selectedAccount
 }
 
-export function validateConnection(): string {
+export function validateConnection(): ImportedAccount {
 	const { selectedAccount } = useAccount()
 	if (!selectedAccount.value) {
 		throw standardErrors.provider.unauthorized('No account selected')
 	}
-	return selectedAccount.value.address
+	return selectedAccount.value
 }

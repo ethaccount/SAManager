@@ -1,3 +1,6 @@
+import { AccountId } from '@/lib/accounts'
+import { ImportedAccount } from '@/stores/account/account'
+import { CHAIN_ID } from '@/stores/blockchain/chains'
 import { useConnect } from './useConnect'
 
 // Mock Vue composition functions
@@ -18,6 +21,7 @@ vi.mock('@/stores/blockchain', () => ({
 		client: { value: mockClient },
 		selectedChainId: mockSelectedChainId,
 	})),
+	SUPPORTED_CHAIN_IDS: ['1', '11155111', '8453'], // Mock supported chain IDs for testing
 }))
 
 // Mock the specific blockchain store path used in common.ts
@@ -28,11 +32,11 @@ vi.mock('@/stores/blockchain/useBlockchain', () => ({
 }))
 
 vi.mock('@/stores/blockchain/chains', () => ({
-	isSupportedChainId: vi.fn(() => true),
+	isSupportedChainId: vi.fn((chainId: string) => ['1', '11155111', '8453'].includes(chainId)),
 }))
 
 // Mock account store - THIS IS THE KEY MOCK FOR AUTH TESTING
-const mockSelectedAccount = { value: null as null | { address: string } }
+const mockSelectedAccount = { value: null as null | ImportedAccount }
 vi.mock('@/stores/account/useAccount', () => ({
 	useAccount: vi.fn(() => ({
 		selectedAccount: mockSelectedAccount,
@@ -48,12 +52,22 @@ vi.mock('@/lib/error', () => ({
 	getErrorMessage: vi.fn(err => err?.message || 'Unknown error'),
 }))
 
+const testAddress = '0x1234567890123456789012345678901234567890'
+const fakeAddress = '0x1234567890123456789012345678901234567891'
+
 describe('useConnect', () => {
 	let walletRequestHandler: ReturnType<typeof useConnect>['walletRequestHandler']
 
 	beforeEach(() => {
 		vi.clearAllMocks()
-		mockSelectedAccount.value = null
+		mockSelectedAccount.value = {
+			accountId: AccountId['biconomy.nexus.1.2.0'],
+			category: 'Smart Account',
+			address: testAddress,
+			chainId: '1' as CHAIN_ID,
+			vMethods: [],
+		}
+
 		mockSelectedChainId.value = '1' // Reset to chain ID 1
 		walletRequestHandler = useConnect().walletRequestHandler
 	})
@@ -73,46 +87,95 @@ describe('useConnect', () => {
 
 		// pnpm vitest --run test -t "wallet_getCapabilities"
 		describe('wallet_getCapabilities', () => {
-			it('should throw unauthorized error when no account is selected and address is provided', async () => {
-				// Setup: no account selected
-				mockSelectedAccount.value = null
+			describe('authorization validation', () => {
+				it('should throw unauthorized error when no account is selected and address is provided', async () => {
+					mockSelectedAccount.value = null
+					await expect(
+						walletRequestHandler('wallet_getCapabilities', [testAddress, ['0x1']]),
+					).rejects.toThrow('No account selected')
+				})
 
-				// Test with address parameter - should reject due to authorization check
-				await expect(
-					walletRequestHandler('wallet_getCapabilities', [
-						'0x1234567890123456789012345678901234567890',
-						['0x1'],
-					]),
-				).rejects.toThrow('No account selected')
+				it('should throw unauthorized error when address does not match selected account', async () => {
+					await expect(
+						walletRequestHandler('wallet_getCapabilities', [fakeAddress, ['0x1']]),
+					).rejects.toThrow('Account address mismatch')
+				})
+
+				it('should throw error when no address is provided', async () => {
+					await expect(walletRequestHandler('wallet_getCapabilities', [undefined, ['0x1']])).rejects.toThrow(
+						'Invalid account address',
+					)
+				})
 			})
 
-			it('should throw unauthorized error when address does not match selected account', async () => {
-				// Setup: account selected but different address
-				mockSelectedAccount.value = { address: '0x9876543210987654321098765432109876543210' }
+			describe('chainIds validation', () => {
+				it('should throw error when chainIds is not an array', async () => {
+					await expect(
+						walletRequestHandler('wallet_getCapabilities', [testAddress, 'invalid']),
+					).rejects.toThrow('Invalid chainIds')
+				})
 
-				await expect(
-					walletRequestHandler('wallet_getCapabilities', [
-						'0x1234567890123456789012345678901234567890',
-						['0x1'],
-					]),
-				).rejects.toThrow('Account address mismatch')
+				it('should throw error when chainIds is an empty array', async () => {
+					await expect(walletRequestHandler('wallet_getCapabilities', [testAddress, []])).rejects.toThrow(
+						'Invalid chainIds',
+					)
+				})
+
+				it('should throw error when chainId does not have 0x prefix', async () => {
+					await expect(walletRequestHandler('wallet_getCapabilities', [testAddress, ['1']])).rejects.toThrow(
+						'chainId must have 0x prefix',
+					)
+				})
+
+				it('should throw error when chainId has leading zeros', async () => {
+					await expect(
+						walletRequestHandler('wallet_getCapabilities', [testAddress, ['0x01']]),
+					).rejects.toThrow('chainId must not have leading zeros')
+				})
+
+				it('should throw error when chainId is unsupported', async () => {
+					await expect(
+						walletRequestHandler('wallet_getCapabilities', [testAddress, ['0x999']]),
+					).rejects.toThrow('Unsupported chain')
+				})
 			})
 
-			it('should not throw unauthorized error when account is selected and addresses match', async () => {
-				// Setup: account selected with matching address
-				const testAddress = '0x1234567890123456789012345678901234567890'
-				mockSelectedAccount.value = { address: testAddress }
+			describe('successful capability responses', () => {
+				it('should return capabilities for single supported chainId', async () => {
+					const result = await walletRequestHandler('wallet_getCapabilities', [testAddress, ['0x1']])
+					expect(result).toEqual({
+						'0x1': { atomic: { supported: true }, paymasterService: { supported: true } },
+					})
+				})
 
-				const result = await walletRequestHandler('wallet_getCapabilities', [testAddress, ['0x1']])
+				it('should return capabilities for multiple supported chainIds', async () => {
+					const result = await walletRequestHandler('wallet_getCapabilities', [
+						testAddress,
+						['0x1', '0x2105'],
+					])
+					expect(result).toEqual({
+						'0x1': { atomic: { supported: true }, paymasterService: { supported: true } },
+						'0x2105': { atomic: { supported: true }, paymasterService: { supported: true } },
+					})
+				})
 
-				// Should return capabilities for the requested chain
-				expect(result).toEqual({ '0x1': { atomic: { status: 'supported' } } })
-			})
+				it('should return capabilities for all supported chains when no chainIds provided', async () => {
+					const result = await walletRequestHandler('wallet_getCapabilities', [testAddress])
+					expect(result).toEqual({
+						'0x1': { atomic: { supported: true }, paymasterService: { supported: true } },
+						'0xaa36a7': { atomic: { supported: true }, paymasterService: { supported: true } },
+						'0x2105': { atomic: { supported: true }, paymasterService: { supported: true } },
+					})
+				})
 
-			it('should throw error when no address is provided', async () => {
-				await expect(walletRequestHandler('wallet_getCapabilities', [undefined, ['0x1']])).rejects.toThrow(
-					'Invalid account address',
-				)
+				it('should return capabilities for all supported chains when chainIds is undefined', async () => {
+					const result = await walletRequestHandler('wallet_getCapabilities', [testAddress, undefined])
+					expect(result).toEqual({
+						'0x1': { atomic: { supported: true }, paymasterService: { supported: true } },
+						'0xaa36a7': { atomic: { supported: true }, paymasterService: { supported: true } },
+						'0x2105': { atomic: { supported: true }, paymasterService: { supported: true } },
+					})
+				})
 			})
 		})
 
@@ -137,12 +200,10 @@ describe('useConnect', () => {
 			})
 
 			it('should throw unauthorized error when from address does not match selected account', async () => {
-				// Setup: account selected but different from address
-				mockSelectedAccount.value = { address: '0x9876543210987654321098765432109876543210' }
 				const paramsWithDifferentFrom = [
 					{
 						...validSendCallsParams[0],
-						from: '0x1234567890123456789012345678901234567890',
+						from: fakeAddress,
 					},
 				]
 
@@ -152,9 +213,6 @@ describe('useConnect', () => {
 			})
 
 			it('should pass validation when account is selected and from matches', async () => {
-				// Setup: account selected with matching from address
-				const testAddress = '0x1234567890123456789012345678901234567890'
-				mockSelectedAccount.value = { address: testAddress }
 				const paramsWithFrom = [
 					{
 						...validSendCallsParams[0],
@@ -189,9 +247,6 @@ describe('useConnect', () => {
 			})
 
 			it('should pass validation when account is selected and no from is provided', async () => {
-				// Setup: account selected, no from address (should use selectedAccount.address)
-				mockSelectedAccount.value = { address: '0x1234567890123456789012345678901234567890' }
-
 				// Test that validation passes (doesn't throw) within reasonable time
 				let rejected = false
 				let rejectionError: unknown = null

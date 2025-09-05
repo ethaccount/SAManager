@@ -1,3 +1,4 @@
+import { SupportedCapability } from '@/features/account-capabilities'
 import { EntryPointVersion } from 'sendop'
 import {
 	KernelAccountProvider,
@@ -53,6 +54,10 @@ export class AccountRegistry {
 	static getVersion(accountId: AccountId): string {
 		return AccountRegistry.getConfig(accountId).version
 	}
+
+	static getCapabilities(accountId: AccountId): SupportedCapability[] {
+		return AccountRegistry.getConfig(accountId).capabilities
+	}
 }
 
 AccountRegistry.register(AccountId['kernel.advanced.v0.3.1'], {
@@ -62,6 +67,7 @@ AccountRegistry.register(AccountId['kernel.advanced.v0.3.1'], {
 	entryPointVersion: 'v0.7',
 	canCreate: false,
 	version: '0.3.1',
+	capabilities: ['paymasterService'],
 })
 AccountRegistry.register(AccountId['kernel.advanced.v0.3.3'], {
 	provider: new KernelAccountProvider(),
@@ -70,6 +76,7 @@ AccountRegistry.register(AccountId['kernel.advanced.v0.3.3'], {
 	entryPointVersion: 'v0.7',
 	canCreate: true,
 	version: '0.3.3',
+	capabilities: ['paymasterService'],
 })
 AccountRegistry.register(AccountId['biconomy.nexus.1.0.2'], {
 	provider: new NexusAccountProvider(),
@@ -78,6 +85,7 @@ AccountRegistry.register(AccountId['biconomy.nexus.1.0.2'], {
 	entryPointVersion: 'v0.7',
 	canCreate: false,
 	version: '1.0.2',
+	capabilities: ['paymasterService'],
 })
 AccountRegistry.register(AccountId['biconomy.nexus.1.2.0'], {
 	provider: new NexusAccountProvider(),
@@ -86,6 +94,7 @@ AccountRegistry.register(AccountId['biconomy.nexus.1.2.0'], {
 	entryPointVersion: 'v0.7',
 	canCreate: true,
 	version: '1.2.0',
+	capabilities: ['paymasterService'],
 })
 AccountRegistry.register(AccountId['rhinestone.safe7579.v1.0.0'], {
 	provider: new Safe7579AccountProvider(),
@@ -94,6 +103,7 @@ AccountRegistry.register(AccountId['rhinestone.safe7579.v1.0.0'], {
 	entryPointVersion: 'v0.7',
 	canCreate: true,
 	version: '1.0.0',
+	capabilities: ['paymasterService'],
 })
 AccountRegistry.register(AccountId['infinitism.Simple7702Account.0.8.0'], {
 	provider: new Simple7702AccountProvider(),
@@ -102,4 +112,5 @@ AccountRegistry.register(AccountId['infinitism.Simple7702Account.0.8.0'], {
 	entryPointVersion: 'v0.8',
 	canCreate: false,
 	version: '0.8.0',
+	capabilities: ['paymasterService'],
 })

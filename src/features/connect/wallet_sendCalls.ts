@@ -1,7 +1,8 @@
+import { ImportedAccount } from '@/stores/account/account'
 import type { Call, Capability, WalletSendCallsRequest } from '@samanager/sdk'
 import { standardErrors } from '@samanager/sdk'
 import { isAddress } from 'ethers'
-import { isSupportedCapability } from './capabilities'
+import { isAccountCapabilitySupported } from '../account-capabilities'
 import {
 	validateAccountConnection,
 	validateChainIdFormat,
@@ -40,11 +41,11 @@ export function validateWalletSendCallsParams(params: WalletSendCallsRequest['pa
 	validateChainIdSupport(sendCallsParams.chainId)
 	validateChainIdMatchesSelectedChain(sendCallsParams.chainId)
 
-	let sender: string
+	let account: ImportedAccount
 	if (sendCallsParams.from) {
-		sender = validateAccountConnection(sendCallsParams.from)
+		account = validateAccountConnection(sendCallsParams.from)
 	} else {
-		sender = validateConnection()
+		account = validateConnection()
 	}
 
 	// Validate call id if provided
@@ -56,8 +57,8 @@ export function validateWalletSendCallsParams(params: WalletSendCallsRequest['pa
 	validateCalls(sendCallsParams.calls)
 
 	// Validate capabilities if provided
-	if (sendCallsParams.capabilities) {
-		validateCapabilities(sender, sendCallsParams.capabilities)
+	if (sendCallsParams.capabilities && typeof sendCallsParams.capabilities === 'object') {
+		validateCapabilities(account, sendCallsParams.capabilities)
 	}
 }
 
@@ -96,19 +97,17 @@ function validateCalls(calls: unknown[]) {
 	}
 }
 
-function validateCapabilities(sender: string, capabilities: Record<string, unknown>) {
-	for (const [capName, capValue] of Object.entries(capabilities)) {
-		if (typeof capValue !== 'object' || capValue === null) {
-			throw standardErrors.rpc.invalidParams(`Invalid capability ${capName} in ${sender}`)
+function validateCapabilities(account: ImportedAccount, capabilities: Record<string, Capability>) {
+	for (const [capName, capability] of Object.entries(capabilities)) {
+		if (typeof capability !== 'object' || !capability) {
+			throw standardErrors.rpc.invalidParams(`Invalid capability: ${capName}`)
 		}
 
-		const capObj = capValue as Capability
-
 		// Check if capability is optional
-		const isOptional = capObj.optional === true
+		const isOptional = capability.optional === true
 
 		// If capability is not supported and not optional, reject
-		if (!isOptional && !isSupportedCapability(sender, capName)) {
+		if (!isOptional && !isAccountCapabilitySupported(account, capName, capability)) {
 			throw standardErrors.provider.unsupportedCapability(`Unsupported capability: ${capName}`)
 		}
 	}

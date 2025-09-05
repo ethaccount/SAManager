@@ -45,10 +45,9 @@ export function useConnect() {
 					}
 					case 'wallet_getCapabilities': {
 						// await new Promise(resolve => setTimeout(resolve, 10000000))
-						const capabilities = (await handleGetCapabilities(
+						result = (await handleGetCapabilities(
 							params as WalletGetCapabilitiesRequest['params'],
 						)) as WalletGetCapabilitiesResponse
-						result = capabilities
 						break
 					}
 

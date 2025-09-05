@@ -85,9 +85,13 @@ async function onClickGetBlock() {
 				method: 'eth_getBlockByNumber',
 				params: ['latest', false],
 			})
-		} catch (err: unknown) {
-			console.error('Error getting block', err)
-			getBlockError.value = err instanceof Error ? err.message : 'Failed to get block'
+		} catch (err) {
+			console.error(err)
+			if (err instanceof EthereumRpcError) {
+				getBlockError.value = `${err.code}: ${err.message}`
+			} else {
+				getBlockError.value = `Error getting block: ${getErrorMessage(err)}`
+			}
 		}
 	} else {
 		getBlockError.value = 'Wallet not connected'
@@ -103,9 +107,13 @@ async function onClickGetChainId() {
 				method: 'eth_chainId',
 				params: [],
 			})
-		} catch (err: unknown) {
-			console.error('Error getting chain ID', err)
-			chainIdError.value = err instanceof Error ? err.message : 'Failed to get chain ID'
+		} catch (err) {
+			console.error(err)
+			if (err instanceof EthereumRpcError) {
+				chainIdError.value = `${err.code}: ${err.message}`
+			} else {
+				chainIdError.value = `Error getting chain ID: ${getErrorMessage(err)}`
+			}
 		}
 	} else {
 		chainIdError.value = 'Wallet not connected'
@@ -122,9 +130,13 @@ async function onClickGetCapabilities() {
 				params: [wallet.address, [`0x${DAPP_CHAIN_ID.toString(16)}`]],
 			})
 			console.log('capabilitiesResult', capabilitiesResult.value)
-		} catch (err: unknown) {
-			console.error('Error getting capabilities', err)
-			capabilitiesError.value = err instanceof Error ? err.message : 'Failed to get capabilities'
+		} catch (err) {
+			console.error(err)
+			if (err instanceof EthereumRpcError) {
+				capabilitiesError.value = `${err.code}: ${err.message}`
+			} else {
+				capabilitiesError.value = `Error getting capabilities: ${getErrorMessage(err)}`
+			}
 		}
 	} else {
 		capabilitiesError.value = 'Wallet not connected'
@@ -177,9 +189,13 @@ async function onClickGetCallsStatus() {
 				method: 'wallet_getCallsStatus',
 				params: [sendCallsResult.value.id],
 			})
-		} catch (err: unknown) {
-			console.error('Error getting calls status', err)
-			getCallsStatusError.value = err instanceof Error ? err.message : 'Failed to get calls status'
+		} catch (err) {
+			console.error(err)
+			if (err instanceof EthereumRpcError) {
+				getCallsStatusError.value = `${err.code}: ${err.message}`
+			} else {
+				getCallsStatusError.value = `Error getting calls status: ${getErrorMessage(err)}`
+			}
 		}
 	} else if (!sendCallsResult.value) {
 		getCallsStatusError.value = 'No sendCalls result available'
@@ -197,9 +213,13 @@ async function onClickShowCallsStatus() {
 				method: 'wallet_showCallsStatus',
 				params: [sendCallsResult.value.id],
 			})
-		} catch (err: unknown) {
-			console.error('Error showing calls status', err)
-			showCallsStatusError.value = err instanceof Error ? err.message : 'Failed to show calls status'
+		} catch (err) {
+			console.error(err)
+			if (err instanceof EthereumRpcError) {
+				showCallsStatusError.value = `${err.code}: ${err.message}`
+			} else {
+				showCallsStatusError.value = `Error showing calls status: ${getErrorMessage(err)}`
+			}
 		}
 	} else if (!sendCallsResult.value) {
 		showCallsStatusError.value = 'No sendCalls result available'
@@ -221,9 +241,13 @@ async function onClickSwitchChain() {
 			params: [{ chainId: `0x${DAPP_CHAIN_ID.toString(16)}` }],
 		})
 		switchChainResult.value = result === null ? 'Chain switched successfully' : JSON.stringify(result)
-	} catch (err: unknown) {
+	} catch (err) {
 		console.error(err)
-		switchChainError.value = err instanceof Error ? err.message : 'Failed to switch chain'
+		if (err instanceof EthereumRpcError) {
+			switchChainError.value = `${err.code}: ${err.message}`
+		} else {
+			switchChainError.value = `Error switching chain: ${getErrorMessage(err)}`
+		}
 	}
 }
 </script>

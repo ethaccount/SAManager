@@ -33,7 +33,9 @@
 		"cf-typegen": "wrangler types",
 		"lint": "eslint .",
 		"lint:fix": "eslint . --fix",
-		"check": "pnpm typecheck && pnpm lint"
+		"check": "pnpm typecheck && pnpm lint",
+		"check:sdk": "pnpm -F sdk check",
+		"check:all": "pnpm run check:sdk && pnpm run check"
 	},
 	"dependencies": {
 		"@internationalized/date": "^3.7.0",
