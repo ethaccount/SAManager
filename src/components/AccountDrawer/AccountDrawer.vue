@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { AccountRegistry } from '@/lib/accounts'
 import { AccountWithMultichain, useAccountList } from '@/lib/accounts/useAccountList'
 import { toRoute } from '@/lib/router'
@@ -14,7 +12,7 @@ import { useSigner } from '@/stores/useSigner'
 import { shortenAddress } from '@vue-dapp/core'
 import { breakpointsTailwind } from '@vueuse/core'
 import { concat, keccak256, toBeHex } from 'ethers'
-import { AlertCircle, ArrowRight, CheckCircle, CircleDot, Download, Info, Plus, Power, X } from 'lucide-vue-next'
+import { AlertCircle, ArrowRight, CheckCircle, CircleDot, Download, Plus, Power, X } from 'lucide-vue-next'
 import { VueFinalModal } from 'vue-final-modal'
 
 const emit = defineEmits<{
@@ -100,8 +98,14 @@ function getAccountListKey(account: AccountWithMultichain) {
 										</Tooltip>
 									</TooltipProvider>
 
-									<span class="font-medium truncate">
+									<span class="font-medium relative">
 										{{ shortenAddress(selectedAccount.address) }}
+										<span
+											v-if="!isAccountAccessible"
+											class="absolute -top-2.5 left-0 text-[10px] text-yellow-700 dark:text-yellow-400"
+										>
+											Not Connected
+										</span>
 									</span>
 									<div class="flex items-center gap-1">
 										<CopyButton :address="selectedAccount.address" />
@@ -154,7 +158,7 @@ function getAccountListKey(account: AccountWithMultichain) {
 				</div>
 
 				<!-- Warning section for inaccessible account -->
-				<div
+				<!-- <div
 					v-if="selectedAccount && !isAccountAccessible"
 					class="warning-section flex items-start gap-2 text-sm"
 				>
@@ -167,7 +171,7 @@ function getAccountListKey(account: AccountWithMultichain) {
 						</p>
 						<p class="">Connect the appropriate signer to use this account</p>
 					</div>
-				</div>
+				</div> -->
 
 				<!-- Buttons -->
 				<div class="" v-if="selectedAccount">

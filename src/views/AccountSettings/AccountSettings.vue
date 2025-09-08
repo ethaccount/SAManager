@@ -9,27 +9,50 @@ import { displayChainName } from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { shortenAddress } from '@vue-dapp/core'
 import { ArrowLeft, Loader2 } from 'lucide-vue-next'
+import { isSameAddress } from 'sendop'
 
+const route = useRoute()
 const router = useRouter()
 const { selectedAccount, isModular, isChainIdMatching, isMultichain } = useAccount()
 const { getCode, isDeployed, loading } = useGetCode()
 
 const isGetCodeFinished = ref(false)
 
-// Timing: App loaded, Account changed
-// Use this instead of onMounted because users might change account with the drawer
-watchImmediate(selectedAccount, async () => {
-	isGetCodeFinished.value = false
+// If the user navigates directly to the account-settings with an address, check if the address matches the selectedAccount
+const addressNotFound = ref(false)
+try {
+	if (selectedAccount.value && !isSameAddress(route.params.address as string, selectedAccount.value.address)) {
+		addressNotFound.value = true
+	}
+} catch {
+	addressNotFound.value = true
+}
 
+// Only check address if it's not on the "address not found" page
+onMounted(async () => {
+	if (!addressNotFound.value) {
+		await checkAddress()
+	}
+})
+
+// If on the "address not found" page, users can select another account via the drawer
+watch(selectedAccount, async () => {
+	addressNotFound.value = false
+	await checkAddress()
+})
+
+async function checkAddress() {
 	if (selectedAccount.value && isChainIdMatching.value) {
-		// Only redirect if we're on the exact account route (not on a child route)
-		if (router.currentRoute.value.name === 'account') {
-			router.replace(toRoute('account-settings-modules', { address: selectedAccount.value.address }))
-		}
+		isGetCodeFinished.value = false
+		router.replace(
+			toRoute(router.currentRoute.value.name as string, {
+				address: selectedAccount.value.address,
+			}),
+		)
 		await getCode(selectedAccount.value.address)
 		isGetCodeFinished.value = true
 	}
-})
+}
 
 function onClickSwitchToCorrectChain() {
 	if (!selectedAccount.value) return
@@ -45,6 +68,13 @@ const showSwitchToCorrectChain = computed(() => {
 	<CenterStageLayout>
 		<div v-if="!selectedAccount" class="w-full mx-auto flex justify-center items-center h-full flex-col gap-4">
 			<div class="text-sm text-muted-foreground">Import or create an account to view its settings</div>
+			<Button variant="outline" size="sm" @click="router.push(toRoute('home'))">
+				<ArrowLeft class="h-3.5 w-3.5" />
+				Go to home page
+			</Button>
+		</div>
+		<div v-else-if="addressNotFound" class="w-full mx-auto flex justify-center items-center h-full flex-col gap-4">
+			<div class="text-sm text-muted-foreground">Account Not Found</div>
 			<Button variant="outline" size="sm" @click="router.push(toRoute('home'))">
 				<ArrowLeft class="h-3.5 w-3.5" />
 				Go to home page
