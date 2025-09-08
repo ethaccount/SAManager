@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { fetchEthUsdPrice } from '@/api/etherscan'
 import { ExecutionUIEmits, ExecutionUIProps, TransactionStatus, useExecutionModal } from '@/components/ExecutionModal'
-import { Button } from '@/components/ui/button'
-import Address from '@/components/utils/Address.vue'
 import { AccountRegistry } from '@/lib/accounts'
 import { addressToName } from '@/lib/addressToName'
 import {
@@ -33,9 +31,8 @@ import {
 	UserOpBuilder,
 } from 'sendop'
 import { toast } from 'vue-sonner'
-import ExecutionModalUOPreview from './ExecutionModalOpPreview.vue'
-import PaymasterSelector from './PaymasterSelector.vue'
 import { usePaymaster } from './paymasters'
+import { usePaymasterService } from './paymasters/usePaymasterService'
 
 const props = withDefaults(defineProps<ExecutionUIProps>(), {
 	executions: () => [],
@@ -74,6 +71,8 @@ const {
 	resetExecutionModal,
 } = useExecutionModal()
 
+status.value = TransactionStatus.Initial
+
 const txModalErrorMessage = ref<string | null>(null)
 
 // Expansion state for executions
@@ -97,28 +96,36 @@ watchImmediate(isAccountAccessible, () => {
 
 const { selectedPaymaster, paymasters, checkUsdcBalanceAndAllowance, usdcPaymasterData } = usePaymaster()
 
-// This cannot be placed in useExecutionModal because it needs to be executed immediately when the ExecutionModal is mounted
-watchImmediate(selectedPaymaster, async newPaymaster => {
-	// If the selected paymaster is not supported, switch to the first supported paymaster
-	if (!paymasters.value.some(paymaster => paymaster.id === newPaymaster)) {
-		selectedPaymaster.value = paymasters.value[0].id
-	}
+// ================================================
+// Paymaster Selection Logic
+// ================================================
 
+if (props.paymasterCapability) {
+	selectedPaymaster.value = 'erc7677'
+} else if (!paymasters.value.some(paymaster => paymaster.id === selectedPaymaster.value)) {
+	// If the selected paymaster is not supported, switch to the first supported paymaster
+	selectedPaymaster.value = paymasters.value[0].id
+}
+
+// This cannot be placed in useExecutionModal because it needs to be executed immediately when the ExecutionModal is mounted
+watchImmediate(selectedPaymaster, async () => {
 	if (status.value === TransactionStatus.Initial) {
-		if (newPaymaster === 'usdc') {
+		if (selectedPaymaster.value === 'usdc') {
+			// Preparing USDC paymaster
 			status.value = TransactionStatus.PreparingPaymaster
 			await checkUsdcBalanceAndAllowance()
 			if (usdcPaymasterData.value) {
 				status.value = TransactionStatus.Initial
 			}
-		} else {
-			status.value = TransactionStatus.Initial
+		} else if (selectedPaymaster.value === 'erc7677') {
+			// Preparing ERC-7677 paymaster
+			status.value = TransactionStatus.PreparingPaymaster
+			const { checkEntryPointSupport } = usePaymasterService()
+			const isEntryPointSupported = await checkEntryPointSupport(props.paymasterCapability)
+			if (isEntryPointSupported) {
+				status.value = TransactionStatus.Initial
+			}
 		}
-	}
-
-	// When selecting other paymaster from usdc paymaster, reset the status to initial
-	if (status.value === TransactionStatus.PreparingPaymaster && newPaymaster !== 'usdc') {
-		status.value = TransactionStatus.Initial
 	}
 })
 

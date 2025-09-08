@@ -78,8 +78,6 @@ export const useExecutionModalStore = defineStore('useExecutionModalStore', () =
 		})
 
 		open()
-
-		status.value = TransactionStatus.Initial
 	}
 
 	const { bundler, selectedChainId, client, fetchGasPrice, currentEntryPointAddress } = useBlockchain()

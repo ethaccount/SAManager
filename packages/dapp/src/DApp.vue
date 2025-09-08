@@ -335,7 +335,7 @@ async function onClickSwitchChain() {
 			<button class="btn" @click="onClickGetCallsStatus">wallet_getCallsStatus</button>
 			<div v-if="getCallsStatusError" class="text-red-500">{{ getCallsStatusError }}</div>
 			<div v-if="getCallsStatusResult">
-				<div>{{ getCallsStatusResult }}</div>
+				<div>Status: {{ getCallsStatusResult.status }}</div>
 			</div>
 		</div>
 

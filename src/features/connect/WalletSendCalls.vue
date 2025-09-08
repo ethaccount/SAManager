@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { TransactionStatus, useExecutionModal } from '@/components/ExecutionModal'
 import { encodeCallIdentifier, standardErrors, WalletSendCallsRequest } from '@samanager/sdk'
 import { toBigInt } from 'ethers'
 import { PaymasterServiceCapability } from '../account-capabilities'
@@ -8,13 +7,6 @@ import { PendingRequest } from './types'
 const props = defineProps<{
 	pendingRequest: PendingRequest<WalletSendCallsRequest['params']>
 }>()
-
-const { status } = useExecutionModal()
-
-onMounted(() => {
-	// set status to initial like useExecutionModalStore.openModal()
-	status.value = TransactionStatus.Initial
-})
 
 const executions = computed(() => {
 	const params = props.pendingRequest.params

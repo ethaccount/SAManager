@@ -4,9 +4,8 @@ import Address from '@/components/utils/Address.vue'
 import { PaymasterServiceCapability } from '@/features/account-capabilities'
 import { isTestnet } from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { getErrorMessage } from '@samanager/sdk'
 import { ChevronDown, ChevronUp, ExternalLink, Loader2 } from 'lucide-vue-next'
-import { isSameAddress, PaymasterService } from 'sendop'
+import { SUPPORTED_PAYMASTERS } from './paymasters/constants'
 import { usePaymaster } from './paymasters/usePaymaster'
 
 const props = withDefaults(
@@ -16,7 +15,7 @@ const props = withDefaults(
 	{},
 )
 
-const { selectedChainId, currentEntryPointAddress } = useBlockchain()
+const { selectedChainId } = useBlockchain()
 const { status } = useExecutionModal()
 const {
 	selectedPaymaster,
@@ -38,28 +37,6 @@ const {
 
 // Expansion state for permit USDC section
 const isPermitSectionExpanded = ref(false)
-
-const isCheckingPaymasterSupport = ref(false)
-
-onMounted(async () => {
-	if (props.paymasterCapability) {
-		try {
-			selectedPaymaster.value = 'erc7677'
-			isCheckingPaymasterSupport.value = true
-			// check supported entrypoints
-			const paymasterService = new PaymasterService(props.paymasterCapability.url, selectedChainId.value)
-			const supportedEntryPoints = await paymasterService.supportedEntryPoints()
-			if (!supportedEntryPoints.some(entryPoint => isSameAddress(entryPoint, currentEntryPointAddress.value))) {
-				throw new Error('Paymaster service does not support the current entrypoint')
-			}
-		} catch (err) {
-			selectedPaymaster.value = 'none'
-			throw new Error(`Error initializing paymaster service: ${getErrorMessage(err)}`, { cause: err })
-		} finally {
-			isCheckingPaymasterSupport.value = false
-		}
-	}
-})
 
 // Watch status to auto-expand/collapse permit section
 watchImmediate(status, newStatus => {
@@ -131,6 +108,13 @@ const paymasterIcon = computed<string | null>(() => {
 	}
 	return null
 })
+
+const paymasterOptions = computed(() => {
+	if (props.paymasterCapability) {
+		return [...paymasters.value, SUPPORTED_PAYMASTERS.erc7677]
+	}
+	return paymasters.value
+})
 </script>
 
 <template>
@@ -151,7 +135,7 @@ const paymasterIcon = computed<string | null>(() => {
 							{{ paymasterName }}
 						</span>
 
-						<span v-if="isCheckingPaymasterSupport" class="flex items-center gap-1">
+						<span v-if="status === TransactionStatus.PreparingPaymaster" class="flex items-center gap-1">
 							<Loader2 class="w-4 h-4 animate-spin" />
 						</span>
 					</div>
@@ -163,7 +147,7 @@ const paymasterIcon = computed<string | null>(() => {
 			<SelectContent class="z-[1100]">
 				<SelectItem
 					class="cursor-pointer hover:bg-muted"
-					v-for="paymaster in paymasters"
+					v-for="paymaster in paymasterOptions"
 					:key="paymaster.id"
 					:value="paymaster.id"
 				>
@@ -182,73 +166,66 @@ const paymasterIcon = computed<string | null>(() => {
 		<!-- USDC Paymaster Checks -->
 		<div
 			v-if="
+				!isCheckingUsdcData &&
 				selectedPaymaster === 'usdc' &&
 				(status === TransactionStatus.Initial || status === TransactionStatus.PreparingPaymaster)
 			"
 			class="space-y-2 mt-3 p-3 bg-muted/20 rounded-lg border"
 		>
-			<div>
-				<!-- Loading State -->
-				<div v-if="isCheckingUsdcData" class="flex items-center gap-2 text-sm text-muted-foreground">
-					<Loader2 class="w-4 h-4 animate-spin" />
-					Checking USDC balance and allowance...
+			<div class="space-y-1">
+				<!-- USDC Address -->
+				<div class="flex items-center justify-between text-xs">
+					<div class="flex items-center gap-2">
+						<span>USDC Address</span>
+					</div>
+					<Address :address="usdcAddress ?? ''" button-size="xs" text-size="xs" />
 				</div>
 
-				<div v-else class="space-y-1">
-					<!-- USDC Address -->
-					<div class="flex items-center justify-between text-xs">
-						<div class="flex items-center gap-2">
-							<span>USDC Address</span>
-						</div>
-						<Address :address="usdcAddress ?? ''" button-size="xs" text-size="xs" />
+				<!-- USDC Paymaster Address -->
+				<div class="flex items-center justify-between text-xs">
+					<div class="flex items-center gap-2">
+						<span>USDC Paymaster Address</span>
 					</div>
+					<Address :address="usdcPaymasterAddress ?? ''" button-size="xs" text-size="xs" />
+				</div>
 
-					<!-- USDC Paymaster Address -->
-					<div class="flex items-center justify-between text-xs">
-						<div class="flex items-center gap-2">
-							<span>USDC Paymaster Address</span>
-						</div>
-						<Address :address="usdcPaymasterAddress ?? ''" button-size="xs" text-size="xs" />
+				<!-- USDC Balance -->
+				<div class="flex items-center justify-between text-xs">
+					<div class="flex items-center gap-2">
+						<span>USDC Balance</span>
 					</div>
+					<span class="font-mono" :class="hasUsdcBalance ? 'text-primary' : 'text-yellow-600'">
+						{{ formattedUsdcBalance ?? 'N/A' }} USDC
+					</span>
+				</div>
 
-					<!-- USDC Balance -->
-					<div class="flex items-center justify-between text-xs">
-						<div class="flex items-center gap-2">
-							<span>USDC Balance</span>
-						</div>
-						<span class="font-mono" :class="hasUsdcBalance ? 'text-primary' : 'text-yellow-600'">
-							{{ formattedUsdcBalance ?? 'N/A' }} USDC
-						</span>
+				<!-- USDC Allowance -->
+				<div class="flex items-center justify-between text-xs">
+					<div class="flex items-center gap-2">
+						<span>USDC Allowance</span>
 					</div>
+					<span class="font-mono" :class="hasUsdcAllowance ? 'text-primary' : 'text-yellow-600'">
+						{{ formattedUsdcAllowance ?? 'N/A' }} USDC
+					</span>
+				</div>
 
-					<!-- USDC Allowance -->
-					<div class="flex items-center justify-between text-xs">
-						<div class="flex items-center gap-2">
-							<span>USDC Allowance</span>
-						</div>
-						<span class="font-mono" :class="hasUsdcAllowance ? 'text-primary' : 'text-yellow-600'">
-							{{ formattedUsdcAllowance ?? 'N/A' }} USDC
-						</span>
+				<!-- USDC Permit Signature -->
+				<div class="flex items-center justify-between text-xs">
+					<div class="flex items-center gap-2">
+						<span>Permit Signature</span>
 					</div>
-
-					<!-- USDC Permit Signature -->
-					<div class="flex items-center justify-between text-xs">
-						<div class="flex items-center gap-2">
-							<span>Permit Signature</span>
-						</div>
-						<span
-							class="font-mono"
-							:class="
-								hasUsdcPermitSignature
-									? 'text-green-600'
-									: !hasUsdcAllowance
-										? 'text-yellow-600'
-										: 'text-muted-foreground'
-							"
-						>
-							{{ hasUsdcPermitSignature ? 'Signed' : 'None' }}
-						</span>
-					</div>
+					<span
+						class="font-mono"
+						:class="
+							hasUsdcPermitSignature
+								? 'text-green-600'
+								: !hasUsdcAllowance
+									? 'text-yellow-600'
+									: 'text-muted-foreground'
+						"
+					>
+						{{ hasUsdcPermitSignature ? 'Signed' : 'None' }}
+					</span>
 				</div>
 			</div>
 

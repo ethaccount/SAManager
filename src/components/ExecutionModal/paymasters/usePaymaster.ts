@@ -17,7 +17,7 @@ export const usePaymasterStore = defineStore('usePaymasterStore', () => {
 
 	// Supported paymaster options
 	const paymasters = computed(() => {
-		const excludedPaymasters: (keyof typeof SUPPORTED_PAYMASTERS)[] = []
+		const excludedPaymasters: (keyof typeof SUPPORTED_PAYMASTERS)[] = ['erc7677']
 
 		// exclude public paymaster if not supported
 		if (!isPublicPaymasterSupported.value) {
