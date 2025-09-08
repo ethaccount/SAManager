@@ -547,7 +547,7 @@ const shouldShowEffectiveFee = computed(() => {
 
 					<!-- Deployment Status -->
 					<div
-						v-if="!isDeployed && selectedAccount?.category === 'Smart Account'"
+						v-if="!isLoadingCode && !isDeployed && selectedAccount?.category === 'Smart Account'"
 						class="flex items-center justify-between text-sm"
 					>
 						<span class="text-muted-foreground">Status</span>
@@ -559,7 +559,10 @@ const shouldShowEffectiveFee = computed(() => {
 				</div>
 
 				<!-- Account Deployment Notice -->
-				<div v-if="!isDeployed && selectedAccount?.category === 'Smart Account'" class="warning-section">
+				<div
+					v-if="!isLoadingCode && !isDeployed && selectedAccount?.category === 'Smart Account'"
+					class="warning-section"
+				>
 					This transaction will deploy your account
 				</div>
 			</div>
