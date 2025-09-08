@@ -30,8 +30,7 @@ const { wallet, address, isEOAWalletConnected, disconnect, isEOAWalletSupported 
 const { isLogin, resetCredentialId, selectedCredentialDisplay, isPasskeySupported } = usePasskey()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 const { selectSigner, selectedSigner } = useSigner()
-const { accountList, isAccountSelected, onClickSelectAccount, onClickDeleteAccount, onClickUnselectAccount } =
-	useAccountList()
+const { accountList, isAccountSelected, onClickSelectAccount, onClickUnselectAccount } = useAccountList()
 
 function onClickAccountSettings() {
 	if (!selectedAccount.value) return
@@ -352,15 +351,6 @@ function getAccountListKey(account: AccountWithMultichain) {
 								<!-- <span>{{ account.vOptions.map(v => v.type).join(', ') }}</span> -->
 							</div>
 						</div>
-
-						<Button
-							variant="ghost"
-							size="icon"
-							class="absolute right-1 top-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground z-[60]"
-							@click.stop="onClickDeleteAccount(account)"
-						>
-							<X class="h-3 w-3" />
-						</Button>
 					</div>
 				</div>
 			</div>
