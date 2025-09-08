@@ -1,14 +1,23 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import Address from '@/components/utils/Address.vue'
 import { TransactionStatus, useExecutionModal } from '@/components/ExecutionModal'
+import Address from '@/components/utils/Address.vue'
+import { PaymasterServiceCapability } from '@/features/account-capabilities'
 import { isTestnet } from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
+import { getErrorMessage } from '@samanager/sdk'
 import { ChevronDown, ChevronUp, ExternalLink, Loader2 } from 'lucide-vue-next'
+import { isSameAddress, PaymasterService } from 'sendop'
+import { usePaymaster } from './paymasters/usePaymaster'
 
-const { selectedChainId } = useBlockchain()
+const props = withDefaults(
+	defineProps<{
+		paymasterCapability?: PaymasterServiceCapability
+	}>(),
+	{},
+)
+
+const { selectedChainId, currentEntryPointAddress } = useBlockchain()
+const { status } = useExecutionModal()
 const {
 	selectedPaymaster,
 	paymasters,
@@ -19,18 +28,43 @@ const {
 	isValidPermitAmount,
 	usdcAddress,
 	isSigningPermit,
-	canSignPermit,
 	handleSignUsdcPermit,
 	usdcPaymasterAddress,
 	usdcAllowance,
 	hasUsdcPermitSignature,
 	usdcBalance,
 	usdcPaymasterData,
-	status,
-} = useExecutionModal()
+} = usePaymaster()
 
 // Expansion state for permit USDC section
 const isPermitSectionExpanded = ref(false)
+
+onMounted(async () => {
+	if (props.paymasterCapability) {
+		try {
+			// check supported entrypoints
+			const paymasterService = new PaymasterService(props.paymasterCapability.url, selectedChainId.value)
+			const supportedEntryPoints = await paymasterService.supportedEntryPoints()
+			if (!supportedEntryPoints.some(entryPoint => isSameAddress(entryPoint, currentEntryPointAddress.value))) {
+				throw new Error('Paymaster service does not support the current entrypoint')
+			}
+			selectedPaymaster.value = 'erc7677'
+		} catch (err) {
+			selectedPaymaster.value = 'none'
+			throw new Error(`Error initializing paymaster service: ${getErrorMessage(err)}`, { cause: err })
+		}
+	}
+})
+
+// Watch status to auto-expand/collapse permit section
+watchImmediate(status, newStatus => {
+	// auto-expand when PreparingPaymaster, auto-collapse when not
+	if (newStatus === TransactionStatus.PreparingPaymaster) {
+		isPermitSectionExpanded.value = true
+	} else {
+		isPermitSectionExpanded.value = false
+	}
+})
 
 const paymasterSelectorDisabled = computed(() => {
 	return status.value !== TransactionStatus.Initial && status.value !== TransactionStatus.PreparingPaymaster
@@ -65,14 +99,14 @@ async function onClickSignPermit() {
 	}
 }
 
-// Watch status to auto-expand/collapse permit section
-watchImmediate(status, newStatus => {
-	// auto-expand when PreparingPaymaster, auto-collapse when not
-	if (newStatus === TransactionStatus.PreparingPaymaster) {
-		isPermitSectionExpanded.value = true
-	} else {
-		isPermitSectionExpanded.value = false
-	}
+const canSignPermit = computed(() => {
+	const { isValidPermitAmount, isSigningPermit } = usePaymaster()
+	return (
+		selectedPaymaster.value === 'usdc' &&
+		isValidPermitAmount.value &&
+		!isSigningPermit.value &&
+		(status.value === TransactionStatus.Initial || status.value === TransactionStatus.PreparingPaymaster)
+	)
 })
 </script>
 

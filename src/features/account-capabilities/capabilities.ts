@@ -5,6 +5,11 @@ import { Capability } from '@samanager/sdk'
 export type SupportedCapability = 'atomic' | 'paymasterService'
 export const DEFAULT_ACCOUNT_CAPABILITIES: SupportedCapability[] = ['atomic']
 
+export type PaymasterServiceCapability = {
+	url: string
+	context?: Record<string, unknown>
+}
+
 export function getAccountCapabilityNames(account: ImportedAccount): SupportedCapability[] {
 	return [...DEFAULT_ACCOUNT_CAPABILITIES, ...AccountRegistry.getCapabilities(account.accountId)]
 }

@@ -167,7 +167,7 @@ async function onClickSendCalls() {
 							paymasterService: {
 								url: `https://api.candide.dev/paymaster/v3/base-sepolia/${import.meta.env.VITE_CANDIDE_API_KEY}`,
 								context: {
-									policyId: 'f0785f78e6678a99',
+									sponsorshipPolicyId: 'f0785f78e6678a99',
 								},
 							},
 						},

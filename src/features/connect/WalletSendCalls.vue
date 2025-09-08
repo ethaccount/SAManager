@@ -2,6 +2,7 @@
 import { TransactionStatus, useExecutionModal } from '@/components/ExecutionModal'
 import { encodeCallIdentifier, standardErrors, WalletSendCallsRequest } from '@samanager/sdk'
 import { toBigInt } from 'ethers'
+import { PaymasterServiceCapability } from '../account-capabilities'
 import { PendingRequest } from './types'
 
 const props = defineProps<{
@@ -26,6 +27,10 @@ const executions = computed(() => {
 	})
 })
 
+const paymasterCapability = computed(() => {
+	return props.pendingRequest.params[0].capabilities?.paymasterService as PaymasterServiceCapability
+})
+
 function onClickTxClose() {
 	props.pendingRequest.reject(standardErrors.provider.userRejectedRequest())
 }
@@ -45,6 +50,7 @@ function handleTxSent(hash: string) {
 	<ExecutionUI
 		:executions="executions"
 		:use-modal-specific-style="false"
+		:paymaster-capability="paymasterCapability"
 		@close="onClickTxClose"
 		@sent="handleTxSent"
 	/>

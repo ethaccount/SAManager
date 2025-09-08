@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { fetchEthUsdPrice } from '@/api/etherscan'
+import { ExecutionUIEmits, ExecutionUIProps, TransactionStatus, useExecutionModal } from '@/components/ExecutionModal'
 import { Button } from '@/components/ui/button'
 import Address from '@/components/utils/Address.vue'
-import { ExecutionUIEmits, ExecutionUIProps, TransactionStatus, useExecutionModal } from '@/components/ExecutionModal'
 import { AccountRegistry } from '@/lib/accounts'
 import { addressToName } from '@/lib/addressToName'
 import {
@@ -35,6 +35,7 @@ import {
 import { toast } from 'vue-sonner'
 import ExecutionModalUOPreview from './ExecutionModalOpPreview.vue'
 import PaymasterSelector from './PaymasterSelector.vue'
+import { usePaymaster } from './paymasters'
 
 const props = withDefaults(defineProps<ExecutionUIProps>(), {
 	executions: () => [],
@@ -65,16 +66,12 @@ const {
 	canEstimate,
 	canSign,
 	canSend,
-	selectedPaymaster,
-	paymasters,
 	canClose,
 	handleEstimate,
 	handleSign,
 	sendUserOp,
 	waitUserOp,
 	resetExecutionModal,
-	checkUsdcBalanceAndAllowance,
-	usdcPaymasterData,
 } = useExecutionModal()
 
 const txModalErrorMessage = ref<string | null>(null)
@@ -95,6 +92,33 @@ watchImmediate(isAccountAccessible, () => {
 	if (!isAccountAccessible.value) {
 		toast.error('Account is not accessible. Please connect the right signer to the account')
 		emit('close')
+	}
+})
+
+const { selectedPaymaster, paymasters, checkUsdcBalanceAndAllowance, usdcPaymasterData } = usePaymaster()
+
+// This cannot be placed in useExecutionModal because it needs to be executed immediately when the ExecutionModal is mounted
+watchImmediate(selectedPaymaster, async newPaymaster => {
+	// If the selected paymaster is not supported, switch to the first supported paymaster
+	if (!paymasters.value.some(paymaster => paymaster.id === newPaymaster)) {
+		selectedPaymaster.value = paymasters.value[0].id
+	}
+
+	if (status.value === TransactionStatus.Initial) {
+		if (newPaymaster === 'usdc') {
+			status.value = TransactionStatus.PreparingPaymaster
+			await checkUsdcBalanceAndAllowance()
+			if (usdcPaymasterData.value) {
+				status.value = TransactionStatus.Initial
+			}
+		} else {
+			status.value = TransactionStatus.Initial
+		}
+	}
+
+	// When selecting other paymaster from usdc paymaster, reset the status to initial
+	if (status.value === TransactionStatus.PreparingPaymaster && newPaymaster !== 'usdc') {
+		status.value = TransactionStatus.Initial
 	}
 })
 
@@ -124,31 +148,6 @@ onMounted(async () => {
 
 onUnmounted(() => {
 	resetExecutionModal()
-})
-
-// This cannot be placed in useExecutionModal because it needs to be executed immediately when the ExecutionModal is mounted
-watchImmediate(selectedPaymaster, async newPaymaster => {
-	// If the selected paymaster is not supported, switch to the first supported paymaster
-	if (!paymasters.value.some(paymaster => paymaster.id === newPaymaster)) {
-		selectedPaymaster.value = paymasters.value[0].id
-	}
-
-	if (status.value === TransactionStatus.Initial) {
-		if (newPaymaster === 'usdc') {
-			status.value = TransactionStatus.PreparingPaymaster
-			await checkUsdcBalanceAndAllowance()
-			if (usdcPaymasterData.value) {
-				status.value = TransactionStatus.Initial
-			}
-		} else {
-			status.value = TransactionStatus.Initial
-		}
-	}
-
-	// When selecting other paymaster from usdc paymaster, reset the status to initial
-	if (status.value === TransactionStatus.PreparingPaymaster && newPaymaster !== 'usdc') {
-		status.value = TransactionStatus.Initial
-	}
 })
 
 watchImmediate(status, (newStatus, oldStatus) => {
@@ -202,7 +201,7 @@ async function onClickEstimate() {
 		}
 
 		if (isDeployed.value || selectedAccount.value.category === 'Smart EOA') {
-			await handleEstimate(props.executions)
+			await handleEstimate({ executions: props.executions, paymasterCapability: props.paymasterCapability })
 		} else {
 			// If the account is not deployed, check if there is init code provided
 			if (!selectedAccountInitCodeData.value) {
@@ -210,7 +209,11 @@ async function onClickEstimate() {
 				toast.error('Account not deployed and no init code provided')
 				return
 			}
-			await handleEstimate(props.executions, selectedAccountInitCodeData.value.initCode)
+			await handleEstimate({
+				executions: props.executions,
+				initCode: selectedAccountInitCodeData.value.initCode,
+				paymasterCapability: props.paymasterCapability,
+			})
 		}
 		status.value = TransactionStatus.Sign
 	} catch (e: unknown) {
@@ -508,7 +511,7 @@ const shouldShowEffectiveFee = computed(() => {
 			</div>
 
 			<!-- Paymaster Selection -->
-			<PaymasterSelector />
+			<PaymasterSelector :paymaster-capability="props.paymasterCapability" />
 
 			<!-- Account section -->
 			<div class="space-y-4">

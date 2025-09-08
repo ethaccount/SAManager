@@ -4,6 +4,11 @@ export const SUPPORTED_PAYMASTERS = {
 	none: { id: 'none', name: 'None', description: 'Use native tokens in the account to pay gas fees' },
 	public: { id: 'public', name: 'Public Paymaster', description: 'Use public funds to pay gas fees (testnet only)' },
 	usdc: { id: 'usdc', name: 'USDC Paymaster', description: 'Use USDC in the account to pay gas fees' },
+	erc7677: {
+		id: 'erc7677',
+		name: 'Paymaster Service',
+		description: 'Use dapp-provided paymaster service to pay gas fees',
+	},
 } as const
 
 export const PUBLIC_PAYMASTER_ADDRESSES = {
