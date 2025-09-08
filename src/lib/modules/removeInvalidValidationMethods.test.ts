@@ -1,5 +1,4 @@
 import { ERC7579_MODULE_TYPE } from 'sendop'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ValidationMethodData } from '../validations/types'
 import { removeInvalidValidationMethods, type ModuleRecordModule } from './useAccountModule'
 

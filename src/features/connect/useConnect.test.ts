@@ -2,12 +2,17 @@ import { AccountId } from '@/lib/accounts'
 import { ImportedAccount } from '@/stores/account/account'
 import { CHAIN_ID } from '@/stores/blockchain/chains'
 import { useConnect } from './useConnect'
+import { createPinia, setActivePinia } from 'pinia'
 
 // Mock Vue composition functions
-vi.mock('vue', () => ({
-	ref: vi.fn(value => ({ value })),
-	computed: vi.fn(fn => ({ value: fn() })),
-}))
+vi.mock('vue', async importOriginal => {
+	const actual = await importOriginal<typeof import('vue')>()
+	return {
+		...actual,
+		ref: vi.fn(value => ({ value })),
+		computed: vi.fn(fn => ({ value: fn() })),
+	}
+})
 
 // Mock blockchain store
 const mockClient = {
@@ -59,6 +64,10 @@ describe('useConnect', () => {
 	let walletRequestHandler: ReturnType<typeof useConnect>['walletRequestHandler']
 
 	beforeEach(() => {
+		// Setup Pinia for each test
+		const pinia = createPinia()
+		setActivePinia(pinia)
+
 		vi.clearAllMocks()
 		mockSelectedAccount.value = {
 			accountId: AccountId['biconomy.nexus.1.2.0'],
