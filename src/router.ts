@@ -60,6 +60,11 @@ const router = createRouter({
 							name: 'connect',
 							component: () => import('@/views/Connect.vue'),
 						},
+						{
+							path: '/:chainId/connect/create',
+							name: 'connect-create',
+							component: () => import('@/views/ConnectCreate.vue'),
+						},
 						// Account Settings
 						{
 							path: '/:chainId/:address',

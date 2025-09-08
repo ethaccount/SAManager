@@ -57,6 +57,7 @@ declare module 'vue' {
     ConnectPasskey: typeof import('./components/signer/ConnectPasskey.vue')['default']
     ConnectSignerModal: typeof import('./components/signer/ConnectSignerModal.vue')['default']
     CopyButton: typeof import('./components/utils/CopyButton.vue')['default']
+    CreateUI: typeof import('./components/CreateAccount/CreateUI.vue')['default']
     DropdownMenu: typeof import('./components/ui/dropdown-menu/DropdownMenu.vue')['default']
     DropdownMenuCheckboxItem: typeof import('./components/ui/dropdown-menu/DropdownMenuCheckboxItem.vue')['default']
     DropdownMenuContent: typeof import('./components/ui/dropdown-menu/DropdownMenuContent.vue')['default']

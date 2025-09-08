@@ -15,11 +15,13 @@ import { useSigner } from '@/stores/useSigner'
 import { standardErrors } from '@samanager/sdk'
 import { AlertCircle, CheckCircle, CircleDot, Power, X } from 'lucide-vue-next'
 import { PendingRequest } from './types'
+import { toRoute } from '@/lib/router'
 
 const props = defineProps<{
 	pendingRequest: PendingRequest<undefined>
 }>()
 
+const router = useRouter()
 const { selectedAccount, isAccountAccessible, isChainIdMatching, isMultichain } = useAccount()
 const { wallet, address, isEOAWalletConnected, disconnect, isEOAWalletSupported } = useEOAWallet()
 const { isLogin, resetCredentialId, selectedCredentialDisplay, isPasskeySupported } = usePasskey()
@@ -39,7 +41,11 @@ function onClickConnect() {
 	}
 }
 
-function onClickReject() {
+function onClickCreate() {
+	router.push(toRoute('connect-create'))
+}
+
+function onClickCancel() {
 	props.pendingRequest.reject(standardErrors.provider.userRejectedRequest())
 }
 </script>
@@ -102,11 +108,16 @@ function onClickReject() {
 					</div>
 				</div>
 			</div>
-			<div class="mt-4 space-y-3">
-				<Button class="w-full" :disabled="!selectedAccount || !isAccountAccessible" @click="onClickConnect">
-					{{ selectedAccount ? 'Connect' : 'Select an account to connect' }}
+
+			<!-- Action buttons -->
+			<div class="mt-4 space-y-2">
+				<Button class="w-full" v-if="selectedAccount && isAccountAccessible" @click="onClickConnect">
+					Connect
 				</Button>
-				<Button variant="outline" class="w-full" @click="onClickReject"> Cancel </Button>
+
+				<Button variant="secondary" class="w-full" @click="onClickCreate">Create Account</Button>
+
+				<Button variant="ghost" class="w-full" @click="onClickCancel"> Cancel </Button>
 			</div>
 		</div>
 
