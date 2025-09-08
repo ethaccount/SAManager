@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { IS_STAGING } from '@/config'
 import { useAccount } from '@/stores/account/useAccount'
-import { useExecutionModal } from '@/components/execution'
+import { useExecutionModal } from '@/components/ExecutionModal'
 import { Interface, isAddress, parseEther } from 'ethers'
 import { Eraser, Plus, X, Zap } from 'lucide-vue-next'
 

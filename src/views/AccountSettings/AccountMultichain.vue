@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { fetchAccountCode } from '@/api/etherscan'
 import ChainIcon from '@/components/ChainIcon.vue'
-import { useExecutionModal } from '@/components/execution'
+import { useExecutionModal } from '@/components/ExecutionModal'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import Address from '@/components/utils/Address.vue'

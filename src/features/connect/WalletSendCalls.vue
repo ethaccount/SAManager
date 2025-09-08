@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { TransactionStatus, useExecutionModal } from '@/components/execution'
+import { TransactionStatus, useExecutionModal } from '@/components/ExecutionModal'
 import { encodeCallIdentifier, standardErrors, WalletSendCallsRequest } from '@samanager/sdk'
 import { toBigInt } from 'ethers'
 import { PendingRequest } from './types'

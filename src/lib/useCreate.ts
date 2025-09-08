@@ -1,4 +1,4 @@
-import { useExecutionModal } from '@/components/execution'
+import { useExecutionModal } from '@/components/ExecutionModal'
 import {
 	ACCOUNT_SUPPORTED_INITIAL_VALIDATION,
 	AccountId,

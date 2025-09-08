@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ExecutionUIEmits, ExecutionUIProps, useExecutionModal } from '@/components/execution'
+import { ExecutionUIEmits, ExecutionUIProps, useExecutionModal } from '@/components/ExecutionModal'
 import { VueFinalModal } from 'vue-final-modal'
 
 withDefaults(defineProps<ExecutionUIProps>(), {

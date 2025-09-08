@@ -1,13 +1,13 @@
-import ExecutionModal from '@/components/execution/ExecutionModal.vue'
 import { usePaymaster } from '@/lib/paymasters'
 import { UserOpDirector } from '@/lib/UserOpDirector'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
+import { useSigner } from '@/stores/useSigner'
 import { defineStore, storeToRefs } from 'pinia'
 import { Execution, UserOpBuilder, UserOperationReceipt } from 'sendop'
 import { useModal } from 'vue-final-modal'
 import { toast } from 'vue-sonner'
-import { useSigner } from '../../stores/useSigner'
+import ExecutionModal from './ExecutionModal.vue'
 
 export enum TransactionStatus {
 	Closed = 'Closed',

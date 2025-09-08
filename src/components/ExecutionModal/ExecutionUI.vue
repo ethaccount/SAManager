@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import Address from '@/components/utils/Address.vue'
-import { ExecutionUIEmits, ExecutionUIProps, TransactionStatus, useExecutionModal } from '@/components/execution'
+import { ExecutionUIEmits, ExecutionUIProps, TransactionStatus, useExecutionModal } from '@/components/ExecutionModal'
 import { AccountRegistry } from '@/lib/accounts'
 import { addressToName } from '@/lib/addressToName'
 import {

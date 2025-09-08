@@ -16,7 +16,7 @@ import { useGetCode } from '@/lib/useGetCode'
 import { ImportedAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { ExecutionModalExecution, useExecutionModal } from '@/components/execution'
+import { ExecutionModalExecution, useExecutionModal } from '@/components/ExecutionModal'
 import { DateValue, getLocalTimeZone } from '@internationalized/date'
 import { concat, parseUnits, toBeHex, ZeroAddress } from 'ethers'
 import {

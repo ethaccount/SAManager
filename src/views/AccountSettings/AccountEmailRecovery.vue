@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { OwnableValidatorAPI } from '@/api/OwnableValidatorAPI'
-import type { ExecutionModalExecution } from '@/components/execution'
-import { useExecutionModal } from '@/components/execution'
+import type { ExecutionModalExecution } from '@/components/ExecutionModal'
+import { useExecutionModal } from '@/components/ExecutionModal'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'

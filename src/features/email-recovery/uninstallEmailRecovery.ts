@@ -2,7 +2,7 @@ import { getUninstallModuleData } from '@/lib/accounts/account-specific'
 import { EMAIL_RECOVERY_EXECUTOR_ADDRESS } from '@/features/email-recovery'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { useExecutionModal, type ExecutionModalExecution } from '@/components/execution'
+import { useExecutionModal, type ExecutionModalExecution } from '@/components/ExecutionModal'
 import { ERC7579_MODULE_TYPE, type ERC7579Module } from 'sendop'
 import { ref } from 'vue'
 
