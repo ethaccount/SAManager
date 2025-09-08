@@ -163,7 +163,14 @@ async function onClickSendCalls() {
 								data: '0xd09de08a',
 							},
 						],
-						capabilities: {},
+						capabilities: {
+							paymasterService: {
+								url: `https://api.candide.dev/paymaster/v3/base-sepolia/${import.meta.env.VITE_CANDIDE_API_KEY}`,
+								context: {
+									policyId: 'f0785f78e6678a99',
+								},
+							},
+						},
 					},
 				],
 			})
