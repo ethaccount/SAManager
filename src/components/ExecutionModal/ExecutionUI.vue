@@ -21,7 +21,7 @@ import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useSigner } from '@/stores/useSigner'
 import { formatEther } from 'ethers'
-import { ArrowLeft, CircleDot, Code, ExternalLink, Loader2, X } from 'lucide-vue-next'
+import { ArrowLeft, CircleDot, Code, ExternalLink, Info, Loader2, X } from 'lucide-vue-next'
 import {
 	ERC4337Error,
 	extractHexString,
@@ -438,7 +438,7 @@ const shouldShowEffectiveFee = computed(() => {
 		</div>
 
 		<!-- UserOp Preview Screen -->
-		<ExecutionModalUOPreview v-show="showUserOpPreview" :user-op="userOp" />
+		<ExecutionModalOpPreview v-show="showUserOpPreview" :user-op="userOp" />
 
 		<!-- Content -->
 		<div
@@ -568,9 +568,10 @@ const shouldShowEffectiveFee = computed(() => {
 				<!-- Account Deployment Notice -->
 				<div
 					v-if="!isLoadingCode && !isDeployed && selectedAccount?.category === 'Smart Account'"
-					class="warning-section"
+					class="warning-section flex items-center gap-1.5"
 				>
-					This transaction will deploy your account
+					<Info class="w-4 h-4" />
+					<div>This transaction will deploy your account</div>
 				</div>
 			</div>
 

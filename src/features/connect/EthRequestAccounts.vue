@@ -1,8 +1,4 @@
 <script setup lang="ts">
-import NetworkSelector from '@/components/header/NetworkSelector.vue'
-import { Button } from '@/components/ui/button'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import Address from '@/components/utils/Address.vue'
 import { AccountRegistry } from '@/lib/accounts'
 import { useAccountList } from '@/lib/accounts/useAccountList'
 import { getErrorMessage } from '@/lib/error'
@@ -79,7 +75,15 @@ function onClickCancel() {
 								</TooltipContent>
 							</Tooltip>
 						</TooltipProvider>
-						<Address :address="selectedAccount.address" text-size="sm" button-size="sm" />
+						<div class="relative">
+							<Address :address="selectedAccount.address" text-size="sm" button-size="sm" />
+							<span
+								v-if="!isAccountAccessible"
+								class="absolute -top-2.5 left-0 text-[10px] text-yellow-700 dark:text-yellow-400"
+							>
+								Not Connected
+							</span>
+						</div>
 					</div>
 					<Button variant="ghost" size="icon" class="h-6 w-6" @click="onClickUnselectAccount">
 						<X class="w-4 h-4" />

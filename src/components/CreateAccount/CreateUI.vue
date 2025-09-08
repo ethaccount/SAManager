@@ -1,16 +1,17 @@
 <script setup lang="ts">
 import { useCreate } from '@/components/CreateAccount/useCreate'
 import { AccountRegistry } from '@/lib/accounts'
-import { toRoute } from '@/lib/router'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
 import { useBlockchain } from '@/stores/blockchain'
 import { displayChainName } from '@/stores/blockchain/chains'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { isAddress } from 'ethers'
-import { AlertCircle, ChevronRight, Power } from 'lucide-vue-next'
+import { AlertCircle, ChevronRight, Power, Info } from 'lucide-vue-next'
 
-const router = useRouter()
+const emits = defineEmits<{
+	(e: 'created', address: string): void
+}>()
 
 const {
 	selectedAccountType,
@@ -24,12 +25,11 @@ const {
 	computedAddress,
 	isComputingAddress,
 	isDeployed,
-	isImported,
-	disabledImportButton,
-	disabledDeployButton,
-	handleImport,
-	onClickDeploy,
+	initCode,
+	selectedValidationMethod,
+	handleCreate,
 } = useCreate()
+
 const { selectedCredentialDisplay, isLogin, isPasskeySupported, resetCredentialId } = usePasskey()
 const { wallet, address, disconnect, isEOAWalletConnected, isEOAWalletSupported } = useEOAWallet()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
@@ -39,13 +39,18 @@ function onClickPasskeyLogout() {
 	resetCredentialId()
 }
 
-function onClickImport() {
-	handleImport()
+const disabledCreateButton = computed(() => {
+	return !computedAddress.value || !initCode.value || !selectedValidationMethod.value
+})
+
+function onClickCreate() {
+	handleCreate()
 
 	if (!computedAddress.value) {
-		throw new Error('onClickImport: No computed address')
+		throw new Error('onClickCreate: No computed address')
 	}
-	router.push(toRoute('account-settings', { address: computedAddress.value }))
+
+	emits('created', computedAddress.value)
 }
 </script>
 
@@ -217,6 +222,7 @@ function onClickImport() {
 					{{ errMsg }}
 				</div>
 
+				<!-- Computed Account Address -->
 				<div v-if="isValidationAvailable" class="p-4 rounded-lg bg-muted/30 space-y-1.5">
 					<div class="text-sm text-muted-foreground">Computed Account Address</div>
 					<div
@@ -235,20 +241,24 @@ function onClickImport() {
 					</div>
 				</div>
 
-				<div v-if="isDeployed" class="info-section">
-					This account is already deployed on {{ displayChainName(selectedChainId) }}
+				<div v-if="isDeployed" class="info-section flex items-center gap-1.5">
+					<Info class="w-4 h-4" />
+					<div>This account is already deployed on {{ displayChainName(selectedChainId) }}</div>
 				</div>
 
+				<!-- Action Buttons -->
 				<div
 					v-if="isValidationAvailable && computedAddress && !isComputingAddress"
-					class="grid grid-cols-2 gap-2"
+					class="flex justify-center items-center"
 				>
-					<Button variant="default" size="lg" :disabled="disabledImportButton" @click="onClickImport">
-						{{ isImported ? 'Settings' : 'Import' }}
-					</Button>
-
-					<Button variant="secondary" size="lg" :disabled="disabledDeployButton" @click="onClickDeploy">
-						Deploy
+					<Button
+						class="w-full"
+						variant="default"
+						size="lg"
+						:disabled="disabledCreateButton"
+						@click="onClickCreate"
+					>
+						Confirm
 					</Button>
 				</div>
 			</CardContent>

@@ -1,4 +1,3 @@
-import { useExecutionModal } from '@/components/ExecutionModal'
 import {
 	ACCOUNT_SUPPORTED_INITIAL_VALIDATION,
 	AccountId,
@@ -182,75 +181,21 @@ export function useCreate() {
 		},
 	)
 
-	const disabledDeployButton = computed(() => {
-		return !computedAddress.value || !initCode.value || !selectedValidationMethod.value || isDeployed.value
-	})
-
-	const disabledImportButton = computed(() => {
-		return !computedAddress.value || !initCode.value || !selectedValidationMethod.value
-	})
-
-	function onClickDeploy() {
+	function handleCreate() {
 		if (!selectedAccountType.value) {
-			throw new Error('onClickDeploy: No account type')
+			throw new Error('handleCreate: No account type')
 		}
 
 		if (!computedAddress.value) {
-			throw new Error('onClickDeploy: No computed address')
+			throw new Error('handleCreate: No computed address')
 		}
 
 		if (!initCode.value) {
-			throw new Error('onClickDeploy: No init code')
+			throw new Error('handleCreate: No init code')
 		}
 
 		if (!selectedValidationMethod.value) {
-			throw new Error('onClickDeploy: No validation')
-		}
-
-		console.log('initCode', initCode.value)
-
-		importAccount(
-			{
-				accountId: selectedAccountType.value,
-				category: 'Smart Account',
-				address: computedAddress.value,
-				chainId: selectedChainId.value,
-				vMethods: [selectedValidationMethod.value.serialize()],
-			},
-			initCode.value,
-		)
-
-		selectAccount(computedAddress.value, selectedChainId.value)
-
-		useExecutionModal().openModal({
-			// Update the deployed status when the transaction status changes
-			// When users has deployed and closed the modal, they can't click the deploy button again
-			onSuccess: async () => {
-				if (!computedAddress.value) {
-					throw new Error('[onClickDeploy] computedAddress is falsy')
-				}
-				const { getCode, isDeployed: isAccountDeployed } = useGetCode()
-				await getCode(computedAddress.value)
-				isDeployed.value = isAccountDeployed.value
-			},
-		})
-	}
-
-	function handleImport() {
-		if (!selectedAccountType.value) {
-			throw new Error('handleImport: No account type')
-		}
-
-		if (!computedAddress.value) {
-			throw new Error('handleImport: No computed address')
-		}
-
-		if (!initCode.value) {
-			throw new Error('handleImport: No init code')
-		}
-
-		if (!selectedValidationMethod.value) {
-			throw new Error('handleImport: No validation')
+			throw new Error('handleCreate: No validation')
 		}
 
 		if (!isImported.value) {
@@ -282,11 +227,8 @@ export function useCreate() {
 		isComputingAddress,
 		isDeployed,
 		isImported,
-		disabledImportButton,
-		disabledDeployButton,
 		errMsg,
 		initCode,
-		onClickDeploy,
-		handleImport,
+		handleCreate,
 	}
 }

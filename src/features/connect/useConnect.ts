@@ -12,7 +12,7 @@ import {
 	WalletSwitchEthereumChainRequest,
 } from '@samanager/sdk'
 
-export function useConnect() {
+export const useConnectStore = defineStore('useConnectStore', () => {
 	const error = ref<string | null>(null)
 	const pendingRequest = ref<PendingRequest | null>(null)
 	const isLoading = ref(false)
@@ -96,5 +96,13 @@ export function useConnect() {
 		isLoading,
 		method,
 		walletRequestHandler,
+	}
+})
+
+export function useConnect() {
+	const store = useConnectStore()
+	return {
+		...store,
+		...storeToRefs(store),
 	}
 }
