@@ -6,8 +6,8 @@ export const SUPPORTED_PAYMASTERS = {
 	usdc: { id: 'usdc', name: 'USDC Paymaster', description: 'Use USDC in the account to pay gas fees' },
 	erc7677: {
 		id: 'erc7677',
-		name: 'Paymaster Service',
-		description: 'Use dapp-provided paymaster service to pay gas fees',
+		name: 'Dapp-provided Paymaster',
+		description: 'Use dapp-provided paymaster based on ERC-7677',
 	},
 } as const
 

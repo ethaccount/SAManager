@@ -39,19 +39,24 @@ const {
 // Expansion state for permit USDC section
 const isPermitSectionExpanded = ref(false)
 
+const isCheckingPaymasterSupport = ref(false)
+
 onMounted(async () => {
 	if (props.paymasterCapability) {
 		try {
+			selectedPaymaster.value = 'erc7677'
+			isCheckingPaymasterSupport.value = true
 			// check supported entrypoints
 			const paymasterService = new PaymasterService(props.paymasterCapability.url, selectedChainId.value)
 			const supportedEntryPoints = await paymasterService.supportedEntryPoints()
 			if (!supportedEntryPoints.some(entryPoint => isSameAddress(entryPoint, currentEntryPointAddress.value))) {
 				throw new Error('Paymaster service does not support the current entrypoint')
 			}
-			selectedPaymaster.value = 'erc7677'
 		} catch (err) {
 			selectedPaymaster.value = 'none'
 			throw new Error(`Error initializing paymaster service: ${getErrorMessage(err)}`, { cause: err })
+		} finally {
+			isCheckingPaymasterSupport.value = false
 		}
 	}
 })
@@ -108,6 +113,24 @@ const canSignPermit = computed(() => {
 		(status.value === TransactionStatus.Initial || status.value === TransactionStatus.PreparingPaymaster)
 	)
 })
+
+const paymasterName = computed(() => {
+	if (selectedPaymaster.value === 'erc7677' && props.paymasterCapability?.context?.name) {
+		return props.paymasterCapability.context.name
+	}
+	return paymasters.value.find(p => p.id === selectedPaymaster.value)?.name
+})
+
+const paymasterIcon = computed<string | null>(() => {
+	if (
+		selectedPaymaster.value === 'erc7677' &&
+		props.paymasterCapability?.context?.icon &&
+		typeof props.paymasterCapability.context.icon === 'string'
+	) {
+		return props.paymasterCapability.context.icon
+	}
+	return null
+})
 </script>
 
 <template>
@@ -122,9 +145,14 @@ const canSignPermit = computed(() => {
 				}"
 			>
 				<SelectValue placeholder="Select Paymaster">
-					<div class="flex items-center justify-between w-full">
+					<div class="flex items-center justify-between w-full gap-2">
+						<img v-if="paymasterIcon" :src="paymasterIcon" class="w-4 h-4 rounded-full" />
 						<span class="font-medium">
-							{{ paymasters.find(p => p.id === selectedPaymaster)?.name }}
+							{{ paymasterName }}
+						</span>
+
+						<span v-if="isCheckingPaymasterSupport" class="flex items-center gap-1">
+							<Loader2 class="w-4 h-4 animate-spin" />
 						</span>
 					</div>
 				</SelectValue>
