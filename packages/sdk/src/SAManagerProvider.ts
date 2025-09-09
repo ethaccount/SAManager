@@ -220,13 +220,10 @@ export class SAManagerProvider implements ProviderInterface {
 	}
 
 	private async sendRequestToPopup(request: RequestArguments) {
-		this.log('sendRequestToPopup')
-
 		// Open the popup before constructing the request message.
 		// This is to ensure that the popup is not blocked by some browsers (i.e. Safari)
 		await this.communicator.waitForPopupLoaded?.()
 
-		this.log('sendRequestToPopup: sendEncryptedRequest')
 		const response = await this.sendEncryptedRequest(request)
 		const decrypted = await this.decryptResponseMessage(response)
 		return this.handleResponse(request, decrypted)
