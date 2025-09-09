@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { fetchEthUsdPrice } from '@/api/etherscan'
 import { ExecutionUIEmits, ExecutionUIProps, TransactionStatus, useExecutionModal } from '@/components/ExecutionModal'
+import { ERROR_NOTIFICATION_DURATION } from '@/config'
 import { AccountRegistry } from '@/lib/accounts'
 import { addressToName } from '@/lib/addressToName'
 import {
@@ -73,7 +74,7 @@ const {
 
 status.value = TransactionStatus.Initial
 
-const txModalErrorMessage = ref<string | null>(null)
+const executionError = ref<string | null>(null)
 
 // Expansion state for executions
 const expandedExecutions = ref(new Set<number>())
@@ -179,6 +180,8 @@ function toggleUserOpPreview() {
 function handleError(e: unknown, prefix?: string) {
 	console.error(getErrorChainMessage(e, prefix))
 
+	let msg = getErrorMsg(e, prefix)
+
 	if (e instanceof ERC4337Error) {
 		console.log(e.payload)
 		if (e.userOp) {
@@ -187,20 +190,25 @@ function handleError(e: unknown, prefix?: string) {
 			})
 			console.log('encoded handleOps data', op.encodeHandleOpsDataWithDefaultGas())
 		}
+	} else if (isEthersError(e)) {
+		msg = getEthersErrorMsg(e, prefix)
 	}
 
-	const msg = getErrorMsg(e, prefix)
 	const errHex = extractHexString(msg)
 	if (errHex && parseContractError(errHex)) {
-		txModalErrorMessage.value = replaceHexString(msg, parseContractError(errHex, true))
+		executionError.value = replaceHexString(msg, parseContractError(errHex, true))
 	} else {
-		txModalErrorMessage.value = msg
+		executionError.value = msg
 	}
+
+	toast.error(executionError.value, {
+		duration: ERROR_NOTIFICATION_DURATION,
+	})
 }
 
 async function onClickEstimate() {
 	try {
-		txModalErrorMessage.value = null
+		executionError.value = null
 		status.value = TransactionStatus.Estimating
 
 		if (!selectedAccount.value) {
@@ -224,7 +232,7 @@ async function onClickEstimate() {
 		}
 		status.value = TransactionStatus.Sign
 	} catch (e: unknown) {
-		handleError(e, 'Failed to estimate gas')
+		handleError(e, 'Error estimating gas')
 		status.value = TransactionStatus.Initial
 	} finally {
 		await updateEthUsdPrice()
@@ -233,7 +241,7 @@ async function onClickEstimate() {
 
 async function onClickSign() {
 	try {
-		txModalErrorMessage.value = null
+		executionError.value = null
 		status.value = TransactionStatus.Signing
 		await handleSign()
 		status.value = TransactionStatus.Send
@@ -259,7 +267,7 @@ async function onClickSign() {
 			msg = ''
 		}
 
-		txModalErrorMessage.value = msg
+		executionError.value = msg
 		status.value = TransactionStatus.Sign
 	}
 }
@@ -271,7 +279,7 @@ async function onClickSend() {
 		}
 		const op = userOp.value
 
-		txModalErrorMessage.value = null
+		executionError.value = null
 
 		await sendUserOp()
 		emit('sent', op.hash())
@@ -356,7 +364,7 @@ const shouldShowMaxFee = computed(() => {
 	)
 })
 
-// Computed property for maximum possible fee calculation
+// Maximum possible fee calculation
 const maxPossibleFee = computed(() => {
 	if (!userOp.value) return null
 
@@ -386,7 +394,7 @@ const maxPossibleFee = computed(() => {
 	}
 })
 
-// Computed property for effective transaction fee (actual fee paid)
+// Effective transaction fee (actual fee paid)
 const effectiveTransactionFee = computed(() => {
 	if (!opReceipt.value || status.value !== TransactionStatus.Success) return null
 
@@ -621,19 +629,6 @@ const shouldShowEffectiveFee = computed(() => {
 			</div>
 		</div>
 
-		<!-- Error message display -->
-		<div v-if="txModalErrorMessage" class="border-t border-border p-4">
-			<div
-				class="error-section"
-				:class="{
-					'overflow-y-auto': useModalSpecificStyle,
-					'max-h-[100px]': useModalSpecificStyle,
-				}"
-			>
-				{{ txModalErrorMessage }}
-			</div>
-		</div>
-
 		<!-- Footer -->
 		<div
 			v-show="!showUserOpPreview && status !== TransactionStatus.PreparingPaymaster"
@@ -700,8 +695,8 @@ const shouldShowEffectiveFee = computed(() => {
 							View on Explorer
 							<ExternalLink class="w-4 h-4" />
 						</a>
-						<p v-if="txModalErrorMessage" class="mt-2 text-sm text-muted-foreground">
-							{{ txModalErrorMessage }}
+						<p v-if="executionError" class="mt-2 text-sm text-muted-foreground">
+							{{ executionError }}
 						</p>
 					</div>
 				</template>
@@ -764,5 +759,3 @@ const shouldShowEffectiveFee = computed(() => {
 		</div>
 	</div>
 </template>
-
-<style lang="css" scoped></style>
