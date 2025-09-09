@@ -1,19 +1,23 @@
 <script setup lang="ts">
 import { useCreate } from '@/components/CreateAccount/useCreate'
-import { AccountRegistry } from '@/lib/accounts'
+import { AccountRegistry, getDeployment } from '@/lib/accounts'
 import { useConnectSignerModal } from '@/lib/useConnectSignerModal'
+import { useGetCode } from '@/lib/useGetCode'
 import { useBlockchain } from '@/stores/blockchain'
 import { displayChainName } from '@/stores/blockchain/chains'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
+import { useSigner } from '@/stores/useSigner'
 import { isAddress } from 'ethers'
-import { AlertCircle, ChevronRight, Power, Info } from 'lucide-vue-next'
+import { AlertCircle, ChevronRight, Info, Power } from 'lucide-vue-next'
 
 const emits = defineEmits<{
 	(e: 'created', address: string): void
 }>()
 
 const {
+	computedSalt,
+	deployment,
 	selectedAccountType,
 	selectedValidationType,
 	supportedAccounts,
@@ -30,10 +34,69 @@ const {
 	handleCreate,
 } = useCreate()
 
-const { selectedCredentialDisplay, isLogin, isPasskeySupported, resetCredentialId } = usePasskey()
+const { selectedCredentialDisplay, isLogin, isPasskeySupported, resetCredentialId, isFullCredential } = usePasskey()
 const { wallet, address, disconnect, isEOAWalletConnected, isEOAWalletSupported } = useEOAWallet()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
-const { selectedChainId } = useBlockchain()
+const { selectedChainId, client } = useBlockchain()
+
+// Auto select the signer when the selectedValidationMethod is updated
+watchImmediate(selectedValidationMethod, () => {
+	if (selectedValidationMethod.value) {
+		const { selectSigner } = useSigner()
+		selectSigner(selectedValidationMethod.value.signerType)
+	}
+})
+
+// when these states are changed, we need to re-compute the deployment
+watchImmediate(
+	[isValidationAvailable, selectedValidationType, isLogin, selectedAccountType, computedSalt],
+	async () => {
+		deployment.value = null
+		isDeployed.value = false
+		errMsg.value = null
+
+		if (
+			isValidationAvailable.value &&
+			selectedValidationMethod.value &&
+			selectedAccountType.value &&
+			computedSalt.value
+		) {
+			isComputingAddress.value = true
+			try {
+				deployment.value = await getDeployment(
+					client.value,
+					selectedAccountType.value,
+					selectedValidationMethod.value,
+					computedSalt.value,
+				)
+				console.log('deployment', deployment.value)
+				const { getCode, isDeployed: isAccountDeployed } = useGetCode()
+				await getCode(deployment.value.accountAddress)
+				isDeployed.value = isAccountDeployed.value
+			} catch (error) {
+				throw error
+			} finally {
+				isComputingAddress.value = false
+			}
+		} else {
+			if (selectedValidationType.value === 'PASSKEY' && isLogin.value && !isFullCredential.value) {
+				errMsg.value = `This passkey's public key is not stored in the browser,
+                        so it can only be used for signing but not for creating a new account.
+                        To use a passkey with a public key, please create a new one.`
+			}
+		}
+	},
+)
+
+// Reset validation type when account type is changed
+watch(selectedAccountType, () => {
+	// if the supported validations only has one type, select it
+	if (supportedValidations.value && supportedValidations.value.length === 1) {
+		selectedValidationType.value = supportedValidations.value[0].type
+	} else {
+		selectedValidationType.value = undefined
+	}
+})
 
 function onClickPasskeyLogout() {
 	resetCredentialId()

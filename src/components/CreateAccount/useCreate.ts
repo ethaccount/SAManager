@@ -1,11 +1,4 @@
-import {
-	ACCOUNT_SUPPORTED_INITIAL_VALIDATION,
-	AccountId,
-	AccountRegistry,
-	Deployment,
-	getDeployment,
-} from '@/lib/accounts'
-import { useGetCode } from '@/lib/useGetCode'
+import { ACCOUNT_SUPPORTED_INITIAL_VALIDATION, AccountId, AccountRegistry, Deployment } from '@/lib/accounts'
 import {
 	ECDSAValidatorVMethod,
 	OwnableValidatorVMethod,
@@ -24,9 +17,9 @@ import { concat, getBigInt, hexlify } from 'ethers'
 import { toBytes32 } from 'sendop'
 
 export function useCreate() {
-	const { client, selectedChainId } = useBlockchain()
+	const { selectedChainId } = useBlockchain()
 	const { signer } = useEOAWallet()
-	const { isLogin, isFullCredential, selectedCredential } = usePasskey()
+	const { selectedCredential } = usePasskey()
 	const { importAccount, selectAccount, isAccountImported } = useAccounts()
 	const { selectedSigner } = useSigner()
 
@@ -34,6 +27,12 @@ export function useCreate() {
 
 	const selectedAccountType = ref<AccountId | undefined>(undefined) // use undefined instead of null for v-model
 	const selectedValidationType = ref<ValidationType | undefined>(undefined) // use undefined instead of null for v-model
+	const isComputingAddress = ref(false)
+	const showMoreOptions = ref(false)
+	const saltInput = ref<number | undefined>(undefined)
+	const deployment = ref<Deployment | null>(null)
+	const isDeployed = ref(false)
+	const errMsg = ref<string | null>(null)
 
 	const supportedValidations = computed<
 		{
@@ -43,19 +42,6 @@ export function useCreate() {
 	>(() => {
 		if (!selectedAccountType.value) return []
 		return ACCOUNT_SUPPORTED_INITIAL_VALIDATION[selectedAccountType.value] || []
-	})
-
-	const isComputingAddress = ref(false)
-	const showMoreOptions = ref(false)
-
-	// Reset validation type when account type is changed
-	watch(selectedAccountType, () => {
-		// if the supported validations only has one type, select it
-		if (supportedValidations.value && supportedValidations.value.length === 1) {
-			selectedValidationType.value = supportedValidations.value[0].type
-		} else {
-			selectedValidationType.value = undefined
-		}
 	})
 
 	const selectedValidationMethod = computed<ValidationMethod | null>(() => {
@@ -101,15 +87,6 @@ export function useCreate() {
 		}
 	})
 
-	// Auto select the signer when the selectedValidationMethod is updated
-	watchImmediate(selectedValidationMethod, () => {
-		if (selectedValidationMethod.value) {
-			const { selectSigner } = useSigner()
-			selectSigner(selectedValidationMethod.value.signerType)
-		}
-	})
-
-	const saltInput = ref<number | undefined>(undefined)
 	const computedSalt = computed(() => {
 		if (!saltInput.value) return APP_SALT
 		return toBytes32(BigInt(saltInput.value))
@@ -122,9 +99,6 @@ export function useCreate() {
 		return selectedValidationMethod.value.isValidSigner(selectedSigner.value)
 	})
 
-	const deployment = ref<Deployment | null>(null)
-	const isDeployed = ref(false)
-
 	const computedAddress = computed(() => {
 		return deployment.value?.accountAddress
 	})
@@ -133,53 +107,6 @@ export function useCreate() {
 		if (!deployment.value) return null
 		return concat([deployment.value.factory, deployment.value.factoryData])
 	})
-
-	const isImported = computed(() => {
-		return deployment.value && isAccountImported(deployment.value.accountAddress, selectedChainId.value)
-	})
-
-	const errMsg = ref<string | null>(null)
-
-	// when these states are changed, we need to re-compute the deployment
-	watchImmediate(
-		[isValidationAvailable, selectedValidationType, isLogin, selectedAccountType, computedSalt],
-		async () => {
-			deployment.value = null
-			isDeployed.value = false
-			errMsg.value = null
-
-			if (
-				isValidationAvailable.value &&
-				selectedValidationMethod.value &&
-				selectedAccountType.value &&
-				computedSalt.value
-			) {
-				isComputingAddress.value = true
-				try {
-					deployment.value = await getDeployment(
-						client.value,
-						selectedAccountType.value,
-						selectedValidationMethod.value,
-						computedSalt.value,
-					)
-					console.log('deployment', deployment.value)
-					const { getCode, isDeployed: isAccountDeployed } = useGetCode()
-					await getCode(deployment.value.accountAddress)
-					isDeployed.value = isAccountDeployed.value
-				} catch (error) {
-					throw error
-				} finally {
-					isComputingAddress.value = false
-				}
-			} else {
-				if (selectedValidationType.value === 'PASSKEY' && isLogin.value && !isFullCredential.value) {
-					errMsg.value = `This passkey's public key is not stored in the browser,
-                        so it can only be used for signing but not for creating a new account.
-                        To use a passkey with a public key, please create a new one.`
-				}
-			}
-		},
-	)
 
 	function handleCreate() {
 		if (!selectedAccountType.value) {
@@ -198,7 +125,7 @@ export function useCreate() {
 			throw new Error('handleCreate: No validation')
 		}
 
-		if (!isImported.value) {
+		if (!isAccountImported(computedAddress.value, selectedChainId.value)) {
 			importAccount(
 				{
 					accountId: selectedAccountType.value,
@@ -215,6 +142,8 @@ export function useCreate() {
 	}
 
 	return {
+		computedSalt,
+		deployment,
 		selectedAccountType,
 		selectedValidationType,
 		supportedAccounts,
@@ -226,7 +155,6 @@ export function useCreate() {
 		computedAddress,
 		isComputingAddress,
 		isDeployed,
-		isImported,
 		errMsg,
 		initCode,
 		handleCreate,
