@@ -20,7 +20,7 @@ export function validateWalletSendCallsParams(params: WalletSendCallsRequest['pa
 	const sendCallsParams = params[0]
 
 	// Validate required fields
-	if (typeof sendCallsParams.version !== 'string' || sendCallsParams.version !== '2.0') {
+	if (typeof sendCallsParams.version !== 'string') {
 		throw standardErrors.rpc.invalidParams('Missing or invalid version field; Please set version to 2.0')
 	}
 
