@@ -111,21 +111,30 @@ if (props.paymasterCapability) {
 // This cannot be placed in useExecutionModal because it needs to be executed immediately when the ExecutionModal is mounted
 watchImmediate(selectedPaymaster, async () => {
 	if (status.value === TransactionStatus.Initial) {
-		if (selectedPaymaster.value === 'usdc') {
-			// Preparing USDC paymaster
-			status.value = TransactionStatus.PreparingPaymaster
-			await checkUsdcBalanceAndAllowance()
-			if (usdcPaymasterData.value) {
-				status.value = TransactionStatus.Initial
+		try {
+			if (selectedPaymaster.value === 'usdc') {
+				// Preparing USDC paymaster
+				status.value = TransactionStatus.PreparingPaymaster
+				await checkUsdcBalanceAndAllowance()
+				if (usdcPaymasterData.value) {
+					status.value = TransactionStatus.Initial
+				} else {
+					throw new Error('USDC paymaster data not prepared')
+				}
+			} else if (selectedPaymaster.value === 'erc7677') {
+				// Preparing ERC-7677 paymaster
+				status.value = TransactionStatus.PreparingPaymaster
+				const { checkEntryPointSupport } = usePaymasterService()
+				const isEntryPointSupported = await checkEntryPointSupport(props.paymasterCapability)
+				if (isEntryPointSupported) {
+					status.value = TransactionStatus.Initial
+				} else {
+					throw new Error('Paymaster service does not support the current entrypoint')
+				}
 			}
-		} else if (selectedPaymaster.value === 'erc7677') {
-			// Preparing ERC-7677 paymaster
-			status.value = TransactionStatus.PreparingPaymaster
-			const { checkEntryPointSupport } = usePaymasterService()
-			const isEntryPointSupported = await checkEntryPointSupport(props.paymasterCapability)
-			if (isEntryPointSupported) {
-				status.value = TransactionStatus.Initial
-			}
+		} catch (e) {
+			handleError(e, 'Error preparing paymaster')
+			status.value = TransactionStatus.Closed
 		}
 	}
 })
