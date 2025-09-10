@@ -4,12 +4,12 @@ const route = useRoute()
 
 <template>
 	<main v-if="route.name === 'browser'" class="mt-14 h-[calc(100vh-3.5rem)]">
-		<router-view />
+		<RouterView />
 	</main>
 
 	<main v-else class="mt-14 flex-1 mx-auto w-full max-w-[1200px] px-4 py-5">
 		<SendLayout v-if="route.name === 'send-token' || route.name === 'send-raw'">
-			<router-view />
+			<RouterView />
 		</SendLayout>
 
 		<ScheduleLayout
@@ -19,10 +19,10 @@ const route = useRoute()
 				route.name === 'scheduling-jobs'
 			"
 		>
-			<router-view />
+			<RouterView />
 		</ScheduleLayout>
 
-		<router-view v-else />
+		<RouterView v-else />
 	</main>
 </template>
 

@@ -7,15 +7,16 @@ import { useDisclaimerModal } from '@/stores/useDisclaimerModal'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useSigner } from '@/stores/useSigner'
 import { VueDappModal } from '@vue-dapp/modal'
+import { CircleCheck, CircleX } from 'lucide-vue-next'
 import { ModalsContainer } from 'vue-final-modal'
 import { Toaster } from 'vue-sonner'
 import { makeFatalError } from './lib/error'
 import { useAccount } from './stores/account/useAccount'
 import { useBackend } from './stores/useBackend'
 import { useStorageMigration } from './stores/useStorageMigration'
-import { CircleX, CircleCheck } from 'lucide-vue-next'
 
 const route = useRoute()
+const router = useRouter()
 
 const { isEOAWalletConnected } = useEOAWallet()
 const { isLogin, checkPasskeySupport } = usePasskey()
@@ -82,14 +83,15 @@ watchImmediate([isEOAWalletConnected, isLogin], ([eoaWalletConnected, passkeyCon
 
 const mode = useColorMode()
 
-// Prefer window.location.pathname over route.name for layout control,
-// as route.name's reactivity can lag and briefly render incorrect UI (header flicker)
-const pathname = computed(() => window.location.pathname)
+// Prefer reactivity to prevent briefly render incorrect UI (header flicker)
+const isNoHeader = computed(() => {
+	return router.currentRoute.value.name?.toString().startsWith('connect')
+})
 </script>
 
 <template>
 	<div>
-		<div v-if="pathname.endsWith('/connect')">
+		<div v-if="isNoHeader">
 			<RouterView />
 		</div>
 		<div v-else>

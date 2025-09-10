@@ -18,6 +18,7 @@ const props = withDefaults(
 const { selectedChainId } = useBlockchain()
 const { status } = useExecutionModal()
 const {
+	isLoading: isLoadingPaymaster,
 	selectedPaymaster,
 	paymasters,
 	formattedUsdcBalance,
@@ -135,7 +136,7 @@ const paymasterOptions = computed(() => {
 							{{ paymasterName }}
 						</span>
 
-						<span v-if="status === TransactionStatus.PreparingPaymaster" class="flex items-center gap-1">
+						<span v-if="isLoadingPaymaster" class="flex items-center gap-1">
 							<Loader2 class="w-4 h-4 animate-spin" />
 						</span>
 					</div>
