@@ -7,10 +7,8 @@ import { addressToName } from '@/lib/addressToName'
 import {
 	getChainMismatchErrorMessage,
 	getErrorChainMessage,
-	getErrorMsg,
-	getEthersErrorMsg,
+	getErrorMessage,
 	isChainMismatchError,
-	isEthersError,
 	isUserRejectedError,
 } from '@/lib/error'
 import { useGetCode } from '@/lib/useGetCode'
@@ -200,9 +198,9 @@ function toggleUserOpPreview() {
 }
 
 function handleError(e: unknown, prefix?: string) {
-	console.error(getErrorChainMessage(e, prefix))
+	console.error(prefix, e)
 
-	let msg = getErrorMsg(e, prefix)
+	const msg = getErrorMessage(e, prefix)
 
 	if (e instanceof ERC4337Error) {
 		console.log(e.payload)
@@ -212,8 +210,6 @@ function handleError(e: unknown, prefix?: string) {
 			})
 			console.log('encoded handleOps data', op.encodeHandleOpsDataWithDefaultGas())
 		}
-	} else if (isEthersError(e)) {
-		msg = getEthersErrorMsg(e, prefix)
 	}
 
 	const errHex = extractHexString(msg)
@@ -242,9 +238,7 @@ async function onClickEstimate() {
 		} else {
 			// If the account is not deployed, check if there is init code provided
 			if (!selectedAccountInitCodeData.value) {
-				emit('close')
-				toast.error('Account not deployed and no init code provided')
-				return
+				throw new Error('Account not deployed and no init code provided')
 			}
 			await handleEstimate({
 				executions: props.executions,
@@ -253,7 +247,7 @@ async function onClickEstimate() {
 			})
 		}
 		status.value = TransactionStatus.Sign
-	} catch (e: unknown) {
+	} catch (e) {
 		handleError(e, 'Error estimating gas')
 		status.value = TransactionStatus.Initial
 	} finally {
@@ -271,13 +265,7 @@ async function onClickSign() {
 		const prefix = 'Failed to sign user operation'
 		console.error(getErrorChainMessage(e, prefix))
 
-		let msg = ''
-
-		if (isEthersError(e)) {
-			msg = getEthersErrorMsg(e, prefix)
-		} else {
-			msg = getErrorMsg(e, prefix)
-		}
+		let msg = getErrorMessage(e, prefix)
 
 		// Chain mismatch error - show user-friendly message
 		if (isChainMismatchError(e)) {

@@ -1,5 +1,6 @@
 import { usePaymaster } from '@/components/ExecutionModal/paymasters'
 import { PaymasterServiceCapability } from '@/features/account-capabilities'
+import { getErrorMessage } from '@/lib/error'
 import { UserOpDirector } from '@/lib/UserOpDirector'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
@@ -171,37 +172,41 @@ export const useExecutionModalStore = defineStore('useExecutionModalStore', () =
 		// Set paymaster data based on selected paymaster
 		let isFinal = false
 
-		if (selectedPaymaster.value === 'erc7677') {
-			if (!paymasterCapability) {
-				throw new Error('[handleEstimate] Paymaster capability not provided')
+		try {
+			if (selectedPaymaster.value === 'erc7677') {
+				if (!paymasterCapability) {
+					throw new Error('Paymaster capability not provided')
+				}
+				const paymasterService = new PaymasterService(paymasterCapability.url, selectedChainId.value)
+				const paymasterStubData = await paymasterService.getPaymasterStubData({
+					userOp: op.preview(),
+					entryPointAddress: currentEntryPointAddress.value,
+					context: paymasterCapability.context || {},
+				})
+				if (!paymasterStubData) {
+					throw new Error('Paymaster stub data not found')
+				}
+				op.setPaymaster(paymasterStubData)
+				isFinal = paymasterStubData.isFinal || false
+			} else {
+				// public paymaster or usdc paymaster
+				const paymasterData = await buildPaymasterData()
+				if (paymasterData) {
+					op.setPaymaster(paymasterData)
+				}
 			}
-			const paymasterService = new PaymasterService(paymasterCapability.url, selectedChainId.value)
-			const paymasterStubData = await paymasterService.getPaymasterStubData({
-				userOp: op.preview(),
-				entryPointAddress: currentEntryPointAddress.value,
-				context: paymasterCapability.context || {},
-			})
-			if (!paymasterStubData) {
-				throw new Error('[handleEstimate] Paymaster stub data not found')
-			}
-			op.setPaymaster(paymasterStubData)
-			isFinal = paymasterStubData.isFinal || false
-		} else {
-			// public paymaster or usdc paymaster
-			const paymasterData = await buildPaymasterData()
-			if (paymasterData) {
-				op.setPaymaster(paymasterData)
-			}
+		} catch (e) {
+			throw new Error(`Error getting paymaster stub data: ${getErrorMessage(e)}`)
 		}
 
 		op.setGasPrice(await fetchGasPrice())
 
-		try {
-			await op.estimateGas()
+		await op.estimateGas()
 
+		try {
 			if (selectedPaymaster.value === 'erc7677' && !isFinal) {
 				if (!paymasterCapability) {
-					throw new Error('[handleEstimate] Paymaster capability not provided')
+					throw new Error('Paymaster capability not provided')
 				}
 				const paymasterService = new PaymasterService(paymasterCapability.url, selectedChainId.value)
 				const paymasterData = await paymasterService.getPaymasterData({
@@ -210,13 +215,12 @@ export const useExecutionModalStore = defineStore('useExecutionModalStore', () =
 					context: paymasterCapability.context || {},
 				})
 				if (!paymasterData) {
-					throw new Error('[handleEstimate] Paymaster data not found')
+					throw new Error('Paymaster data not found')
 				}
 				op.setPaymasterData(paymasterData.paymasterData)
 			}
-		} catch (e: unknown) {
-			console.error(op.preview())
-			throw e
+		} catch (e) {
+			throw new Error(`Error getting paymaster data: ${getErrorMessage(e)}`)
 		}
 
 		// Notice: markRaw is used to prevent TypeError: Cannot read from private field

@@ -4,11 +4,13 @@ import { normalizeChainId } from '@vue-dapp/core'
 import type { ErrorCode, ethers, EthersError } from 'ethers'
 import { isError } from 'ethers'
 
-export function getErrorMessage(e: unknown) {
-	if (e instanceof Error) {
-		return e.message
+export function getErrorMessage(e: unknown, prefix?: string) {
+	if (isEthersError(e)) {
+		return getEthersErrorMsg(e, prefix)
+	} else if (e instanceof Error) {
+		return prefix ? `${prefix}: ${e.message}` : e.message
 	}
-	return JSON.stringify(e)
+	return prefix ? `${prefix}: ${JSON.stringify(e)}` : JSON.stringify(e)
 }
 
 export function isProviderRpcError(e: unknown): e is ProviderRpcError {
@@ -80,11 +82,6 @@ export function isUserRejectedError(error: unknown): boolean {
 
 export function getEthersErrorMsg(error: ethers.EthersError, prefix?: string): string {
 	const msg = error.error?.message || error.error?.toString() || error.message || error.toString()
-	return prefix ? `${prefix}: ${msg}` : msg
-}
-
-export function getErrorMsg(error: unknown, prefix?: string): string {
-	const msg = error instanceof Error ? error.message : String(error)
 	return prefix ? `${prefix}: ${msg}` : msg
 }
 
