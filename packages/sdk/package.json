@@ -1,6 +1,6 @@
 {
 	"name": "@samanager/sdk",
-	"version": "0.0.3-beta.3",
+	"version": "0.0.3",
 	"type": "module",
 	"repository": "https://github.com/ethaccount/SAManager",
 	"author": "Johnson Chen <https://x.com/johnson86tw>",
