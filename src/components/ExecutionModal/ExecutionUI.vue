@@ -54,6 +54,7 @@ const { selectedChainId, explorerUrl } = useBlockchain()
 const { selectedAccount, selectedAccountInitCodeData, isAccountAccessible } = useAccount()
 const { selectSigner, selectedSigner } = useSigner()
 const { selectedCredentialDisplay, isLogin } = usePasskey()
+const { isLoading: isLoadingPaymaster } = usePaymaster()
 const { isDeployed, getCode, loading: isLoadingCode } = useGetCode()
 const { currentEntryPointAddress, setEntryPointAddress } = useBlockchain()
 const {
@@ -124,14 +125,15 @@ if (props.paymasterCapability) {
 watchImmediate(selectedPaymaster, async () => {
 	if (status.value === TransactionStatus.Initial) {
 		try {
+			isLoadingPaymaster.value = true
+
 			if (selectedPaymaster.value === 'usdc') {
 				// Preparing USDC paymaster
 				status.value = TransactionStatus.PreparingPaymaster
+
 				await checkUsdcBalanceAndAllowance()
 				if (usdcPaymasterData.value) {
 					status.value = TransactionStatus.Initial
-				} else {
-					throw new Error('USDC paymaster data not prepared')
 				}
 			} else if (selectedPaymaster.value === 'erc7677') {
 				// Preparing ERC-7677 paymaster
@@ -146,7 +148,9 @@ watchImmediate(selectedPaymaster, async () => {
 			}
 		} catch (e) {
 			handleError(e, 'Error preparing paymaster')
-			status.value = TransactionStatus.Closed
+			status.value = TransactionStatus.Initial
+		} finally {
+			isLoadingPaymaster.value = false
 		}
 	}
 })

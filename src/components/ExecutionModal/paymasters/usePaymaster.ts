@@ -5,6 +5,8 @@ import { usePublicPaymaster } from './usePublicPaymaster'
 import { useUsdcPaymaster } from './useUsdcPaymaster'
 
 export const usePaymasterStore = defineStore('usePaymasterStore', () => {
+	const isLoading = ref(false)
+
 	const usdcPaymasterHook = useUsdcPaymaster()
 	const { isUsdcPaymasterSupported, usdcPaymasterData } = usdcPaymasterHook
 
@@ -50,6 +52,7 @@ export const usePaymasterStore = defineStore('usePaymasterStore', () => {
 	}
 
 	return {
+		isLoading,
 		paymasters,
 		selectedPaymaster,
 		buildPaymasterData,
