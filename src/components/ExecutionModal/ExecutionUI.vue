@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { fetchEthUsdPrice } from '@/api/etherscan'
 import { ExecutionUIEmits, ExecutionUIProps, TransactionStatus, useExecutionModal } from '@/components/ExecutionModal'
+import NetworkSelector from '@/components/header/NetworkSelector.vue'
 import { ERROR_NOTIFICATION_DURATION } from '@/config'
 import { AccountRegistry } from '@/lib/accounts'
 import { addressToName } from '@/lib/addressToName'
@@ -14,7 +15,7 @@ import {
 import { useGetCode } from '@/lib/useGetCode'
 import { deserializeValidationMethod } from '@/lib/validations'
 import { useAccount } from '@/stores/account/useAccount'
-import { displayChainName, getEntryPointAddress } from '@/stores/blockchain/chains'
+import { getEntryPointAddress } from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
@@ -306,7 +307,7 @@ async function onClickSend() {
 			}
 		})
 	} catch (e: unknown) {
-		handleError(e, 'Failed to send user operation')
+		handleError(e, 'Error sending user operation')
 		status.value = TransactionStatus.Initial
 	} finally {
 		await updateEthUsdPrice()
@@ -450,9 +451,10 @@ const shouldShowEffectiveFee = computed(() => {
 			<!-- Title -->
 			<div class="font-medium">{{ showUserOpPreview ? 'UserOp Preview' : 'Transaction' }}</div>
 			<!-- Close Button -->
-			<Button variant="ghost" size="icon" :disabled="!canClose" @click="onClickClose">
+			<Button v-if="!showUserOpPreview" variant="ghost" size="icon" :disabled="!canClose" @click="onClickClose">
 				<X class="w-4 h-4" />
 			</Button>
+			<div v-else class="w-9"></div>
 		</div>
 
 		<!-- UserOp Preview Screen -->
@@ -547,13 +549,10 @@ const shouldShowEffectiveFee = computed(() => {
 						<Address :address="selectedAccount?.address || ''" button-size="xs" text-size="sm" />
 					</div>
 
-					<!-- Network -->
+					<!-- Network & Infrastructure -->
 					<div class="flex items-center justify-between text-sm">
 						<span class="text-muted-foreground">Network</span>
-						<div class="flex items-center gap-2">
-							<ChainIcon :chain-id="selectedChainId" :size="24" :show-tooltip="false" />
-							<span class="text-sm">{{ displayChainName(selectedChainId) }}</span>
-						</div>
+						<NetworkSelector :fixed-chain="true" />
 					</div>
 
 					<!-- Account Type -->
