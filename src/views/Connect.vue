@@ -3,114 +3,35 @@ import NetworkSelector from '@/components/header/NetworkSelector.vue'
 import CenterStageLayout from '@/components/layout/CenterStageLayout.vue'
 import { PendingRequest } from '@/features/connect'
 import EthRequestAccounts from '@/features/connect/EthRequestAccounts.vue'
-import { handleGetCallsStatus } from '@/features/connect/wallet_getCallsStatus'
-import { handleGetCapabilities } from '@/features/connect/wallet_getCapabilities'
+import { useConnect } from '@/features/connect/useConnect'
 import WalletSendCalls from '@/features/connect/WalletSendCalls.vue'
 import WalletShowCallsStatus from '@/features/connect/WalletShowCallsStatus.vue'
 import { toRoute } from '@/lib/router'
 import { useBlockchain } from '@/stores/blockchain'
-import {
-	SAManagerPopup,
-	standardErrors,
-	WalletGetCallsStatusRequest,
-	WalletGetCallsStatusResponse,
-	WalletGetCapabilitiesRequest,
-	WalletGetCapabilitiesResponse,
-	WalletSendCallsRequest,
-	WalletShowCallsStatusRequest,
-} from '@samanager/sdk'
+import { SAManagerPopup, WalletSendCallsRequest, WalletShowCallsStatusRequest } from '@samanager/sdk'
 import { AlertCircle, Loader2 } from 'lucide-vue-next'
 
-const route = useRoute()
 const router = useRouter()
+const { selectedChainId } = useBlockchain()
 
-const chainId = route.params.chainId as string
+const { pendingRequest, error, isLoading, method, walletRequestHandler } = useConnect()
 
-const error = ref<string | null>(null)
-const pendingRequest = ref<PendingRequest | null>(null)
-const isLoading = ref(false)
+let popup: SAManagerPopup
 
-const method = computed(() => {
-	return pendingRequest.value?.method
-})
-
-if (window.opener) {
-	if (!chainId) {
-		window.close()
-	}
-
-	new SAManagerPopup({
-		debug: true,
-		chainId: BigInt(chainId),
-		walletRequestHandler: async (method, params) => {
-			console.log('request', method, params)
-
-			return new Promise(async (resolve, reject) => {
-				pendingRequest.value = { method, params, resolve, reject }
-				isLoading.value = true
-				let result
-				let shouldResolveImmediately = true
-
-				try {
-					switch (method) {
-						case 'eth_chainId':
-						case 'eth_getBlockByNumber': {
-							// await new Promise(resolve => setTimeout(resolve, 10000000))
-							const { client } = useBlockchain()
-							result = await client.value.send(method, params)
-							break
-						}
-						case 'wallet_getCapabilities': {
-							// await new Promise(resolve => setTimeout(resolve, 10000000))
-							const capabilities = (await handleGetCapabilities(
-								params as WalletGetCapabilitiesRequest['params'],
-							)) as WalletGetCapabilitiesResponse
-							result = capabilities
-							break
-						}
-						case 'wallet_getCallsStatus': {
-							// await new Promise(resolve => setTimeout(resolve, 10000000))
-							result = (await handleGetCallsStatus(
-								params as WalletGetCallsStatusRequest['params'],
-							)) as WalletGetCallsStatusResponse
-							break
-						}
-						// Method that requires user interaction
-						case 'eth_requestAccounts':
-						case 'wallet_sendCalls':
-						case 'wallet_showCallsStatus': {
-							shouldResolveImmediately = false
-							break
-						}
-
-						default: {
-							throw standardErrors.provider.unsupportedMethod({
-								message: `Method ${method} not supported`,
-							})
-						}
-					}
-
-					if (shouldResolveImmediately) {
-						resolve(result)
-					}
-					// For eth_requestAccounts, the promise remains pending until user clicks connect
-				} catch (err) {
-					console.error('Error processing request', err)
-					error.value = err instanceof Error ? err.message : 'Failed to process request'
-					reject(standardErrors.rpc.internal(error.value))
-				} finally {
-					if (shouldResolveImmediately) {
-						isLoading.value = false
-						pendingRequest.value = null
-					}
-				}
-			})
-		},
-	})
-} else {
+if (!window.opener) {
 	// Redirect to the home page when this popup route is not opened by a parent window
 	router.replace(toRoute('home'))
+} else {
+	popup = new SAManagerPopup({
+		chainId: Number(selectedChainId.value),
+		debug: true,
+		walletRequestHandler,
+	})
 }
+
+watch(selectedChainId, () => {
+	popup.updateChainId(Number(selectedChainId.value))
+})
 </script>
 
 <template>
@@ -137,7 +58,7 @@ if (window.opener) {
 					<h1 class="text-xl font-bold">{{ pendingRequest?.method }}</h1>
 				</div>
 
-				<NetworkSelector fixed-chain />
+				<NetworkSelector />
 			</div>
 
 			<!-- Loading State -->
@@ -155,7 +76,7 @@ if (window.opener) {
 						<div>
 							<span class="font-medium text-muted-foreground">Method:</span>
 							<div class="mt-1 p-2 bg-background rounded border font-mono text-sm">
-								{{ pendingRequest?.method }}
+								{{ pendingRequest?.method || 'None' }}
 							</div>
 						</div>
 
@@ -164,7 +85,7 @@ if (window.opener) {
 							<div
 								class="mt-1 p-2 bg-background rounded border font-mono text-sm max-h-32 overflow-y-auto"
 							>
-								<pre>{{ JSON.stringify(pendingRequest?.params, null, 2) }}</pre>
+								<pre>{{ JSON.stringify(pendingRequest?.params, null, 2) || 'None' }}</pre>
 							</div>
 						</div>
 					</div>

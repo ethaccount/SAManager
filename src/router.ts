@@ -33,6 +33,10 @@ const router = createRouter({
 												path: '/:chainId/test/modal',
 												component: () => import('@/views/test/TestModal.vue'),
 											},
+											{
+												path: '/:chainId/test/toast',
+												component: () => import('@/views/test/TestToast.vue'),
+											},
 										],
 									},
 								]),
@@ -59,6 +63,11 @@ const router = createRouter({
 							path: '/:chainId/connect',
 							name: 'connect',
 							component: () => import('@/views/Connect.vue'),
+						},
+						{
+							path: '/:chainId/connect/create',
+							name: 'connect-create',
+							component: () => import('@/views/ConnectCreate.vue'),
 						},
 						// Account Settings
 						{

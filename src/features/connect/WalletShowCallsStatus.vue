@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import NetworkSelector from '@/components/header/NetworkSelector.vue'
+import { getErrorMessage } from '@/lib/error'
 import { useBlockchain } from '@/stores/blockchain'
-import { WalletShowCallsStatusRequest } from '@samanager/sdk'
+import { CallIdentifier, CallIdentifierType, decodeCallIdentifier, WalletShowCallsStatusRequest } from '@samanager/sdk'
 import { AlertCircle, CheckCircle, ExternalLink, Loader2 } from 'lucide-vue-next'
 import { PendingRequest } from './types'
 
@@ -13,7 +13,16 @@ const identifier = computed(() => {
 	return props.pendingRequest.params[0]
 })
 
-const { bundler, explorerUrl } = useBlockchain()
+const decodedIdentifier = computed<CallIdentifier | null>(() => {
+	try {
+		return decodeCallIdentifier(identifier.value)
+	} catch (e) {
+		console.error('Error decoding identifier:', getErrorMessage(e))
+		return null
+	}
+})
+
+const { client, bundler, explorerUrl } = useBlockchain()
 
 const isLoading = ref(true)
 const error = ref<string | null>(null)
@@ -37,11 +46,25 @@ onMounted(async () => {
 		isLoading.value = true
 		error.value = null
 
-		const result = await bundler.value.waitForReceipt(identifier.value)
-		receipt.value = result
+		if (!decodedIdentifier.value) {
+			throw new Error('Invalid identifier')
+		}
+
+		if (decodedIdentifier.value.type === CallIdentifierType.tx) {
+			const result = await client.value.getTransactionReceipt(decodedIdentifier.value.hash)
+			if (result) {
+				receipt.value = result.toJSON()
+			} else {
+				throw new Error('Transaction receipt not found')
+			}
+		} else if (decodedIdentifier.value.type === CallIdentifierType.op) {
+			receipt.value = await bundler.value.waitForReceipt(decodedIdentifier.value.hash)
+		} else {
+			throw new Error('Invalid identifier type')
+		}
 	} catch (e: unknown) {
-		console.error('Failed to get call status:', e)
-		error.value = e instanceof Error ? e.message : 'Failed to get call status'
+		console.error('Error getting call status:', e)
+		error.value = `Error getting call status: ${getErrorMessage(e)}`
 	} finally {
 		isLoading.value = false
 	}
@@ -116,7 +139,7 @@ function onClickClose() {
 			</div>
 
 			<!-- Call Details -->
-			<div class="p-4 border rounded-lg bg-accent/5">
+			<!-- <div class="p-4 border rounded-lg bg-accent/5">
 				<div class="space-y-3 text-sm">
 					<div>
 						<span class="font-medium text-muted-foreground">Call Identifier:</span>
@@ -132,17 +155,12 @@ function onClickClose() {
 						</div>
 					</div>
 				</div>
-			</div>
+			</div> -->
 		</div>
 
 		<!-- Close Button -->
-		<div class="flex justify-center pt-4">
-			<button
-				@click="onClickClose"
-				class="px-6 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-			>
-				Close
-			</button>
+		<div class="flex justify-center">
+			<Button @click="onClickClose"> Close </Button>
 		</div>
 	</div>
 </template>

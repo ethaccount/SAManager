@@ -2,7 +2,7 @@ import { getUninstallModuleData } from '@/lib/accounts/account-specific'
 import { EMAIL_RECOVERY_EXECUTOR_ADDRESS } from '@/features/email-recovery'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { useTxModal, type TxModalExecution } from '@/stores/useTxModal'
+import { useExecutionModal, type ExecutionModalExecution } from '@/components/ExecutionModal'
 import { ERC7579_MODULE_TYPE, type ERC7579Module } from 'sendop'
 import { ref } from 'vue'
 
@@ -39,7 +39,7 @@ export function useUninstallEmailRecovery() {
 				deInitData: '0x',
 			}
 
-			const execution: TxModalExecution = {
+			const execution: ExecutionModalExecution = {
 				description: 'Uninstall Email Recovery Module',
 				to: selectedAccount.value.address,
 				data: await getUninstallModuleData(
@@ -51,7 +51,7 @@ export function useUninstallEmailRecovery() {
 				value: 0n,
 			}
 
-			useTxModal().openModal({
+			useExecutionModal().openModal({
 				executions: [execution],
 				onSuccess: async () => {
 					await options?.onSuccess?.()

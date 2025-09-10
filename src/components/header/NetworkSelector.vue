@@ -10,8 +10,13 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { SUPPORTED_CHAIN_IDS } from '@/config'
-import { CHAIN_ID, displayChainName, SUPPORTED_BUNDLER, SUPPORTED_NODE } from '@/stores/blockchain/chains'
+import {
+	CHAIN_ID,
+	displayChainName,
+	SUPPORTED_BUNDLER,
+	SUPPORTED_CHAIN_IDS,
+	SUPPORTED_NODE,
+} from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { Check } from 'lucide-vue-next'
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { IS_STAGING } from '@/config'
-import { AccountRegistry } from '@/lib/accounts'
+import { AccountRegistry, useAccountList } from '@/lib/accounts'
 import { toRoute } from '@/lib/router'
 import { useGetCode } from '@/lib/useGetCode'
 import { getVMethodName, getVMethodType } from '@/lib/validations/helpers'
@@ -8,28 +8,52 @@ import { useAccount } from '@/stores/account/useAccount'
 import { displayChainName } from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { shortenAddress } from '@vue-dapp/core'
-import { ArrowLeft, Loader2 } from 'lucide-vue-next'
+import { ArrowLeft, Loader2, Trash } from 'lucide-vue-next'
+import { isSameAddress } from 'sendop'
 
+const route = useRoute()
 const router = useRouter()
 const { selectedAccount, isModular, isChainIdMatching, isMultichain } = useAccount()
 const { getCode, isDeployed, loading } = useGetCode()
+const { onClickDeleteAccount } = useAccountList()
 
 const isGetCodeFinished = ref(false)
 
-// Timing: App loaded, Account changed
-// Use this instead of onMounted because users might change account with the drawer
-watchImmediate(selectedAccount, async () => {
-	isGetCodeFinished.value = false
+// If the user navigates directly to the account-settings with an address, check if the address matches the selectedAccount
+const addressNotFound = ref(false)
+try {
+	if (selectedAccount.value && !isSameAddress(route.params.address as string, selectedAccount.value.address)) {
+		addressNotFound.value = true
+	}
+} catch {
+	addressNotFound.value = true
+}
 
+// Only check address if it's not on the "address not found" page
+onMounted(async () => {
+	if (!addressNotFound.value) {
+		await checkAddress()
+	}
+})
+
+// If on the "address not found" page, users can select another account via the drawer
+watch(selectedAccount, async () => {
+	addressNotFound.value = false
+	await checkAddress()
+})
+
+async function checkAddress() {
 	if (selectedAccount.value && isChainIdMatching.value) {
-		// Only redirect if we're on the exact account route (not on a child route)
-		if (router.currentRoute.value.name === 'account') {
-			router.replace(toRoute('account-settings-modules', { address: selectedAccount.value.address }))
-		}
+		isGetCodeFinished.value = false
+		router.replace(
+			toRoute(router.currentRoute.value.name as string, {
+				address: selectedAccount.value.address,
+			}),
+		)
 		await getCode(selectedAccount.value.address)
 		isGetCodeFinished.value = true
 	}
-})
+}
 
 function onClickSwitchToCorrectChain() {
 	if (!selectedAccount.value) return
@@ -50,10 +74,17 @@ const showSwitchToCorrectChain = computed(() => {
 				Go to home page
 			</Button>
 		</div>
+		<div v-else-if="addressNotFound" class="w-full mx-auto flex justify-center items-center h-full flex-col gap-4">
+			<div class="text-sm text-muted-foreground">Account Not Found</div>
+			<Button variant="outline" size="sm" @click="router.push(toRoute('home'))">
+				<ArrowLeft class="h-3.5 w-3.5" />
+				Go to home page
+			</Button>
+		</div>
 		<div v-else class="w-full mx-auto">
 			<div class="space-y-4">
-				<div class="space-y-2">
-					<!-- address -->
+				<!-- address -->
+				<div class="flex justify-between items-center">
 					<div class="flex items-center gap-2">
 						<h1 class="text-xl font-medium">{{ shortenAddress(selectedAccount.address) }}</h1>
 						<div class="flex items-center gap-1">
@@ -61,73 +92,77 @@ const showSwitchToCorrectChain = computed(() => {
 							<AddressLinkButton :address="selectedAccount.address" />
 						</div>
 					</div>
+					<div>
+						<Button variant="outline" size="sm" @click="onClickDeleteAccount(selectedAccount)">
+							<Trash class="h-3.5 w-3.5" />
+							Delete
+						</Button>
+					</div>
+				</div>
 
-					<!-- account Id -->
-					<div class="flex items-center gap-3 mt-2">
+				<!-- account Id -->
+				<div class="flex items-center gap-3 mt-2">
+					<div>
+						<p class="text-sm text-muted-foreground">
+							{{ AccountRegistry.getName(selectedAccount.accountId) }} ({{ selectedAccount.accountId }})
+						</p>
+					</div>
+				</div>
+
+				<!-- Chain -->
+				<div v-if="!isMultichain">
+					<div class="flex items-center gap-2 text-sm">
+						<ChainIcon :chain-id="selectedAccount.chainId" :size="20" />
 						<div>
-							<p class="text-sm text-muted-foreground">
-								{{ AccountRegistry.getName(selectedAccount.accountId) }} ({{
-									selectedAccount.accountId
-								}})
-							</p>
+							<span>{{ displayChainName(selectedAccount.chainId) }}</span>
+							<span v-if="!isChainIdMatching" class="text-yellow-500"> (Chain Mismatch)</span>
 						</div>
 					</div>
+				</div>
 
-					<!-- Chain -->
-					<div v-if="!isMultichain">
-						<div class="flex items-center gap-2 text-sm">
-							<ChainIcon :chain-id="selectedAccount.chainId" :size="20" />
-							<div>
-								<span>{{ displayChainName(selectedAccount.chainId) }}</span>
-								<span v-if="!isChainIdMatching" class="text-yellow-500"> (Chain Mismatch)</span>
-							</div>
-						</div>
+				<!-- tag section -->
+				<div class="flex items-center gap-2 mt-2">
+					<!-- Category -->
+					<div class="text-xs rounded-full bg-muted px-2.5 py-0.5">
+						{{ selectedAccount.category }}
 					</div>
 
-					<!-- tag section -->
-					<div class="flex items-center gap-2 mt-2">
-						<!-- Category -->
-						<div class="text-xs rounded-full bg-muted px-2.5 py-0.5">
-							{{ selectedAccount.category }}
-						</div>
-
-						<!-- Deployed tag -->
-						<TooltipProvider
-							v-if="isChainIdMatching && !loading && selectedAccount.category === 'Smart Account'"
-						>
-							<Tooltip>
-								<TooltipTrigger asChild>
-									<div class="flex items-center gap-1">
-										<div
-											class="text-xs rounded-full px-2.5 py-0.5"
-											:class="isDeployed ? 'bg-blue-500' : 'bg-yellow-500/10 text-yellow-500'"
-										>
-											{{ isDeployed ? 'Deployed' : 'Not Deployed' }}
-										</div>
+					<!-- Deployed tag -->
+					<TooltipProvider
+						v-if="isChainIdMatching && !loading && selectedAccount.category === 'Smart Account'"
+					>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<div class="flex items-center gap-1">
+									<div
+										class="text-xs rounded-full px-2.5 py-0.5"
+										:class="isDeployed ? 'bg-blue-500' : 'bg-yellow-500/10 text-yellow-500'"
+									>
+										{{ isDeployed ? 'Deployed' : 'Not Deployed' }}
 									</div>
-								</TooltipTrigger>
-								<TooltipContent>
-									{{
-										isDeployed
-											? `The account is deployed on ${displayChainName(selectedAccount.chainId)}`
-											: 'The account is not deployed'
-									}}
-								</TooltipContent>
-							</Tooltip>
-						</TooltipProvider>
+								</div>
+							</TooltipTrigger>
+							<TooltipContent>
+								{{
+									isDeployed
+										? `The account is deployed on ${displayChainName(selectedAccount.chainId)}`
+										: 'The account is not deployed'
+								}}
+							</TooltipContent>
+						</Tooltip>
+					</TooltipProvider>
 
-						<!-- Multichain tag -->
-						<TooltipProvider v-if="isMultichain">
-							<Tooltip>
-								<TooltipTrigger asChild>
-									<div class="flex items-center gap-1">
-										<div class="text-xs rounded-full px-2.5 py-0.5 bg-green-800">Multichain</div>
-									</div>
-								</TooltipTrigger>
-								<TooltipContent> The account can be used on all supported chains</TooltipContent>
-							</Tooltip>
-						</TooltipProvider>
-					</div>
+					<!-- Multichain tag -->
+					<TooltipProvider v-if="isMultichain">
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<div class="flex items-center gap-1">
+									<div class="text-xs rounded-full px-2.5 py-0.5 bg-green-800">Multichain</div>
+								</div>
+							</TooltipTrigger>
+							<TooltipContent> The account can be used on all supported chains</TooltipContent>
+						</Tooltip>
+					</TooltipProvider>
 				</div>
 			</div>
 

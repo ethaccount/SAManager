@@ -72,6 +72,35 @@ export const standardErrors = {
 			return getEthProviderError(standardErrorCodes.provider.unsupportedChain, arg)
 		},
 
+		// EIP-5792: Wallet Call API errors
+		unsupportedCapability: <T>(arg?: EthErrorsArg<T>) => {
+			return getEthProviderError(standardErrorCodes.provider.unsupportedCapability, arg)
+		},
+
+		unsupportedChainId: <T>(arg?: EthErrorsArg<T>) => {
+			return getEthProviderError(standardErrorCodes.provider.unsupportedChainId, arg)
+		},
+
+		duplicateId: <T>(arg?: EthErrorsArg<T>) => {
+			return getEthProviderError(standardErrorCodes.provider.duplicateId, arg)
+		},
+
+		unknownBundleId: <T>(arg?: EthErrorsArg<T>) => {
+			return getEthProviderError(standardErrorCodes.provider.unknownBundleId, arg)
+		},
+
+		bundleTooLarge: <T>(arg?: EthErrorsArg<T>) => {
+			return getEthProviderError(standardErrorCodes.provider.bundleTooLarge, arg)
+		},
+
+		atomicUpgradeRejected: <T>(arg?: EthErrorsArg<T>) => {
+			return getEthProviderError(standardErrorCodes.provider.atomicUpgradeRejected, arg)
+		},
+
+		atomicityNotSupported: <T>(arg?: EthErrorsArg<T>) => {
+			return getEthProviderError(standardErrorCodes.provider.atomicityNotSupported, arg)
+		},
+
 		custom: <T>(opts: CustomErrorArg<T>) => {
 			if (!opts || typeof opts !== 'object' || Array.isArray(opts)) {
 				throw new Error('Ethereum Provider custom errors must provide single object argument.')
@@ -188,7 +217,7 @@ export type InsufficientBalanceErrorData = {
 class ActionableInsufficientBalanceError extends EthereumRpcError<InsufficientBalanceErrorData> {}
 
 function isValidEthProviderCode(code: number): boolean {
-	return Number.isInteger(code) && code >= 1000 && code <= 4999
+	return Number.isInteger(code) && code >= 1000 && code <= 5999
 }
 
 export function isActionableHttpRequestError(errorObject: unknown): errorObject is ActionableInsufficientBalanceError {

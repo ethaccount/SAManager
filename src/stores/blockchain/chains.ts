@@ -2,6 +2,9 @@ import { ADDRESS, EntryPointVersion } from 'sendop'
 
 export type CHAIN_ID = MAINNET_CHAIN_ID | TESTNET_CHAIN_ID
 
+// Reason to use string enums instead of number enums for chain ids:
+// Numeric enums generate a bi-directional mapping, so Object.values includes both the keys and the values
+// String enums only have a one-way mapping, so Object.values only contains the defined string values.
 export enum MAINNET_CHAIN_ID {
 	ETHEREUM = '1',
 	BASE = '8453',
@@ -66,21 +69,15 @@ export enum SUPPORTED_BUNDLER {
 
 export type SUPPORTED_ENTRY_POINT = EntryPointVersion
 
-export function isSupportedChainId(chainId: string | number | bigint): chainId is TESTNET_CHAIN_ID | MAINNET_CHAIN_ID {
-	try {
-		return Object.values({ ...TESTNET_CHAIN_ID, ...MAINNET_CHAIN_ID }).includes(
-			chainId.toString() as TESTNET_CHAIN_ID | MAINNET_CHAIN_ID,
-		)
-	} catch {
-		return false
-	}
+export function isSupportedChainId(chainId: string): chainId is CHAIN_ID {
+	return SUPPORTED_CHAIN_IDS.includes(chainId as CHAIN_ID)
 }
 
-export function displayChainName(chainId: string | number | bigint): string {
+export function displayChainName(chainId: string): string {
 	if (isSupportedChainId(chainId)) {
-		return CHAIN_NAME[chainId.toString()]
+		return CHAIN_NAME[chainId]
 	}
-	return 'Unknown'
+	return `Unknown(${chainId})`
 }
 
 export function isTestnet(chainId: string): boolean {
@@ -97,3 +94,29 @@ export function getEntryPointAddress(version: EntryPointVersion): string {
 			throw new Error(`Unsupported entrypoint version: ${version}`)
 	}
 }
+
+export const DEFAULT_ENTRY_POINT_VERSION: EntryPointVersion = 'v0.7'
+export const DEFAULT_NODE = SUPPORTED_NODE.ALCHEMY
+export const DEFAULT_BUNDLER = SUPPORTED_BUNDLER.PIMLICO
+export const SUPPORTED_MAINNET_CHAIN_IDS = [MAINNET_CHAIN_ID.ARBITRUM, MAINNET_CHAIN_ID.BASE]
+export const SUPPORTED_CHAIN_IDS = getSupportedChainIds()
+
+function getSupportedChainIds(): CHAIN_ID[] {
+	switch (import.meta.env.MODE) {
+		case 'test':
+		case 'staging':
+			// no local dev needed
+			return Object.values(TESTNET_CHAIN_ID).filter(id => id !== TESTNET_CHAIN_ID.LOCAL)
+		case 'production':
+			return SUPPORTED_MAINNET_CHAIN_IDS
+		default:
+			throw new Error(`[getSupportedChainIds] Invalid vite mode: ${import.meta.env.MODE}`)
+	}
+}
+
+// Most dapps only support SEPOLIA so we set it as default on testnet
+export const DEFAULT_CHAIN_ID = import.meta.env.MODE === 'staging' ? TESTNET_CHAIN_ID.SEPOLIA : MAINNET_CHAIN_ID.BASE
+export const DEFAULT_BROWSER_URL =
+	import.meta.env.MODE === 'staging'
+		? `https://swap.cow.fi/#/${TESTNET_CHAIN_ID.SEPOLIA}/swap/ETH/0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`
+		: `https://swap.cow.fi/#/${MAINNET_CHAIN_ID.BASE}/swap/ETH/0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`

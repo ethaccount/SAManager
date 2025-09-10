@@ -1,8 +1,4 @@
 <script setup lang="ts">
-import NetworkSelector from '@/components/header/NetworkSelector.vue'
-import { Button } from '@/components/ui/button'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import Address from '@/components/utils/Address.vue'
 import { AccountRegistry } from '@/lib/accounts'
 import { useAccountList } from '@/lib/accounts/useAccountList'
 import { getErrorMessage } from '@/lib/error'
@@ -15,11 +11,13 @@ import { useSigner } from '@/stores/useSigner'
 import { standardErrors } from '@samanager/sdk'
 import { AlertCircle, CheckCircle, CircleDot, Power, X } from 'lucide-vue-next'
 import { PendingRequest } from './types'
+import { toRoute } from '@/lib/router'
 
 const props = defineProps<{
 	pendingRequest: PendingRequest<undefined>
 }>()
 
+const router = useRouter()
 const { selectedAccount, isAccountAccessible, isChainIdMatching, isMultichain } = useAccount()
 const { wallet, address, isEOAWalletConnected, disconnect, isEOAWalletSupported } = useEOAWallet()
 const { isLogin, resetCredentialId, selectedCredentialDisplay, isPasskeySupported } = usePasskey()
@@ -39,7 +37,11 @@ function onClickConnect() {
 	}
 }
 
-function onClickReject() {
+function onClickCreate() {
+	router.push(toRoute('connect-create'))
+}
+
+function onClickCancel() {
 	props.pendingRequest.reject(standardErrors.provider.userRejectedRequest())
 }
 </script>
@@ -49,7 +51,7 @@ function onClickReject() {
 		<!-- Header with Network Selector -->
 		<div class="flex justify-between items-center mb-6">
 			<h1 class="text-2xl font-bold">Connect Wallet</h1>
-			<NetworkSelector fixed-chain />
+			<NetworkSelector />
 		</div>
 
 		<!-- Selected Account -->
@@ -73,7 +75,15 @@ function onClickReject() {
 								</TooltipContent>
 							</Tooltip>
 						</TooltipProvider>
-						<Address :address="selectedAccount.address" text-size="sm" button-size="sm" />
+						<div class="relative">
+							<Address :address="selectedAccount.address" text-size="sm" button-size="sm" />
+							<span
+								v-if="!isAccountAccessible"
+								class="absolute -top-2.5 left-0 text-[10px] text-yellow-700 dark:text-yellow-400"
+							>
+								Not Connected
+							</span>
+						</div>
 					</div>
 					<Button variant="ghost" size="icon" class="h-6 w-6" @click="onClickUnselectAccount">
 						<X class="w-4 h-4" />
@@ -102,11 +112,16 @@ function onClickReject() {
 					</div>
 				</div>
 			</div>
-			<div class="mt-4 space-y-3">
-				<Button class="w-full" :disabled="!selectedAccount || !isAccountAccessible" @click="onClickConnect">
-					{{ selectedAccount ? 'Connect' : 'Select an account to connect' }}
+
+			<!-- Action buttons -->
+			<div class="mt-4 space-y-2">
+				<Button class="w-full" v-if="selectedAccount && isAccountAccessible" @click="onClickConnect">
+					Connect
 				</Button>
-				<Button variant="outline" class="w-full" @click="onClickReject"> Cancel </Button>
+
+				<Button variant="secondary" class="w-full" @click="onClickCreate">Create Account</Button>
+
+				<Button variant="ghost" class="w-full" @click="onClickCancel"> Cancel </Button>
 			</div>
 		</div>
 

@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { OwnableValidatorAPI } from '@/api/OwnableValidatorAPI'
+import type { ExecutionModalExecution } from '@/components/ExecutionModal'
+import { useExecutionModal } from '@/components/ExecutionModal'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { getInstallModuleData } from '@/lib/accounts/account-specific'
 import {
 	checkAcceptanceRequest,
 	completeRecovery,
@@ -14,6 +15,7 @@ import {
 	sendAcceptanceRequest,
 	sendRecoveryRequest,
 } from '@/features/email-recovery'
+import { getInstallModuleData } from '@/lib/accounts/account-specific'
 import { getErrorMessage } from '@/lib/error'
 import { toRoute } from '@/lib/router'
 import { deserializeValidationMethod, OwnableValidatorVMethod } from '@/lib/validations'
@@ -22,8 +24,6 @@ import { useAccount } from '@/stores/account/useAccount'
 import { TESTNET_CHAIN_ID } from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { useEmailRecovery } from '@/stores/useEmailRecovery'
-import type { TxModalExecution } from '@/stores/useTxModal'
-import { useTxModal } from '@/stores/useTxModal'
 import { Interface } from 'ethers'
 import { ChevronDown, ChevronUp, Info, Loader2 } from 'lucide-vue-next'
 import { ADDRESS, ERC7579_MODULE_TYPE, IERC7579Account__factory } from 'sendop'
@@ -38,7 +38,7 @@ const props = defineProps<{
 }>()
 
 const { selectedChainId, switchChain, client } = useBlockchain()
-const { openModal } = useTxModal()
+const { openModal } = useExecutionModal()
 const { accountToNewOwnerAddress, accountToEmail } = useEmailRecovery()
 
 const isLoadingState = ref(true)
@@ -292,7 +292,7 @@ async function onClickConfigureRecovery() {
 		})
 
 		// Install the email recovery executor module
-		const execution: TxModalExecution = {
+		const execution: ExecutionModalExecution = {
 			description: 'Install Email Recovery Module',
 			to: props.selectedAccount.address,
 			data: getInstallModuleData(props.selectedAccount.accountId, emailRecoveryData.module),
@@ -401,7 +401,7 @@ function onClickCancelRecovery() {
 		isLoadingCancelRecovery.value = true
 		error.value = null
 
-		let execution: TxModalExecution
+		let execution: ExecutionModalExecution
 
 		if (isRecoveryRequestExpired.value) {
 			// call function cancelExpiredRecovery(address account)

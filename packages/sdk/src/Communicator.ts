@@ -18,6 +18,8 @@ export class Communicator {
 	private listeners = new Map<(_: MessageEvent) => void, { reject: (_: Error) => void }>()
 	private debug = false
 	private onDisconnectCallback?: () => void
+	private popupCheckInterval?: number
+	private isDisconnecting = false
 
 	constructor({ url, debug = false, onDisconnect }: { url: string; debug?: boolean; onDisconnect?: () => void }) {
 		this.url = new URL(url)
@@ -70,9 +72,41 @@ export class Communicator {
 	}
 
 	/**
+	 * Starts polling to check if popup is manually closed
+	 */
+	private startPopupPolling = () => {
+		if (this.popupCheckInterval) {
+			window.clearInterval(this.popupCheckInterval)
+		}
+
+		this.popupCheckInterval = window.setInterval(() => {
+			if (this.popup && this.popup.closed && !this.isDisconnecting) {
+				this.log('Popup manually closed by user')
+				this.disconnect()
+			}
+		}, 1000) // Check every second
+	}
+
+	/**
+	 * Stops polling for popup closure
+	 */
+	private stopPopupPolling = () => {
+		if (this.popupCheckInterval) {
+			window.clearInterval(this.popupCheckInterval)
+			this.popupCheckInterval = undefined
+		}
+	}
+
+	/**
 	 * Closes the popup, rejects all requests and clears the listeners
 	 */
 	disconnect = () => {
+		if (this.isDisconnecting) return
+		this.isDisconnecting = true
+
+		// Stop polling first
+		this.stopPopupPolling()
+
 		// Note: keys popup handles closing itself. this is a fallback.
 		closePopup(this.popup)
 		this.popup = null
@@ -83,8 +117,8 @@ export class Communicator {
 		})
 		this.listeners.clear()
 
-		// Notify parent about disconnection
 		this.onDisconnectCallback?.()
+		// Don't reset flag - prevents duplicate calls from PopupUnload message
 	}
 
 	/**
@@ -97,7 +131,13 @@ export class Communicator {
 			return this.popup
 		}
 
+		// Reset disconnection flag when opening new popup
+		this.isDisconnecting = false
+
 		this.popup = await openPopup(this.url)
+
+		// Start polling to detect manual closure
+		this.startPopupPolling()
 
 		this.onMessage<ConfigMessage>(({ event }) => event === 'PopupUnload')
 			.then(() => {

@@ -1,17 +1,17 @@
 import { Communicator } from './Communicator'
-import { DEFAULT_ORIGIN, ICON_DATA_URI, SUPPORTED_CHAIN_IDS } from './constants'
+import { DEFAULT_ORIGIN, ICON_DATA_URI } from './constants'
 import { correlationIds } from './correlationIds'
 import { deserializeError, standardErrors } from './error'
 import { KeyManager } from './KeyManager'
-import type { EncryptedData, RPCRequestMessage, RPCResponse, RPCResponseMessage } from './message'
+import type { EncryptedData, RPCRequest, RPCRequestMessage, RPCResponse, RPCResponseMessage } from './message'
 import type { EthRequestAccountsResponse } from './rpc'
+import { handleGetCallsStatus } from './rpc/wallet_getCallsStatus'
 import type { Address, ProviderEventMap, ProviderInterface, RequestArguments } from './types'
-import { bigIntToHex, decryptContent, encryptContent, exportKeyToHexString, importKeyFromHexString } from './utils'
+import { decryptContent, encryptContent, exportKeyToHexString, importKeyFromHexString, toChainIdHex } from './utils'
 
 export type ProviderEventCallback = ProviderInterface['emit']
 
 export type SAManagerProviderOptions = {
-	chainId: bigint
 	origin?: string
 	debug?: boolean
 }
@@ -23,18 +23,15 @@ export class SAManagerProvider implements ProviderInterface {
 	private eventHandlers: Map<keyof ProviderEventMap, Set<(payload: any) => void>> = new Map()
 
 	private accounts: Address[]
-	private chainId: bigint
+	private chainId: number = 0 // chainId default to zero
+	private origin: string
 
-	constructor({ chainId, origin = DEFAULT_ORIGIN, debug = false }: SAManagerProviderOptions) {
-		// Check if the chainId is supported in SAManager
-		if (!SUPPORTED_CHAIN_IDS.includes(chainId.toString() as any)) {
-			throw standardErrors.provider.unsupportedChain(
-				`Unsupported chainId: ${chainId}. Supported chainIds: ${SUPPORTED_CHAIN_IDS.join(', ')}`,
-			)
-		}
-		this.chainId = chainId
+	constructor(options?: SAManagerProviderOptions) {
+		const { origin = DEFAULT_ORIGIN, debug = false } = options ?? {}
+
+		this.origin = origin
 		this.communicator = new Communicator({
-			url: origin + '/' + this.chainId.toString() + '/connect',
+			url: origin + '/connect',
 			onDisconnect: () => this.handlePopupDisconnect(),
 			debug,
 		})
@@ -51,19 +48,32 @@ export class SAManagerProvider implements ProviderInterface {
 	async request(request: RequestArguments) {
 		this.log('request', request)
 
-		// // Handle methods that don't require popup
+		// Handle methods that don't require popup or before handshake
 		switch (request.method) {
 			case 'eth_chainId': {
-				// Direct return the chainId set in the constructor
-				return this.handleResponse(request, {
-					result: {
-						value: bigIntToHex(this.chainId),
-					},
-				})
+				// If the chainId is set, direct return the chainId, or call the popup to get the chainId as below
+				if (this.chainId) {
+					// Direct return the chainId
+					return toChainIdHex(this.chainId)
+				}
+				break
+			}
+			case 'wallet_getCallsStatus': {
+				return await handleGetCallsStatus(request, this.origin)
+			}
+
+			// Methods that require account connection
+			case 'wallet_getCapabilities':
+			case 'wallet_sendCalls': {
+				if (!this.hasAccount()) {
+					throw standardErrors.provider.unauthorized('No account connected')
+				}
+				break
 			}
 		}
 
 		try {
+			// ================= Handshake =================
 			// Checks if a shared secret exists. If not, it will perform a handshake
 			const sharedSecret = await this.keyManager.getSharedSecret()
 			if (!sharedSecret) {
@@ -76,7 +86,12 @@ export class SAManagerProvider implements ProviderInterface {
 			let result: unknown
 
 			switch (request.method) {
-				case 'eth_getBlockByNumber': {
+				case 'eth_chainId':
+				case 'eth_getBlockByNumber':
+				case 'wallet_showCallsStatus':
+				case 'wallet_getCapabilities':
+				case 'wallet_sendCalls':
+				case 'wallet_switchEthereumChain': {
 					result = await this.sendRequestToPopup(request)
 					break
 				}
@@ -86,22 +101,11 @@ export class SAManagerProvider implements ProviderInterface {
 					this.updateAccounts(result as EthRequestAccountsResponse)
 					break
 				}
-				case 'wallet_getCapabilities':
-				case 'wallet_sendCalls':
-				case 'wallet_getCallsStatus':
-				case 'wallet_showCallsStatus': {
-					// Check if there is an account connected
-					if (!this.hasAccount()) {
-						throw standardErrors.provider.disconnected('No account found. Please connect wallet.')
-					}
-					result = await this.sendRequestToPopup(request)
-					break
-				}
 				default:
 					throw standardErrors.provider.unsupportedMethod(`Unsupported method: ${request.method}`)
 			}
 
-			this.log('request completed', result)
+			this.log('Popup request completed', result)
 
 			return result
 		} catch (error) {
@@ -155,12 +159,10 @@ export class SAManagerProvider implements ProviderInterface {
 		this.emit('accountsChanged', accounts)
 	}
 
-	private updateChain(chainId: bigint): boolean {
-		if (chainId !== this.chainId) {
-			this.chainId = chainId
-			this.emit('chainChanged', bigIntToHex(chainId))
-		}
-		return true
+	private updateChainId(chainId: number): void {
+		if (chainId === this.chainId) return
+		this.chainId = chainId
+		this.emit('chainChanged', toChainIdHex(chainId))
 	}
 
 	private hasAccount(): boolean {
@@ -206,6 +208,11 @@ export class SAManagerProvider implements ProviderInterface {
 			// 4. Extract peer's public key from response.sender
 			const peerPublicKey = await importKeyFromHexString('public', response.sender)
 			await this.keyManager.setPeerPublicKey(peerPublicKey)
+
+			// 5. Decrypt the response to get the chainId
+			const decryptedResponse = await this.decryptResponseMessage(response)
+			this.updateChainId(decryptedResponse.data.chainId)
+
 			this.log('handshake completed')
 		} catch (error) {
 			throw error
@@ -213,13 +220,10 @@ export class SAManagerProvider implements ProviderInterface {
 	}
 
 	private async sendRequestToPopup(request: RequestArguments) {
-		this.log('sendRequestToPopup')
-
 		// Open the popup before constructing the request message.
 		// This is to ensure that the popup is not blocked by some browsers (i.e. Safari)
 		await this.communicator.waitForPopupLoaded?.()
 
-		this.log('sendRequestToPopup: sendEncryptedRequest')
 		const response = await this.sendEncryptedRequest(request)
 		const decrypted = await this.decryptResponseMessage(response)
 		return this.handleResponse(request, decrypted)
@@ -233,17 +237,16 @@ export class SAManagerProvider implements ProviderInterface {
 		}
 
 		// 2. Encrypt the actual request + chain context
+
+		const rpcRequest: RPCRequest = {
+			action: request,
+		}
+
 		let encrypted: EncryptedData
 		try {
-			encrypted = await encryptContent(
-				{
-					action: request,
-					chainId: Number(this.chainId),
-				},
-				sharedSecret,
-			)
+			encrypted = await encryptContent(rpcRequest, sharedSecret)
 		} catch (error) {
-			throw new Error('Failed to encrypt request', { cause: error })
+			throw new Error('Error encrypting request', { cause: error })
 		}
 
 		// 3. Wrap in message structure
@@ -283,19 +286,23 @@ export class SAManagerProvider implements ProviderInterface {
 			throw standardErrors.provider.unauthorized('No shared secret found when decrypting response')
 		}
 
-		const response: RPCResponse = await decryptContent(content.encrypted, sharedSecret)
-
-		return response
+		return await decryptContent(content.encrypted, sharedSecret)
 	}
 
 	private async handleResponse(_request: RequestArguments, decrypted: RPCResponse) {
+		if (!decrypted || !decrypted.result) {
+			throw standardErrors.rpc.internal('Invalid response structure from popup')
+		}
+
 		const result = decrypted.result
 		if ('error' in result) throw deserializeError(result.error)
+		// Update chainId in every response
+		this.updateChainId(decrypted.data.chainId)
 		return result.value
 	}
 }
 
-export function announceSAManagerProvider({ chainId, origin, debug }: SAManagerProviderOptions) {
+export function announceSAManagerProvider({ origin, debug }: SAManagerProviderOptions) {
 	window.dispatchEvent(
 		new CustomEvent('eip6963:announceProvider', {
 			detail: {
@@ -306,7 +313,6 @@ export function announceSAManagerProvider({ chainId, origin, debug }: SAManagerP
 					rdns: 'xyz.samanager',
 				},
 				provider: new SAManagerProvider({
-					chainId,
 					origin,
 					debug,
 				}),

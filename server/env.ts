@@ -1,5 +1,6 @@
 export interface Env {
 	ENVIRONMENT: 'staging' | 'production'
+	IS_LOCAL_DEV?: boolean
 
 	ALCHEMY_API_KEY: string
 	PIMLICO_API_KEY: string

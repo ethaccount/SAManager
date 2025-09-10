@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { AccountRegistry } from '@/lib/accounts'
 import { AccountWithMultichain, useAccountList } from '@/lib/accounts/useAccountList'
 import { toRoute } from '@/lib/router'
@@ -14,7 +12,7 @@ import { useSigner } from '@/stores/useSigner'
 import { shortenAddress } from '@vue-dapp/core'
 import { breakpointsTailwind } from '@vueuse/core'
 import { concat, keccak256, toBeHex } from 'ethers'
-import { AlertCircle, ArrowRight, CheckCircle, CircleDot, Download, Info, Plus, Power, X } from 'lucide-vue-next'
+import { AlertCircle, ArrowRight, CheckCircle, CircleDot, Download, Plus, Power, X } from 'lucide-vue-next'
 import { VueFinalModal } from 'vue-final-modal'
 
 const emit = defineEmits<{
@@ -32,8 +30,7 @@ const { wallet, address, isEOAWalletConnected, disconnect, isEOAWalletSupported 
 const { isLogin, resetCredentialId, selectedCredentialDisplay, isPasskeySupported } = usePasskey()
 const { openConnectEOAWallet, openConnectPasskeyBoth } = useConnectSignerModal()
 const { selectSigner, selectedSigner } = useSigner()
-const { accountList, isAccountSelected, onClickSelectAccount, onClickDeleteAccount, onClickUnselectAccount } =
-	useAccountList()
+const { accountList, isAccountSelected, onClickSelectAccount, onClickUnselectAccount } = useAccountList()
 
 function onClickAccountSettings() {
 	if (!selectedAccount.value) return
@@ -100,8 +97,14 @@ function getAccountListKey(account: AccountWithMultichain) {
 										</Tooltip>
 									</TooltipProvider>
 
-									<span class="font-medium truncate">
+									<span class="font-medium relative">
 										{{ shortenAddress(selectedAccount.address) }}
+										<span
+											v-if="!isAccountAccessible"
+											class="absolute -top-2.5 left-0 text-[10px] text-yellow-700 dark:text-yellow-400"
+										>
+											Not Connected
+										</span>
 									</span>
 									<div class="flex items-center gap-1">
 										<CopyButton :address="selectedAccount.address" />
@@ -154,7 +157,7 @@ function getAccountListKey(account: AccountWithMultichain) {
 				</div>
 
 				<!-- Warning section for inaccessible account -->
-				<div
+				<!-- <div
 					v-if="selectedAccount && !isAccountAccessible"
 					class="warning-section flex items-start gap-2 text-sm"
 				>
@@ -167,7 +170,7 @@ function getAccountListKey(account: AccountWithMultichain) {
 						</p>
 						<p class="">Connect the appropriate signer to use this account</p>
 					</div>
-				</div>
+				</div> -->
 
 				<!-- Buttons -->
 				<div class="" v-if="selectedAccount">
@@ -348,15 +351,6 @@ function getAccountListKey(account: AccountWithMultichain) {
 								<!-- <span>{{ account.vOptions.map(v => v.type).join(', ') }}</span> -->
 							</div>
 						</div>
-
-						<Button
-							variant="ghost"
-							size="icon"
-							class="absolute right-1 top-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground z-[60]"
-							@click.stop="onClickDeleteAccount(account)"
-						>
-							<X class="h-3 w-3" />
-						</Button>
 					</div>
 				</div>
 			</div>

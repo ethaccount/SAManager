@@ -1,13 +1,14 @@
-import TxModal from '@/components/TxModal.vue'
-import { usePaymaster } from '@/lib/paymasters'
+import { usePaymaster } from '@/components/ExecutionModal/paymasters'
+import { PaymasterServiceCapability } from '@/features/account-capabilities'
+import { getErrorMessage } from '@/lib/error'
 import { UserOpDirector } from '@/lib/UserOpDirector'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { defineStore, storeToRefs } from 'pinia'
-import { Execution, UserOpBuilder, UserOperationReceipt } from 'sendop'
+import { useSigner } from '@/stores/useSigner'
+import { Execution, PaymasterService, UserOpBuilder, UserOperationReceipt } from 'sendop'
 import { useModal } from 'vue-final-modal'
-import { useSigner } from './useSigner'
 import { toast } from 'vue-sonner'
+import ExecutionModal from './ExecutionModal.vue'
 
 export enum TransactionStatus {
 	Closed = 'Closed',
@@ -23,12 +24,13 @@ export enum TransactionStatus {
 	Failed = 'Failed',
 }
 
-export type TxUIProps = {
-	executions?: TxModalExecution[]
+export type ExecutionUIProps = {
+	executions?: ExecutionModalExecution[]
 	useModalSpecificStyle?: boolean
+	paymasterCapability?: PaymasterServiceCapability
 }
 
-export type TxUIEmits = {
+export type ExecutionUIEmits = {
 	(e: 'close'): void
 	(e: 'sent', hash: string): void
 	(e: 'executed'): void // when status is success or failed
@@ -36,20 +38,20 @@ export type TxUIEmits = {
 	(e: 'failed'): void
 }
 
-export type TxModalExecution = Execution & {
+export type ExecutionModalExecution = Execution & {
 	description?: string
 }
 
-export const useTxModalStore = defineStore('useTxModalStore', () => {
+export const useExecutionModalStore = defineStore('useExecutionModalStore', () => {
 	const { open, close, patchOptions } = useModal({
-		component: TxModal,
+		component: ExecutionModal,
 	})
 
-	const defaultProps: InstanceType<typeof TxModal>['$props'] = {
+	const defaultProps: InstanceType<typeof ExecutionModal>['$props'] = {
 		executions: [],
 	}
 
-	function openModal(props: InstanceType<typeof TxModal>['$props']) {
+	function openModal(props: InstanceType<typeof ExecutionModal>['$props']) {
 		const { isAccountAccessible } = useAccount()
 		if (!isAccountAccessible.value) {
 			toast.error('Please connect your account first')
@@ -77,27 +79,15 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 		})
 
 		open()
-
-		status.value = TransactionStatus.Initial
 	}
 
-	const { bundler, selectedChainId, client, fetchGasPrice } = useBlockchain()
+	const { bundler, selectedChainId, client, fetchGasPrice, currentEntryPointAddress } = useBlockchain()
 	const { selectedAccount, accountVMethods } = useAccount()
 	const { selectedSignerType } = useSigner()
 
-	const paymasterHook = usePaymaster()
-	const { selectedPaymaster, isValidPermitAmount, isSigningPermit, resetUsdcData, buildPaymasterData } = paymasterHook
+	const { selectedPaymaster, resetUsdcData, buildPaymasterData } = usePaymaster()
 
 	const status = ref<TransactionStatus>(TransactionStatus.Closed)
-
-	const canSignPermit = computed(() => {
-		return (
-			selectedPaymaster.value === 'usdc' &&
-			isValidPermitAmount.value &&
-			!isSigningPermit.value &&
-			(status.value === TransactionStatus.Initial || status.value === TransactionStatus.PreparingPaymaster)
-		)
-	})
 
 	// Determine if modal can be closed
 	const canClose = computed(() => {
@@ -124,7 +114,7 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 	const opHash = ref<string | null>(null)
 	const opReceipt = ref<UserOperationReceipt | null>(null)
 
-	function resetTxModal() {
+	function resetExecutionModal() {
 		status.value = TransactionStatus.Closed
 		userOp.value = null
 		opHash.value = null
@@ -132,7 +122,15 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 		resetUsdcData()
 	}
 
-	async function handleEstimate(executions: Execution[], initCode?: string) {
+	async function handleEstimate({
+		executions,
+		initCode,
+		paymasterCapability,
+	}: {
+		executions: Execution[]
+		initCode?: string
+		paymasterCapability?: PaymasterServiceCapability
+	}) {
 		// throw new Error(
 		// 	'Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of "de Finibus Bonorum et Malorum" (The Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a treatise on the theory of ethics, very popular during the Renaissance. The first line of Lorem Ipsum, "Lorem ipsum dolor sit amet..", comes from a line in section 1.10.32.',
 		// )
@@ -172,18 +170,57 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 		}
 
 		// Set paymaster data based on selected paymaster
-		const paymasterData = await buildPaymasterData()
-		if (paymasterData) {
-			op.setPaymaster(paymasterData)
+		let isFinal = false
+
+		try {
+			if (selectedPaymaster.value === 'erc7677') {
+				if (!paymasterCapability) {
+					throw new Error('Paymaster capability not provided')
+				}
+				const paymasterService = new PaymasterService(paymasterCapability.url, selectedChainId.value)
+				const paymasterStubData = await paymasterService.getPaymasterStubData({
+					userOp: op.preview(),
+					entryPointAddress: currentEntryPointAddress.value,
+					context: paymasterCapability.context || {},
+				})
+				if (!paymasterStubData) {
+					throw new Error('Paymaster stub data not found')
+				}
+				op.setPaymaster(paymasterStubData)
+				isFinal = paymasterStubData.isFinal || false
+			} else {
+				// public paymaster or usdc paymaster
+				const paymasterData = await buildPaymasterData()
+				if (paymasterData) {
+					op.setPaymaster(paymasterData)
+				}
+			}
+		} catch (e) {
+			throw new Error(`Error getting paymaster stub data: ${getErrorMessage(e)}`)
 		}
 
 		op.setGasPrice(await fetchGasPrice())
 
+		await op.estimateGas()
+
 		try {
-			await op.estimateGas()
-		} catch (e: unknown) {
-			console.error(op.preview())
-			throw e
+			if (selectedPaymaster.value === 'erc7677' && !isFinal) {
+				if (!paymasterCapability) {
+					throw new Error('Paymaster capability not provided')
+				}
+				const paymasterService = new PaymasterService(paymasterCapability.url, selectedChainId.value)
+				const paymasterData = await paymasterService.getPaymasterData({
+					userOp: op.preview(),
+					entryPointAddress: currentEntryPointAddress.value,
+					context: paymasterCapability.context || {},
+				})
+				if (!paymasterData) {
+					throw new Error('Paymaster data not found')
+				}
+				op.setPaymasterData(paymasterData.paymasterData)
+			}
+		} catch (e) {
+			throw new Error(`Error getting paymaster data: ${getErrorMessage(e)}`)
 		}
 
 		// Notice: markRaw is used to prevent TypeError: Cannot read from private field
@@ -242,21 +279,19 @@ export const useTxModalStore = defineStore('useTxModalStore', () => {
 		status,
 		opHash,
 		opReceipt,
-		canSignPermit,
 		canClose,
 		openModal,
 		closeModal: close,
-		resetTxModal,
+		resetExecutionModal,
 		handleEstimate,
 		handleSign,
 		sendUserOp,
 		waitUserOp,
-		...paymasterHook,
 	}
 })
 
-export function useTxModal() {
-	const store = useTxModalStore()
+export function useExecutionModal() {
+	const store = useExecutionModalStore()
 	return {
 		...store,
 		...storeToRefs(store),

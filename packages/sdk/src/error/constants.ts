@@ -19,6 +19,15 @@ interface ErrorCodes {
 		readonly disconnected: 4900
 		readonly chainDisconnected: 4901
 		readonly unsupportedChain: 4902
+
+		// EIP-5792: Wallet Call API errors
+		readonly unsupportedCapability: 5700
+		readonly unsupportedChainId: 5710
+		readonly duplicateId: 5720
+		readonly unknownBundleId: 5730
+		readonly bundleTooLarge: 5740
+		readonly atomicUpgradeRejected: 5750
+		readonly atomicityNotSupported: 5760
 	}
 }
 
@@ -43,6 +52,14 @@ export const standardErrorCodes: ErrorCodes = {
 		disconnected: 4900,
 		chainDisconnected: 4901,
 		unsupportedChain: 4902,
+		// EIP-5792: Wallet Call API errors
+		unsupportedCapability: 5700,
+		unsupportedChainId: 5710,
+		duplicateId: 5720,
+		unknownBundleId: 5730,
+		bundleTooLarge: 5740,
+		atomicUpgradeRejected: 5750,
+		atomicityNotSupported: 5760,
 	},
 }
 
@@ -115,5 +132,34 @@ export const errorValues = {
 	'4902': {
 		standard: 'EIP-3085',
 		message: 'Unrecognized chain ID.',
+	},
+	// EIP-5792: Wallet Call API error codes
+	'5700': {
+		standard: 'EIP-5792',
+		message: 'Unsupported non-optional capability.',
+	},
+	'5710': {
+		standard: 'EIP-5792',
+		message: 'Unsupported chain id.',
+	},
+	'5720': {
+		standard: 'EIP-5792',
+		message: 'Duplicate ID.',
+	},
+	'5730': {
+		standard: 'EIP-5792',
+		message: 'Unknown bundle id.',
+	},
+	'5740': {
+		standard: 'EIP-5792',
+		message: 'Bundle too large.',
+	},
+	'5750': {
+		standard: 'EIP-5792',
+		message: 'Atomic-ready wallet rejected upgrade.',
+	},
+	'5760': {
+		standard: 'EIP-5792',
+		message: 'Atomicity not supported.',
 	},
 }

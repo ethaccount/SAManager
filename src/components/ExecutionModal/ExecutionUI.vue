@@ -1,31 +1,27 @@
 <script setup lang="ts">
 import { fetchEthUsdPrice } from '@/api/etherscan'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import Address from '@/components/utils/Address.vue'
+import { ExecutionUIEmits, ExecutionUIProps, TransactionStatus, useExecutionModal } from '@/components/ExecutionModal'
+import NetworkSelector from '@/components/header/NetworkSelector.vue'
+import { ERROR_NOTIFICATION_DURATION } from '@/config'
 import { AccountRegistry } from '@/lib/accounts'
 import { addressToName } from '@/lib/addressToName'
 import {
 	getChainMismatchErrorMessage,
 	getErrorChainMessage,
-	getErrorMsg,
-	getEthersErrorMsg,
+	getErrorMessage,
 	isChainMismatchError,
-	isEthersError,
 	isUserRejectedError,
 } from '@/lib/error'
 import { useGetCode } from '@/lib/useGetCode'
 import { deserializeValidationMethod } from '@/lib/validations'
 import { useAccount } from '@/stores/account/useAccount'
-import { displayChainName, getEntryPointAddress, isTestnet } from '@/stores/blockchain/chains'
+import { getEntryPointAddress } from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { usePasskey } from '@/stores/passkey/usePasskey'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useSigner } from '@/stores/useSigner'
-import { TransactionStatus, TxUIEmits, TxUIProps, useTxModal } from '@/stores/useTxModal'
 import { formatEther } from 'ethers'
-import { ArrowLeft, ChevronDown, ChevronUp, CircleDot, Code, ExternalLink, Loader2, X } from 'lucide-vue-next'
+import { ArrowLeft, CircleDot, Code, ExternalLink, Info, Loader2, X } from 'lucide-vue-next'
 import {
 	ERC4337Error,
 	extractHexString,
@@ -35,14 +31,15 @@ import {
 	UserOpBuilder,
 } from 'sendop'
 import { toast } from 'vue-sonner'
-import TxModalUOPreview from './TxModalOpPreview.vue'
+import { usePaymaster } from './paymasters'
+import { usePaymasterService } from './paymasters/usePaymasterService'
 
-const props = withDefaults(defineProps<TxUIProps>(), {
+const props = withDefaults(defineProps<ExecutionUIProps>(), {
 	executions: () => [],
 	useModalSpecificStyle: true,
 })
 
-const emit = defineEmits<TxUIEmits>()
+const emit = defineEmits<ExecutionUIEmits>()
 
 function onClickClose() {
 	// Prevent closing when transaction is being sent or pending
@@ -66,37 +63,33 @@ const {
 	canEstimate,
 	canSign,
 	canSend,
-	selectedPaymaster,
-	paymasters,
-	formattedUsdcBalance,
-	formattedUsdcAllowance,
-	isCheckingUsdcData,
-	permitAllowanceAmount,
-	isValidPermitAmount,
-	usdcAddress,
-	isSigningPermit,
-	canSignPermit,
 	canClose,
-	handleSignUsdcPermit,
 	handleEstimate,
 	handleSign,
 	sendUserOp,
 	waitUserOp,
-	resetTxModal,
-	checkUsdcBalanceAndAllowance,
-	usdcPaymasterData,
-	usdcPaymasterAddress,
-	usdcAllowance,
-	hasUsdcPermitSignature,
-	usdcBalance,
-} = useTxModal()
+	resetExecutionModal,
+} = useExecutionModal()
 
-const txModalErrorMessage = ref<string | null>(null)
+status.value = TransactionStatus.Initial
+
+const executionError = ref<string | null>(null)
 
 // Expansion state for executions
 const expandedExecutions = ref(new Set<number>())
-// Expansion state for permit USDC section
-const isPermitSectionExpanded = ref(false)
+
+// Auto-expand executions with unknown descriptions
+watchImmediate(
+	() => props.executions,
+	executions => {
+		executions.forEach((execution, index) => {
+			if (!execution.description || execution.description === 'Unknown') {
+				expandedExecutions.value.add(index)
+			}
+		})
+	},
+)
+
 // UserOp preview state
 const showUserOpPreview = ref(false)
 
@@ -106,7 +99,7 @@ async function updateEthUsdPrice() {
 	ethUsdPrice.value = await fetchEthUsdPrice()
 }
 
-// Close the TxModal when the account is not accessible
+// Close the ExecutionModal when the account is not accessible
 watchImmediate(isAccountAccessible, () => {
 	if (!isAccountAccessible.value) {
 		toast.error('Account is not accessible. Please connect the right signer to the account')
@@ -114,10 +107,54 @@ watchImmediate(isAccountAccessible, () => {
 	}
 })
 
-// When the TxModal is opened
+const { selectedPaymaster, paymasters, checkUsdcBalanceAndAllowance, usdcPaymasterData } = usePaymaster()
+
+// ================================================
+// Paymaster Selection Logic
+// ================================================
+
+if (props.paymasterCapability) {
+	selectedPaymaster.value = 'erc7677'
+} else if (!paymasters.value.some(paymaster => paymaster.id === selectedPaymaster.value)) {
+	// If the selected paymaster is not supported, switch to the first supported paymaster
+	selectedPaymaster.value = paymasters.value[0].id
+}
+
+// This cannot be placed in useExecutionModal because it needs to be executed immediately when the ExecutionModal is mounted
+watchImmediate(selectedPaymaster, async () => {
+	if (status.value === TransactionStatus.Initial) {
+		try {
+			if (selectedPaymaster.value === 'usdc') {
+				// Preparing USDC paymaster
+				status.value = TransactionStatus.PreparingPaymaster
+				await checkUsdcBalanceAndAllowance()
+				if (usdcPaymasterData.value) {
+					status.value = TransactionStatus.Initial
+				} else {
+					throw new Error('USDC paymaster data not prepared')
+				}
+			} else if (selectedPaymaster.value === 'erc7677') {
+				// Preparing ERC-7677 paymaster
+				status.value = TransactionStatus.PreparingPaymaster
+				const { checkEntryPointSupport } = usePaymasterService()
+				const isEntryPointSupported = await checkEntryPointSupport(props.paymasterCapability)
+				if (isEntryPointSupported) {
+					status.value = TransactionStatus.Initial
+				} else {
+					throw new Error('Paymaster service does not support the current entrypoint')
+				}
+			}
+		} catch (e) {
+			handleError(e, 'Error preparing paymaster')
+			status.value = TransactionStatus.Closed
+		}
+	}
+})
+
+// When the ExecutionModal is opened
 onMounted(async () => {
 	if (!selectedAccount.value) {
-		throw new Error('[TxModal#onMounted] No account selected')
+		throw new Error('[ExecutionModal#onMounted] No account selected')
 	}
 
 	// Check if account is deployed
@@ -139,45 +176,13 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-	resetTxModal()
-})
-
-// This cannot be placed in useTxModal because it needs to be executed immediately when the TxModal is mounted
-watchImmediate(selectedPaymaster, async newPaymaster => {
-	// If the selected paymaster is not supported, switch to the first supported paymaster
-	if (!paymasters.value.some(paymaster => paymaster.id === newPaymaster)) {
-		selectedPaymaster.value = paymasters.value[0].id
-	}
-
-	if (status.value === TransactionStatus.Initial) {
-		if (newPaymaster === 'usdc') {
-			status.value = TransactionStatus.PreparingPaymaster
-			await checkUsdcBalanceAndAllowance()
-			if (usdcPaymasterData.value) {
-				status.value = TransactionStatus.Initial
-			}
-		} else {
-			status.value = TransactionStatus.Initial
-		}
-	}
-
-	// When selecting other paymaster from usdc paymaster, reset the status to initial
-	if (status.value === TransactionStatus.PreparingPaymaster && newPaymaster !== 'usdc') {
-		status.value = TransactionStatus.Initial
-	}
+	resetExecutionModal()
 })
 
 watchImmediate(status, (newStatus, oldStatus) => {
 	// Auto send when signing is done
 	if (oldStatus === TransactionStatus.Signing && newStatus === TransactionStatus.Send) {
 		onClickSend()
-	}
-
-	// auto-expand when PreparingPaymaster, auto-collapse when not
-	if (newStatus === TransactionStatus.PreparingPaymaster) {
-		isPermitSectionExpanded.value = true
-	} else {
-		isPermitSectionExpanded.value = false
 	}
 })
 
@@ -189,16 +194,14 @@ function toggleExecutionExpansion(index: number) {
 	}
 }
 
-function togglePermitSectionExpansion() {
-	isPermitSectionExpanded.value = !isPermitSectionExpanded.value
-}
-
 function toggleUserOpPreview() {
 	showUserOpPreview.value = !showUserOpPreview.value
 }
 
 function handleError(e: unknown, prefix?: string) {
-	console.error(getErrorChainMessage(e, prefix))
+	console.error(prefix, e)
+
+	const msg = getErrorMessage(e, prefix)
 
 	if (e instanceof ERC4337Error) {
 		console.log(e.payload)
@@ -210,27 +213,21 @@ function handleError(e: unknown, prefix?: string) {
 		}
 	}
 
-	const msg = getErrorMsg(e, prefix)
 	const errHex = extractHexString(msg)
 	if (errHex && parseContractError(errHex)) {
-		txModalErrorMessage.value = replaceHexString(msg, parseContractError(errHex, true))
+		executionError.value = replaceHexString(msg, parseContractError(errHex, true))
 	} else {
-		txModalErrorMessage.value = msg
+		executionError.value = msg
 	}
-}
 
-async function onClickSignPermit() {
-	await handleSignUsdcPermit(isDeployed.value)
-
-	// only when the data is set, users can start estimating the gas
-	if (usdcPaymasterData.value) {
-		status.value = TransactionStatus.Initial
-	}
+	toast.error(executionError.value, {
+		duration: ERROR_NOTIFICATION_DURATION,
+	})
 }
 
 async function onClickEstimate() {
 	try {
-		txModalErrorMessage.value = null
+		executionError.value = null
 		status.value = TransactionStatus.Estimating
 
 		if (!selectedAccount.value) {
@@ -238,19 +235,21 @@ async function onClickEstimate() {
 		}
 
 		if (isDeployed.value || selectedAccount.value.category === 'Smart EOA') {
-			await handleEstimate(props.executions)
+			await handleEstimate({ executions: props.executions, paymasterCapability: props.paymasterCapability })
 		} else {
 			// If the account is not deployed, check if there is init code provided
 			if (!selectedAccountInitCodeData.value) {
-				emit('close')
-				toast.error('Account not deployed and no init code provided')
-				return
+				throw new Error('Account not deployed and no init code provided')
 			}
-			await handleEstimate(props.executions, selectedAccountInitCodeData.value.initCode)
+			await handleEstimate({
+				executions: props.executions,
+				initCode: selectedAccountInitCodeData.value.initCode,
+				paymasterCapability: props.paymasterCapability,
+			})
 		}
 		status.value = TransactionStatus.Sign
-	} catch (e: unknown) {
-		handleError(e, 'Failed to estimate gas')
+	} catch (e) {
+		handleError(e, 'Error estimating gas')
 		status.value = TransactionStatus.Initial
 	} finally {
 		await updateEthUsdPrice()
@@ -259,7 +258,7 @@ async function onClickEstimate() {
 
 async function onClickSign() {
 	try {
-		txModalErrorMessage.value = null
+		executionError.value = null
 		status.value = TransactionStatus.Signing
 		await handleSign()
 		status.value = TransactionStatus.Send
@@ -267,13 +266,7 @@ async function onClickSign() {
 		const prefix = 'Failed to sign user operation'
 		console.error(getErrorChainMessage(e, prefix))
 
-		let msg = ''
-
-		if (isEthersError(e)) {
-			msg = getEthersErrorMsg(e, prefix)
-		} else {
-			msg = getErrorMsg(e, prefix)
-		}
+		let msg = getErrorMessage(e, prefix)
 
 		// Chain mismatch error - show user-friendly message
 		if (isChainMismatchError(e)) {
@@ -285,7 +278,7 @@ async function onClickSign() {
 			msg = ''
 		}
 
-		txModalErrorMessage.value = msg
+		executionError.value = msg
 		status.value = TransactionStatus.Sign
 	}
 }
@@ -297,7 +290,7 @@ async function onClickSend() {
 		}
 		const op = userOp.value
 
-		txModalErrorMessage.value = null
+		executionError.value = null
 
 		await sendUserOp()
 		emit('sent', op.hash())
@@ -314,7 +307,7 @@ async function onClickSend() {
 			}
 		})
 	} catch (e: unknown) {
-		handleError(e, 'Failed to send user operation')
+		handleError(e, 'Error sending user operation')
 		status.value = TransactionStatus.Initial
 	} finally {
 		await updateEthUsdPrice()
@@ -362,10 +355,6 @@ const showPasskeyValidationMethod = computed(() => {
 	return selectedAccount.value.vMethods.some(v => deserializeValidationMethod(v).signerType === 'Passkey')
 })
 
-const paymasterSelectorDisabled = computed(() => {
-	return status.value !== TransactionStatus.Initial && status.value !== TransactionStatus.PreparingPaymaster
-})
-
 // Computed properties for signer selection
 const canSelectSigner = computed(() => {
 	return status.value === TransactionStatus.Initial || status.value === TransactionStatus.PreparingPaymaster
@@ -373,19 +362,6 @@ const canSelectSigner = computed(() => {
 
 const signerSelectorDisabled = computed(() => {
 	return !canSelectSigner.value
-})
-
-// Check if current chain is testnet
-const isCurrentChainTestnet = computed(() => {
-	return isTestnet(selectedChainId.value)
-})
-
-const hasUsdcAllowance = computed(() => {
-	return usdcAllowance.value !== null && usdcAllowance.value > 0n
-})
-
-const hasUsdcBalance = computed(() => {
-	return usdcBalance.value !== null && usdcBalance.value > 0n
 })
 
 // Show max fee when userOp exists and transaction is estimated or completed
@@ -399,7 +375,7 @@ const shouldShowMaxFee = computed(() => {
 	)
 })
 
-// Computed property for maximum possible fee calculation
+// Maximum possible fee calculation
 const maxPossibleFee = computed(() => {
 	if (!userOp.value) return null
 
@@ -429,7 +405,7 @@ const maxPossibleFee = computed(() => {
 	}
 })
 
-// Computed property for effective transaction fee (actual fee paid)
+// Effective transaction fee (actual fee paid)
 const effectiveTransactionFee = computed(() => {
 	if (!opReceipt.value || status.value !== TransactionStatus.Success) return null
 
@@ -475,13 +451,14 @@ const shouldShowEffectiveFee = computed(() => {
 			<!-- Title -->
 			<div class="font-medium">{{ showUserOpPreview ? 'UserOp Preview' : 'Transaction' }}</div>
 			<!-- Close Button -->
-			<Button variant="ghost" size="icon" :disabled="!canClose" @click="onClickClose">
+			<Button v-if="!showUserOpPreview" variant="ghost" size="icon" :disabled="!canClose" @click="onClickClose">
 				<X class="w-4 h-4" />
 			</Button>
+			<div v-else class="w-9"></div>
 		</div>
 
 		<!-- UserOp Preview Screen -->
-		<TxModalUOPreview v-show="showUserOpPreview" :user-op="userOp" />
+		<ExecutionModalOpPreview v-show="showUserOpPreview" :user-op="userOp" />
 
 		<!-- Content -->
 		<div
@@ -561,203 +538,7 @@ const shouldShowEffectiveFee = computed(() => {
 			</div>
 
 			<!-- Paymaster Selection -->
-			<div class="space-y-3">
-				<div class="text-sm font-medium">Paymaster</div>
-				<Select v-model="selectedPaymaster" :disabled="paymasterSelectorDisabled">
-					<SelectTrigger
-						class=""
-						:class="{
-							'hover:border-primary': !paymasterSelectorDisabled,
-						}"
-					>
-						<SelectValue placeholder="Select Paymaster">
-							<div class="flex items-center justify-between w-full">
-								<span class="font-medium">
-									{{ paymasters.find(p => p.id === selectedPaymaster)?.name }}
-								</span>
-							</div>
-						</SelectValue>
-					</SelectTrigger>
-
-					<!-- z-index: 1100 to make it above the modal(z-index: 1000) -->
-					<!-- hover:bg-muted to make it look like a button -->
-					<SelectContent class="z-[1100]">
-						<SelectItem
-							class="cursor-pointer hover:bg-muted"
-							v-for="paymaster in paymasters"
-							:key="paymaster.id"
-							:value="paymaster.id"
-						>
-							<div class="flex flex-col py-1">
-								<div class="flex items-center justify-between w-full">
-									<span class="font-medium">{{ paymaster.name }}</span>
-								</div>
-								<span class="text-xs text-muted-foreground mt-0.5">
-									{{ paymaster.description }}
-								</span>
-							</div>
-						</SelectItem>
-					</SelectContent>
-				</Select>
-
-				<!-- USDC Paymaster Checks -->
-				<div
-					v-if="
-						selectedPaymaster === 'usdc' &&
-						(status === TransactionStatus.Initial || status === TransactionStatus.PreparingPaymaster)
-					"
-					class="space-y-2 mt-3 p-3 bg-muted/20 rounded-lg border"
-				>
-					<div>
-						<!-- Loading State -->
-						<div v-if="isCheckingUsdcData" class="flex items-center gap-2 text-sm text-muted-foreground">
-							<Loader2 class="w-4 h-4 animate-spin" />
-							Checking USDC balance and allowance...
-						</div>
-
-						<div v-else class="space-y-1">
-							<!-- USDC Address -->
-							<div class="flex items-center justify-between text-xs">
-								<div class="flex items-center gap-2">
-									<span>USDC Address</span>
-								</div>
-								<Address :address="usdcAddress ?? ''" button-size="xs" text-size="xs" />
-							</div>
-
-							<!-- USDC Paymaster Address -->
-							<div class="flex items-center justify-between text-xs">
-								<div class="flex items-center gap-2">
-									<span>USDC Paymaster Address</span>
-								</div>
-								<Address :address="usdcPaymasterAddress ?? ''" button-size="xs" text-size="xs" />
-							</div>
-
-							<!-- USDC Balance -->
-							<div class="flex items-center justify-between text-xs">
-								<div class="flex items-center gap-2">
-									<span>USDC Balance</span>
-								</div>
-								<span class="font-mono" :class="hasUsdcBalance ? 'text-primary' : 'text-yellow-600'">
-									{{ formattedUsdcBalance ?? 'N/A' }} USDC
-								</span>
-							</div>
-
-							<!-- USDC Allowance -->
-							<div class="flex items-center justify-between text-xs">
-								<div class="flex items-center gap-2">
-									<span>USDC Allowance</span>
-								</div>
-								<span class="font-mono" :class="hasUsdcAllowance ? 'text-primary' : 'text-yellow-600'">
-									{{ formattedUsdcAllowance ?? 'N/A' }} USDC
-								</span>
-							</div>
-
-							<!-- USDC Permit Signature -->
-							<div class="flex items-center justify-between text-xs">
-								<div class="flex items-center gap-2">
-									<span>Permit Signature</span>
-								</div>
-								<span
-									class="font-mono"
-									:class="
-										hasUsdcPermitSignature
-											? 'text-green-600'
-											: !hasUsdcAllowance
-												? 'text-yellow-600'
-												: 'text-muted-foreground'
-									"
-								>
-									{{ hasUsdcPermitSignature ? 'Signed' : 'None' }}
-								</span>
-							</div>
-						</div>
-					</div>
-
-					<!-- Message about needing sufficient balance -->
-					<div
-						v-if="!isCheckingUsdcData && !hasUsdcBalance"
-						class="text-xs text-yellow-600 dark:text-yellow-400 p-2 bg-yellow-50 dark:bg-yellow-950/20 rounded border border-yellow-200 dark:border-yellow-800"
-					>
-						⚠️ You need some USDC in your account to pay for gas fees.
-						<span v-if="isCurrentChainTestnet">
-							<a
-								href="https://faucet.circle.com/"
-								target="_blank"
-								rel="noopener noreferrer"
-								class="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline"
-							>
-								USDC Faucet
-								<ExternalLink class="w-3 h-3" />
-							</a>
-						</span>
-					</div>
-
-					<!-- Permit USDC Spend -->
-					<div
-						v-if="
-							!isCheckingUsdcData &&
-							hasUsdcBalance &&
-							(status === TransactionStatus.Initial || status === TransactionStatus.PreparingPaymaster)
-						"
-						class="border rounded-lg border-border"
-					>
-						<!-- Permit Section Header -->
-						<div
-							class="flex items-center justify-between p-3 cursor-pointer hover:bg-muted/50 bg-muted/20"
-							@click="togglePermitSectionExpansion"
-						>
-							<div class="text-xs font-medium text-foreground">Permit USDC Spend</div>
-							<ChevronUp v-if="isPermitSectionExpanded" class="w-4 h-4 text-muted-foreground" />
-							<ChevronDown v-else class="w-4 h-4 text-muted-foreground" />
-						</div>
-
-						<!-- Permit Section Details -->
-						<div v-if="isPermitSectionExpanded" class="border-t bg-muted/20 border-border">
-							<div class="p-3 space-y-2">
-								<!-- Allowance amount input -->
-								<div class="space-y-2">
-									<div class="text-xs text-muted-foreground">Allowance Amount (USDC)</div>
-									<Input
-										v-model="permitAllowanceAmount"
-										placeholder="Enter USDC amount"
-										class="text-sm"
-										:class="{
-											'border-red-300 dark:border-red-700': !isValidPermitAmount,
-										}"
-									/>
-									<div v-if="!isValidPermitAmount" class="text-xs text-red-500">
-										Please enter a valid amount greater than 0
-									</div>
-								</div>
-
-								<!-- Permit signature button -->
-								<Button
-									:disabled="!canSignPermit"
-									:loading="isSigningPermit"
-									@click="onClickSignPermit"
-									class="w-full text-sm"
-									variant="outline"
-									size="sm"
-								>
-									<span v-if="isSigningPermit"> Signing Permit... </span>
-									<span v-else-if="!hasUsdcBalance" class="text-muted-foreground">
-										Insufficient USDC Balance
-									</span>
-									<span v-else-if="!isValidPermitAmount" class="text-muted-foreground">
-										Invalid Amount
-									</span>
-									<span v-else> Sign Permit </span>
-								</Button>
-
-								<div class="text-xs text-muted-foreground">
-									This will allow the paymaster to spend up to {{ permitAllowanceAmount }} USDC from
-									your account to pay for gas fees.
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
+			<PaymasterSelector :paymaster-capability="props.paymasterCapability" />
 
 			<!-- Account section -->
 			<div class="space-y-4">
@@ -768,13 +549,10 @@ const shouldShowEffectiveFee = computed(() => {
 						<Address :address="selectedAccount?.address || ''" button-size="xs" text-size="sm" />
 					</div>
 
-					<!-- Network -->
+					<!-- Network & Infrastructure -->
 					<div class="flex items-center justify-between text-sm">
 						<span class="text-muted-foreground">Network</span>
-						<div class="flex items-center gap-2">
-							<ChainIcon :chain-id="selectedChainId" :size="24" :show-tooltip="false" />
-							<span class="text-sm">{{ displayChainName(selectedChainId) }}</span>
-						</div>
+						<NetworkSelector :fixed-chain="true" />
 					</div>
 
 					<!-- Account Type -->
@@ -793,7 +571,7 @@ const shouldShowEffectiveFee = computed(() => {
 
 					<!-- Deployment Status -->
 					<div
-						v-if="!isDeployed && selectedAccount?.category === 'Smart Account'"
+						v-if="!isLoadingCode && !isDeployed && selectedAccount?.category === 'Smart Account'"
 						class="flex items-center justify-between text-sm"
 					>
 						<span class="text-muted-foreground">Status</span>
@@ -805,8 +583,12 @@ const shouldShowEffectiveFee = computed(() => {
 				</div>
 
 				<!-- Account Deployment Notice -->
-				<div v-if="!isDeployed && selectedAccount?.category === 'Smart Account'" class="warning-section">
-					This transaction will deploy your account
+				<div
+					v-if="!isLoadingCode && !isDeployed && selectedAccount?.category === 'Smart Account'"
+					class="warning-section flex items-center gap-1.5"
+				>
+					<Info class="w-4 h-4" />
+					<div>This transaction will deploy your account</div>
 				</div>
 			</div>
 
@@ -853,19 +635,6 @@ const shouldShowEffectiveFee = computed(() => {
 						</div>
 					</div>
 				</div>
-			</div>
-		</div>
-
-		<!-- Error message display -->
-		<div v-if="txModalErrorMessage" class="border-t border-border p-4">
-			<div
-				class="error-section"
-				:class="{
-					'overflow-y-auto': useModalSpecificStyle,
-					'max-h-[100px]': useModalSpecificStyle,
-				}"
-			>
-				{{ txModalErrorMessage }}
 			</div>
 		</div>
 
@@ -935,8 +704,8 @@ const shouldShowEffectiveFee = computed(() => {
 							View on Explorer
 							<ExternalLink class="w-4 h-4" />
 						</a>
-						<p v-if="txModalErrorMessage" class="mt-2 text-sm text-muted-foreground">
-							{{ txModalErrorMessage }}
+						<p v-if="executionError" class="mt-2 text-sm text-muted-foreground">
+							{{ executionError }}
 						</p>
 					</div>
 				</template>
@@ -999,5 +768,3 @@ const shouldShowEffectiveFee = computed(() => {
 		</div>
 	</div>
 </template>
-
-<style lang="css" scoped></style>

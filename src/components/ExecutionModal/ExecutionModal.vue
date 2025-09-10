@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { TxUIEmits, TxUIProps, useTxModal } from '@/stores/useTxModal'
+import { ExecutionUIEmits, ExecutionUIProps, useExecutionModal } from '@/components/ExecutionModal'
 import { VueFinalModal } from 'vue-final-modal'
 
-withDefaults(defineProps<TxUIProps>(), {
+withDefaults(defineProps<ExecutionUIProps>(), {
 	executions: () => [],
 })
 
-const emit = defineEmits<TxUIEmits>()
+const emit = defineEmits<ExecutionUIEmits>()
 
-const { canClose } = useTxModal()
+const { canClose } = useExecutionModal()
 
 const isCloseHandled = ref(false)
 
@@ -32,7 +32,7 @@ function handleClose() {
 		:click-to-close="canClose"
 		:esc-to-close="canClose"
 	>
-		<TxUI
+		<ExecutionUI
 			:executions="executions"
 			@close="handleClose"
 			@executed="emit('executed')"

@@ -1,13 +1,16 @@
 import { displayChainName } from '@/stores/blockchain/chains'
 import { ProviderRpcError } from '@samanager/sdk'
+import { normalizeChainId } from '@vue-dapp/core'
 import type { ErrorCode, ethers, EthersError } from 'ethers'
 import { isError } from 'ethers'
 
-export function getErrorMessage(e: unknown) {
-	if (e instanceof Error) {
-		return e.message
+export function getErrorMessage(e: unknown, prefix?: string) {
+	if (isEthersError(e)) {
+		return getEthersErrorMsg(e, prefix)
+	} else if (e instanceof Error) {
+		return prefix ? `${prefix}: ${e.message}` : e.message
 	}
-	return JSON.stringify(e)
+	return prefix ? `${prefix}: ${JSON.stringify(e)}` : JSON.stringify(e)
 }
 
 export function isProviderRpcError(e: unknown): e is ProviderRpcError {
@@ -82,11 +85,6 @@ export function getEthersErrorMsg(error: ethers.EthersError, prefix?: string): s
 	return prefix ? `${prefix}: ${msg}` : msg
 }
 
-export function getErrorMsg(error: unknown, prefix?: string): string {
-	const msg = error instanceof Error ? error.message : String(error)
-	return prefix ? `${prefix}: ${msg}` : msg
-}
-
 export function getErrorChainMessage(err: unknown, prefix?: string): string {
 	const msg = err instanceof Error ? err.message : String(err)
 	if (err instanceof Error) {
@@ -129,7 +127,7 @@ export function getChainMismatchErrorMessage(error: unknown): string {
 		const chainMismatchMatch = errorMsg.match(/Provided chainId "(\d+)" must match the active chainId "(\d+)"/)
 		if (chainMismatchMatch) {
 			const expectedChainId = chainMismatchMatch[1]
-			const currentChainName = displayChainName(Number(expectedChainId))
+			const currentChainName = displayChainName(normalizeChainId(expectedChainId).toString())
 			return `Please switch your EOA Wallet network to ${currentChainName} to sign the user operation`
 		}
 	}

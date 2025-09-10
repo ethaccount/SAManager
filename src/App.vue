@@ -9,16 +9,14 @@ import { useSigner } from '@/stores/useSigner'
 import { VueDappModal } from '@vue-dapp/modal'
 import { ModalsContainer } from 'vue-final-modal'
 import { Toaster } from 'vue-sonner'
-import { DEFAULT_CHAIN_ID, SUPPORTED_CHAIN_IDS } from './config'
 import { makeFatalError } from './lib/error'
 import { useAccount } from './stores/account/useAccount'
-import { useBlockchain } from './stores/blockchain'
 import { useBackend } from './stores/useBackend'
 import { useStorageMigration } from './stores/useStorageMigration'
+import { CircleX, CircleCheck } from 'lucide-vue-next'
 
 const route = useRoute()
 
-const { selectedChainId } = useBlockchain()
 const { isEOAWalletConnected } = useEOAWallet()
 const { isLogin, checkPasskeySupport } = usePasskey()
 const { selectSigner } = useSigner()
@@ -39,11 +37,6 @@ onMounted(async () => {
 	console.info('APP_SESSION_SIGNER_ADDRESS', APP_SESSION_SIGNER_ADDRESS)
 
 	showDisclaimerIfNeeded()
-
-	// reset selectedChainId when it is not supported because it may be stored in localStorage
-	if (!SUPPORTED_CHAIN_IDS.includes(selectedChainId.value)) {
-		selectedChainId.value = DEFAULT_CHAIN_ID
-	}
 
 	await checkPasskeySupport()
 	await checkWorkerHealth()
@@ -88,23 +81,62 @@ watchImmediate([isEOAWalletConnected, isLogin], ([eoaWalletConnected, passkeyCon
 })
 
 const mode = useColorMode()
+
+// Prefer window.location.pathname over route.name for layout control,
+// as route.name's reactivity can lag and briefly render incorrect UI (header flicker)
+const pathname = computed(() => window.location.pathname)
 </script>
 
 <template>
-	<div v-if="route.name === 'connect'">
-		<RouterView />
-	</div>
-
-	<div v-else>
-		<Header />
-		<MainLayout />
+	<div>
+		<div v-if="pathname.endsWith('/connect')">
+			<RouterView />
+		</div>
+		<div v-else>
+			<Header />
+			<MainLayout />
+		</div>
 	</div>
 
 	<AppHelp v-if="route.name !== 'browser' && route.name !== 'connect'" class="fixed bottom-4 left-4" />
 
 	<VueDappModal :dark="mode === 'dark'" autoConnect />
 	<ModalsContainer />
-	<Toaster :theme="mode === 'dark' ? 'light' : 'dark'" position="top-center" closeButton />
+	<Toaster :theme="mode === 'dark' ? 'light' : 'dark'" position="top-center" closeButton>
+		<template #error-icon>
+			<CircleX class="text-red-600 w-[18px] h-[18px]" />
+		</template>
+		<template #success-icon>
+			<CircleCheck class="text-green-600 w-[18px] h-[18px]" />
+		</template>
+	</Toaster>
 </template>
 
-<style></style>
+<style>
+/* Scrollable content */
+[data-sonner-toast] [data-content] {
+	max-height: 200px;
+	overflow-y: auto;
+	padding-right: 4px;
+}
+
+/* Align icon to the top */
+[data-sonner-toast][data-styled='true'] {
+	align-items: flex-start;
+}
+
+[data-sonner-toast][data-styled='true'] [data-icon] {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 18px;
+	height: 18px;
+	margin: 0;
+}
+
+/* Disable lift animation */
+[data-sonner-toast] {
+	--lift: 0;
+	--lift-amount: 0;
+}
+</style>
