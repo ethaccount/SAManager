@@ -33,6 +33,10 @@ const router = createRouter({
 												path: '/:chainId/test/modal',
 												component: () => import('@/views/test/TestModal.vue'),
 											},
+											{
+												path: '/:chainId/test/toast',
+												component: () => import('@/views/test/TestToast.vue'),
+											},
 										],
 									},
 								]),

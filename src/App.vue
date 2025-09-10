@@ -13,6 +13,7 @@ import { makeFatalError } from './lib/error'
 import { useAccount } from './stores/account/useAccount'
 import { useBackend } from './stores/useBackend'
 import { useStorageMigration } from './stores/useStorageMigration'
+import { CircleX, CircleCheck } from 'lucide-vue-next'
 
 const route = useRoute()
 
@@ -101,7 +102,41 @@ const pathname = computed(() => window.location.pathname)
 
 	<VueDappModal :dark="mode === 'dark'" autoConnect />
 	<ModalsContainer />
-	<Toaster :theme="mode === 'dark' ? 'light' : 'dark'" position="top-center" closeButton />
+	<Toaster :theme="mode === 'dark' ? 'light' : 'dark'" position="top-center" closeButton>
+		<template #error-icon>
+			<CircleX class="text-red-600 w-[18px] h-[18px]" />
+		</template>
+		<template #success-icon>
+			<CircleCheck class="text-green-600 w-[18px] h-[18px]" />
+		</template>
+	</Toaster>
 </template>
 
-<style></style>
+<style>
+/* Scrollable content */
+[data-sonner-toast] [data-content] {
+	max-height: 200px;
+	overflow-y: auto;
+	padding-right: 4px;
+}
+
+/* Align icon to the top */
+[data-sonner-toast][data-styled='true'] {
+	align-items: flex-start;
+}
+
+[data-sonner-toast][data-styled='true'] [data-icon] {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 18px;
+	height: 18px;
+	margin: 0;
+}
+
+/* Disable lift animation */
+[data-sonner-toast] {
+	--lift: 0;
+	--lift-amount: 0;
+}
+</style>
