@@ -26,7 +26,7 @@ export class UserOpDirector {
 		const vMethod = vMethods.find(vMethod => vMethod.signerType === signerType)
 
 		if (!vMethod) {
-			throw new Error('[handleEstimate] vMethod not found')
+			throw new Error('[buildAccountExecutions] vMethod not found')
 		}
 
 		let accountAPI: AccountAPI

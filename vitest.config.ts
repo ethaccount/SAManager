@@ -1,9 +1,11 @@
 import { defineConfig } from 'vitest/config'
 import path from 'path'
 import AutoImport from 'unplugin-auto-import/vite'
+import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
 	plugins: [
+		vue(),
 		AutoImport({
 			imports: ['vue', 'vue-router', 'pinia', '@vueuse/core', 'vitest'],
 		}),

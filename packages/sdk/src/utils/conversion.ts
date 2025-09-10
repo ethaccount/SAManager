@@ -10,3 +10,7 @@ export function hexStringToUint8Array(hexString: string): Uint8Array {
 export function bigIntToHex(value: bigint) {
 	return '0x' + value.toString(16)
 }
+
+export function toChainIdHex(value: number | bigint) {
+	return '0x' + Number(value).toString(16)
+}

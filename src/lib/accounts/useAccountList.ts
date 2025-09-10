@@ -74,6 +74,7 @@ export function useAccountList() {
 			onConfirm: () => {
 				removeAccount(account)
 			},
+			clickToClose: true,
 		})
 	}
 

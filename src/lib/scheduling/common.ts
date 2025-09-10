@@ -3,7 +3,7 @@ import { AccountRegistry } from '@/lib/accounts'
 import { ImportedAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBackend } from '@/stores/useBackend'
-import { TxModalExecution } from '@/stores/useTxModal'
+import { ExecutionModalExecution } from '@/components/ExecutionModal'
 import { JsonRpcProvider } from 'ethers'
 import {
 	ADDRESS,
@@ -155,7 +155,7 @@ export async function checkRhinestoneAttesterTrusted(
 	return true
 }
 
-export function buildRhinestoneAttesterExecutions(isRhinestoneAttesterTrusted: boolean): TxModalExecution[] {
+export function buildRhinestoneAttesterExecutions(isRhinestoneAttesterTrusted: boolean): ExecutionModalExecution[] {
 	if (isRhinestoneAttesterTrusted) {
 		return []
 	}

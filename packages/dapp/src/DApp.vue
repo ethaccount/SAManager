@@ -1,10 +1,25 @@
 <script setup lang="ts">
-import { announceSAManagerProvider, WalletGetCallsStatusResponse, WalletSendCallsResponse } from '@samanager/sdk'
+import {
+	announceSAManagerProvider,
+	EthereumRpcError,
+	getErrorMessage,
+	WalletGetCallsStatusResponse,
+	WalletSendCallsResponse,
+} from '@samanager/sdk'
 import { BrowserWalletConnector, useVueDapp } from '@vue-dapp/core'
 import { useVueDappModal, VueDappModal } from '@vue-dapp/modal'
 import '@vue-dapp/modal/dist/style.css'
 
-const { wallet, isConnected, connectors, addConnectors, watchWalletChanged, watchDisconnect, disconnect } = useVueDapp()
+const {
+	wallet,
+	isConnected,
+	connectors,
+	addConnectors,
+	watchWalletChanged,
+	watchDisconnect,
+	disconnect,
+	onChainChanged,
+} = useVueDapp()
 
 const DAPP_CHAIN_ID = 84532n
 
@@ -16,11 +31,14 @@ onMounted(() => {
 	// Announce SAManager as an EIP-6963 provider
 	announceSAManagerProvider({
 		debug: true,
-		chainId: DAPP_CHAIN_ID,
 		origin: 'http://localhost:5173',
 	})
 
 	onClickConnectButton()
+})
+
+onChainChanged((chainId: number) => {
+	console.log('chainChanged', chainId)
 })
 
 watchWalletChanged(async wallet => {
@@ -45,6 +63,8 @@ function onClickConnectButton() {
 
 const getBlockError = ref<string | null>(null)
 const block = ref(null)
+const chainIdError = ref<string | null>(null)
+const chainIdResult = ref<string | null>(null)
 const sendCallsError = ref<string | null>(null)
 const sendCallsResult = ref<WalletSendCallsResponse | null>(null)
 const getCallsStatusError = ref<string | null>(null)
@@ -53,6 +73,8 @@ const showCallsStatusError = ref<string | null>(null)
 const showCallsStatusResult = ref(null)
 const capabilitiesError = ref<string | null>(null)
 const capabilitiesResult = ref(null)
+const switchChainError = ref<string | null>(null)
+const switchChainResult = ref<string | null>(null)
 
 async function onClickGetBlock() {
 	getBlockError.value = null
@@ -63,12 +85,38 @@ async function onClickGetBlock() {
 				method: 'eth_getBlockByNumber',
 				params: ['latest', false],
 			})
-		} catch (err: unknown) {
-			console.error('Error getting block', err)
-			getBlockError.value = err instanceof Error ? err.message : 'Failed to get block'
+		} catch (err) {
+			console.error(err)
+			if (err instanceof EthereumRpcError) {
+				getBlockError.value = `${err.code}: ${err.message}`
+			} else {
+				getBlockError.value = `Error getting block: ${getErrorMessage(err)}`
+			}
 		}
 	} else {
 		getBlockError.value = 'Wallet not connected'
+	}
+}
+
+async function onClickGetChainId() {
+	chainIdError.value = null
+	chainIdResult.value = null
+	if (wallet.status === 'connected' && wallet.provider) {
+		try {
+			chainIdResult.value = await wallet.provider.request({
+				method: 'eth_chainId',
+				params: [],
+			})
+		} catch (err) {
+			console.error(err)
+			if (err instanceof EthereumRpcError) {
+				chainIdError.value = `${err.code}: ${err.message}`
+			} else {
+				chainIdError.value = `Error getting chain ID: ${getErrorMessage(err)}`
+			}
+		}
+	} else {
+		chainIdError.value = 'Wallet not connected'
 	}
 }
 
@@ -81,9 +129,14 @@ async function onClickGetCapabilities() {
 				method: 'wallet_getCapabilities',
 				params: [wallet.address, [`0x${DAPP_CHAIN_ID.toString(16)}`]],
 			})
-		} catch (err: unknown) {
-			console.error('Error getting capabilities', err)
-			capabilitiesError.value = err instanceof Error ? err.message : 'Failed to get capabilities'
+			console.log('capabilitiesResult', capabilitiesResult.value)
+		} catch (err) {
+			console.error(err)
+			if (err instanceof EthereumRpcError) {
+				capabilitiesError.value = `${err.code}: ${err.message}`
+			} else {
+				capabilitiesError.value = `Error getting capabilities: ${getErrorMessage(err)}`
+			}
 		}
 	} else {
 		capabilitiesError.value = 'Wallet not connected'
@@ -99,7 +152,7 @@ async function onClickSendCalls() {
 				method: 'wallet_sendCalls',
 				params: [
 					{
-						version: '1.0',
+						version: '2.0',
 						chainId: `0x${DAPP_CHAIN_ID.toString(16)}`,
 						from: wallet.address,
 						atomicRequired: true,
@@ -110,13 +163,26 @@ async function onClickSendCalls() {
 								data: '0xd09de08a',
 							},
 						],
-						capabilities: {},
+						capabilities: {
+							paymasterService: {
+								url: `https://api.candide.dev/paymaster/v3/base-sepolia/${import.meta.env.VITE_CANDIDE_API_KEY}`,
+								context: {
+									name: 'Candide Paymaster',
+									icon: 'https://paymaster-service.infra.candide.dev/api/files/33beceb9720c7dce313b543d35d689b6c5699545fe0fc0977961aa40d8f90429/6d9ac3ee255853747bc1df4fb7d03204_metadata_default_logo.png',
+									sponsorshipPolicyId: 'f0785f78e6678a99',
+								},
+							},
+						},
 					},
 				],
 			})
-		} catch (err: unknown) {
+		} catch (err) {
 			console.error(err)
-			sendCallsError.value = err instanceof Error ? err.message : 'Failed to send calls'
+			if (err instanceof EthereumRpcError) {
+				sendCallsError.value = `${err.code}: ${err.message}`
+			} else {
+				sendCallsError.value = `Error sending calls: ${getErrorMessage(err)}`
+			}
 		}
 	} else {
 		sendCallsError.value = 'Wallet not connected'
@@ -132,9 +198,14 @@ async function onClickGetCallsStatus() {
 				method: 'wallet_getCallsStatus',
 				params: [sendCallsResult.value.id],
 			})
-		} catch (err: unknown) {
-			console.error('Error getting calls status', err)
-			getCallsStatusError.value = err instanceof Error ? err.message : 'Failed to get calls status'
+			console.log('getCallsStatusResult', getCallsStatusResult.value)
+		} catch (err) {
+			console.error(err)
+			if (err instanceof EthereumRpcError) {
+				getCallsStatusError.value = `${err.code}: ${err.message}`
+			} else {
+				getCallsStatusError.value = `Error getting calls status: ${getErrorMessage(err)}`
+			}
 		}
 	} else if (!sendCallsResult.value) {
 		getCallsStatusError.value = 'No sendCalls result available'
@@ -152,14 +223,41 @@ async function onClickShowCallsStatus() {
 				method: 'wallet_showCallsStatus',
 				params: [sendCallsResult.value.id],
 			})
-		} catch (err: unknown) {
-			console.error('Error showing calls status', err)
-			showCallsStatusError.value = err instanceof Error ? err.message : 'Failed to show calls status'
+		} catch (err) {
+			console.error(err)
+			if (err instanceof EthereumRpcError) {
+				showCallsStatusError.value = `${err.code}: ${err.message}`
+			} else {
+				showCallsStatusError.value = `Error showing calls status: ${getErrorMessage(err)}`
+			}
 		}
 	} else if (!sendCallsResult.value) {
 		showCallsStatusError.value = 'No sendCalls result available'
 	} else {
 		showCallsStatusError.value = 'Wallet not connected'
+	}
+}
+
+async function onClickSwitchChain() {
+	switchChainError.value = null
+	switchChainResult.value = null
+
+	try {
+		if (!wallet.provider) {
+			throw new Error('wallet.provider not found')
+		}
+		const result = await wallet.provider.request({
+			method: 'wallet_switchEthereumChain',
+			params: [{ chainId: `0x${DAPP_CHAIN_ID.toString(16)}` }],
+		})
+		switchChainResult.value = result === null ? 'Chain switched successfully' : JSON.stringify(result)
+	} catch (err) {
+		console.error(err)
+		if (err instanceof EthereumRpcError) {
+			switchChainError.value = `${err.code}: ${err.message}`
+		} else {
+			switchChainError.value = `Error switching chain: ${getErrorMessage(err)}`
+		}
 	}
 }
 </script>
@@ -184,10 +282,30 @@ async function onClickShowCallsStatus() {
 		<br />
 
 		<div>
+			<button class="btn" @click="onClickSwitchChain">wallet_switchEthereumChain</button>
+			<div v-if="switchChainError" class="text-red-500">{{ switchChainError }}</div>
+			<div v-if="switchChainResult">
+				<div>{{ switchChainResult }}</div>
+			</div>
+		</div>
+
+		<br />
+
+		<div>
 			<button class="btn" @click="onClickGetBlock">eth_getBlockByNumber</button>
 			<div v-if="getBlockError" class="text-red-500">{{ getBlockError }}</div>
 			<div v-if="block">
 				<div>{{ (block as any).hash }}</div>
+			</div>
+		</div>
+
+		<br />
+
+		<div>
+			<button class="btn" @click="onClickGetChainId">eth_chainId</button>
+			<div v-if="chainIdError" class="text-red-500">{{ chainIdError }}</div>
+			<div v-if="chainIdResult">
+				<div>{{ chainIdResult }}</div>
 			</div>
 		</div>
 
@@ -217,7 +335,7 @@ async function onClickShowCallsStatus() {
 			<button class="btn" @click="onClickGetCallsStatus">wallet_getCallsStatus</button>
 			<div v-if="getCallsStatusError" class="text-red-500">{{ getCallsStatusError }}</div>
 			<div v-if="getCallsStatusResult">
-				<div>{{ getCallsStatusResult }}</div>
+				<div>Status: {{ getCallsStatusResult.status }}</div>
 			</div>
 		</div>
 
@@ -230,6 +348,8 @@ async function onClickShowCallsStatus() {
 				<div>{{ showCallsStatusResult }}</div>
 			</div>
 		</div>
+
+		<br />
 
 		<RouterView />
 	</div>

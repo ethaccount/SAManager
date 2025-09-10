@@ -1,5 +1,4 @@
-import { DEFAULT_CHAIN_ID } from '@/config'
-import { CHAIN_ID, isSupportedChainId } from '@/stores/blockchain/chains'
+import { CHAIN_ID, DEFAULT_CHAIN_ID, isSupportedChainId } from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { useRouter } from 'vue-router'
 
@@ -10,13 +9,24 @@ export function useChainIdRoute() {
 
 	const urlChainId = window.location.pathname.split('/')[1]
 
-	if (isSupportedChainId(urlChainId)) {
+	if (window.location.pathname === '/connect') {
+		// Special case for /connect:
+		// If the URL is /connect without a chainId, redirect to /:chainId/connect where chainId comes from localStorage or default.
+		if (selectedChainId.value) {
+			router.replace({ path: `/${selectedChainId.value}/connect` })
+		} else {
+			router.replace({ path: `/${DEFAULT_CHAIN_ID}/connect` })
+			selectedChainId.value = DEFAULT_CHAIN_ID
+		}
+	} else if (isSupportedChainId(urlChainId)) {
+		// Use the chainId specified in the URL
 		selectedChainId.value = urlChainId as CHAIN_ID
 	} else {
-		// selectedChainId may be stored in localStorage
 		if (selectedChainId.value) {
+			// Use the chainId stored in localStorage
 			router.replace({ path: `/${selectedChainId.value}` })
 		} else {
+			// Use the default chainId
 			router.replace({ path: `/${DEFAULT_CHAIN_ID}` })
 			selectedChainId.value = DEFAULT_CHAIN_ID
 		}
@@ -26,7 +36,7 @@ export function useChainIdRoute() {
 		router.replace({ params: { chainId: selectedChainId.value } })
 
 		// Reload page when selectedChainId changes except for the excluded routes
-		const excludedRouteNames = ['browser', 'account-multichain']
+		const excludedRouteNames = ['browser', 'account-settings-multichain', 'connect']
 		if (excludedRouteNames.includes(route.name as string)) {
 			return
 		}

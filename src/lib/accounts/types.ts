@@ -1,6 +1,7 @@
+import { SupportedCapability } from '@/features/account-capabilities'
 import { ValidationMethod } from '@/lib/validations'
 import { BigNumberish, JsonRpcProvider } from 'ethers'
-import { AccountAPI, ERC7579Module, ValidationAPI, EntryPointVersion, TypedData } from 'sendop'
+import { AccountAPI, EntryPointVersion, ERC7579Module, TypedData, ValidationAPI } from 'sendop'
 
 export enum AccountId {
 	'kernel.advanced.v0.3.1' = 'kernel.advanced.v0.3.1',
@@ -43,6 +44,7 @@ export type AccountConfig = {
 	entryPointVersion: EntryPointVersion
 	canCreate: boolean
 	version: string // example: '0.3.1'
+	capabilities: SupportedCapability[]
 }
 
 export type AccountName = 'Kernel' | 'Nexus' | 'Safe7579' | 'Simple7702Account'

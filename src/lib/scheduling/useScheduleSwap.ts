@@ -16,7 +16,7 @@ import { useGetCode } from '@/lib/useGetCode'
 import { ImportedAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { TxModalExecution, useTxModal } from '@/stores/useTxModal'
+import { ExecutionModalExecution, useExecutionModal } from '@/components/ExecutionModal'
 import { DateValue, getLocalTimeZone } from '@internationalized/date'
 import { concat, parseUnits, toBeHex } from 'ethers'
 import {
@@ -127,8 +127,8 @@ export function useScheduleSwap() {
 	function buildSmartSessionExecutions(
 		moduleStatus: ModuleStatus,
 		importedAccount: ImportedAccount,
-	): { executions: TxModalExecution[]; permissionId: string } {
-		const executions: TxModalExecution[] = []
+	): { executions: ExecutionModalExecution[]; permissionId: string } {
+		const executions: ExecutionModalExecution[] = []
 		let permissionId = moduleStatus.permissionId
 
 		if (!permissionId) {
@@ -177,8 +177,8 @@ export function useScheduleSwap() {
 		moduleStatus: ModuleStatus,
 		accountId: AccountId,
 		scheduledOrdersOrderData: string,
-	): TxModalExecution[] {
-		const executions: TxModalExecution[] = []
+	): ExecutionModalExecution[] {
+		const executions: ExecutionModalExecution[] = []
 
 		if (moduleStatus.isScheduledOrdersInstalled) {
 			// Add a order
@@ -284,7 +284,7 @@ export function useScheduleSwap() {
 			const rhinestoneExecutions = buildRhinestoneAttesterExecutions(moduleStatus.isRhinestoneAttesterTrusted)
 
 			// Step 9: Combine all executions
-			const executions: TxModalExecution[] = [
+			const executions: ExecutionModalExecution[] = [
 				...rhinestoneExecutions,
 				...smartSessionExecutions,
 				...scheduledOrdersExecutions,
@@ -293,7 +293,7 @@ export function useScheduleSwap() {
 			// Step 10: Get job ID and open transaction modal
 			const jobId = await getJobId(selectedAccount.address)
 
-			useTxModal().openModal({
+			useExecutionModal().openModal({
 				executions,
 				async onSuccess() {
 					const { bundler, client } = useBlockchain()

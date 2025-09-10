@@ -1,4 +1,4 @@
-import { sendAcceptanceRequest } from '@/lib/email-recovery'
+import { sendAcceptanceRequest } from '@/features/email-recovery'
 import { JsonRpcProvider } from 'ethers'
 import { alchemy } from 'evm-providers'
 

@@ -1,8 +1,8 @@
+import { EMAIL_RECOVERY_EXECUTOR_ADDRESS } from '@/features/email-recovery/utils'
 import { shortenAddress } from '@vue-dapp/core'
 import { isAddress } from 'ethers'
 import { ADDRESS, ENTRY_POINT_V07_ADDRESS, ENTRY_POINT_V08_ADDRESS, KernelAPI, NexusAPI, Safe7579API } from 'sendop'
 import { AccountId } from './accounts'
-import { EMAIL_RECOVERY_EXECUTOR_ADDRESS } from './email-recovery/utils'
 
 export const DEPRECATED_WEB_AUTHN_VALIDATOR_ADDRESS = '0xD990393C670dCcE8b4d8F858FB98c9912dBFAa06'
 

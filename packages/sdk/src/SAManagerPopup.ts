@@ -7,19 +7,19 @@ import { decryptContent, encryptContent, exportKeyToHexString, importKeyFromHexS
 export type WalletRequestHandler = (method: string, params: unknown[]) => Promise<unknown>
 
 export class SAManagerPopup {
-	private chainId: bigint
 	private readonly keyManager: KeyManager
 	private readonly walletRequestHandler: WalletRequestHandler
 	private parentOrigin: string | null = null
 	private debug: boolean
 	private opener: WindowProxy
+	private chainId: number
 
 	constructor({
 		chainId,
 		walletRequestHandler,
 		debug = false,
 	}: {
-		chainId: bigint
+		chainId: number
 		walletRequestHandler: WalletRequestHandler
 		debug?: boolean
 	}) {
@@ -40,6 +40,10 @@ export class SAManagerPopup {
 		this.setupUnloadDetection()
 
 		if (debug) this.log('SAManagerPopup initialized')
+	}
+
+	public updateChainId(chainId: number) {
+		this.chainId = chainId
 	}
 
 	/**
@@ -96,6 +100,7 @@ export class SAManagerPopup {
 			// 2. Send back encrypted acknowledgment (handshake complete)
 			const response = await this.createEncryptedResponse(message.id, {
 				result: { value: 'handshake_complete' },
+				data: { chainId: this.chainId },
 			})
 			this.opener.postMessage(response, origin)
 		} catch (error) {
@@ -120,17 +125,17 @@ export class SAManagerPopup {
 
 			const decryptedRequest: RPCRequest = await decryptContent(message.content.encrypted, sharedSecret)
 
-			// 2. Update chain context if needed
-			this.updateChain(BigInt(decryptedRequest.chainId))
-
-			// 3. Process the decrypted request using the provided handler
+			// 2. Process the decrypted request using the provided handler
 			const result = await this.walletRequestHandler(
 				decryptedRequest.action.method,
 				Array.isArray(decryptedRequest.action.params) ? decryptedRequest.action.params : [],
 			)
 
-			// 4. Create and send encrypted response
-			const response = await this.createEncryptedResponse(message.id, { result: { value: result } })
+			// 3. Create and send encrypted response
+			const response = await this.createEncryptedResponse(message.id, {
+				result: { value: result },
+				data: { chainId: this.chainId },
+			})
 			this.opener.postMessage(response, origin)
 		} catch (error) {
 			await this.sendErrorResponse(message.id, error, origin)
@@ -243,14 +248,6 @@ export class SAManagerPopup {
 		// 		}, 100)
 		// 	}
 		// })
-	}
-
-	private updateChain(chainId: bigint): void {
-		if (chainId !== this.chainId) {
-			this.chainId = chainId
-			// In a real implementation, this might trigger UI updates
-			console.log('Chain updated to:', chainId.toString())
-		}
 	}
 
 	private log(...args: any[]): void {

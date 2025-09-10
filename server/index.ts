@@ -4,21 +4,107 @@ import { getTenderlyApiKey } from './getTenderlyApiKey'
 
 let envValidated = false
 
+const ALLOWED_ORIGINS = ['https://samanager.xyz', 'https://testnet.samanager.xyz']
+const CORS_EXCLUDED_ROUTES = ['/api/provider']
+
+function isOriginAllowed(origin: string | null, env: Env): boolean {
+	// Same-origin requests (your frontend) - no Origin
+	if (!origin) return true
+
+	if (ALLOWED_ORIGINS.includes(origin)) return true
+
+	// Only allow localhost when explicitly set IS_LOCAL_DEV in env
+	if (env.IS_LOCAL_DEV && origin.startsWith('http://localhost')) return true
+
+	return false
+}
+
+function createCorsHeaders(origin: string | null, permissive: boolean, env?: Env): Headers {
+	const headers = new Headers()
+
+	if (permissive) {
+		headers.set('Access-Control-Allow-Origin', origin || '*')
+	} else if (env && isOriginAllowed(origin, env)) {
+		headers.set('Access-Control-Allow-Origin', origin!)
+	}
+
+	headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+	headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Secret')
+	headers.set('Access-Control-Max-Age', '86400')
+
+	return headers
+}
+
+function addCorsHeaders(response: Response, origin: string | null, permissive: boolean, env?: Env): Response {
+	const corsHeaders = createCorsHeaders(origin, permissive, env)
+
+	// If not permissive and origin not allowed, return original response
+	if (!permissive && env && !isOriginAllowed(origin, env)) {
+		return response
+	}
+
+	const headers = new Headers(response.headers)
+	corsHeaders.forEach((value, key) => headers.set(key, value))
+
+	return new Response(response.body, {
+		status: response.status,
+		statusText: response.statusText,
+		headers,
+	})
+}
+
 export default {
 	async fetch(request: Request, env: Env): Promise<Response> {
+		const origin = request.headers.get('Origin')
+
+		const url = new URL(request.url)
+
+		// Handle CORS preflight requests
+		if (request.method === 'OPTIONS') {
+			const isExcludedRoute = CORS_EXCLUDED_ROUTES.includes(url.pathname)
+
+			// Completely bypass CORS for excluded routes
+			if (isExcludedRoute) {
+				const headers = new Headers()
+				headers.set('Access-Control-Allow-Origin', '*')
+				headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+				headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Secret')
+				headers.set('Access-Control-Max-Age', '86400')
+				return new Response(null, { status: 204, headers })
+			}
+
+			if (!isOriginAllowed(origin, env)) {
+				return new Response(null, { status: 403 })
+			}
+
+			const headers = createCorsHeaders(origin, false, env)
+			return new Response(null, { status: 204, headers })
+		}
+
+		// Check origin for all other requests (except excluded routes)
+		if (!CORS_EXCLUDED_ROUTES.includes(url.pathname) && !isOriginAllowed(origin, env)) {
+			return new Response(JSON.stringify({ error: 'Origin not allowed' }), {
+				status: 403,
+				headers: { 'Content-Type': 'application/json' },
+			})
+		}
+
 		if (!envValidated) {
 			try {
 				validateEnv(env)
 				envValidated = true
 			} catch (e) {
-				return Response.json({ error: `Worker is not ready: ${(e as Error).message}` }, { status: 503 })
+				const response = Response.json(
+					{ error: `Worker is not ready: ${(e as Error).message}` },
+					{ status: 503 },
+				)
+				return addCorsHeaders(response, origin, false, env)
 			}
 		}
 
-		const url = new URL(request.url)
-
 		if (url.pathname === '/health') {
-			return Response.json({ status: 'ok' }, { status: 200 })
+			const response = Response.json({ status: 'ok' }, { status: 200 })
+			return addCorsHeaders(response, origin, false, env)
 		}
 
 		if (url.pathname.startsWith('/backend')) {
@@ -42,27 +128,31 @@ export default {
 				const responseHeaders = new Headers(upstreamResponse.headers)
 				responseHeaders.delete('content-encoding')
 
-				return new Response(upstreamResponse.body, {
+				const response = new Response(upstreamResponse.body, {
 					status: upstreamResponse.status,
 					headers: responseHeaders,
 				})
+				return addCorsHeaders(response, origin, false, env)
 			} catch (e: unknown) {
-				return Response.json(
+				const response = Response.json(
 					{ error: `Failed to proxy backend request: ${(e as Error).message}` },
 					{ status: 500 },
 				)
+				return addCorsHeaders(response, origin, false, env)
 			}
 		}
 
 		if (url.pathname === '/api/provider') {
 			const chainId = url.searchParams.get('chainId')
 			if (!chainId) {
-				return Response.json({ error: '[SAManager server] Chain ID is required' }, { status: 400 })
+				const response = Response.json({ error: '[SAManager server] Chain ID is required' }, { status: 400 })
+				return addCorsHeaders(response, origin, true)
 			}
 
 			const provider = url.searchParams.get('provider')
 			if (!provider) {
-				return Response.json({ error: '[SAManager server] Provider is required' }, { status: 400 })
+				const response = Response.json({ error: '[SAManager server] Provider is required' }, { status: 400 })
+				return addCorsHeaders(response, origin, true)
 			}
 
 			const chainIdNum = Number(chainId)
@@ -78,7 +168,11 @@ export default {
 				case 'tenderly':
 					const tenderlyApiKey = getTenderlyApiKey(chainIdNum, env)
 					if (!tenderlyApiKey) {
-						return Response.json({ error: `Tenderly not supported for chain ${chainId}` }, { status: 400 })
+						const response = Response.json(
+							{ error: `Tenderly not supported for chain ${chainId}` },
+							{ status: 400 },
+						)
+						return addCorsHeaders(response, origin, true)
 					}
 					providerUrl = tenderly(chainIdNum as TenderlyChain, tenderlyApiKey)
 					break
@@ -93,7 +187,7 @@ export default {
 					break
 			}
 
-			return proxyRequest(request, providerUrl)
+			return proxyRequest(request, providerUrl, origin, true)
 		}
 
 		if (url.pathname === '/etherscan') {
@@ -106,14 +200,15 @@ export default {
 				etherscanUrl.searchParams.set(key, value)
 			})
 
-			return proxyRequest(request, etherscanUrl.toString())
+			return proxyRequest(request, etherscanUrl.toString(), origin, false, env)
 		}
 
-		return new Response(null, { status: 404 })
+		const response = new Response(null, { status: 404 })
+		return addCorsHeaders(response, origin, false, env)
 	},
 }
 
-async function proxyRequest(request: Request, url: string) {
+async function proxyRequest(request: Request, url: string, origin: string | null, permissive: boolean, env?: Env) {
 	try {
 		const upstreamRequest = new Request(url, {
 			method: request.method,
@@ -129,11 +224,16 @@ async function proxyRequest(request: Request, url: string) {
 		const responseHeaders = new Headers(upstreamResponse.headers)
 		responseHeaders.delete('content-encoding')
 
-		return new Response(upstreamResponse.body, {
+		const response = new Response(upstreamResponse.body, {
 			status: upstreamResponse.status,
 			headers: responseHeaders,
 		})
+		return addCorsHeaders(response, origin, permissive, env)
 	} catch (e: unknown) {
-		return Response.json({ error: `Failed to proxy provider request: ${(e as Error).message}` }, { status: 500 })
+		const response = Response.json(
+			{ error: `Failed to proxy provider request: ${(e as Error).message}` },
+			{ status: 500 },
+		)
+		return addCorsHeaders(response, origin, permissive, env)
 	}
 }
