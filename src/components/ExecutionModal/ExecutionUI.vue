@@ -78,6 +78,19 @@ const executionError = ref<string | null>(null)
 
 // Expansion state for executions
 const expandedExecutions = ref(new Set<number>())
+
+// Auto-expand executions with unknown descriptions
+watchImmediate(
+	() => props.executions,
+	executions => {
+		executions.forEach((execution, index) => {
+			if (!execution.description || execution.description === 'Unknown') {
+				expandedExecutions.value.add(index)
+			}
+		})
+	},
+)
+
 // UserOp preview state
 const showUserOpPreview = ref(false)
 
