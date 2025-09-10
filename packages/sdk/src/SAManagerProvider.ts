@@ -5,7 +5,7 @@ import { deserializeError, standardErrors } from './error'
 import { KeyManager } from './KeyManager'
 import type { EncryptedData, RPCRequest, RPCRequestMessage, RPCResponse, RPCResponseMessage } from './message'
 import type { EthRequestAccountsResponse } from './rpc'
-import { handleGetCallsStatus } from './rpc/wallet_getCallStatus'
+import { handleGetCallsStatus } from './rpc/wallet_getCallsStatus'
 import type { Address, ProviderEventMap, ProviderInterface, RequestArguments } from './types'
 import { decryptContent, encryptContent, exportKeyToHexString, importKeyFromHexString, toChainIdHex } from './utils'
 

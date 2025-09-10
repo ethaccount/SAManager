@@ -31,11 +31,16 @@ export async function handleGetCallsStatus(
 	try {
 		const url = new URL(origin + '/api/provider')
 		url.searchParams.set('chainId', decodedIdentifier.chainId.toString())
-		url.searchParams.set('provider', 'alchemy')
+		url.searchParams.set('provider', 'pimlico')
 
 		const res = await fetch(url, {
 			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
 			body: JSON.stringify({
+				jsonrpc: '2.0',
+				id: 1,
 				method: 'eth_getUserOperationReceipt',
 				params: [decodedIdentifier.hash],
 			}),
