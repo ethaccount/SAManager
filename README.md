@@ -1,19 +1,18 @@
 # Smart Account Manager
 
-SAManager is an open web wallet that aims to enable interoperability across different smart contract account implementations.
+SAManager is a web-based wallet that aims to enable interoperability across different smart contract account implementations. It also enables Dapp developers to build applications using smart contract accounts.
 
-By leveraging ERC-4337 and various account providers, it allows users to access their smart accounts using EOAs or Passkeys to authenticate their accounts.
+By leveraging ERC-4337, it allows users to access their accounts using EOAs or Passkeys. Smart accounts can be decentralized and are not locked into any specific wallet provider, including SAManager itself. SAManager ensures your accounts remain accessible no matter which interface you use, promoting a more open and self-custodial experience.
 
-Smart accounts can be decentralized and are not locked into specific wallet providers. SAManager ensures your accounts remain accessible regardless of the interface you choose to use, promoting a more open and self-custodial experience.
-
-
-- [Documentation](https://hackmd.io/@ZtktAkBVTlOtaS8TkcZO2g/HkiPnQM8eg)
+- [SAManager SDK](https://github.com/ethaccount/SAManager/tree/main/packages/sdk#samanager-sdk)
+- [SAManager Documentation](https://hackmd.io/@ZtktAkBVTlOtaS8TkcZO2g/HkiPnQM8eg)
 - TypeScript library [sendop](https://github.com/ethaccount/sendop)
 - [Backend repository](https://github.com/ethaccount/SAManager-backend)
 
 ## Apps
 - Mainnet https://samanager.xyz
 - Testnet: https://testnet.samanager.xyz
+- [Dapp Integration Demo](https://johnson86tw.github.io/dapp5792/)
 
 ## Contributing
 
@@ -29,6 +28,13 @@ This project thanks the [EF ESP Pectra Proactive Grant Round](https://esp.ethere
 - Favicon generated using [favicon.io](https://favicon.io/emoji-favicons/diamond-with-a-dot/)
 - Emoji graphics licensed under [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/) from the [Twemoji project](https://github.com/twitter/twemoji)
 
+## License
+
+This project is licensed under the GNU Affero General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+
+
+
+---
 
 
 ## Dev notes
@@ -38,7 +44,7 @@ This project thanks the [EF ESP Pectra Proactive Grant Round](https://esp.ethere
 ```
 pnpm dev
 pnpm build
-pnpm typecheck
+pnpm check
 ```
 
 
@@ -61,9 +67,3 @@ pnpm dlx shadcn-vue@2.1.0 add button
 - Toast: https://vue-sonner.robertshaw.id/
 - Modal: https://vue-final-modal.org/use-cases/playground
 - eslint: https://github.com/vuejs/eslint-config-typescript/?tab=readme-ov-file#vueeslint-config-typescript
-
-
-## License
-
-This project is licensed under the GNU Affero General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
-
