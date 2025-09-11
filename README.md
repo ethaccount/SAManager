@@ -4,7 +4,7 @@ SAManager is a web-based wallet that aims to enable interoperability across diff
 
 By leveraging ERC-4337, it allows users to access their accounts using EOAs or Passkeys. Smart accounts can be decentralized and are not locked into any specific wallet provider, including SAManager itself. SAManager ensures your accounts remain accessible no matter which interface you use, promoting a more open and self-custodial experience.
 
-- [SAManager SDK](https://github.com/ethaccount/SAManager/tree/testnet/packages/sdk#samanager-sdk)
+- [SAManager SDK](https://github.com/ethaccount/SAManager/tree/main/packages/sdk#samanager-sdk)
 - [SAManager Documentation](https://hackmd.io/@ZtktAkBVTlOtaS8TkcZO2g/HkiPnQM8eg)
 - TypeScript library [sendop](https://github.com/ethaccount/sendop)
 - [Backend repository](https://github.com/ethaccount/SAManager-backend)
