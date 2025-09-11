@@ -1,23 +1,47 @@
 # SAManager SDK
 
+- Demo: https://johnson86tw.github.io/dapp5792/
+- Example Code: https://github.com/johnson86tw/dapp5792/blob/main/src/App.vue
+- Standards:
+  - https://eip6963.org Multi Injected Provider Discovery
+  - https://eip5792.xyz Wallet Call API
+  - https://erc7677.xyz Paymaster Web Service Capability
+
 ## Usage
 
+1. Install the library
+```
+npm install @samanager/sdk
+```
+
+2. Create the wallet provider
+
 ```ts
-// EIP-6963
+import { announceSAManagerProvider, SAManagerProvider } from '@samanager/sdk'
+// announce EIP-6963 provider
 announceSAManagerProvider({
-    debug: true,
-    chainId: 84532n,
-    origin: 'https://testnet.samanager.xyz',
+    origin: "https://testnet.samanager.xyz", // optional; default is https://samanager.xyz
+    debug: true, // optional; will print console.log
 })
 
-// or
+// or use the provider directly
 const provider = new SAManagerProvider({
-    debug: true,
-    chainId: 84532n,
     origin: 'https://testnet.samanager.xyz',
 })
+```
 
-// =================================== EIP-1193 & EIP-5792 ===================================
+3. RPC Methods
+
+```ts
+await provider.request({
+    method: 'eth_requestAccounts',
+    params: [],
+})
+
+await provider.request({
+    method: 'eth_chainId',
+    params: [],
+})
 
 await provider.request({
     method: 'eth_getBlockByNumber',
@@ -25,17 +49,24 @@ await provider.request({
 })
 
 await provider.request({
-    method: 'wallet_getCapabilities',
-    params: [address, ['0x14a34']],
+    method: 'wallet_switchEthereumChain',
+    params: [{ chainId }],
 })
 
+// EIP-5792 & ERC-7677
+
 await provider.request({
+    method: 'wallet_getCapabilities',
+    params: [from, [chainId]], // the second parameter (chainId) is optional
+})
+
+const callIdentifier = await provider.request({
     method: 'wallet_sendCalls',
     params: [
         {
-            version: '1.0',
-            chainId: '0x14a34',
-            from: address,
+            version: '2.0',
+            chainId,
+            from,
             atomicRequired: true,
             calls: [
                 {
@@ -44,19 +75,28 @@ await provider.request({
                     data: '0xd09de08a',
                 },
             ],
-            capabilities: {},
+            capabilities: {
+                paymasterService: {
+                    url: "",
+                    context: {
+                        name: "",
+                        icon: "",
+                        sponsorshipPolicyId: ""
+                    },
+                },
+            },
         },
     ],
 })
 
 await provider.request({
     method: 'wallet_getCallsStatus',
-    params: [id],
+    params: [callIdentifier],
 })
 
 await provider.request({
     method: 'wallet_showCallsStatus',
-    params: [id],
+    params: [callIdentifier],
 })
 ```
 
