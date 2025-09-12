@@ -98,7 +98,6 @@ export function getEntryPointAddress(version: EntryPointVersion): string {
 export const DEFAULT_ENTRY_POINT_VERSION: EntryPointVersion = 'v0.7'
 export const DEFAULT_NODE = SUPPORTED_NODE.ALCHEMY
 export const DEFAULT_BUNDLER = SUPPORTED_BUNDLER.PIMLICO
-export const SUPPORTED_MAINNET_CHAIN_IDS = [MAINNET_CHAIN_ID.ARBITRUM, MAINNET_CHAIN_ID.BASE]
 export const SUPPORTED_CHAIN_IDS = getSupportedChainIds()
 
 function getSupportedChainIds(): CHAIN_ID[] {
@@ -108,7 +107,7 @@ function getSupportedChainIds(): CHAIN_ID[] {
 			// no local dev needed
 			return Object.values(TESTNET_CHAIN_ID).filter(id => id !== TESTNET_CHAIN_ID.LOCAL)
 		case 'production':
-			return SUPPORTED_MAINNET_CHAIN_IDS
+			return Object.values(MAINNET_CHAIN_ID)
 		default:
 			throw new Error(`[getSupportedChainIds] Invalid vite mode: ${import.meta.env.MODE}`)
 	}
