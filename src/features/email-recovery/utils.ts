@@ -4,8 +4,22 @@ import type { JsonRpcProvider } from 'ethers'
 import { Contract, hexlify, Interface, isAddress } from 'ethers'
 import { abiEncode, ADDRESS, ERC7579_MODULE_TYPE, type ERC7579Module } from 'sendop'
 
+import { MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from '@/stores/blockchain/chains'
+
 export const EMAIL_RECOVERY_EXECUTOR_ADDRESS = '0x636632FA22052d2a4Fb6e3Bab84551B620b9C1F9'
 export const EMAIL_RELAYER_URL_BASE_SEPOLIA = 'https://auth-base-sepolia-staging.prove.email/api'
+export const EMAIL_RELAYER_URL_BASE = 'https://base-relayer.zk.email/api'
+
+export function getEmailRelayerUrl(chainId: string): string {
+	switch (chainId) {
+		case MAINNET_CHAIN_ID.BASE:
+			return EMAIL_RELAYER_URL_BASE
+		case TESTNET_CHAIN_ID.BASE_SEPOLIA:
+			return EMAIL_RELAYER_URL_BASE_SEPOLIA
+		default:
+			throw new Error(`Email recovery not supported on chain ${chainId}`)
+	}
+}
 
 /**
  * @param client - The JSON RPC provider
@@ -17,12 +31,14 @@ export const EMAIL_RELAYER_URL_BASE_SEPOLIA = 'https://auth-base-sepolia-staging
  */
 export async function createOwnableEmailRecovery({
 	client,
+	relayerUrl,
 	accountAddress,
 	email,
 	delay = 21600n, // 6 hours (minimumDelay)
 	expiry = 2n * 7n * 24n * 60n * 60n, // 2 weeks in seconds
 }: {
 	client: JsonRpcProvider
+	relayerUrl: string
 	accountAddress: string
 	email: string
 	delay?: bigint
@@ -32,7 +48,7 @@ export async function createOwnableEmailRecovery({
 	const accountCodeBytes: Uint8Array = poseidon.F.random()
 	const accountCode = hexlify(accountCodeBytes.reverse())
 
-	const response = await fetch(`${EMAIL_RELAYER_URL_BASE_SEPOLIA}/getAccountSalt`, {
+	const response = await fetch(`${relayerUrl}/getAccountSalt`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -116,6 +132,7 @@ export function getEmailRecoveryExecutor({
 
 export async function sendAcceptanceRequest(
 	client: JsonRpcProvider,
+	relayerUrl: string,
 	guardianEmail: string,
 	accountAddress: string,
 	accountCode: string,
@@ -135,7 +152,7 @@ export async function sendAcceptanceRequest(
 		accountCode = accountCode.slice(2)
 	}
 
-	const response = await fetch(`${EMAIL_RELAYER_URL_BASE_SEPOLIA}/acceptanceRequest`, {
+	const response = await fetch(`${relayerUrl}/acceptanceRequest`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -180,11 +197,13 @@ export async function recoveryCommandTemplates(client: JsonRpcProvider) {
 
 export async function sendRecoveryRequest({
 	client,
+	relayerUrl,
 	accountAddress,
 	guardianEmail,
 	newOwnerAddress,
 }: {
 	client: JsonRpcProvider
+	relayerUrl: string
 	accountAddress: string
 	guardianEmail: string
 	newOwnerAddress: string
@@ -206,7 +225,7 @@ export async function sendRecoveryRequest({
 		.replace('{string}', keccak256(recoveryData))
 
 	// Send recovery request to relayer
-	const response = await fetch(`${EMAIL_RELAYER_URL_BASE_SEPOLIA}/recoveryRequest`, {
+	const response = await fetch(`${relayerUrl}/recoveryRequest`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -282,6 +301,7 @@ export async function getRecoveryTimeLeft(client: JsonRpcProvider, accountAddres
 
 export async function completeRecovery(
 	client: JsonRpcProvider,
+	relayerUrl: string,
 	accountAddress: string,
 	newOwnerAddress: string,
 ): Promise<boolean> {
@@ -320,8 +340,8 @@ export async function completeRecovery(
 
 	const recoveryData = abiEncode(['address', 'bytes'], [ADDRESS.OwnableValidator, addOwnerAction])
 
-	// Response text/plain: Recovery completed
-	const response = await fetch(`${EMAIL_RELAYER_URL_BASE_SEPOLIA}/completeRequest`, {
+	// Send complete request to relayer
+	const response = await fetch(`${relayerUrl}/completeRequest`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',

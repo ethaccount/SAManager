@@ -6,14 +6,17 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { IS_PRODUCTION, IS_STAGING } from '@/config'
 import {
 	checkAcceptanceRequest,
 	completeRecovery,
 	createOwnableEmailRecovery,
 	EMAIL_RECOVERY_EXECUTOR_ADDRESS,
+	getEmailRelayerUrl,
 	getRecoveryRequest,
 	sendAcceptanceRequest,
 	sendRecoveryRequest,
+	useEmailRecovery,
 } from '@/features/email-recovery'
 import { getInstallModuleData } from '@/lib/accounts/account-specific'
 import { getErrorMessage } from '@/lib/error'
@@ -21,9 +24,8 @@ import { toRoute } from '@/lib/router'
 import { deserializeValidationMethod, OwnableValidatorVMethod } from '@/lib/validations'
 import type { ImportedAccount } from '@/stores/account/account'
 import { useAccount } from '@/stores/account/useAccount'
-import { TESTNET_CHAIN_ID } from '@/stores/blockchain/chains'
+import { displayChainName, MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
-import { useEmailRecovery } from '@/stores/useEmailRecovery'
 import { Interface } from 'ethers'
 import { ChevronDown, ChevronUp, Info, Loader2 } from 'lucide-vue-next'
 import { ADDRESS, ERC7579_MODULE_TYPE, IERC7579Account__factory } from 'sendop'
@@ -92,10 +94,12 @@ const isRecoveryRequestExpired = computed(() => {
 	return recoveryExpiry.value <= 0n
 })
 
-const isOnBaseSepolia = computed(() => selectedChainId.value === TESTNET_CHAIN_ID.BASE_SEPOLIA)
+const isOnSupportedNetwork = computed(
+	() => selectedChainId.value === TESTNET_CHAIN_ID.BASE_SEPOLIA || selectedChainId.value === MAINNET_CHAIN_ID.BASE,
+)
 
 const canUseEmailRecovery = computed(() => {
-	return isOnBaseSepolia.value && hasOwnableValidator.value
+	return isOnSupportedNetwork.value && hasOwnableValidator.value
 })
 
 const recoveryTimeLeftFormatted = computed(() => {
@@ -258,9 +262,19 @@ async function fetchRecoveryRequestStatus() {
 	}
 }
 
-async function onClickSwitchToBaseSepolia() {
-	switchChain(TESTNET_CHAIN_ID.BASE_SEPOLIA)
-}
+const supportedChains = computed(() => {
+	if (IS_PRODUCTION) {
+		return [{ id: MAINNET_CHAIN_ID.BASE, name: displayChainName(MAINNET_CHAIN_ID.BASE) }]
+	}
+	if (IS_STAGING) {
+		return [{ id: TESTNET_CHAIN_ID.BASE_SEPOLIA, name: displayChainName(TESTNET_CHAIN_ID.BASE_SEPOLIA) }]
+	}
+	// Fallback for development - show both
+	return [
+		{ id: MAINNET_CHAIN_ID.BASE, name: displayChainName(MAINNET_CHAIN_ID.BASE) },
+		{ id: TESTNET_CHAIN_ID.BASE_SEPOLIA, name: displayChainName(TESTNET_CHAIN_ID.BASE_SEPOLIA) },
+	]
+})
 
 const isLoadingConfigureRecovery = ref(false)
 async function onClickConfigureRecovery() {
@@ -285,6 +299,7 @@ async function onClickConfigureRecovery() {
 		// Create email recovery module configuration
 		const emailRecoveryData = await createOwnableEmailRecovery({
 			client: client.value,
+			relayerUrl: getEmailRelayerUrl(selectedChainId.value),
 			accountAddress: props.selectedAccount.address,
 			email: guardianEmail.value,
 			delay: BigInt(parseInt(timelockValue.value) * (timelockUnit.value === 'hours' ? 3600 : 86400)),
@@ -305,6 +320,7 @@ async function onClickConfigureRecovery() {
 				// Send acceptance request to guardian
 				await sendAcceptanceRequest(
 					client.value,
+					getEmailRelayerUrl(selectedChainId.value),
 					guardianEmail.value,
 					props.selectedAccount.address,
 					emailRecoveryData.accountCode,
@@ -338,6 +354,7 @@ async function onClickSendRecoveryRequest() {
 	try {
 		await sendRecoveryRequest({
 			client: client.value,
+			relayerUrl: getEmailRelayerUrl(selectedChainId.value),
 			accountAddress: props.selectedAccount.address,
 			guardianEmail: guardianEmail.value,
 			newOwnerAddress: newOwnerAddress.value,
@@ -359,7 +376,12 @@ async function onClickCompleteRecovery() {
 	error.value = null
 
 	try {
-		await completeRecovery(client.value, props.selectedAccount.address, newOwnerAddress.value)
+		await completeRecovery(
+			client.value,
+			getEmailRelayerUrl(selectedChainId.value),
+			props.selectedAccount.address,
+			newOwnerAddress.value,
+		)
 
 		// Update OwnableValidator addresses
 		const owners = await OwnableValidatorAPI.getOwners(client.value, props.selectedAccount.address)
@@ -486,14 +508,23 @@ const isLoading = computed(() => {
 				</div>
 
 				<!-- Network Check -->
-				<div v-else-if="!isOnBaseSepolia" class="space-y-3">
+				<div v-else-if="!isOnSupportedNetwork" class="space-y-3">
 					<div class="flex items-center gap-2 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-md">
 						<Info class="w-4 h-4 text-yellow-500 flex-shrink-0" />
 						<div class="text-sm text-yellow-700 dark:text-yellow-400">
-							Email recovery is only available on Base Sepolia network
+							Email recovery is only available on Base and Base Sepolia networks
 						</div>
 					</div>
-					<Button variant="outline" @click="onClickSwitchToBaseSepolia"> Switch to Base Sepolia </Button>
+					<div class="flex flex-wrap gap-2">
+						<Button
+							v-for="chain in supportedChains"
+							:key="chain.id"
+							variant="outline"
+							@click="switchChain(chain.id)"
+						>
+							Switch to {{ chain.name }}
+						</Button>
+					</div>
 				</div>
 
 				<!-- OwnableValidator Check -->
