@@ -1,4 +1,4 @@
-import { sendAcceptanceRequest } from '@/features/email-recovery'
+import { sendAcceptanceRequest, getEmailRelayerUrl } from '@/features/email-recovery'
 import { JsonRpcProvider } from 'ethers'
 import { alchemy } from 'evm-providers'
 
@@ -19,5 +19,7 @@ const rpcUrl = alchemy(CHAIN_ID, ALCHEMY_API_KEY)
 
 const client = new JsonRpcProvider(rpcUrl)
 
-const data = await sendAcceptanceRequest(client, GUARDIAN_EMAIL, ACCOUNT_ADDRESS, ACCOUNT_CODE)
+const relayerUrl = getEmailRelayerUrl(CHAIN_ID.toString())
+
+const data = await sendAcceptanceRequest(client, relayerUrl, GUARDIAN_EMAIL, ACCOUNT_ADDRESS, ACCOUNT_CODE)
 console.log('data:', data)

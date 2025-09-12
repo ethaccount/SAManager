@@ -1,4 +1,4 @@
-import { createOwnableEmailRecovery } from '@/features/email-recovery'
+import { createOwnableEmailRecovery, getEmailRelayerUrl } from '@/features/email-recovery'
 import { getOwnableValidator, RHINESTONE_ATTESTER_ADDRESS } from '@rhinestone/module-sdk'
 import { JsonRpcProvider, Wallet } from 'ethers'
 import { alchemy, pimlico } from 'evm-providers'
@@ -58,8 +58,11 @@ const { accountAddress, factory, factoryData } = await NexusAPI.getDeployment({
 })
 console.log('accountAddress', accountAddress)
 
+const relayerUrl = getEmailRelayerUrl(CHAIN_ID.toString())
+
 const emailModuleData = await createOwnableEmailRecovery({
 	client,
+	relayerUrl,
 	accountAddress,
 	email: GUARDIAN_EMAIL,
 })
