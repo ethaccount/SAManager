@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { IS_STAGING } from '@/config'
 import { AccountRegistry, useAccountList } from '@/lib/accounts'
 import { toRoute } from '@/lib/router'
 import { useGetCode } from '@/lib/useGetCode'
 import { getVMethodName, getVMethodType } from '@/lib/validations/helpers'
 import { useAccount } from '@/stores/account/useAccount'
-import { displayChainName } from '@/stores/blockchain/chains'
+import { displayChainName, MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from '@/stores/blockchain/chains'
 import { useBlockchain } from '@/stores/blockchain/useBlockchain'
 import { shortenAddress } from '@vue-dapp/core'
 import { ArrowLeft, Loader2, Trash } from 'lucide-vue-next'
@@ -16,6 +15,7 @@ const router = useRouter()
 const { selectedAccount, isModular, isChainIdMatching, isMultichain } = useAccount()
 const { getCode, isDeployed, loading } = useGetCode()
 const { onClickDeleteAccount } = useAccountList()
+const { selectedChainId } = useBlockchain()
 
 const isGetCodeFinished = ref(false)
 
@@ -63,6 +63,10 @@ function onClickSwitchToCorrectChain() {
 const showSwitchToCorrectChain = computed(() => {
 	return !isMultichain.value && !isChainIdMatching.value
 })
+
+const isOnEmailRecoverySupportedNetwork = computed(
+	() => selectedChainId.value === TESTNET_CHAIN_ID.BASE_SEPOLIA || selectedChainId.value === MAINNET_CHAIN_ID.BASE,
+)
 </script>
 
 <template>
@@ -297,7 +301,7 @@ const showSwitchToCorrectChain = computed(() => {
 							</RouterLink>
 
 							<RouterLink
-								v-if="IS_STAGING"
+								v-if="isOnEmailRecoverySupportedNetwork"
 								:to="toRoute('account-settings-email-recovery', { address: selectedAccount.address })"
 								class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
 								:class="

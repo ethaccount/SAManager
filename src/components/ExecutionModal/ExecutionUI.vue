@@ -167,8 +167,11 @@ onMounted(async () => {
 
 		nextTick(() => {
 			if (!isDeployed.value && !selectedAccountInitCodeData.value) {
+				toast.error('Account is not deployed and initialization code not found', {
+					duration: ERROR_NOTIFICATION_DURATION,
+				})
+				// Because this will close the modal, if we use throw error after emit, the toast won't show, so we use toast.error above
 				emit('close')
-				throw new Error('Account not deployed and no init code provided')
 			}
 		})
 	}
@@ -243,7 +246,7 @@ async function onClickEstimate() {
 		} else {
 			// If the account is not deployed, check if there is init code provided
 			if (!selectedAccountInitCodeData.value) {
-				throw new Error('Account not deployed and no init code provided')
+				throw new Error('Account is not deployed and initialization code not found')
 			}
 			await handleEstimate({
 				executions: props.executions,

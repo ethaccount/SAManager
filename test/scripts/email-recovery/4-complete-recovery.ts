@@ -1,4 +1,4 @@
-import { completeRecovery } from '@/features/email-recovery'
+import { completeRecovery, getEmailRelayerUrl } from '@/features/email-recovery'
 import { JsonRpcProvider } from 'ethers'
 import { alchemy } from 'evm-providers'
 
@@ -18,5 +18,7 @@ const NEW_OWNER = '0xd78B5013757Ea4A7841811eF770711e6248dC282'
 const rpcUrl = alchemy(CHAIN_ID, ALCHEMY_API_KEY)
 const client = new JsonRpcProvider(rpcUrl)
 
-const data = await completeRecovery(client, ACCOUNT_ADDRESS, NEW_OWNER)
+const relayerUrl = getEmailRelayerUrl(CHAIN_ID.toString())
+
+const data = await completeRecovery(client, relayerUrl, ACCOUNT_ADDRESS, NEW_OWNER)
 console.log('data:', data)
