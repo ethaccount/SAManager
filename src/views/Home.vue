@@ -56,7 +56,7 @@ function onClickEnvironmentSwitch() {
 		</div>
 
 		<!-- Features Section -->
-		<div class="bg-muted/30 py-12 sm:py-16">
+		<div class="bg-muted/40 py-12 sm:py-16 rounded-xl">
 			<div class="container mx-auto px-4 max-w-5xl">
 				<div class="text-center space-y-4 mb-12">
 					<h2 class="text-xl sm:text-2xl font-bold tracking-tight">Interoperability Across Smart Accounts</h2>
@@ -67,9 +67,7 @@ function onClickEnvironmentSwitch() {
 				</div>
 
 				<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-					<Card
-						class="group border border-border/50 hover:border-primary/50 hover:shadow-md transition-all duration-300"
-					>
+					<Card class="group border border-border transition-all duration-300">
 						<CardHeader class="text-center pb-4">
 							<div
 								class="w-10 h-10 mx-auto mb-3 rounded-full bg-primary/10 flex items-center justify-center text-lg"
@@ -83,9 +81,7 @@ function onClickEnvironmentSwitch() {
 						</CardHeader>
 					</Card>
 
-					<Card
-						class="group border border-border/50 hover:border-primary/50 hover:shadow-md transition-all duration-300"
-					>
+					<Card class="group border border-border transition-all duration-300">
 						<CardHeader class="text-center pb-4">
 							<div
 								class="w-10 h-10 mx-auto mb-3 rounded-full bg-primary/10 flex items-center justify-center text-lg"
@@ -99,9 +95,7 @@ function onClickEnvironmentSwitch() {
 						</CardHeader>
 					</Card>
 
-					<Card
-						class="group border border-border/50 hover:border-primary/50 hover:shadow-md transition-all duration-300"
-					>
+					<Card class="group border border-border transition-all duration-300">
 						<CardHeader class="text-center pb-4">
 							<div
 								class="w-10 h-10 mx-auto mb-3 rounded-full bg-primary/10 flex items-center justify-center text-lg"

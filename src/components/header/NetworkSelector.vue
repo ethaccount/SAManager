@@ -108,7 +108,7 @@ function onClickNetworkSelector() {
 		</DropdownMenuTrigger>
 
 		<!-- Dropdown Menu Content -->
-		<DropdownMenuContent class="w-80 max-h-[80vh] overflow-y-auto">
+		<DropdownMenuContent class="w-80 max-h-[80vh] overflow-y-auto z-[1100]">
 			<!-- Network Section -->
 			<template v-if="!props.fixedChain">
 				<DropdownMenuLabel>Network</DropdownMenuLabel>
