@@ -7,7 +7,7 @@ import { useDisclaimerModal } from '@/stores/useDisclaimerModal'
 import { useEOAWallet } from '@/stores/useEOAWallet'
 import { useSigner } from '@/stores/useSigner'
 import { VueDappModal } from '@vue-dapp/modal'
-import { CircleCheck, CircleX } from 'lucide-vue-next'
+import { CircleCheck, CircleX, HandCoins } from 'lucide-vue-next'
 import { ModalsContainer } from 'vue-final-modal'
 import { Toaster } from 'vue-sonner'
 import { makeFatalError } from './lib/error'
@@ -90,6 +90,16 @@ const isNoHeader = computed(() => {
 </script>
 
 <template>
+	<AppBanner v-if="route.name === 'home'" id="gitcoin-grants" to="https://giveth.io/project/ethaccount">
+		<div class="flex items-center gap-2">
+			<HandCoins class="w-5 h-5 flex-shrink-0 pointer-events-none" />
+			<span>
+				DONATIONS OPEN October 14 – October 29 |
+				<span class="font-semibold italic">Gitcoin Grants 24</span> is live!
+			</span>
+		</div>
+	</AppBanner>
+
 	<div>
 		<div v-if="isNoHeader">
 			<RouterView />
