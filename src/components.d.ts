@@ -16,6 +16,7 @@ declare module 'vue' {
     AccountOptions: typeof import('./components/ImportAccountModal/AccountOptions.vue')['default']
     Address: typeof import('./components/utils/Address.vue')['default']
     AddressLinkButton: typeof import('./components/utils/AddressLinkButton.vue')['default']
+    AppBanner: typeof import('./components/AppBanner.vue')['default']
     AppHelp: typeof import('./components/AppHelp.vue')['default']
     AutoForm: typeof import('./components/ui/auto-form/AutoForm.vue')['default']
     AutoFormField: typeof import('./components/ui/auto-form/AutoFormField.vue')['default']

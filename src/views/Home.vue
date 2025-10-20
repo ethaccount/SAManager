@@ -28,7 +28,7 @@ function onClickEnvironmentSwitch() {
 <template>
 	<div class="flex flex-col">
 		<!-- Hero Section -->
-		<div class="flex flex-col items-center justify-center px-4 py-12 sm:py-16">
+		<div class="flex flex-col items-center justify-center px-4 py-14 sm:py-16">
 			<div class="text-center space-y-4 max-w-3xl">
 				<h1
 					class="py-1 text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent"
